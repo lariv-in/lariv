@@ -1,0 +1,10 @@
+go 1.25.5
+
+use (
+	./components
+	./p_dashboard
+	./lago
+	./p_users
+	./totschool_lago
+	./views
+)

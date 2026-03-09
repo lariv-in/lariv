@@ -1,0 +1,28 @@
+package lago
+
+import (
+	"net/url"
+)
+
+type PluginType int
+
+const (
+	// For plugins that add new models and functionality, ideally independent of other plugins
+	PluginTypeApp = iota
+	// For plugins that add additional functionality to App
+	PluginTypeAddon
+	// For plugins that add a long running service
+	PluginTypeService
+)
+
+type Plugin struct {
+	Type        PluginType
+	Icon        string
+	Url         *url.URL
+	VerboseName string
+	Method      string
+	OnClick     string
+	Classes     string
+}
+
+var RegistryPlugins Registry[Plugin] = NewRegistry[Plugin]()

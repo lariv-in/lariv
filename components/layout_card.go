@@ -1,0 +1,28 @@
+package components
+
+import (
+	"context"
+	. "maragu.dev/gomponents"
+	. "maragu.dev/gomponents/html"
+)
+
+type LayoutCard struct {
+	Children []PageInterface
+}
+
+func (e LayoutCard) Build(ctx context.Context) Node {
+	group := Group{}
+	for _, child := range e.Children {
+		group = append(group, child.Build(ctx))
+	}
+	return Div(Class("min-h-screen flex items-center justify-center bg-base-200"),
+		Progress(Class("progress w-full fixed top-0 left-0 h-1 z-50"), ID("global-loading-indicator")),
+		Div(Class("card shadow-xl"), Div(Class("card-body"),
+			group,
+		)),
+	)
+}
+
+func (e LayoutCard) GetChildren() []PageInterface {
+	return e.Children
+}
