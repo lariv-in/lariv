@@ -75,7 +75,8 @@ var otpCache = NewMemoryCache()
 func GenerateOTP() string {
 	b := make([]byte, 3)
 	_, _ = rand.Read(b)
-	return fmt.Sprintf("%06d", int(b[0])|int(b[1])<<8|int(b[2])<<16)%1000000
+	val := (int(b[0]) | int(b[1])<<8 | int(b[2])<<16) % 1000000
+	return fmt.Sprintf("%06d", val)
 }
 
 func phoneToCacheSuffix(phone string) string {
