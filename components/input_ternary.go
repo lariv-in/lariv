@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -57,15 +58,16 @@ func (e InputTernary) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputTernary) Parse(v string) (any, error) {
-	switch v {
-	case "True", "true", "1":
-		return true, nil
-	case "False", "false", "0":
-		return false, nil
-	default:
+func (e InputTernary) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 || vals[0] == "" {
 		return nil, nil
 	}
+	b, err := strconv.ParseBool(vals[0])
+	if err != nil {
+		return nil, nil
+	}
+	return b, nil
 }
 
 func (e InputTernary) GetName() string {

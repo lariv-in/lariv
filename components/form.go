@@ -82,7 +82,7 @@ func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]er
 
 	for _, input := range inputs {
 		name := input.GetName()
-		inputValues[name], inputErrors[name] = input.Parse(r.FormValue(name))
+		inputValues[name], inputErrors[name] = input.Parse(r.Form[name])
 	}
 
 	return inputValues, inputErrors, nil

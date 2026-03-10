@@ -27,9 +27,13 @@ func (e InputPassword) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputPassword) Parse(v string) (any, error) {
+func (e InputPassword) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 {
+		return "", nil
+	}
 	// TODO: Add some password validation here
-	return v, nil
+	return vals[0], nil
 }
 
 func (e InputPassword) GetName() string {

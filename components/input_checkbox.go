@@ -42,8 +42,12 @@ func (e InputCheckbox) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputCheckbox) Parse(v string) (any, error) {
-	return strconv.ParseBool(v)
+func (e InputCheckbox) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 {
+		return false, nil
+	}
+	return strconv.ParseBool(vals[0])
 }
 
 func (e InputCheckbox) GetName() string {

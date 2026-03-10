@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/lariv-in/components"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // parseFormFromView finds the first FormComponent in the view's page tree and parses the request.
@@ -46,111 +45,6 @@ func hasFieldErrors(fieldErrors map[string]error) bool {
 		}
 	}
 	return false
-}
-
-// getID extracts the ID field from a struct instance using reflection.
-func getID(instance any) any {
-	v := reflect.ValueOf(instance)
-	if v.Kind() == reflect.Pointer {
-		v = v.Elem()
-	}
-	if v.Kind() != reflect.Struct {
-		return nil
-	}
-	// Walk embedded structs (e.g. gorm.Model) to find ID
-	return findField(v, "ID")
-}
-
-func findField(v reflect.Value, name string) any {
-	t := v.Type()
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		if field.Name == name {
-			return v.Field(i).Interface()
-		}
-		if field.Anonymous && v.Field(i).Kind() == reflect.Struct {
-			if result := findField(v.Field(i), name); result != nil {
-				return result
-			}
-		}
-	}
-	return nil
-}
-
-// applyValues copies form values (snake_case keys) into exported struct fields.
-// It walks embedded structs and converts string values to the target field type.
-func applyValues(instance any, values map[string]any) {
-	v := reflect.ValueOf(instance)
-	if v.Kind() == reflect.Pointer {
-		v = v.Elem()
-	}
-	setFields(v, values)
-}
-
-func setFields(v reflect.Value, values map[string]any) {
-	t := v.Type()
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		if field.Anonymous && v.Field(i).Kind() == reflect.Struct {
-			setFields(v.Field(i), values)
-			continue
-		}
-		if field.PkgPath != "" || !v.Field(i).CanSet() {
-			continue
-		}
-		key := toSnakeCase(field.Name)
-		val, ok := values[key]
-		if !ok {
-			continue
-		}
-		fieldVal := v.Field(i)
-		rv := reflect.ValueOf(val)
-		if rv.Type().AssignableTo(fieldVal.Type()) {
-			fieldVal.Set(rv)
-		} else if rv.Type().ConvertibleTo(fieldVal.Type()) {
-			fieldVal.Set(rv.Convert(fieldVal.Type()))
-		} else if rv.Kind() == reflect.String {
-			setFieldFromString(fieldVal, val.(string))
-		}
-	}
-}
-
-func setFieldFromString(field reflect.Value, s string) {
-	switch field.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		if n, err := strconv.ParseInt(s, 10, 64); err == nil {
-			field.SetInt(n)
-		}
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		if n, err := strconv.ParseUint(s, 10, 64); err == nil {
-			field.SetUint(n)
-		}
-	case reflect.Float32, reflect.Float64:
-		if f, err := strconv.ParseFloat(s, 64); err == nil {
-			field.SetFloat(f)
-		}
-	case reflect.Bool:
-		if b, err := strconv.ParseBool(s); err == nil {
-			field.SetBool(b)
-		}
-	case reflect.String:
-		field.SetString(s)
-	}
-}
-
-func toSnakeCase(s string) string {
-	var result strings.Builder
-	for i, r := range s {
-		if r >= 'A' && r <= 'Z' {
-			if i > 0 {
-				result.WriteByte('_')
-			}
-			result.WriteRune(r + ('a' - 'A'))
-		} else {
-			result.WriteRune(r)
-		}
-	}
-	return result.String()
 }
 
 // --- List View ---
@@ -291,16 +185,16 @@ func CreateView[T any](model T, successUrl string) func(View) View {
 				}
 
 				db := r.Context().Value("$db").(*gorm.DB)
-				instance := new(T)
-				applyValues(instance, values)
-				result := db.Create(instance)
-				if result.Error != nil {
-					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", result.Error))
+
+				// Create using the map directly with RETURNING to get the generated ID
+				err = db.Model(new(T)).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(values).Error
+				if err != nil {
+					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", err))
 					renderFormErrors(innerView, w, ctx, values, fieldErrors)
 					return
 				}
 
-				http.Redirect(w, r, fmt.Sprintf(successUrl, getID(instance)), http.StatusSeeOther)
+				http.Redirect(w, r, fmt.Sprintf(successUrl, values["id"]), http.StatusSeeOther)
 			})
 		})
 	}
@@ -333,15 +227,9 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 				}
 
 				db := r.Context().Value("$db").(*gorm.DB)
-				instance := new(T)
-				err = db.First(instance, id).Error
-				if err != nil {
-					http.NotFound(w, r)
-					return
-				}
 
-				applyValues(instance, values)
-				err = db.Save(instance).Error
+				// Update using the map directly, ID already known from path
+				err = db.Model(new(T)).Where("id = ?", id).Updates(values).Error
 				if err != nil {
 					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", err))
 					renderFormErrors(innerView, w, ctx, values, fieldErrors)

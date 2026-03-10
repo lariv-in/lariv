@@ -306,7 +306,7 @@ func registerDetailPages() {
 							components.LabelInline{
 								Title: "Role",
 								Children: []components.PageInterface{
-									components.FieldText{Getter: components.GetterKey("$in.Role.Name")},
+									components.FieldText{Getter: components.GetterForeignKey[Role](components.GetterKey("$in.RoleID"), "Name")},
 								},
 							},
 						},

@@ -26,8 +26,12 @@ func (e InputText) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputText) Parse(v string) (any, error) {
-	return v, nil
+func (e InputText) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 {
+		return "", nil
+	}
+	return vals[0], nil
 }
 
 func (e InputText) GetName() string {

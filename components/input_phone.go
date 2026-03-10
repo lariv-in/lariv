@@ -27,8 +27,12 @@ func (e InputPhone) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputPhone) Parse(v string) (any, error) {
-	num, err := phonenumbers.Parse(v, "IN")
+func (e InputPhone) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 {
+		return "", nil
+	}
+	num, err := phonenumbers.Parse(vals[0], "IN")
 	if err != nil {
 		return nil, err
 	}

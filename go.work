@@ -4,6 +4,7 @@ use (
 	./components
 	./lago
 	./p_dashboard
+	./p_otp
 	./p_users
 	./totschool_lago
 	./views

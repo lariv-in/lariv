@@ -68,8 +68,12 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputForeignKey) Parse(v string) (any, error) {
-	return v, nil
+func (e InputForeignKey) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 {
+		return "", nil
+	}
+	return vals[0], nil
 }
 
 func (e InputForeignKey) GetName() string {

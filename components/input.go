@@ -1,7 +1,7 @@
 package components
 
 type InputInterface interface {
-	Parse(string) (any, error)
+	Parse(any) (any, error)
 	GetName() string
 }
 

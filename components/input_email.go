@@ -26,8 +26,12 @@ func (e InputEmail) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputEmail) Parse(v string) (any, error) {
-	address, err := mail.ParseAddress(v)
+func (e InputEmail) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 {
+		return "", nil
+	}
+	address, err := mail.ParseAddress(vals[0])
 	if err != nil {
 		return nil, err
 	}

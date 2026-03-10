@@ -16,7 +16,7 @@ func (e ShellBase) Body(ctx context.Context) Node {
 	for _, child := range e.Children {
 		group = append(group, child.Build(ctx))
 	}
-	return Body(Class("hide-right font-sans"), Attr("x-data", `{ theme: localStorage.getItem('theme') || 'light' }`), Attr(":data-theme", "theme"), Attr("hx-ext", "preload, morph"), Attr("hx-boost", "true"), Attr("hx-indicator", "#global-loading-indicator"), Attr("hx-push-url", "true"),
+	return Body(Class("hide-right font-sans"), Attr("x-data", `{ theme: localStorage.getItem('theme') || 'light' }`), Attr(":data-theme", "theme"), Attr("hx-ext", "preload, alpine-morph"), Attr("hx-boost", "true"), Attr("hx-indicator", "#global-loading-indicator"), Attr("hx-push-url", "true"),
 		Div(ID("global-loading-indicator"), Class("fixed top-0 left-0 w-full z-50"),
 			Div(Class("h-0.5 bg-primary animate-pulse")),
 		),

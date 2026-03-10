@@ -114,6 +114,44 @@ func GetterAssociation(table string, foreignKeyGetter Getter) Getter {
 	}
 }
 
+// GetterForeignKey fetches a related model T by its primary key and returns a specific field.
+// foreignKeyGetter resolves the FK value (e.g. GetterKey("$in.RoleID")).
+// fieldPath is the dot-separated path into the related model's map (e.g. "Name").
+func GetterForeignKey[T any](foreignKeyGetter Getter, fieldPath string) Getter {
+	return func(ctx context.Context) any {
+		fkValue := IfOrGetter(foreignKeyGetter, ctx, nil)
+		if fkValue == nil || fkValue == "" {
+			return nil
+		}
+
+		db, ok := ctx.Value("$db").(*gorm.DB)
+		if !ok {
+			return nil
+		}
+
+		var instance T
+		if err := db.First(&instance, fkValue).Error; err != nil {
+			return nil
+		}
+
+		// Convert to map and walk the field path
+		m := MapFromStruct(&instance)
+		parts := strings.Split(fieldPath, ".")
+		var value any = m
+		for _, part := range parts {
+			mp, ok := value.(map[string]any)
+			if !ok {
+				return nil
+			}
+			value, ok = mp[part]
+			if !ok {
+				return nil
+			}
+		}
+		return value
+	}
+}
+
 // GetterNavigate returns an Alpine @click expression that performs HTMX navigation.
 // urlFormat and getters work like GetterFormat to produce the URL per-row.
 func GetterNavigate(urlFormat string, getters ...Getter) Getter {
