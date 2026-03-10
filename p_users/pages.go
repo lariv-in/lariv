@@ -248,7 +248,7 @@ func registerTablePages() {
 				Classes:         "w-full",
 				Data:            components.GetterKey("users"),
 				CreateUrl:       components.GetterStatic(AppUrl + "create/"),
-				Url:             components.GetterFormat(AppUrl+"%v/", components.GetterKey("$row.id")),
+				OnClick:         components.GetterNavigate(AppUrl+"%v/", components.GetterKey("$row.id")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
@@ -365,7 +365,7 @@ func registerAuthPages() {
 						},
 						components.ButtonLink{
 							Label:   "Don't have an account? Sign up",
-							Link:    lago.RegistryRoute.Getter("users.SignupRoute"),
+							Link:    lago.RoutePathGetter("users.SignupRoute"),
 							Classes: "w-full",
 						},
 					},
@@ -422,7 +422,7 @@ func registerAuthPages() {
 					},
 					ChildrenAction: []components.PageInterface{
 						components.ButtonSubmit{Label: "Sign Up", Classes: "w-full"},
-						components.ButtonLink{Label: "Already have an account? Login", Link: lago.RegistryRoute.Getter("users.LoginRoute"), Classes: "w-full"},
+						components.ButtonLink{Label: "Already have an account? Login", Link: lago.RoutePathGetter("users.LoginRoute"), Classes: "w-full"},
 					},
 				},
 			}},
@@ -430,7 +430,16 @@ func registerAuthPages() {
 	})
 
 	lago.RegistryPage.Register("users.UnauthenticatedPage", components.ShellAuthScaffold{
-		Children: []components.PageInterface{},
+		Children: []components.PageInterface{
+			components.ContainerColumn{Classes: "w-80 items-center text-center", Children: []components.PageInterface{
+				components.FieldTitle{Getter: components.GetterStatic("Welcome")},
+				components.FieldSubtitle{Getter: components.GetterStatic("Please log in or create an account to continue.")},
+				components.ContainerColumn{Classes: "w-full mt-4 gap-2", Children: []components.PageInterface{
+					components.ButtonLink{Label: "Login", Classes: "btn btn-primary text-white w-full", Link: lago.RoutePathGetter("users.LoginRoute")},
+					components.ButtonLink{Label: "Sign Up", Classes: "btn btn-outline w-full", Link: lago.RoutePathGetter("users.SignupRoute")},
+				}},
+			}},
+		},
 	})
 }
 
@@ -444,6 +453,7 @@ func registerSelectionPages() {
 			components.DataTable{
 				UID:             "user-selection-table",
 				Data:            components.GetterKey("users"),
+				OnClick:         components.GetterSelect("user", components.GetterKey("$row.id"), components.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
@@ -467,6 +477,7 @@ func registerSelectionPages() {
 			components.DataTable{
 				UID:             "user-multi-selection-table",
 				Data:            components.GetterKey("users"),
+				OnClick:         components.GetterMultiSelect("role", components.GetterKey("$row.id"), components.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserMultiSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
@@ -487,6 +498,7 @@ func registerSelectionPages() {
 			components.DataTable{
 				UID:             "role-selection-table",
 				Data:            components.GetterKey("roles"),
+				OnClick:         components.GetterSelect("role", components.GetterKey("$row.id"), components.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{

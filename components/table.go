@@ -27,17 +27,17 @@ type DataTable struct {
 	Displays        map[string]func([]TableColumn, Getter, Getter) PageInterface
 	FilterComponent PageInterface
 	CreateUrl       Getter
-	Url             Getter // Per-row click URL
+	OnClick         Getter // Per-row Alpine @click expression (use GetterNavigate, GetterSelect, or GetterMultiSelect)
 }
 
 func (e DataTable) Build(ctx context.Context) Node {
 	if e.Displays == nil {
 		e.Displays = map[string]func([]TableColumn, Getter, Getter) PageInterface{
-			"List": func(cols []TableColumn, data Getter, url Getter) PageInterface {
-				return TableListContent{Columns: cols, Data: data, Url: url}
+			"List": func(cols []TableColumn, data Getter, onClick Getter) PageInterface {
+				return TableListContent{Columns: cols, Data: data, OnClick: onClick}
 			},
-			"Grid": func(cols []TableColumn, data Getter, url Getter) PageInterface {
-				return TableGridContent{Columns: cols, Data: data, Url: url}
+			"Grid": func(cols []TableColumn, data Getter, onClick Getter) PageInterface {
+				return TableGridContent{Columns: cols, Data: data, OnClick: onClick}
 			},
 		}
 	}
@@ -46,7 +46,7 @@ func (e DataTable) Build(ctx context.Context) Node {
 	for name, builder := range e.Displays {
 		displayNodes = append(displayNodes, Div(
 			Attr("x-show", fmt.Sprintf("view === '%s'", name)),
-			builder(e.Columns, e.Data, e.Url).Build(ctx),
+			builder(e.Columns, e.Data, e.OnClick).Build(ctx),
 		))
 	}
 

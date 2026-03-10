@@ -12,7 +12,7 @@ import (
 type TableListContent struct {
 	Columns []TableColumn
 	Data    Getter
-	Url     Getter
+	OnClick Getter
 }
 
 func (e TableListContent) Build(ctx context.Context) Node {
@@ -50,13 +50,12 @@ func (e TableListContent) Build(ctx context.Context) Node {
 				tds = append(tds, g_html.Td(g_html.Class("whitespace-nowrap truncate max-w-xs min-w-[100px]"), Group(cellNodes)))
 			}
 
-			// If Url getter is set, make rows clickable links
-			if e.Url != nil {
-				rowUrl := fmt.Sprintf("%s", IfOrGetter(e.Url, rowCtx, ""))
-				if rowUrl != "" {
+			if e.OnClick != nil {
+				expr := fmt.Sprintf("%v", IfOrGetter(e.OnClick, rowCtx, ""))
+				if expr != "" {
 					trs = append(trs, g_html.Tr(
 						g_html.Class("cursor-pointer hover:bg-base-200 transition-colors"),
-						Attr("onclick", fmt.Sprintf("window.location.href='%s'", rowUrl)),
+						Attr("@click", expr),
 						Group(tds),
 					))
 					continue

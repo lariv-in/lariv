@@ -12,7 +12,7 @@ import (
 type TableGridContent struct {
 	Columns []TableColumn
 	Data    Getter
-	Url     Getter
+	OnClick Getter
 }
 
 func (e TableGridContent) Build(ctx context.Context) Node {
@@ -58,25 +58,21 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 				))
 			}
 
-			cardNode := g_html.Div(
-				g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2"),
-				Group(contentNodes),
-			)
-
-			// If Url getter is set, wrap card in a link
-			if e.Url != nil {
-				rowUrl := fmt.Sprintf("%s", IfOrGetter(e.Url, rowCtx, ""))
-				if rowUrl != "" {
-					cards = append(cards, g_html.A(g_html.Href(rowUrl),
-						g_html.Div(
-							g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200"),
-							Group(contentNodes),
-						),
+			if e.OnClick != nil {
+				expr := fmt.Sprintf("%v", IfOrGetter(e.OnClick, rowCtx, ""))
+				if expr != "" {
+					cards = append(cards, g_html.Div(
+						g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200"),
+						Attr("@click", expr),
+						Group(contentNodes),
 					))
 					continue
 				}
 			}
-			cards = append(cards, cardNode)
+			cards = append(cards, g_html.Div(
+				g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2"),
+				Group(contentNodes),
+			))
 		}
 	}
 

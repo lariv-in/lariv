@@ -113,3 +113,34 @@ func GetterAssociation(table string, foreignKeyGetter Getter) Getter {
 		return result
 	}
 }
+
+// GetterNavigate returns an Alpine @click expression that performs HTMX navigation.
+// urlFormat and getters work like GetterFormat to produce the URL per-row.
+func GetterNavigate(urlFormat string, getters ...Getter) Getter {
+	urlGetter := GetterFormat(urlFormat, getters...)
+	return func(ctx context.Context) any {
+		url := IfOrGetter(urlGetter, ctx, "")
+		// Need to fix this so it uses htmx
+		return fmt.Sprintf("htmx.ajax('GET', '%v', {target: 'body', swap: 'outerHTML'})", url)
+	}
+}
+
+// GetterSelect returns an Alpine @click expression that dispatches an 'fk-select' event for single selection.
+// name is the input field name. valueGetter and displayGetter resolve per-row.
+func GetterSelect(name string, valueGetter Getter, displayGetter Getter) Getter {
+	return func(ctx context.Context) any {
+		value := IfOrGetter(valueGetter, ctx, "")
+		display := IfOrGetter(displayGetter, ctx, "")
+		return fmt.Sprintf("$dispatch('fk-select',{name:'%s',value:'%v',display:'%v'})", name, value, display)
+	}
+}
+
+// GetterMultiSelect returns an Alpine @click expression that dispatches an 'fk-multi-select' event for multi selection.
+// name is the input field name. valueGetter and displayGetter resolve per-row.
+func GetterMultiSelect(name string, valueGetter Getter, displayGetter Getter) Getter {
+	return func(ctx context.Context) any {
+		value := IfOrGetter(valueGetter, ctx, "")
+		display := IfOrGetter(displayGetter, ctx, "")
+		return fmt.Sprintf("$dispatch('fk-multi-select',{name:'%s',value:'%v',display:'%v'})", name, value, display)
+	}
+}

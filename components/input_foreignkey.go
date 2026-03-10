@@ -46,19 +46,22 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 		placeholder = "Select..."
 	}
 
-	shown := displayValue
-	opacityClass := ""
-	if shown == "" {
-		shown = placeholder
-		opacityClass = " opacity-50"
-	}
+	alpineData := fmt.Sprintf("{ value: '%s', display: '%s', placeholder: '%s' }", valuePk, displayValue, placeholder)
+	eventHandler := fmt.Sprintf("if ($event.detail.name === '%s') { value = $event.detail.value; display = $event.detail.display; document.getElementById('modal-container').innerHTML = ''; }", e.Name)
 
-	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
+	return Div(
+		Class(fmt.Sprintf("my-1 %s", e.Classes)),
+		Attr("x-data", alpineData),
+		Attr("@fk-select.window", eventHandler),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Input(Type("hidden"), Name(e.Name), Value(valuePk),
+		Input(Type("hidden"), Name(e.Name), Attr(":value", "value"),
 			If(e.Required, Required())),
-		Div(Class("input input-bordered w-full flex items-center cursor-pointer"+opacityClass),
-			Text(shown),
+		Div(Class("input input-bordered w-full flex items-center cursor-pointer"),
+			Attr(":class", "display ? '' : 'opacity-50'"),
+			Attr("hx-get", fmt.Sprintf("%v", IfOrGetter(e.Url, ctx, ""))),
+			Attr("hx-target", "#modal-container"),
+			Attr("hx-swap", "innerHTML"),
+			El("span", Attr("x-text", "display || placeholder")),
 		),
 	)
 }
