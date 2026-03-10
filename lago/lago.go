@@ -18,6 +18,7 @@ func Start(address string, certFile *string, keyFile *string) error {
 
 	RegistryMiddleware.Register("core.DbMiddleware", MiddlewareDb(db))
 	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
+	RegistryMiddleware.Register("core.HtmxBoostMiddleware", MiddlewareHtmxBoost)
 
 	// Applying all middlewares
 	middlewares := RegistryMiddleware.All()
@@ -74,4 +75,11 @@ type statusWriter struct {
 func (w *statusWriter) WriteHeader(code int) {
 	w.status = code
 	w.ResponseWriter.WriteHeader(code)
+}
+
+func MiddlewareHtmxBoost(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		isBoosted := r.Header.Get("HX-Boosted") == "true"
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "isHtmxBoosted", isBoosted)))
+	})
 }

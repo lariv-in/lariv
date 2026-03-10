@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	lago.RegistryPage.Register("dashboard.AppsPage", components.LayoutTopbarScaffold{
+	lago.RegistryPage.Register("dashboard.AppsPage", components.ShellTopbarScaffold{
 		Children: []components.PageInterface{
 			components.LayoutSimple{
 				Children: []components.PageInterface{

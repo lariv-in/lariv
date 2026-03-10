@@ -37,5 +37,5 @@ func (v RedirectView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	http.Redirect(w, r, route.Path, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, route.Path, http.StatusMovedPermanently)
 }

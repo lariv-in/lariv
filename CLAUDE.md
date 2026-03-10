@@ -80,12 +80,12 @@ Helper constructors: `GetterStatic(v)`, `GetterKey("dot.path")`, `GetterNil()`, 
 
 Plugins register GORM migrations via `lago.OnDbInit(func(*gorm.DB) *gorm.DB)` in their `init()`. The DB (SQLite, file `test.db`) is initialized in `lago.Start()` before middlewares are applied.
 
-### Layout Scaffolds
+### Shell Scaffolds
 
-Pre-composed layout wrappers in `components/`:
-- `LayoutAuthScaffold` — centered auth card
-- `LayoutTopbarScaffold` — page with top navigation bar
-- `LayoutScaffold` — topbar + sidebar layout
+Pre-composed layout wrappers in `components/` that implement the `Shell` interface for HTMX boosted partial body rendering:
+- `ShellAuthScaffold` — centered auth card
+- `ShellTopbarScaffold` — page with top navigation bar
+- `ShellScaffold` — topbar + sidebar layout
 
 ### Form Handling
 

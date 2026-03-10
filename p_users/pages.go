@@ -175,7 +175,7 @@ func userFormFields() components.ContainerColumn {
 func registerFormPages() {
 	lago.RegistryPage.Register("users.UserFormFields", userFormFields())
 
-	lago.RegistryPage.Register("users.UserCreateForm", components.LayoutScaffold{
+	lago.RegistryPage.Register("users.UserCreateForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "users.UserMenu"},
 		},
@@ -193,7 +193,7 @@ func registerFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("users.UserUpdateForm", components.LayoutScaffold{
+	lago.RegistryPage.Register("users.UserUpdateForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "users.UserDetailMenu"},
 		},
@@ -212,7 +212,7 @@ func registerFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("users.ChangePasswordForm", components.LayoutScaffold{
+	lago.RegistryPage.Register("users.ChangePasswordForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "users.UserDetailMenu"},
 		},
@@ -238,7 +238,7 @@ func registerFormPages() {
 // --- Tables ---
 
 func registerTablePages() {
-	lago.RegistryPage.Register("users.UserTable", components.LayoutScaffold{
+	lago.RegistryPage.Register("users.UserTable", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "users.UserMenu"},
 		},
@@ -272,7 +272,7 @@ func registerTablePages() {
 // --- Detail & Delete ---
 
 func registerDetailPages() {
-	lago.RegistryPage.Register("users.UserDetail", components.LayoutScaffold{
+	lago.RegistryPage.Register("users.UserDetail", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "users.UserDetailMenu"},
 		},
@@ -310,7 +310,7 @@ func registerDetailPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("users.UserDeleteForm", components.LayoutScaffold{
+	lago.RegistryPage.Register("users.UserDeleteForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "users.UserDetailMenu"},
 		},
@@ -327,7 +327,7 @@ func registerDetailPages() {
 // --- Auth (Login / Signup) ---
 
 func registerAuthPages() {
-	lago.RegistryPage.Register("users.LoginPage", components.LayoutAuthScaffold{
+	lago.RegistryPage.Register("users.LoginPage", components.ShellAuthScaffold{
 		Children: []components.PageInterface{
 			components.ContainerColumn{Classes: "w-80", Children: []components.PageInterface{
 				components.FieldTitle{Getter: components.GetterStatic("Login")},
@@ -374,7 +374,7 @@ func registerAuthPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("users.SignupPage", components.LayoutAuthScaffold{
+	lago.RegistryPage.Register("users.SignupPage", components.ShellAuthScaffold{
 		Children: []components.PageInterface{
 			components.ContainerColumn{Classes: "w-96", Children: []components.PageInterface{
 				components.FieldTitle{Getter: components.GetterStatic("Create an Account")},
@@ -429,7 +429,7 @@ func registerAuthPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("users.UnauthenticatedPage", components.LayoutAuthScaffold{
+	lago.RegistryPage.Register("users.UnauthenticatedPage", components.ShellAuthScaffold{
 		Children: []components.PageInterface{},
 	})
 }

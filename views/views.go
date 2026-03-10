@@ -35,6 +35,14 @@ func (v View) RenderPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
+
+	if shell, ok := page.(components.Shell); ok {
+		if isBoosted, _ := ctx.Value("isHtmxBoosted").(bool); isBoosted {
+			shell.Body(ctx).Render(w)
+			return
+		}
+	}
+
 	page.Build(ctx).Render(w)
 }
 
