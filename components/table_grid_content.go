@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	. "maragu.dev/gomponents"
@@ -11,6 +12,7 @@ import (
 type TableGridContent struct {
 	Columns []TableColumn
 	Data    Getter
+	Url     Getter
 }
 
 func (e TableGridContent) Build(ctx context.Context) Node {
@@ -35,7 +37,7 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
 
 			var contentNodes []Node
-			// First column is the title, font-semibold text-md truncate
+			// First column is the title
 			if len(e.Columns) > 0 {
 				var firstColNodes []Node
 				for _, child := range e.Columns[0].Children {
@@ -56,16 +58,31 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 				))
 			}
 
-			cards = append(cards, g_html.Div(
+			cardNode := g_html.Div(
 				g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2"),
 				Group(contentNodes),
-			))
+			)
+
+			// If Url getter is set, wrap card in a link
+			if e.Url != nil {
+				rowUrl := fmt.Sprintf("%s", IfOrGetter(e.Url, rowCtx, ""))
+				if rowUrl != "" {
+					cards = append(cards, g_html.A(g_html.Href(rowUrl),
+						g_html.Div(
+							g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200"),
+							Group(contentNodes),
+						),
+					))
+					continue
+				}
+			}
+			cards = append(cards, cardNode)
 		}
 	}
 
 	return g_html.Div(g_html.Class("flex flex-col gap-4"),
 		g_html.Div(g_html.Class("overflow-x-auto"),
-			g_html.Div(g_html.Class("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2"),
+			g_html.Div(g_html.Class("grid grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3 @3xl:grid-cols-4 gap-2"),
 				Group(cards),
 			),
 		),

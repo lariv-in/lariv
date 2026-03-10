@@ -8,12 +8,12 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-type FieldTitle struct {
+type FieldText struct {
 	Getter  Getter
 	Classes string
 }
 
-func (e FieldTitle) Build(ctx context.Context) Node {
+func (e FieldText) Build(ctx context.Context) Node {
 	value := fmt.Sprintf("%s", IfOrGetter(e.Getter, ctx, ""))
-	return Div(Class(fmt.Sprintf("text-xl font-semibold text-primary %s", e.Classes)), Text(value))
+	return Div(Class(e.Classes), Text(value))
 }

@@ -16,8 +16,8 @@ func Start(address string, certFile *string, keyFile *string) error {
 		return err
 	}
 
-	RegistryMiddleware.Register("core.DbMiddleware", InjectDb(db))
-	RegistryMiddleware.Register("core.LoggingMiddlware", LoggingMiddleware)
+	RegistryMiddleware.Register("core.DbMiddleware", MiddlewareDb(db))
+	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
 
 	// Applying all middlewares
 	middlewares := RegistryMiddleware.All()
@@ -39,38 +39,39 @@ func Start(address string, certFile *string, keyFile *string) error {
 	return http.ListenAndServe(address, router)
 }
 
-func InjectDb(db *gorm.DB) Middleware {
+func MiddlewareDb(db *gorm.DB) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "$db", db)))
 		})
 	}
 }
-func LoggingMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        start := time.Now()
-        
-        // Use a custom ResponseWriter to capture the status code
-        wrapped := &statusWriter{ResponseWriter: w, status: http.StatusOK}
-        
-        next.ServeHTTP(wrapped, r)
 
-        slog.Info("http_request",
-            slog.String("method", r.Method),
-            slog.String("path", r.URL.Path),
-            slog.Int("status", wrapped.status),
-            slog.Duration("latency", time.Since(start)),
-            slog.String("ip", r.RemoteAddr),
-        )
-    })
+func MiddlewareLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Use a custom ResponseWriter to capture the status code
+		wrapped := &statusWriter{ResponseWriter: w, status: http.StatusOK}
+
+		next.ServeHTTP(wrapped, r)
+
+		slog.Info("http_request",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Int("status", wrapped.status),
+			slog.Duration("latency", time.Since(start)),
+			slog.String("ip", r.RemoteAddr),
+		)
+	})
 }
 
 type statusWriter struct {
-    http.ResponseWriter
-    status int
+	http.ResponseWriter
+	status int
 }
 
 func (w *statusWriter) WriteHeader(code int) {
-    w.status = code
-    w.ResponseWriter.WriteHeader(code)
+	w.status = code
+	w.ResponseWriter.WriteHeader(code)
 }

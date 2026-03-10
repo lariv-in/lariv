@@ -3,7 +3,7 @@ package components
 import (
 	"context"
 
-	. "maragu.dev/gomponents"
+	"maragu.dev/gomponents"
 )
 
 type LayoutScaffold struct {
@@ -11,11 +11,10 @@ type LayoutScaffold struct {
 	Children []PageInterface
 }
 
-func (e LayoutScaffold) Build(ctx context.Context) Node {
+func (e LayoutScaffold) Build(ctx context.Context) gomponents.Node {
 	return LayoutBase{
 		Children: []PageInterface{
 			LayoutTopbar{
-				Buttons: GetterKey("topbar_buttons"),
 				Children: []PageInterface{
 					LayoutSidebar{
 						Sidebar:  e.Sidebar,

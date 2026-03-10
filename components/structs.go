@@ -4,10 +4,14 @@ import "reflect"
 
 // MapFromStruct converts a struct into a map[string]any using reflection.
 func MapFromStruct(s any) map[string]any {
+	if m, ok := s.(map[string]any); ok {
+		return m
+	}
+
 	m := make(map[string]any)
 	v := reflect.ValueOf(s)
 
-	if v.Kind() == reflect.Pointer {
+	if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
 

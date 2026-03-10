@@ -16,23 +16,28 @@ type TableColumn struct {
 }
 
 type DataTable struct {
+	UID      string
 	Columns  []TableColumn
 	Data     Getter
 	Title    string
 	Subtitle string
+	Classes  string
 	// Displays is a map of view name to display component
 	// e.g. "List": TableListContent, "Grid": TableGridContent
-	Displays map[string]func([]TableColumn, Getter) PageInterface
+	Displays        map[string]func([]TableColumn, Getter, Getter) PageInterface
+	FilterComponent PageInterface
+	CreateUrl       Getter
+	Url             Getter // Per-row click URL
 }
 
 func (e DataTable) Build(ctx context.Context) Node {
 	if e.Displays == nil {
-		e.Displays = map[string]func([]TableColumn, Getter) PageInterface{
-			"List": func(cols []TableColumn, data Getter) PageInterface {
-				return TableListContent{Columns: cols, Data: data}
+		e.Displays = map[string]func([]TableColumn, Getter, Getter) PageInterface{
+			"List": func(cols []TableColumn, data Getter, url Getter) PageInterface {
+				return TableListContent{Columns: cols, Data: data, Url: url}
 			},
-			"Grid": func(cols []TableColumn, data Getter) PageInterface {
-				return TableGridContent{Columns: cols, Data: data}
+			"Grid": func(cols []TableColumn, data Getter, url Getter) PageInterface {
+				return TableGridContent{Columns: cols, Data: data, Url: url}
 			},
 		}
 	}
@@ -41,7 +46,7 @@ func (e DataTable) Build(ctx context.Context) Node {
 	for name, builder := range e.Displays {
 		displayNodes = append(displayNodes, Div(
 			Attr("x-show", fmt.Sprintf("view === '%s'", name)),
-			builder(e.Columns, e.Data).Build(ctx),
+			builder(e.Columns, e.Data, e.Url).Build(ctx),
 		))
 	}
 
@@ -51,25 +56,67 @@ func (e DataTable) Build(ctx context.Context) Node {
 		options = append(options, Option(Value(name), Text(name)))
 	}
 
+	// Filter dropdown
+	var filterNode Node
+	if e.FilterComponent != nil {
+		filterNode = El("details",
+			Class("dropdown dropdown-end"),
+			Attr("@click.outside", "$el.removeAttribute('open')"),
+			El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"),
+				Icon{Name: "funnel"}.Build(ctx),
+			),
+			Div(Class("card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-2 bg-base-100"),
+				e.FilterComponent.Build(ctx),
+			),
+		)
+	}
+
+	// Create button
+	var createNode Node
+	if e.CreateUrl != nil {
+		createUrl := fmt.Sprintf("%s", IfOrGetter(e.CreateUrl, ctx, ""))
+		if createUrl != "" {
+			createNode = A(Href(createUrl), Class("btn btn-square btn-outline btn-sm"),
+				Icon{Name: "plus"}.Build(ctx),
+			)
+		}
+	}
+
+	uid := e.UID
+	if uid == "" {
+		uid = "table-container"
+	}
+
 	return Div(
-		ID("table-container"), Class("w-full"),
+		ID(uid), Class(fmt.Sprintf("w-full data-table-container %s", e.Classes)),
 		Attr("x-data", "{ view: 'List' }"),
-		Div(Class("flex justify-between items-center mb-4"),
+		Div(Class("flex justify-between items-center my-2"),
 			Div(
-				H2(Class("text-xl font-bold"), Text(e.Title)),
-				P(Class("text-sm text-gray-500"), Text(e.Subtitle)),
+				If(e.Title != "", Div(Class("text-xl font-semibold"), Text(e.Title))),
+				If(e.Subtitle != "", Div(Class("text-sm text-gray-500"), Text(e.Subtitle))),
 			),
 			Div(Class("flex items-center gap-2"),
-				Select(Class("select select-sm select-bordered"),
+				Select(Class("select select-md"),
 					Attr("x-model", "view"),
 					Group(options),
 				),
+				If(filterNode != nil, filterNode),
+				If(createNode != nil, createNode),
 			),
 		),
-		displayNodes,
+		Div(Class("relative my-2"),
+			displayNodes,
+		),
 	)
 }
 
 func (e DataTable) GetChildren() []PageInterface {
-	return nil
+	var children []PageInterface
+	if e.FilterComponent != nil {
+		children = append(children, e.FilterComponent)
+	}
+	for _, col := range e.Columns {
+		children = append(children, col.Children...)
+	}
+	return children
 }

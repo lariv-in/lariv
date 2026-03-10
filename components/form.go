@@ -17,22 +17,44 @@ type FormComponent struct {
 	ChildrenInput  []PageInterface
 	ChildrenAction []PageInterface
 	Classes        string
+	Title          string
+	Subtitle       string
 }
 
 func (e FormComponent) Build(ctx context.Context) Node {
+	// If a Getter is set, resolve the object and pass it to children via $in
+	childCtx := ctx
+	if e.Getter != nil {
+		value := e.Getter(ctx)
+		if value != nil {
+			objMap := MapFromStruct(value)
+			childCtx = context.WithValue(ctx, "$in", objMap)
+		}
+	}
+
 	inputGroup := Group{}
 	for _, child := range e.ChildrenInput {
-		inputGroup = append(inputGroup, child.Build(ctx))
+		inputGroup = append(inputGroup, child.Build(childCtx))
 	}
 	submitGroup := Group{}
 	for _, child := range e.ChildrenAction {
-		submitGroup = append(submitGroup, child.Build(ctx))
+		submitGroup = append(submitGroup, child.Build(childCtx))
 	}
-	urlString := fmt.Sprintf("%s", IfOrGetter(e.Url, ctx, ""))
+	urlString := fmt.Sprintf("%s", IfOrGetter(e.Url, childCtx, ""))
+
+	var headerNodes []Node
+	if e.Title != "" {
+		headerNodes = append(headerNodes, Div(Class("text-xl font-semibold"), Text(e.Title)))
+	}
+	if e.Subtitle != "" {
+		headerNodes = append(headerNodes, Div(Class("text-sm text-gray-500"), Text(e.Subtitle)))
+	}
+
 	return Form(
 		Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
 		If(e.Method != "", Method(e.Method)),
 		If(urlString != "", Action(urlString)),
+		Group(headerNodes),
 		inputGroup,
 		submitGroup)
 }

@@ -28,7 +28,11 @@ func (e InputPhone) Build(ctx context.Context) Node {
 }
 
 func (e InputPhone) Parse(v string) (any, error) {
-	return phonenumbers.Parse(v, "IN")
+	num, err := phonenumbers.Parse(v, "IN")
+	if err != nil {
+		return nil, err
+	}
+	return phonenumbers.Format(num, phonenumbers.E164), nil
 }
 
 func (e InputPhone) GetName() string {

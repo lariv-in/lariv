@@ -27,7 +27,11 @@ func (e InputEmail) Build(ctx context.Context) Node {
 }
 
 func (e InputEmail) Parse(v string) (any, error) {
-	return mail.ParseAddress(v)
+	address, err := mail.ParseAddress(v)
+	if err != nil {
+		return nil, err
+	}
+	return address.Address, nil
 }
 
 func (e InputEmail) GetName() string {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type Getter func(context.Context) any
@@ -26,7 +28,25 @@ func GetterKey(key string) Getter {
 			if !ok {
 				return nil
 			}
-			value = m[parts[i]]
+
+			if v, exists := m[parts[i]]; exists {
+				value = v
+			} else if v, exists := m[strings.ToLower(parts[i])]; exists {
+				value = v
+			} else {
+				found := false
+				targetKey := strings.ToLower(strings.ReplaceAll(parts[i], "_", ""))
+				for k, val := range m {
+					if strings.ToLower(strings.ReplaceAll(k, "_", "")) == targetKey {
+						value = val
+						found = true
+						break
+					}
+				}
+				if !found {
+					return nil
+				}
+			}
 		}
 		return value
 	}
@@ -71,4 +91,25 @@ func GetterIf[T any](g Getter, ctx context.Context, builder func(context.Context
 		return zero
 	}
 	return builder(ctx, value)
+}
+
+// GetterAssociation fetches a single record based on a foreign key dynamically at render time.
+func GetterAssociation(table string, foreignKeyGetter Getter) Getter {
+	return func(ctx context.Context) any {
+		fkValue := foreignKeyGetter(ctx)
+		if fkValue == nil || fkValue == "" {
+			return nil
+		}
+
+		db, ok := ctx.Value("$db").(*gorm.DB)
+		if !ok {
+			return nil
+		}
+
+		result := map[string]any{}
+		if err := db.Table(table).Where("id = ?", fkValue).Take(&result).Error; err != nil {
+			return nil
+		}
+		return result
+	}
 }

@@ -1,9 +1,12 @@
 package lago
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"maps"
+
+	"github.com/lariv-in/components"
 )
 
 func NewRegistry[T any]() Registry[T] {
@@ -72,6 +75,15 @@ func (r *Registry[T]) Get(name string) (T, bool) {
 	}
 	v, isPresent := r.items[name]
 	return v, isPresent
+}
+
+func (r *Registry[T]) Getter(name string) components.Getter {
+	return func(ctx context.Context) any {
+		if v, isPresent := r.Get(name); isPresent {
+			return v
+		}
+		return nil
+	}
 }
 
 func (r *Registry[T]) All() *map[string]T {

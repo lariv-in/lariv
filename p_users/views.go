@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/mail"
 	"time"
 
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/views"
-	"github.com/nyaruka/phonenumbers"
 	"gorm.io/gorm"
 )
+
+const usersTable = "users"
+const rolesTable = "roles"
+
+// --- Auth Handlers (user-specific, not generalizable) ---
 
 func LoginHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -46,11 +49,11 @@ func LoginHandler(v views.View) http.Handler {
 			return
 		}
 
-		email, _ := values["email"].(*mail.Address)
+		email, _ := values["email"].(string)
 		password, _ := values["password"].(string)
 
 		db := r.Context().Value("$db").(*gorm.DB)
-		user, err := Authenticate(db, email.Address, password)
+		user, err := Authenticate(db, email, password)
 		if err != nil {
 			ctx = context.WithValue(ctx, "$error.password", fmt.Errorf("Invalid email or password"))
 			for name, value := range values {
@@ -105,9 +108,8 @@ func SignupHandler(v views.View) http.Handler {
 		}
 
 		name, _ := values["name"].(string)
-		emailObj, _ := values["email"].(*mail.Address)
-		email := emailObj.Address
-		phone, _ := values["phone"].(*phonenumbers.PhoneNumber)
+		email, _ := values["email"].(string)
+		phone, _ := values["phone"].(string)
 
 		db := r.Context().Value("$db").(*gorm.DB)
 		// Setting the default to true, best if data is not changed in case of failure of assumptions
@@ -116,7 +118,7 @@ func SignupHandler(v views.View) http.Handler {
 		user := User{
 			Name:        name,
 			Email:       email,
-			Phone:       phonenumbers.Format(phone, phonenumbers.E164),
+			Phone:       phone,
 			IsSuperuser: false,
 			Password:    []byte(password1Str),
 			Role: Role{
@@ -146,25 +148,117 @@ func LogoutHandler(v views.View) http.Handler {
 	})
 }
 
-func renderAllUsers(next http.Handler) http.Handler {
+// ChangePasswordHandler is user-specific so it stays here.
+func ChangePasswordHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		page, _ := v.GetPage()
+		forms := components.FindChildren[components.FormComponent](page.(components.ParentInterface))
+		if len(forms) == 0 {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		form := forms[0]
+		values, fieldErrors, err := form.ParseForm(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		hasErrors := false
+		for name, fieldErr := range fieldErrors {
+			if fieldErr != nil {
+				hasErrors = true
+				ctx = context.WithValue(ctx, "$error."+name, fieldErr)
+			}
+		}
+
+		newPassword, _ := values["new_password"].(string)
+		confirmPassword, _ := values["confirm_password"].(string)
+
+		if newPassword != confirmPassword {
+			hasErrors = true
+			ctx = context.WithValue(ctx, "$error.confirm_password", fmt.Errorf("Passwords do not match"))
+		}
+
+		if hasErrors {
+			page.Build(ctx).Render(w)
+			return
+		}
+
+		user := r.Context().Value("user").(User)
 		db := r.Context().Value("$db").(*gorm.DB)
-		var users []User
-		err := db.Preload("Role").Find(&users).Error
+
+		user.Password = []byte(newPassword)
+		err = db.Save(&user).Error
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "users", users)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		http.Redirect(w, r, fmt.Sprintf("%s%d/", AppUrl, user.ID), http.StatusSeeOther)
 	})
 }
 
-func init() {
-	lago.RegistryView.Register("users.AllUsersView",
-		AuthMiddleware(renderAllUsers(lago.GetPageView("users.AllUsersPage"))))
+// --- View Registrations ---
 
+func init() {
+	// List view
+	lago.RegistryView.Register("users.ListView",
+		AuthMiddleware(
+			views.ListView(usersTable, "users")(
+				lago.GetPageView("users.UserTable"))))
+
+	// Detail view
+	lago.RegistryView.Register("users.DetailView",
+		AuthMiddleware(
+			views.DetailView(usersTable, "user")(
+				lago.GetPageView("users.UserDetail"))))
+
+	// Create view
+	lago.RegistryView.Register("users.CreateView",
+		AuthMiddleware(
+			views.CreateView(usersTable, AppUrl+"%v/")(
+				lago.GetPageView("users.UserCreateForm"))))
+
+	// Update view
+	lago.RegistryView.Register("users.UpdateView",
+		AuthMiddleware(
+			views.DetailView(usersTable, "user")(
+				views.UpdateView(usersTable, AppUrl+"%v/")(
+					lago.GetPageView("users.UserUpdateForm")))))
+
+	// Delete view
+	lago.RegistryView.Register("users.DeleteView",
+		AuthMiddleware(
+			views.DetailView(usersTable, "user")(
+				views.DeleteView(usersTable, AppUrl)(
+					lago.GetPageView("users.UserDeleteForm")))))
+
+	// Change password view (user-specific handler)
+	lago.RegistryView.Register("users.ChangePasswordView",
+		AuthMiddleware(
+			views.DetailView(usersTable, "user")(
+				lago.GetPageView("users.ChangePasswordForm").
+					WithMethod(http.MethodPost, ChangePasswordHandler))))
+
+	// Selection views
+	lago.RegistryView.Register("users.SelectView",
+		AuthMiddleware(
+			views.ListView(usersTable, "users")(
+				lago.GetPageView("users.UserSelectionTable"))))
+
+	lago.RegistryView.Register("users.MultiSelectView",
+		AuthMiddleware(
+			views.ListView(usersTable, "users")(
+				lago.GetPageView("users.UserMultiSelectionTable"))))
+
+	lago.RegistryView.Register("users.RoleSelectView",
+		AuthMiddleware(
+			views.ListView(rolesTable, "roles")(
+				lago.GetPageView("users.RoleSelectionTable"))))
+
+	// Auth views
 	lago.RegistryView.Register("users.LogoutView",
 		lago.GetPageView("users.UnauthenticatedPage").
 			WithMethod(http.MethodPost, LogoutHandler).
@@ -172,19 +266,11 @@ func init() {
 
 	lago.RegistryView.Register("users.LoginView",
 		lago.GetPageView("users.LoginPage").
-			WithMethod(
-				http.MethodPost,
-				LoginHandler,
-			),
-	)
+			WithMethod(http.MethodPost, LoginHandler))
 
 	lago.RegistryView.Register("users.SignupView",
 		lago.GetPageView("users.SignupPage").
-			WithMethod(
-				http.MethodPost,
-				SignupHandler,
-			),
-	)
+			WithMethod(http.MethodPost, SignupHandler))
 
 	lago.RegistryView.Register("base.HomeView",
 		lago.NewRedirectView("users.LoginRoute"))

@@ -42,9 +42,7 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 			Class("btn btn-md h-auto flex-col space-y-1 py-4"),
 			Attr("x-show", fmt.Sprintf("'%s'.toLowerCase().includes(search.toLowerCase())", app.VerboseName)),
 			Attr("x-cloak"),
-			Span(
-				Class(fmt.Sprintf("w-8 h-8 heroicon heroicon-%s", app.Icon)),
-			),
+			comp.Icon{Name: app.Icon, Classes: "w-8 h-8"}.Build(ctx),
 			Div(
 				Class("text-sm truncate min-w-0 w-full"),
 				Text(app.VerboseName),

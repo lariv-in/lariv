@@ -55,10 +55,10 @@ func (e LayoutSidebar) Build(ctx context.Context) Node {
 				Button(
 					Attr("@click", "showLeft = !showLeft"),
 					Class("btn btn-sm btn-square mb-2"),
-					Span(Class("heroicon heroicon-bars-3")),
+					Icon{Name: "bars-3"}.Build(ctx),
 				),
 
-				// Messages (Simplified for now, will be populated via Alpine/HTMX)
+				// Messages (Simplified for now, will be populated via Alpine/Turbo)
 				Div(Class("messages mb-4"),
 					Template(Attr("x-for", "msg in messages"),
 						Div(Class("alert shadow-lg mb-2"),

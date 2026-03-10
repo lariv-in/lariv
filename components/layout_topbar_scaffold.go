@@ -14,7 +14,6 @@ func (e LayoutTopbarScaffold) Build(ctx context.Context) Node {
 	return LayoutBase{
 		Children: []PageInterface{
 			LayoutTopbar{
-				Buttons:  GetterKey("topbar_buttons"),
 				Children: e.Children,
 			},
 		},
