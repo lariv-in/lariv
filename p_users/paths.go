@@ -61,8 +61,38 @@ func registerRoutes() {
 	})
 
 	_ = lago.RegistryRoute.Register("users.RoleSelectRoute", lago.Route{
-		Path:    AppUrl + "roles/select/",
+		Path:    RoleUrl + "select/",
 		Handler: lago.NewDynamicView("users.RoleSelectView"),
+	})
+
+	_ = lago.RegistryRoute.Register("users.RoleMultiSelectRoute", lago.Route{
+		Path:    RoleUrl + "multi-select/",
+		Handler: lago.NewDynamicView("users.RoleMultiSelectView"),
+	})
+
+	_ = lago.RegistryRoute.Register("users.RoleListRoute", lago.Route{
+		Path:    RoleUrl,
+		Handler: lago.NewDynamicView("users.RoleListView"),
+	})
+
+	_ = lago.RegistryRoute.Register("users.RoleCreateRoute", lago.Route{
+		Path:    RoleUrl + "create/",
+		Handler: lago.NewDynamicView("users.RoleCreateView"),
+	})
+
+	_ = lago.RegistryRoute.Register("users.RoleDetailRoute", lago.Route{
+		Path:    RoleUrl + "{id}/",
+		Handler: lago.NewDynamicView("users.RoleDetailView"),
+	})
+
+	_ = lago.RegistryRoute.Register("users.RoleUpdateRoute", lago.Route{
+		Path:    RoleUrl + "{id}/edit/",
+		Handler: lago.NewDynamicView("users.RoleUpdateView"),
+	})
+
+	_ = lago.RegistryRoute.Register("users.RoleDeleteRoute", lago.Route{
+		Path:    RoleUrl + "{id}/delete/",
+		Handler: lago.NewDynamicView("users.RoleDeleteView"),
 	})
 
 	_ = lago.RegistryRoute.Register("users.LoginRoute", lago.Route{

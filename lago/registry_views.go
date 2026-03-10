@@ -37,5 +37,10 @@ func (v RedirectView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	http.Redirect(w, r, route.Path, http.StatusMovedPermanently)
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", route.Path)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		http.Redirect(w, r, route.Path, http.StatusSeeOther)
+	}
 }

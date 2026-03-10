@@ -90,3 +90,37 @@ Pre-composed layout wrappers in `components/` that implement the `Shell` interfa
 ### Form Handling
 
 `FormComponent.ParseForm(r)` iterates child components implementing `InputInterface`, calling each input's `Parse()` to validate and clean the value. Returns `(values map[string]any, errors map[string]error, err error)`. Input types: `InputText`, `InputEmail`, `InputPassword`, `InputPhone`, `InputCheckbox`.
+
+### CRUD Views (Generics)
+
+`views/crud.go` provides generic CRUD view wrappers: `ListView[T]`, `DetailView[T]`, `CreateView[T]`, `UpdateView[T]`, `DeleteView[T]`. They accept a model instance for type inference (e.g. `views.CreateView(User{}, "/users/%v/")`). Form values are mapped to struct fields via `applyValues` (snake_case → PascalCase + type conversion).
+
+## Common Pitfalls
+
+### Route conflicts with Go 1.22 ServeMux
+Nested resource paths like `/users/roles/{id}/` conflict with `/users/{id}/delete/` because neither pattern is more specific. Give sub-resources their own top-level path (e.g. `/roles/` instead of `/users/roles/`).
+
+### Form field names must match DB column names
+`InputForeignKey` and other inputs submit values under their `Name` field. This must match the GORM column name (snake_case of the struct field). E.g. for a `RoleID int` struct field, use `Name: "role_id"`, not `Name: "role"`.
+
+### `InputForeignKey` selection event name must match input Name
+`GetterSelect(name, ...)` dispatches an event with the given name. The `InputForeignKey` listens for events matching its own `Name` field. These must be identical — e.g. if the input has `Name: "role_id"`, use `GetterSelect("role_id", ...)`.
+
+### `MapFromStruct` flattens embedded structs
+`components.MapFromStruct` promotes fields from anonymous embedded structs (like `gorm.Model`) to the top level. So `ID`, `CreatedAt`, etc. are accessed directly (e.g. `$row.ID`), not nested under `$row.Model.ID`.
+
+### Use `RoutePathGetter` not `RegistryRoute.Getter` for URLs
+`RegistryRoute.Getter(name)` returns the full `Route` struct. For URL strings (in component attrs, topbar buttons, etc.), use `lago.RoutePathGetter(name)` which returns just the path string.
+
+### Alpine `x-data` scope matters for `Alpine.$data()`
+`Alpine.$data(el)` only works on elements that have `x-data`. The theme data lives on `<body>`, so use `Alpine.$data(document.body)`, not `document.documentElement`.
+
+### HTMX uses `hx-*` attributes, not Turbo
+This app uses HTMX, not Turbo Drive. For non-GET requests use `hx-post`, `hx-put`, `hx-delete` (not `data-turbo-method`). For targeting use `hx-target` (not `data-turbo-frame`).
+
+### HTMX relative selectors
+- `closest <sel>` — searches **ancestors** (up the DOM)
+- `next <sel>` — searches **next siblings** (forward in DOM)
+- `find <sel>` — searches **descendants** (down the DOM)
+
+Use `next` for sibling elements, not `closest`.

@@ -21,7 +21,6 @@ func (e ShellBase) Body(ctx context.Context) Node {
 			Div(Class("h-0.5 bg-primary animate-pulse")),
 		),
 		group,
-		Div(ID("modal-container")),
 	)
 }
 
@@ -56,7 +55,7 @@ func (e ShellBase) Build(ctx context.Context) Node {
 					`mask-size: 100% 100%;`+
 					`}`,
 			)),
-			Script(Raw(`function toggleTheme() { const d = Alpine.$data(document.documentElement); d.theme = d.theme === 'light' ? 'dark' : 'light'; localStorage.setItem('theme', d.theme); }`)),
+			Script(Raw(`function toggleTheme() { const d = Alpine.$data(document.body); d.theme = d.theme === 'light' ? 'dark' : 'light'; localStorage.setItem('theme', d.theme); }`)),
 			Script(Src("//unpkg.com/alpinejs"), Defer()),
 			Script(Raw("htmx.config.defaultSwapStyle = 'morph'")),
 			Link(Href("https://cdn.jsdelivr.net/npm/daisyui@5/daisyui.css"), Rel("stylesheet"), Type("text/css")),

@@ -12,8 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
-const usersTable = "users"
-const rolesTable = "roles"
+var userModel = User{}
+var roleModel = Role{}
 
 // --- Auth Handlers (user-specific, not generalizable) ---
 
@@ -206,57 +206,90 @@ func init() {
 	// List view
 	lago.RegistryView.Register("users.ListView",
 		AuthMiddleware(
-			views.ListView(usersTable, "users")(
+			views.ListView(userModel, "users")(
 				lago.GetPageView("users.UserTable"))))
 
 	// Detail view
 	lago.RegistryView.Register("users.DetailView",
 		AuthMiddleware(
-			views.DetailView(usersTable, "user")(
+			views.DetailView(userModel, "user")(
 				lago.GetPageView("users.UserDetail"))))
 
 	// Create view
 	lago.RegistryView.Register("users.CreateView",
 		AuthMiddleware(
-			views.CreateView(usersTable, AppUrl+"%v/")(
+			views.CreateView(userModel, AppUrl+"%v/")(
 				lago.GetPageView("users.UserCreateForm"))))
 
 	// Update view
 	lago.RegistryView.Register("users.UpdateView",
 		AuthMiddleware(
-			views.DetailView(usersTable, "user")(
-				views.UpdateView(usersTable, AppUrl+"%v/")(
+			views.DetailView(userModel, "user")(
+				views.UpdateView(userModel, AppUrl+"%v/")(
 					lago.GetPageView("users.UserUpdateForm")))))
 
 	// Delete view
 	lago.RegistryView.Register("users.DeleteView",
 		AuthMiddleware(
-			views.DetailView(usersTable, "user")(
-				views.DeleteView(usersTable, AppUrl)(
+			views.DetailView(userModel, "user")(
+				views.DeleteView(userModel, AppUrl)(
 					lago.GetPageView("users.UserDeleteForm")))))
 
 	// Change password view (user-specific handler)
 	lago.RegistryView.Register("users.ChangePasswordView",
 		AuthMiddleware(
-			views.DetailView(usersTable, "user")(
+			views.DetailView(userModel, "user")(
 				lago.GetPageView("users.ChangePasswordForm").
 					WithMethod(http.MethodPost, ChangePasswordHandler))))
 
 	// Selection views
 	lago.RegistryView.Register("users.SelectView",
 		AuthMiddleware(
-			views.ListView(usersTable, "users")(
+			views.ListView(userModel, "users")(
 				lago.GetPageView("users.UserSelectionTable"))))
 
 	lago.RegistryView.Register("users.MultiSelectView",
 		AuthMiddleware(
-			views.ListView(usersTable, "users")(
+			views.ListView(userModel, "users")(
 				lago.GetPageView("users.UserMultiSelectionTable"))))
 
 	lago.RegistryView.Register("users.RoleSelectView",
 		AuthMiddleware(
-			views.ListView(rolesTable, "roles")(
+			views.ListView(roleModel, "roles")(
 				lago.GetPageView("users.RoleSelectionTable"))))
+
+	lago.RegistryView.Register("users.RoleMultiSelectView",
+		AuthMiddleware(
+			views.ListView(roleModel, "roles")(
+				lago.GetPageView("users.RoleMultiSelectionTable"))))
+
+	// Role CRUD views
+	lago.RegistryView.Register("users.RoleListView",
+		AuthMiddleware(
+			views.ListView(roleModel, "roles")(
+				lago.GetPageView("users.RoleTable"))))
+
+	lago.RegistryView.Register("users.RoleDetailView",
+		AuthMiddleware(
+			views.DetailView(roleModel, "role")(
+				lago.GetPageView("users.RoleDetail"))))
+
+	lago.RegistryView.Register("users.RoleCreateView",
+		AuthMiddleware(
+			views.CreateView(roleModel, RoleUrl+"%v/")(
+				lago.GetPageView("users.RoleCreateForm"))))
+
+	lago.RegistryView.Register("users.RoleUpdateView",
+		AuthMiddleware(
+			views.DetailView(roleModel, "role")(
+				views.UpdateView(roleModel, RoleUrl+"%v/")(
+					lago.GetPageView("users.RoleUpdateForm")))))
+
+	lago.RegistryView.Register("users.RoleDeleteView",
+		AuthMiddleware(
+			views.DetailView(roleModel, "role")(
+				views.DeleteView(roleModel, RoleUrl)(
+					lago.GetPageView("users.RoleDeleteForm")))))
 
 	// Auth views
 	lago.RegistryView.Register("users.LogoutView",

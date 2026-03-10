@@ -28,14 +28,13 @@ func init() {
 			components.TopbarButton{
 				UID:     "topbar-apps-btn",
 				Icon:    "squares-2x2",
-				URL:     lago.RegistryRoute.Getter("dashboard.AppsRoute"),
-				Target:  "#app-layout",
+				URL:     lago.RoutePathGetter("dashboard.AppsPage"),
 				Classes: "btn-sm btn-square btn-neutral",
 			},
 			components.TopbarButton{
 				UID:     "topbar-logout-btn",
 				Icon:    "arrow-right-start-on-rectangle",
-				URL:     lago.RegistryRoute.Getter("users.LogoutRoute"),
+				URL:     lago.RoutePathGetter("users.LogoutRoute"),
 				Method:  "post",
 				Classes: "btn-sm btn-square btn-error",
 			},

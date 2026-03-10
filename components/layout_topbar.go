@@ -75,19 +75,15 @@ func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 					attrs = append(attrs, gomponents.Attr("onclick", btn.OnClick))
 				}
 				if url != "" {
-					switch strings.ToLower(btn.Method) {
-					case "post":
-						attrs = append(attrs, gomponents.Attr("data-turbo-method", "post"), html.Href(url))
-					case "put":
-						attrs = append(attrs, gomponents.Attr("data-turbo-method", "put"), html.Href(url))
-					case "delete":
-						attrs = append(attrs, gomponents.Attr("data-turbo-method", "delete"), html.Href(url))
-					default:
+					method := strings.ToLower(btn.Method)
+					if method != "" && method != "get" {
+						attrs = append(attrs, gomponents.Attr("hx-"+method, url))
+					} else {
 						attrs = append(attrs, html.Href(url))
 					}
 				}
 				if btn.Target != "" {
-					attrs = append(attrs, gomponents.Attr("data-turbo-frame", btn.Target))
+					attrs = append(attrs, gomponents.Attr("hx-target", btn.Target))
 				}
 
 				if url != "" {

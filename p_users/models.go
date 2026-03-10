@@ -2,7 +2,6 @@ package p_users
 
 import (
 	"crypto/rand"
-	"fmt"
 
 	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
@@ -26,15 +25,25 @@ type Role struct {
 	Name string `gorm:"unique"`
 }
 
-func (u *User) BeforeSave(tx *gorm.DB) (err error) {
-	if len(u.Password) != 0 {
-		u.PasswordSalt = make([]byte, 256)
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	return u.hashPassword()
+}
 
-		// Never actually errors out and always fills the buffer
-		_, _ = rand.Read(u.PasswordSalt)
-		u.Password = HashPassword(u.Password, u.PasswordSalt)
+func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("Password") {
+		return u.hashPassword()
 	}
-	fmt.Println(*u)
+	return nil
+}
+
+func (u *User) hashPassword() error {
+	if len(u.Password) == 0 {
+		return nil
+	}
+	u.PasswordSalt = make([]byte, 256)
+	// Never actually errors out and always fills the buffer
+	_, _ = rand.Read(u.PasswordSalt)
+	u.Password = HashPassword(u.Password, u.PasswordSalt)
 	return nil
 }
 

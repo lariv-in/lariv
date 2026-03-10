@@ -8,6 +8,7 @@ import (
 )
 
 const AppUrl = "/users/"
+const RoleUrl = "/roles/"
 
 func init() {
 	u, err := url.Parse(AppUrl)

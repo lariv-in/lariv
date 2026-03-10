@@ -23,7 +23,7 @@ func GetRouter() *http.ServeMux {
 	return baseRouter
 }
 
-// PathGetter returns a Getter that resolves to the route's Path string.
+// RoutePathGetter returns a Getter that resolves to the route's Path string.
 func RoutePathGetter(name string) components.Getter {
 	return func(ctx context.Context) any {
 		if route, ok := RegistryRoute.Get(name); ok {

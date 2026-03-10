@@ -19,13 +19,21 @@ func MapFromStruct(s any) map[string]any {
 		return m
 	}
 
+	flattenStruct(v, m)
+	return m
+}
+
+func flattenStruct(v reflect.Value, m map[string]any) {
 	t := v.Type()
-	for i := 0; i < v.NumField(); i++ {
+	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		if field.PkgPath != "" { // Skip unexported fields
+		if field.PkgPath != "" {
+			continue
+		}
+		if field.Anonymous && v.Field(i).Kind() == reflect.Struct {
+			flattenStruct(v.Field(i), m)
 			continue
 		}
 		m[field.Name] = v.Field(i).Interface()
 	}
-	return m
 }
