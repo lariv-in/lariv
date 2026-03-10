@@ -106,6 +106,7 @@ func (e DataTable) Build(ctx context.Context) Node {
 		),
 		Div(Class("relative my-2"),
 			displayNodes,
+			TablePagination{Data: e.Data}.Build(ctx),
 		),
 	)
 }

@@ -21,9 +21,16 @@ func (e TableListContent) Build(ctx context.Context) Node {
 
 	if data != nil {
 		v := reflect.ValueOf(data)
-		if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
-			for i := 0; i < v.Len(); i++ {
-				objects = append(objects, v.Index(i).Interface())
+		if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+
+		if v.Kind() == reflect.Struct {
+			itemsField := v.FieldByName("Items")
+			if itemsField.IsValid() && (itemsField.Kind() == reflect.Slice || itemsField.Kind() == reflect.Array) {
+				for i := 0; i < itemsField.Len(); i++ {
+					objects = append(objects, itemsField.Index(i).Interface())
+				}
 			}
 		}
 	}

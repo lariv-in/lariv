@@ -168,6 +168,15 @@ func ListView[T any](model T, key string) func(View) View {
 					db := r.Context().Value("$db").(*gorm.DB)
 					query := db.Model(new(T))
 
+					pageStr := r.URL.Query().Get("page")
+					pageNum := 1
+					if pageStr != "" {
+						if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+							pageNum = p
+						}
+					}
+					pageSize := 12
+
 					// Apply query param filters (simple icontains for strings)
 					for param, values := range r.URL.Query() {
 						if len(values) == 0 || values[0] == "" {
@@ -183,20 +192,30 @@ func ListView[T any](model T, key string) func(View) View {
 						query = query.Where(fmt.Sprintf("%s LIKE ?", param), "%"+values[0]+"%")
 					}
 
+					var total int64
+					if err := query.Count(&total).Error; err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+
 					var results []T
-					err := query.Find(&results).Error
+					err := query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&results).Error
 					if err != nil {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					}
 
-					// Convert structs to maps for template compatibility
-					mapped := make([]map[string]any, len(results))
-					for i, item := range results {
-						mapped[i] = components.MapFromStruct(item)
+					numPages := int((total + int64(pageSize) - 1) / int64(pageSize))
+
+					objectList := components.ObjectList[T]{
+						Items:    results,
+						Number:   pageNum,
+						NumPages: numPages,
+						Total:    total,
 					}
 
-					ctx := context.WithValue(r.Context(), key, mapped)
+					ctx := context.WithValue(r.Context(), key, objectList)
+					ctx = context.WithValue(ctx, "$request", r)
 
 					// Preserve query params in context as $get map for filter re-population
 					queryMap := map[string]any{}
