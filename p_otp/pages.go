@@ -120,8 +120,24 @@ func init() {
 			},
 		},
 	})
+	lago.RegistryPage.Register("otp.OTPPreferencesMenu", components.SidebarMenu{
+		Title: components.GetterStatic("OTP Preferences"),
+		Back: &components.SidebarMenuItem{
+			Title: components.GetterStatic("Back to Home"),
+			Url:   components.GetterStatic("/apps/"),
+		},
+		Children: []components.PageInterface{
+			components.SidebarMenuItem{
+				Title: components.GetterStatic("Preferences"),
+				Url:   components.GetterStatic("/otp/preferences/"),
+			},
+		},
+	})
 
 	lago.RegistryPage.Register("otp.OTPPreferencesForm", components.ShellScaffold{
+		Sidebar: []components.PageInterface{
+			lago.DynamicPage{Name: "otp.OTPPreferencesMenu"},
+		},
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Url:      components.GetterStatic("/otp/preferences/"),
