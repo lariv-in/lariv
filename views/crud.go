@@ -197,6 +197,16 @@ func ListView[T any](model T, key string) func(View) View {
 					}
 
 					ctx := context.WithValue(r.Context(), key, mapped)
+
+					// Preserve query params in context as $get map for filter re-population
+					queryMap := map[string]any{}
+					for param, values := range r.URL.Query() {
+						if len(values) > 0 && values[0] != "" {
+							queryMap[param] = values[0]
+						}
+					}
+					ctx = context.WithValue(ctx, "$get", queryMap)
+
 					oldHandler(innerView).ServeHTTP(w, r.WithContext(ctx))
 				})
 			}

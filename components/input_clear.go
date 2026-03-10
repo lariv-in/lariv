@@ -18,5 +18,7 @@ func (e InputClear) Build(ctx context.Context) Node {
 	if label == "" {
 		label = "Clear"
 	}
-	return Button(Type("reset"), Class(fmt.Sprintf("btn btn-ghost my-2 %s", e.Classes)), Text(label))
+	return Button(Type("button"), Class(fmt.Sprintf("btn btn-ghost my-2 %s", e.Classes)), Text(label),
+		Attr("onclick", "this.closest('form').querySelectorAll('input,select,textarea').forEach(el => { el.value = ''; });"),
+	)
 }

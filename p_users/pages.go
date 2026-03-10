@@ -73,15 +73,16 @@ func registerFilterPages() {
 		Url:    components.GetterStatic(AppUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name"},
-			components.InputText{Label: "Email", Name: "email"},
-			components.InputPhone{Label: "Phone", Name: "phone"},
+			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
+			components.InputText{Label: "Email", Name: "email", Getter: components.GetterKey("$get.email")},
+			components.InputPhone{Label: "Phone", Name: "phone", Getter: components.GetterKey("$get.phone")},
 			components.InputTernary{
 				Label:      "Superuser",
 				Name:       "is_superuser",
 				TrueLabel:  "Yes",
 				FalseLabel: "No",
 				NoneLabel:  "All",
+				Getter:     components.GetterKey("$get.is_superuser"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -96,8 +97,8 @@ func registerFilterPages() {
 		Url:    components.GetterStatic(AppUrl + "select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name"},
-			components.InputText{Label: "Email", Name: "email"},
+			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
+			components.InputText{Label: "Email", Name: "email", Getter: components.GetterKey("$get.email")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -111,8 +112,8 @@ func registerFilterPages() {
 		Url:    components.GetterStatic(AppUrl + "multi-select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name"},
-			components.InputText{Label: "Email", Name: "email"},
+			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
+			components.InputText{Label: "Email", Name: "email", Getter: components.GetterKey("$get.email")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -126,7 +127,7 @@ func registerFilterPages() {
 		Url:    components.GetterStatic(RoleUrl + "select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name"},
+			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -537,20 +538,6 @@ func registerSelectionPages() {
 
 func registerRolePages() {
 	// Role Menu
-	lago.RegistryPage.Register("users.RoleMenu", components.SidebarMenu{
-		Title: components.GetterStatic("Roles"),
-		Back: &components.SidebarMenuItem{
-			Title: components.GetterStatic("Back to Home"),
-			Url:   components.GetterStatic("/apps/"),
-		},
-		Children: []components.PageInterface{
-			components.SidebarMenuItem{
-				Title: components.GetterStatic("All Roles"),
-				Url:   components.GetterStatic(RoleUrl),
-			},
-		},
-	})
-
 	lago.RegistryPage.Register("users.RoleDetailMenu", components.SidebarMenu{
 		Title: components.GetterFormat("Role: %s", components.GetterKey("role.name")),
 		Back: &components.SidebarMenuItem{
@@ -578,7 +565,7 @@ func registerRolePages() {
 		Url:    components.GetterStatic(RoleUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name"},
+			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -591,7 +578,7 @@ func registerRolePages() {
 	// Role Table
 	lago.RegistryPage.Register("users.RoleTable", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.RoleMenu"},
+			lago.DynamicPage{Name: "users.UserMenu"},
 		},
 		Children: []components.PageInterface{
 			components.DataTable{
@@ -613,7 +600,7 @@ func registerRolePages() {
 	// Role Create Form
 	lago.RegistryPage.Register("users.RoleCreateForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.RoleMenu"},
+			lago.DynamicPage{Name: "users.UserMenu"},
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{

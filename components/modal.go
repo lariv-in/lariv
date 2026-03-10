@@ -29,6 +29,9 @@ func (e Modal) Build(ctx context.Context) Node {
 
 	return El("dialog",
 		ID(uid), Class("modal modal-open"),
+		Attr("hx-push-url", "false"),
+		Attr("hx-target", "this"),
+		Attr("hx-swap", "outerHTML"),
 		Div(Class("modal-box max-w-4xl "+e.Classes),
 			FormEl(Method("dialog"),
 				Button(Type("button"), Class("btn btn-sm btn-circle btn-ghost absolute right-2 top-2"),

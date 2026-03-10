@@ -61,6 +61,7 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 			Attr("hx-get", fmt.Sprintf("%v", IfOrGetter(e.Url, ctx, ""))),
 			Attr("hx-target", "next .fk-modal-container"),
 			Attr("hx-swap", "innerHTML"),
+			Attr("hx-push-url", "false"),
 			El("span", Attr("x-text", "display || placeholder")),
 		),
 		Div(Class("fk-modal-container")),
