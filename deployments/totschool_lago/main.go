@@ -20,6 +20,6 @@ func main() {
 	if *lago.TuiFlag {
 		lago.RunTui()
 	} else {
-		slog.Error(lago.Start("127.0.0.1:4269", nil, nil).Error())
+		slog.Error(lago.Start("127.0.0.1:42069", nil, nil).Error())
 	}
 }
