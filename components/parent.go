@@ -11,9 +11,7 @@ func FindChildren[T PageInterface](p ParentInterface) []T {
 			children = append(children, needle)
 		}
 		if parent, isParent := child.(ParentInterface); isParent {
-			for _, needle := range FindChildren[T](parent) {
-				children = append(children, needle)
-			}
+			children = append(children, FindChildren[T](parent)...)
 		}
 	}
 	return children

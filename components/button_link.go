@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"maragu.dev/gomponents"
+	"maragu.dev/gomponents/html"
 )
 
 type ButtonLink struct {
@@ -15,12 +15,12 @@ type ButtonLink struct {
 	Classes string
 }
 
-func (e ButtonLink) Build(ctx context.Context) Node {
+func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 	link := ""
 	if e.Link != nil {
 		if val := e.Link(ctx); val != nil {
 			link = fmt.Sprintf("%s", val)
 		}
 	}
-	return A(Href(link), Class(fmt.Sprintf("link link-primary %s", e.Classes)), Text(e.Label))
+	return html.A(html.Href(link), html.Class(fmt.Sprintf("link link-primary %s", e.Classes)), gomponents.Text(e.Label))
 }

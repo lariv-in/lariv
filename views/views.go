@@ -1,6 +1,7 @@
 package views
 
 import (
+	"maps"
 	"context"
 	"log/slog"
 	"net/http"
@@ -79,9 +80,7 @@ func (v View) RenderWithErrors(w http.ResponseWriter, r *http.Request, fieldErro
 		}
 	}
 	inMap := map[string]any{}
-	for name, value := range values {
-		inMap[name] = value
-	}
+	maps.Copy(inMap, values)
 	ctx = context.WithValue(ctx, "$in", inMap)
 	components.Render(page, ctx).Render(w)
 }

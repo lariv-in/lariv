@@ -3,26 +3,26 @@ package components
 import (
 	"context"
 
-	. "maragu.dev/gomponents"
+	"maragu.dev/gomponents"
 )
 
-type ContainerHtml struct {
+type ContainerHTML struct {
 	Page
 	Children []PageInterface
-	Html     func(Node) Node
+	HTML     func(gomponents.Node) gomponents.Node
 }
 
-func (e ContainerHtml) Build(ctx context.Context) Node {
-	group := Group{}
+func (e ContainerHTML) Build(ctx context.Context) gomponents.Node {
+	group := gomponents.Group{}
 	for _, child := range e.Children {
 		group = append(group, Render(child, ctx))
 	}
-	if e.Html != nil {
-		return e.Html(group)
+	if e.HTML != nil {
+		return e.HTML(group)
 	}
 	return group
 }
 
-func (e ContainerHtml) GetChildren() []PageInterface {
+func (e ContainerHTML) GetChildren() []PageInterface {
 	return e.Children
 }
