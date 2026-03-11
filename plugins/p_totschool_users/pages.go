@@ -10,7 +10,7 @@ func init() {
 		return plugin
 	})
 
-	lago.RegistryPlugins.Patch("preferences", func(plugin lago.Plugin) lago.Plugin {
+	lago.RegistryPlugins.Patch("p_otp", func(plugin lago.Plugin) lago.Plugin {
 		plugin.RenderKeys = []string{"superuser", "totschool_admin"}
 		return plugin
 	})
