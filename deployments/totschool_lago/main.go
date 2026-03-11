@@ -14,7 +14,7 @@ import (
 func main() {
 	lago.ParseFlags()
 
-	config, err := lago.LoadConfigFromFile("nirmancampus.toml")
+	config, err := lago.LoadConfigFromFile("totschool.toml")
 	if err != nil {
 		panic(err)
 	}
