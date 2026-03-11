@@ -20,6 +20,7 @@ func init() {
 		Icon:        "key", // Using a relevant icon
 		Url:         u,
 		VerboseName: "OTP Preferences",
+		RenderKeys:  []string{"superuser", "totschool_admin"},
 	})
 	if err != nil {
 		log.Panic(err)
