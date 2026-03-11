@@ -1,11 +1,13 @@
-go 1.25.5
+go 1.26.1
 
 use (
 	./components
 	./deployments/totschool_lago
 	./getters
 	./lago
+	./plugins/p_courses
 	./plugins/p_dashboard
+	./plugins/p_filesystem
 	./plugins/p_otp
 	./plugins/p_totschool_tally
 	./plugins/p_totschool_users

@@ -4,11 +4,12 @@ import (
 	"log/slog"
 
 	"github.com/lariv-in/lago"
+	_ "github.com/lariv-in/p_courses"
 	_ "github.com/lariv-in/p_dashboard"
 	_ "github.com/lariv-in/p_otp"
-	_ "github.com/lariv-in/p_users"
-	_ "github.com/lariv-in/p_totschool_users"
 	_ "github.com/lariv-in/p_totschool_tally"
+	_ "github.com/lariv-in/p_totschool_users"
+	_ "github.com/lariv-in/p_users"
 )
 
 func main() {
