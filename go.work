@@ -9,6 +9,7 @@ use (
 	./plugins/p_dashboard
 	./plugins/p_filesystem
 	./plugins/p_otp
+	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally
 	./plugins/p_totschool_users
 	./plugins/p_users
