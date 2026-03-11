@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log/slog"
 
 	"github.com/lariv-in/lago"
@@ -11,10 +10,16 @@ import (
 )
 
 func main() {
-	runTui := flag.Bool("run_tui", false, "Run the tui")
-	if *runTui {
+	lago.ParseFlags()
+
+	if *lago.GenerateFlag {
+		lago.RunGenerators()
+		return
+	}
+
+	if *lago.TuiFlag {
 		lago.RunTui()
 	} else {
-		slog.Error(lago.Start("127.0.0.1:42069", nil, nil).Error())
+		slog.Error(lago.Start("127.0.0.1:4269", nil, nil).Error())
 	}
 }
