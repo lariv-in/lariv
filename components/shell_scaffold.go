@@ -7,6 +7,7 @@ import (
 )
 
 type ShellScaffold struct {
+	Page
 	Sidebar  []PageInterface
 	Children []PageInterface
 }
@@ -27,7 +28,7 @@ func (e ShellScaffold) Body(ctx context.Context) Node {
 }
 
 func (e ShellScaffold) Build(ctx context.Context) Node {
-	return ShellBase{
+	return Render(ShellBase{
 		Children: []PageInterface{
 			LayoutTopbar{
 				Children: []PageInterface{
@@ -38,7 +39,7 @@ func (e ShellScaffold) Build(ctx context.Context) Node {
 				},
 			},
 		},
-	}.Build(ctx)
+	}, ctx)
 }
 
 func (e ShellScaffold) GetChildren() []PageInterface {

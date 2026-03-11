@@ -9,6 +9,7 @@ import (
 )
 
 type ButtonSubmit struct {
+	Page
 	Label   string
 	Classes string
 }

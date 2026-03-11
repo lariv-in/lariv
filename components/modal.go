@@ -8,6 +8,7 @@ import (
 )
 
 type Modal struct {
+	Page
 	UID      string
 	Title    string
 	Children []PageInterface
@@ -17,7 +18,7 @@ type Modal struct {
 func (e Modal) Build(ctx context.Context) Node {
 	var childNodes []Node
 	for _, child := range e.Children {
-		childNodes = append(childNodes, child.Build(ctx))
+		childNodes = append(childNodes, Render(child, ctx))
 	}
 
 	uid := e.UID
@@ -35,8 +36,7 @@ func (e Modal) Build(ctx context.Context) Node {
 		Div(Class("modal-box max-w-4xl "+e.Classes),
 			FormEl(Method("dialog"),
 				Button(Type("button"), Class("btn btn-sm btn-circle btn-ghost absolute right-2 top-2"),
-					Attr("onclick", "document.getElementById('"+uid+"').remove()"),
-					Icon{Name: "x-mark"}.Build(ctx),
+					Attr("onclick", "document.getElementById('"+uid+"').remove()"), Render(Icon{Name: "x-mark"}, ctx),
 				),
 			),
 			If(titleNode != nil, titleNode),

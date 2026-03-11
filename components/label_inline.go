@@ -9,6 +9,7 @@ import (
 )
 
 type LabelInline struct {
+	Page
 	Title    string
 	Children []PageInterface
 	Classes  string
@@ -17,7 +18,7 @@ type LabelInline struct {
 func (e LabelInline) Build(ctx context.Context) Node {
 	var childNodes []Node
 	for _, child := range e.Children {
-		childNodes = append(childNodes, child.Build(ctx))
+		childNodes = append(childNodes, Render(child, ctx))
 	}
 	return Div(Class(fmt.Sprintf("flex gap-2 %s", e.Classes)),
 		Span(Class("text-primary font-bold"), Text(e.Title+":")),

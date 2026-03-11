@@ -10,6 +10,7 @@ import (
 // Detail binds an object from context to its descendants under "$in".
 // Child fields can then resolve their values via GetterKey("$in.FieldName").
 type Detail struct {
+	Page
 	Getter   Getter
 	Children []PageInterface
 }
@@ -25,7 +26,7 @@ func (e Detail) Build(ctx context.Context) Node {
 
 	var childNodes []Node
 	for _, child := range e.Children {
-		childNodes = append(childNodes, child.Build(childCtx))
+		childNodes = append(childNodes, Render(child, childCtx))
 	}
 	return Div(Group(childNodes))
 }

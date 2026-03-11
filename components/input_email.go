@@ -10,6 +10,7 @@ import (
 )
 
 type InputEmail struct {
+	Page
 	Label    string
 	Name     string
 	Getter   Getter

@@ -9,6 +9,7 @@ import (
 )
 
 type InputPassword struct {
+	Page
 	Label    string
 	Name     string
 	Getter   Getter

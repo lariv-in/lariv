@@ -11,6 +11,7 @@ import (
 )
 
 type TablePagination struct {
+	Page
 	Data Getter
 }
 

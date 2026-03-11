@@ -11,6 +11,7 @@ import (
 )
 
 type FormComponent struct {
+	Page
 	Getter         Getter
 	Url            Getter
 	Method         string
@@ -34,11 +35,11 @@ func (e FormComponent) Build(ctx context.Context) Node {
 
 	inputGroup := Group{}
 	for _, child := range e.ChildrenInput {
-		inputGroup = append(inputGroup, child.Build(childCtx))
+		inputGroup = append(inputGroup, Render(child, childCtx))
 	}
 	submitGroup := Group{}
 	for _, child := range e.ChildrenAction {
-		submitGroup = append(submitGroup, child.Build(childCtx))
+		submitGroup = append(submitGroup, Render(child, childCtx))
 	}
 	urlString := fmt.Sprintf("%s", IfOrGetter(e.Url, childCtx, ""))
 

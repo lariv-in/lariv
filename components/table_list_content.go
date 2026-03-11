@@ -10,6 +10,7 @@ import (
 )
 
 type TableListContent struct {
+	Page
 	Columns []TableColumn
 	Data    Getter
 	OnClick Getter
@@ -52,7 +53,7 @@ func (e TableListContent) Build(ctx context.Context) Node {
 			for _, col := range e.Columns {
 				var cellNodes []Node
 				for _, child := range col.Children {
-					cellNodes = append(cellNodes, child.Build(rowCtx))
+					cellNodes = append(cellNodes, Render(child, rowCtx))
 				}
 				tds = append(tds, g_html.Td(g_html.Class("whitespace-nowrap truncate max-w-xs min-w-[100px]"), Group(cellNodes)))
 			}

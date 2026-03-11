@@ -10,6 +10,7 @@ import (
 )
 
 type TableGridContent struct {
+	Page
 	Columns []TableColumn
 	Data    Getter
 	OnClick Getter
@@ -48,7 +49,7 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 			if len(e.Columns) > 0 {
 				var firstColNodes []Node
 				for _, child := range e.Columns[0].Children {
-					firstColNodes = append(firstColNodes, child.Build(rowCtx))
+					firstColNodes = append(firstColNodes, Render(child, rowCtx))
 				}
 				contentNodes = append(contentNodes, g_html.Div(g_html.Class("font-semibold text-md truncate"), Group(firstColNodes)))
 			}
@@ -57,7 +58,7 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 			for _, col := range e.Columns[1:] {
 				var colNodes []Node
 				for _, child := range col.Children {
-					colNodes = append(colNodes, child.Build(rowCtx))
+					colNodes = append(colNodes, Render(child, rowCtx))
 				}
 				contentNodes = append(contentNodes, g_html.Div(g_html.Class("text-sm flex gap-2 truncate"),
 					g_html.Span(g_html.Class("font-semibold text-primary"), Text(col.Label+":")),

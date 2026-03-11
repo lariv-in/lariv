@@ -7,6 +7,7 @@ import (
 )
 
 type ContainerHtml struct {
+	Page
 	Children []PageInterface
 	Html     func(Node) Node
 }
@@ -14,7 +15,7 @@ type ContainerHtml struct {
 func (e ContainerHtml) Build(ctx context.Context) Node {
 	group := Group{}
 	for _, child := range e.Children {
-		group = append(group, child.Build(ctx))
+		group = append(group, Render(child, ctx))
 	}
 	if e.Html != nil {
 		return e.Html(group)

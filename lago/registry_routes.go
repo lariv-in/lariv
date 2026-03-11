@@ -2,9 +2,11 @@ package lago
 
 import (
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/lariv-in/components"
+	"golang.org/x/net/websocket"
 )
 
 var RegistryRoute Registry[Route] = NewRegistry[Route]()
@@ -12,6 +14,11 @@ var RegistryRoute Registry[Route] = NewRegistry[Route]()
 type Route struct {
 	Path    string
 	Handler http.Handler
+}
+
+// Echo the data received on the WebSocket.
+func EchoServer(ws *websocket.Conn) {
+	io.Copy(ws, ws)
 }
 
 func GetRouter() *http.ServeMux {

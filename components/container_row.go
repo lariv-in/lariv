@@ -9,6 +9,7 @@ import (
 )
 
 type ContainerRow struct {
+	Page
 	Children []PageInterface
 	Classes  string
 }
@@ -16,11 +17,10 @@ type ContainerRow struct {
 func (e ContainerRow) Build(ctx context.Context) Node {
 	group := Group{}
 	for _, child := range e.Children {
-		group = append(group, child.Build(ctx))
+		group = append(group, Render(child, ctx))
 	}
 	return Div(Class(fmt.Sprintf("flex flex-row gap-1 %s", e.Classes)), group)
 }
-
 
 func (e ContainerRow) GetChildren() []PageInterface {
 	return e.Children

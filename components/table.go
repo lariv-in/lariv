@@ -16,6 +16,7 @@ type TableColumn struct {
 }
 
 type DataTable struct {
+	Page
 	UID      string
 	Columns  []TableColumn
 	Data     Getter
@@ -45,8 +46,7 @@ func (e DataTable) Build(ctx context.Context) Node {
 	displayNodes := Group{}
 	for name, builder := range e.Displays {
 		displayNodes = append(displayNodes, Div(
-			Attr("x-show", fmt.Sprintf("view === '%s'", name)),
-			builder(e.Columns, e.Data, e.OnClick).Build(ctx),
+			Attr("x-show", fmt.Sprintf("view === '%s'", name)), Render(builder(e.Columns, e.Data, e.OnClick), ctx),
 		))
 	}
 
@@ -62,12 +62,8 @@ func (e DataTable) Build(ctx context.Context) Node {
 		filterNode = El("details",
 			Class("dropdown dropdown-end"),
 			Attr("@click.outside", "$el.removeAttribute('open')"),
-			El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"),
-				Icon{Name: "funnel"}.Build(ctx),
-			),
-			Div(Class("card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-2 bg-base-100"),
-				e.FilterComponent.Build(ctx),
-			),
+			El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"), Render(Icon{Name: "funnel"}, ctx)),
+			Div(Class("card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-2 bg-base-100"), Render(e.FilterComponent, ctx)),
 		)
 	}
 
@@ -76,9 +72,7 @@ func (e DataTable) Build(ctx context.Context) Node {
 	if e.CreateUrl != nil {
 		createUrl := fmt.Sprintf("%s", IfOrGetter(e.CreateUrl, ctx, ""))
 		if createUrl != "" {
-			createNode = A(Href(createUrl), Class("btn btn-square btn-outline btn-sm"),
-				Icon{Name: "plus"}.Build(ctx),
-			)
+			createNode = A(Href(createUrl), Class("btn btn-square btn-outline btn-sm"), Render(Icon{Name: "plus"}, ctx))
 		}
 	}
 
@@ -105,8 +99,7 @@ func (e DataTable) Build(ctx context.Context) Node {
 			),
 		),
 		Div(Class("relative my-2"),
-			displayNodes,
-			TablePagination{Data: e.Data}.Build(ctx),
+			displayNodes, Render(TablePagination{Data: e.Data}, ctx),
 		),
 	)
 }

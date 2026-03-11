@@ -4,12 +4,14 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/lariv-in/components"
 	"maragu.dev/gomponents"
 )
 
 // DynamicPage lazily resolves a page by name from RegistryPage at build time.
 // This allows pages to reference other registered pages without import-time dependencies.
 type DynamicPage struct {
+	components.Page
 	Name string
 }
 
@@ -19,5 +21,5 @@ func (d DynamicPage) Build(ctx context.Context) gomponents.Node {
 		slog.Warn("DynamicPage: page not found in registry", "name", d.Name)
 		return nil
 	}
-	return page.Build(ctx)
+	return components.Render(page, ctx)
 }

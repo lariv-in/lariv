@@ -8,6 +8,7 @@ import (
 )
 
 type ContainerError struct {
+	Page
 	Children []PageInterface
 	Error    Getter
 }
@@ -15,7 +16,7 @@ type ContainerError struct {
 func (e ContainerError) Build(ctx context.Context) Node {
 	group := Group{}
 	for _, child := range e.Children {
-		group = append(group, child.Build(ctx))
+		group = append(group, Render(child, ctx))
 	}
 
 	var errorNode Node

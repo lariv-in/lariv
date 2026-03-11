@@ -9,6 +9,7 @@ import (
 )
 
 type SidebarMenuItem struct {
+	Page
 	Title  Getter
 	Url    Getter
 	Icon   string
@@ -21,7 +22,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 
 	var iconNode Node
 	if e.Icon != "" {
-		iconNode = Icon{Name: e.Icon}.Build(ctx)
+		iconNode = Render(Icon{Name: e.Icon}, ctx)
 	}
 
 	activeClass := ""
@@ -38,6 +39,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 }
 
 type SidebarMenu struct {
+	Page
 	Title    Getter
 	Back     *SidebarMenuItem
 	Children []PageInterface
@@ -51,10 +53,7 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 		backTitle := fmt.Sprintf("%s", IfOrGetter(e.Back.Title, ctx, ""))
 		backUrl := fmt.Sprintf("%s", IfOrGetter(e.Back.Url, ctx, "#"))
 		items = append(items, Li(
-			A(Href(backUrl), Class("btn btn-sm mb-2"),
-				Icon{Name: "arrow-left"}.Build(ctx),
-				Text(backTitle),
-			),
+			A(Href(backUrl), Class("btn btn-sm mb-2"), Render(Icon{Name: "arrow-left"}, ctx), Text(backTitle)),
 		))
 	}
 
@@ -68,7 +67,7 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 
 	// Children
 	for _, child := range e.Children {
-		items = append(items, child.Build(ctx))
+		items = append(items, Render(child, ctx))
 	}
 
 	return Ul(Class("menu w-full wrap-anywhere"), Group(items))

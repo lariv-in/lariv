@@ -11,6 +11,7 @@ import (
 )
 
 type InputPhone struct {
+	Page
 	Label    string
 	Name     string
 	Getter   Getter

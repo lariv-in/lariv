@@ -9,6 +9,7 @@ import (
 )
 
 type Icon struct {
+	Page
 	Name    string
 	Classes string
 	Attrs   []Node
@@ -21,4 +22,8 @@ func (e Icon) Build(ctx context.Context) Node {
 	}
 	nodes = append(nodes, e.Attrs...)
 	return Span(nodes...)
+}
+
+func (e Icon) GetRenderKeys() []string {
+	return e.Page.RenderKeys
 }

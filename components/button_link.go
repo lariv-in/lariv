@@ -9,6 +9,7 @@ import (
 )
 
 type ButtonLink struct {
+	Page
 	Label   string
 	Link    Getter
 	Classes string

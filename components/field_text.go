@@ -9,6 +9,7 @@ import (
 )
 
 type FieldText struct {
+	Page
 	Getter  Getter
 	Classes string
 }

@@ -29,6 +29,7 @@ type TopbarButton struct {
 var TopbarButtonsGetter Getter
 
 type LayoutTopbar struct {
+	Page
 	Children []PageInterface
 }
 
@@ -49,18 +50,16 @@ func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 				// Build icon node(s)
 				var iconNode gomponents.Node
 				if btn.IconAlt != "" && btn.IconCondition != "" {
-					iconNode = gomponents.Group{
-						Icon{
-							Name:  btn.Icon,
-							Attrs: []gomponents.Node{gomponents.Attr("x-show", btn.IconCondition)},
-						}.Build(ctx),
-						Icon{
-							Name:  btn.IconAlt,
-							Attrs: []gomponents.Node{gomponents.Attr("x-show", fmt.Sprintf("!(%s)", btn.IconCondition))},
-						}.Build(ctx),
+					iconNode = gomponents.Group{Render(Icon{
+						Name:  btn.Icon,
+						Attrs: []gomponents.Node{gomponents.Attr("x-show", btn.IconCondition)},
+					}, ctx), Render(Icon{
+						Name:  btn.IconAlt,
+						Attrs: []gomponents.Node{gomponents.Attr("x-show", fmt.Sprintf("!(%s)", btn.IconCondition))},
+					}, ctx),
 					}
 				} else {
-					iconNode = Icon{Name: btn.Icon}.Build(ctx)
+					iconNode = Render(Icon{Name: btn.Icon}, ctx)
 				}
 
 				// Collect button attributes
@@ -97,7 +96,7 @@ func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 
 	childGroup := gomponents.Group{}
 	for _, child := range e.Children {
-		childGroup = append(childGroup, child.Build(ctx))
+		childGroup = append(childGroup, Render(child, ctx))
 	}
 
 	return html.Div(html.Class("h-screen flex flex-col overflow-hidden"),

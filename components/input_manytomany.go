@@ -10,6 +10,7 @@ import (
 )
 
 type InputManyToMany struct {
+	Page
 	Label       string
 	Name        string
 	Getter      Getter

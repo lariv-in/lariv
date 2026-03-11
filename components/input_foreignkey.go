@@ -9,6 +9,7 @@ import (
 )
 
 type InputForeignKey struct {
+	Page
 	Label       string
 	Name        string
 	Getter      Getter

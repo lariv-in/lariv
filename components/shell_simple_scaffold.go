@@ -7,6 +7,7 @@ import (
 )
 
 type ShellSimpleScaffold struct {
+	Page
 	Children []PageInterface
 }
 
@@ -21,13 +22,13 @@ func (e ShellSimpleScaffold) Body(ctx context.Context) Node {
 }
 
 func (e ShellSimpleScaffold) Build(ctx context.Context) Node {
-	return ShellBase{
+	return Render(ShellBase{
 		Children: []PageInterface{
 			LayoutSimple{
 				Children: e.Children,
 			},
 		},
-	}.Build(ctx)
+	}, ctx)
 }
 
 func (e ShellSimpleScaffold) GetChildren() []PageInterface {

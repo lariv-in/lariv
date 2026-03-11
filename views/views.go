@@ -1,6 +1,7 @@
 package views
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 
@@ -43,10 +44,54 @@ func (v View) RenderPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	page.Build(ctx).Render(w)
+	components.Render(page, ctx).Render(w)
 }
 
 func (v View) WithMethod(method string, viewHandler func(View) http.Handler) View {
 	v.Handlers[method] = viewHandler
 	return v
+}
+
+// ParseForm finds the first FormComponent in the view's page, parses the request form,
+// and returns the values and field errors. Returns true if parsing failed (error already written to w).
+func (v View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any, map[string]error, bool) {
+	page, _ := v.GetPage()
+	forms := components.FindChildren[components.FormComponent](page.(components.ParentInterface))
+	if len(forms) == 0 {
+		http.Error(w, "Internal Server Error: No form found", http.StatusInternalServerError)
+		return nil, nil, true
+	}
+	values, fieldErrors, err := forms[0].ParseForm(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil, nil, true
+	}
+	return values, fieldErrors, false
+}
+
+// RenderWithErrors re-renders the view's page with field errors and previously submitted values in context.
+func (v View) RenderWithErrors(w http.ResponseWriter, r *http.Request, fieldErrors map[string]error, values map[string]any) {
+	page, _ := v.GetPage()
+	ctx := r.Context()
+	for name, fieldErr := range fieldErrors {
+		if fieldErr != nil {
+			ctx = context.WithValue(ctx, "$error."+name, fieldErr)
+		}
+	}
+	inMap := map[string]any{}
+	for name, value := range values {
+		inMap[name] = value
+	}
+	ctx = context.WithValue(ctx, "$in", inMap)
+	components.Render(page, ctx).Render(w)
+}
+
+// HasErrors returns true if any error in the map is non-nil.
+func HasErrors(errs map[string]error) bool {
+	for _, err := range errs {
+		if err != nil {
+			return true
+		}
+	}
+	return false
 }

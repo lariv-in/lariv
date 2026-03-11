@@ -8,6 +8,7 @@ import (
 )
 
 type LayoutSidebar struct {
+	Page
 	Sidebar  []PageInterface
 	Children []PageInterface
 }
@@ -15,12 +16,12 @@ type LayoutSidebar struct {
 func (e LayoutSidebar) Build(ctx context.Context) Node {
 	sidebarGroup := Group{}
 	for _, child := range e.Sidebar {
-		sidebarGroup = append(sidebarGroup, child.Build(ctx))
+		sidebarGroup = append(sidebarGroup, Render(child, ctx))
 	}
 
 	contentGroup := Group{}
 	for _, child := range e.Children {
-		contentGroup = append(contentGroup, child.Build(ctx))
+		contentGroup = append(contentGroup, Render(child, ctx))
 	}
 
 	return Div(ID("app-layout"), Class("size-full"),
@@ -54,8 +55,7 @@ func (e LayoutSidebar) Build(ctx context.Context) Node {
 			Main(Class("overflow-y-auto p-4 relative h-full"),
 				Button(
 					Attr("@click", "showLeft = !showLeft"),
-					Class("btn btn-sm btn-square mb-2"),
-					Icon{Name: "bars-3"}.Build(ctx),
+					Class("btn btn-sm btn-square mb-2"), Render(Icon{Name: "bars-3"}, ctx),
 				),
 
 				// Messages (Simplified for now, will be populated via Alpine/Turbo)

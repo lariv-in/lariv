@@ -5,6 +5,7 @@ go 1.25.5
 require (
 	charm.land/bubbletea/v2 v2.0.1
 	charm.land/lipgloss/v2 v2.0.0
+	golang.org/x/net v0.51.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
 	maragu.dev/gomponents v1.2.0

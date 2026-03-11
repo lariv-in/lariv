@@ -34,7 +34,7 @@ func renderFormErrors(v View, w http.ResponseWriter, ctx context.Context, values
 		ctx = context.WithValue(ctx, "$in."+name, value)
 	}
 	page, _ := v.GetPage()
-	page.Build(ctx).Render(w)
+	components.Render(page, ctx).Render(w)
 }
 
 // hasFieldErrors returns true if any field error is non-nil.
@@ -237,6 +237,54 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 				}
 
 				http.Redirect(w, r, fmt.Sprintf(successUrl, id), http.StatusSeeOther)
+			})
+		})
+	}
+}
+
+// --- Singleton Handler ---
+
+// SingletonView loads a singleton record of type T (via FirstOrCreate) into $in context for GET,
+// and parses the form + updates the record on POST, then redirects to successUrl.
+func SingletonView[T any](model T, successUrl string) func(View) View {
+	return func(v View) View {
+		// Wrap GET to load singleton into $in context
+		oldGet := v.Handlers[http.MethodGet]
+		v.Handlers[http.MethodGet] = func(innerView View) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				db := r.Context().Value("$db").(*gorm.DB)
+				instance := new(T)
+				db.FirstOrCreate(instance)
+				ctx := context.WithValue(r.Context(), "$in", components.MapFromStruct(instance))
+				oldGet(innerView).ServeHTTP(w, r.WithContext(ctx))
+			})
+		}
+
+		// Add POST handler for form save
+		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				values, fieldErrors, failed := innerView.ParseForm(w, r)
+				if failed {
+					return
+				}
+
+				if HasErrors(fieldErrors) {
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					return
+				}
+
+				db := r.Context().Value("$db").(*gorm.DB)
+				instance := new(T)
+				db.FirstOrCreate(instance)
+
+				err := db.Model(instance).Updates(values).Error
+				if err != nil {
+					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", err))
+					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+					return
+				}
+
+				http.Redirect(w, r, successUrl, http.StatusSeeOther)
 			})
 		})
 	}

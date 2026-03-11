@@ -8,6 +8,7 @@ import (
 )
 
 type FieldCheckbox struct {
+	Page
 	Getter Getter
 }
 
@@ -19,7 +20,7 @@ func (e FieldCheckbox) Build(ctx context.Context) Node {
 	}
 
 	if truthy {
-		return Span(Icon{Name: "check-circle", Classes: "text-success"}.Build(ctx))
+		return Span(Render(Icon{Name: "check-circle", Classes: "text-success"}, ctx))
 	}
-	return Span(Icon{Name: "x-circle", Classes: "text-error"}.Build(ctx))
+	return Span(Render(Icon{Name: "x-circle", Classes: "text-error"}, ctx))
 }

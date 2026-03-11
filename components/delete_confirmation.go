@@ -9,6 +9,7 @@ import (
 )
 
 type DeleteConfirmation struct {
+	Page
 	Title     string
 	Message   string
 	CancelUrl Getter

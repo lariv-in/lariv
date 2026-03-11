@@ -9,6 +9,7 @@ import (
 )
 
 type InputClear struct {
+	Page
 	Label   string
 	Classes string
 }

@@ -9,6 +9,7 @@ import (
 )
 
 type FieldSubtitle struct {
+	Page
 	Getter Getter
 }
 

@@ -7,13 +7,14 @@ import (
 )
 
 type LayoutCard struct {
+	Page
 	Children []PageInterface
 }
 
 func (e LayoutCard) Build(ctx context.Context) Node {
 	group := Group{}
 	for _, child := range e.Children {
-		group = append(group, child.Build(ctx))
+		group = append(group, Render(child, ctx))
 	}
 	return Div(Class("min-h-screen flex items-center justify-center bg-base-200"),
 		Progress(Class("progress w-full fixed top-0 left-0 h-1 z-50"), ID("global-loading-indicator")),

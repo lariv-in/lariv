@@ -10,6 +10,7 @@ import (
 )
 
 type InputCheckbox struct {
+	Page
 	Label    string
 	Name     string
 	Getter   Getter

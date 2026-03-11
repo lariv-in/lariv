@@ -7,19 +7,20 @@ import (
 )
 
 type ShellAuthScaffold struct {
+	Page
 	Children []PageInterface
 }
 
 func (e ShellAuthScaffold) Body(ctx context.Context) Node {
 	return ShellBase{
-		Children: []PageInterface{LayoutCard{e.Children}},
+		Children: []PageInterface{LayoutCard{Page{}, e.Children}},
 	}.Body(ctx)
 }
 
 func (e ShellAuthScaffold) Build(ctx context.Context) Node {
-	return ShellBase{
-		Children: []PageInterface{LayoutCard{e.Children}},
-	}.Build(ctx)
+	return Render(ShellBase{
+		Children: []PageInterface{LayoutCard{Page{}, e.Children}},
+	}, ctx)
 }
 
 func (e ShellAuthScaffold) GetChildren() []PageInterface {
