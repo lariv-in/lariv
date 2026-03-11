@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ./totschool_lago "
+  cmd = "go build -o ./tmp/main ./deployments/totschool_lago "
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
@@ -42,9 +42,9 @@ tmp_dir = "tmp"
   clean_on_exit = false
 
 [proxy]
-  app_port = 0
-  enabled = false
-  proxy_port = 0
+  app_port = 42069
+  enabled = true
+  proxy_port = 4269
 
 [screen]
   clear_on_rebuild = false
