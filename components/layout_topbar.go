@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/lariv-in/getters"
+	"github.com/lariv-in/registry"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
@@ -13,21 +14,21 @@ import (
 // TopbarButton defines a button rendered in the top navigation bar.
 // These are registered globally via a registry in lago, and plugins can add their own.
 type TopbarButton struct {
-	UID           string // unique HTML ID for the button element
-	Icon          string // heroicon name
-	IconAlt       string // alternate icon (for toggling, e.g. sun/moon)
-	IconCondition string // Alpine.js condition for showing the primary icon vs alt
+	UID           string         // unique HTML ID for the button element
+	Icon          string         // heroicon name
+	IconAlt       string         // alternate icon (for toggling, e.g. sun/moon)
+	IconCondition string         // Alpine.js condition for showing the primary icon vs alt
 	URL           getters.Getter // lazily resolved URL (e.g. from route registry)
-	Target        string // Turbo frame target selector
-	Method        string // HTTP method: get (default), post, put, delete
-	OnClick       string // JavaScript onclick handler
-	Classes       string // CSS classes for the button
+	Target        string         // Turbo frame target selector
+	Method        string         // HTTP method: get (default), post, put, delete
+	OnClick       string         // JavaScript onclick handler
+	Classes       string         // CSS classes for the button
 }
 
 // TopbarButtonsGetter is a package-level getter that provides []TopbarButton.
 // It is set by lago during initialization to read from RegistryTopbarButtons.
 // LayoutTopbar reads from this automatically — no per-page configuration needed.
-var TopbarButtonsGetter getters.Getter
+var RegistryTopbarButtons = registry.NewRegistry[TopbarButton]()
 
 type LayoutTopbar struct {
 	Page
@@ -37,61 +38,58 @@ type LayoutTopbar struct {
 func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 	buttonNodes := gomponents.Group{}
 
-	if TopbarButtonsGetter != nil {
-		if buttons, ok := TopbarButtonsGetter(ctx).([]TopbarButton); ok {
-			for _, btn := range buttons {
-				// Resolve URL from getter
-				url := ""
-				if btn.URL != nil {
-					if u, ok := btn.URL(ctx).(string); ok {
-						url = u
-					}
-				}
-
-				// Build icon node(s)
-				var iconNode gomponents.Node
-				if btn.IconAlt != "" && btn.IconCondition != "" {
-					iconNode = gomponents.Group{Render(Icon{
-						Name:  btn.Icon,
-						Attrs: []gomponents.Node{gomponents.Attr("x-show", btn.IconCondition)},
-					}, ctx), Render(Icon{
-						Name:  btn.IconAlt,
-						Attrs: []gomponents.Node{gomponents.Attr("x-show", fmt.Sprintf("!(%s)", btn.IconCondition))},
-					}, ctx),
-					}
-				} else {
-					iconNode = Render(Icon{Name: btn.Icon}, ctx)
-				}
-
-				// Collect button attributes
-				attrs := []gomponents.Node{
-					html.Class(fmt.Sprintf("btn %s", btn.Classes)),
-					iconNode,
-				}
-				if btn.UID != "" {
-					attrs = append(attrs, html.ID(btn.UID))
-				}
-				if btn.OnClick != "" {
-					attrs = append(attrs, gomponents.Attr("onclick", btn.OnClick))
-				}
-				if url != "" {
-					method := strings.ToLower(btn.Method)
-					if method != "" && method != "get" {
-						attrs = append(attrs, gomponents.Attr("hx-"+method, url))
-					} else {
-						attrs = append(attrs, html.Href(url))
-					}
-				}
-				if btn.Target != "" {
-					attrs = append(attrs, gomponents.Attr("hx-target", btn.Target))
-				}
-
-				if url != "" {
-					buttonNodes = append(buttonNodes, html.A(attrs...))
-				} else {
-					buttonNodes = append(buttonNodes, html.Button(attrs...))
-				}
+	for _, btn := range (*RegistryTopbarButtons.All()) {
+		// Resolve URL from getter
+		url := ""
+		if btn.URL != nil {
+			if u, ok := btn.URL(ctx).(string); ok {
+				url = u
 			}
+		}
+
+		// Build icon node(s)
+		var iconNode gomponents.Node
+		if btn.IconAlt != "" && btn.IconCondition != "" {
+			iconNode = gomponents.Group{
+				Render(Icon{
+					Name:  btn.Icon,
+					Attrs: []gomponents.Node{gomponents.Attr("x-show", btn.IconCondition)},
+				}, ctx), Render(Icon{
+					Name:  btn.IconAlt,
+					Attrs: []gomponents.Node{gomponents.Attr("x-show", fmt.Sprintf("!(%s)", btn.IconCondition))},
+				}, ctx),
+			}
+		} else {
+			iconNode = Render(Icon{Name: btn.Icon}, ctx)
+		}
+
+		// Collect button attributes
+		attrs := []gomponents.Node{
+			html.Class(fmt.Sprintf("btn %s", btn.Classes)),
+			iconNode,
+		}
+		if btn.UID != "" {
+			attrs = append(attrs, html.ID(btn.UID))
+		}
+		if btn.OnClick != "" {
+			attrs = append(attrs, gomponents.Attr("onclick", btn.OnClick))
+		}
+		if url != "" {
+			method := strings.ToLower(btn.Method)
+			if method != "" && method != "get" {
+				attrs = append(attrs, gomponents.Attr("hx-"+method, url))
+			} else {
+				attrs = append(attrs, html.Href(url))
+			}
+		}
+		if btn.Target != "" {
+			attrs = append(attrs, gomponents.Attr("hx-target", btn.Target))
+		}
+
+		if url != "" {
+			buttonNodes = append(buttonNodes, html.A(attrs...))
+		} else {
+			buttonNodes = append(buttonNodes, html.Button(attrs...))
 		}
 	}
 

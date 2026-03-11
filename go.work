@@ -3,12 +3,13 @@ go 1.25.5
 use (
 	./components
 	./deployments/totschool_lago
-	./lago
 	./getters
-	./registry
+	./lago
 	./plugins/p_dashboard
 	./plugins/p_otp
+	./plugins/p_totschool_tally
 	./plugins/p_totschool_users
 	./plugins/p_users
+	./registry
 	./views
 )

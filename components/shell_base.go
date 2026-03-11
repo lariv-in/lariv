@@ -45,8 +45,8 @@ func (e ShellBase) Build(ctx context.Context) Node {
 			StyleEl(Raw(
 				`.heroicon {`+
 					`display: inline-block;`+
-					`width: 1.25em;`+
-					`height: 1.25em;`+
+					`width: 24px;`+
+					`height: 24px;`+
 					`background-color: currentColor;`+
 					`-webkit-mask-image: var(--heroicon-url);`+
 					`mask-image: var(--heroicon-url);`+

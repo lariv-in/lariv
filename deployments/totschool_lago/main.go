@@ -8,6 +8,7 @@ import (
 	_ "github.com/lariv-in/p_otp"
 	_ "github.com/lariv-in/p_users"
 	_ "github.com/lariv-in/p_totschool_users"
+	_ "github.com/lariv-in/p_totschool_tally"
 )
 
 func main() {

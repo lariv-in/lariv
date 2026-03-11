@@ -135,6 +135,7 @@ func init() {
 	})
 
 	lago.RegistryPage.Register("otp.OTPPreferencesForm", components.ShellScaffold{
+		Page: components.Page{RenderKeys: []string{"totschool_admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "otp.OTPPreferencesMenu"},
 		},

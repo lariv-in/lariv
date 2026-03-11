@@ -59,6 +59,15 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Redirect(w, r, unauthenticatedRoute.Path, http.StatusMovedPermanently)
 			return
 		}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "$user", user)))
+		var roleName string
+		if user.IsSuperuser {
+			roleName = "superuser"
+		} else {
+			db.Model(&Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
+		}
+
+		ctx := context.WithValue(r.Context(), "$user", user)
+		ctx = context.WithValue(ctx, "$render_key", roleName)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
