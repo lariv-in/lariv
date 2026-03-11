@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -70,4 +71,38 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, "$render_key", roleName)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func RoleAuthorizationMiddleware(roles []string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userObj := r.Context().Value("$user")
+			user, ok := userObj.(User)
+			if !ok {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			var roleName string
+			if user.IsSuperuser {
+				roleName = "superuser"
+			} else {
+				db, ok := r.Context().Value("$db").(*gorm.DB)
+				if !ok {
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
+				db.Model(&Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
+			}
+
+			authorized := slices.Contains(roles, roleName)
+
+			if !authorized {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

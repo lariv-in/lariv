@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 
 	"github.com/lariv-in/components"
@@ -28,8 +29,14 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 
 	if len(apps) == 0 {
 		pluginsMap := lago.RegistryPlugins.All()
+		roleName, _ := ctx.Value("$render_key").(string)
 		for _, plugin := range *pluginsMap {
 			if plugin.Type == lago.PluginTypeApp {
+				if len(plugin.RenderKeys) > 0 {
+					if !slices.Contains(plugin.RenderKeys, roleName) {
+						continue
+					}
+				}
 				apps = append(apps, plugin)
 			}
 		}
