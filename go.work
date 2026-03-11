@@ -3,9 +3,9 @@ go 1.25.5
 use (
 	./components
 	./lago
-	./p_dashboard
-	./p_otp
-	./p_users
-	./totschool_lago
+	./plugins/p_dashboard
+	./plugins/p_otp
+	./plugins/p_users
+	./deployments/totschool_lago
 	./views
 )
