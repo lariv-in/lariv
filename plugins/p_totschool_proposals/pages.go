@@ -8,8 +8,6 @@ import (
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 func init() {
@@ -140,65 +138,7 @@ func registerTable() {
 	})
 }
 
-// proposalAnswersBlock renders $in.Answers ([]QAItem) as Q&A list.
-type proposalAnswersBlock struct {
-	components.Page
-}
 
-func (p proposalAnswersBlock) Build(ctx context.Context) Node {
-	in, _ := ctx.Value("$in").(map[string]any)
-	if in == nil {
-		return Div(Text(""))
-	}
-	raw, ok := in["Answers"]
-	if !ok || raw == nil {
-		return Div(Text(""))
-	}
-	// Type-assert: could be []QAItem or []map
-	var items []QAItem
-	switch v := raw.(type) {
-	case []QAItem:
-		items = v
-	case []map[string]any:
-		for _, m := range v {
-			q, _ := m["Question"].(string)
-			a, _ := m["Answer"].(string)
-			items = append(items, QAItem{Question: q, Answer: a})
-		}
-	default:
-		return Div(Text(""))
-	}
-	var nodes []Node
-	for _, item := range items {
-		nodes = append(nodes,
-			Div(Class("mb-4 pb-4 border-b border-base-300 last:border-b-0"),
-				Div(Class("font-medium text-sm text-base-content/70 mb-1"), Text(item.Question)),
-				Div(Class("whitespace-pre-wrap"), Text(item.Answer)),
-			),
-		)
-	}
-	return Div(Class("mt-6"), Group(nodes))
-}
-
-func (p proposalAnswersBlock) GetChildren() []components.PageInterface { return nil }
-
-// proposalMarkdown renders markdown from getter as HTML.
-type proposalMarkdown struct {
-	components.Page
-	Getter  getters.Getter
-	Classes string
-}
-
-func (p proposalMarkdown) Build(ctx context.Context) Node {
-	s, _ := getters.IfOrGetter(p.Getter, ctx, "").(string)
-	if s == "" {
-		return Div()
-	}
-	html := markdownToHTML(s)
-	return Div(Class("bg-base-100 p-8 rounded-lg shadow border "+p.Classes), Raw(html))
-}
-
-func (p proposalMarkdown) GetChildren() []components.PageInterface { return nil }
 
 func registerDetail() {
 	generatedSection := []components.PageInterface{
@@ -211,14 +151,7 @@ func registerDetail() {
 					postButton("Regenerate Proposal", getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), "arrow-path", "btn-outline btn-primary btn-sm"),
 				}},
 			}},
-			proposalMarkdown{Getter: getters.GetterKey("$in.GeneratedContent")},
-		}},
-	}
-
-	errorSection := []components.PageInterface{
-		components.ContainerColumn{Classes: "bg-error/10 border border-error p-4 rounded-lg flex flex-col items-center gap-3", Children: []components.PageInterface{
-			components.FieldText{Getter: getters.GetterKey("generation_error"), Classes: "text-error font-medium"},
-			postButton("Retry Generation", getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), "arrow-path", "btn-primary btn-sm"),
+			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedContent"), Classes: "bg-base-100 p-8 rounded-lg shadow border"},
 		}},
 	}
 
@@ -243,11 +176,11 @@ func registerDetail() {
 						components.FieldTitle{Getter: getters.GetterKey("$in.Title")},
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.CreatedAt")}}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
-							components.LabelInline{Title: "Questionnaire Answers", Children: []components.PageInterface{proposalAnswersBlock{}}},
+							components.LabelInline{Title: "Questionnaire Answers", Children: []components.PageInterface{components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers"), KeyField: "Question", ValueField: "Answer", Classes: "mt-6"}}},
 						}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedContent"), Children: generatedSection},
-							components.ShowIf{Getter: getters.GetterKey("generation_error"), Children: errorSection},
+	
 							components.ShowIf{Getter: getters.GetterKey("generation_pending"), Children: pendingSection},
 							components.ShowIf{Getter: getterIdleGeneration(proposalGenerationIdle), Children: idleSection},
 						}},
@@ -267,10 +200,7 @@ func proposalGenerationIdle(ctx context.Context) bool {
 	if content != nil && content != "" {
 		return false
 	}
-	if getters.IfOrGetter(getters.GetterKey("generation_error"), ctx, nil) != nil {
-		return false
-	}
-	if getters.IfOrGetter(getters.GetterKey("generation_pending"), ctx, nil) != nil {
+if getters.IfOrGetter(getters.GetterKey("generation_pending"), ctx, nil) != nil {
 		return false
 	}
 	if getters.IfOrGetter(getters.GetterKey("$in.GenerationID"), ctx, nil) != nil {

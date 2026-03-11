@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -41,7 +42,8 @@ func isTruthy(v any) bool {
 	case string:
 		return t != ""
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return true
+		// This is so stupid
+		return fmt.Sprintf("%d", t) != "0"
 	default:
 		return true
 	}

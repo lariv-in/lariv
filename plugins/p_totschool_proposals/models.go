@@ -43,7 +43,7 @@ type Proposal struct {
 	Title            string         `gorm:"size:250;notnull"`
 	Answers          datatypes.JSON `gorm:"type:text"` // [{"question":"...","answer":"..."}, ...]
 	GeneratedContent string         `gorm:"type:text"`
-	GenerationID     *int           // nullable, references generation_queue.id
+	GenerationID     *int           // non-nil while AI generation is in progress
 }
 
 // QAItem is one question-answer pair for JSON (Answers).
@@ -103,6 +103,9 @@ func init() {
 		if err := d.AutoMigrate(&Proposal{}); err != nil {
 			panic(err)
 		}
+		// Mark any stuck generating proposals as not generating on startup
+		d.Model(&Proposal{}).Where("generation_id IS NOT NULL").Update("generation_id", nil)
+		go runWorker(d)
 		return d
 	})
 }

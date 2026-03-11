@@ -3,6 +3,7 @@ package p_totschool_proposals
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/lariv-in/lago"
@@ -10,140 +11,87 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	StatusPending    = "Pending"
-	StatusGenerating = "Generating"
-	StatusSuccess    = "Success"
-	StatusFailed     = "Failed"
-	StatusCanceled   = "Canceled"
-)
-
-// GenerationQueue is the in-process queue for AI generation (same schema as s_totschool_ai).
-type GenerationQueue struct {
-	ID                int64
-	Content           string
-	SystemPrompt      string         `gorm:"column:system_prompt"`
-	Status            string         `gorm:"default:Pending"`
-	GeneratedContent  *string        `gorm:"column:generated_content"`
-	ErrorMessage      *string        `gorm:"column:error_message"`
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
+type AIConfig struct {
+	APIKey string `toml:"apiKey"`
+	Model  string `toml:"model"`
 }
 
-func (GenerationQueue) TableName() string { return "generation_queue" }
+var aiConfig = &AIConfig{}
 
-var proposalDB *gorm.DB
-
-func ensureGenerationQueue(d *gorm.DB) *gorm.DB {
-	err := d.Exec(`
-		CREATE TABLE IF NOT EXISTS generation_queue (
-			id                INTEGER PRIMARY KEY AUTOINCREMENT,
-			content           TEXT NOT NULL,
-			system_prompt     TEXT,
-			status            TEXT NOT NULL DEFAULT 'Pending'
-				CHECK (status IN ('Pending', 'Generating', 'Failed', 'Canceled', 'Success')),
-			generated_content TEXT,
-			error_message     TEXT,
-			created_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at        DATETIME DEFAULT CURRENT_TIMESTAMP
-		);
-	`).Error
-	if err != nil {
-		panic(err)
-	}
-	// Mark any stuck Generating as Failed on startup
-	_ = d.Exec("UPDATE generation_queue SET status = 'Failed', error_message = 'Service restarted while generating' WHERE status = 'Generating'").Error
-	return d
-}
+func (c *AIConfig) PostConfig() {}
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		d = ensureGenerationQueue(d)
-		proposalDB = d
-		go runWorker()
-		return d
-	})
+	lago.RegistryConfig.Register("p_totschool_proposals", aiConfig)
 }
 
-// EnqueueGeneration inserts a task and returns its ID (or 0 on error).
-func EnqueueGeneration(content, systemPrompt string) (int64, error) {
-	if proposalDB == nil {
-		return 0, nil
-	}
-	task := GenerationQueue{
+// generationTask is sent through the work channel to the AI worker.
+type generationTask struct {
+	ProposalID   uint
+	Content      string
+	SystemPrompt string
+}
+
+var (
+	workCh    = make(chan generationTask, 64)
+	cancelMu  sync.Mutex
+	cancelled = map[uint]bool{}
+)
+
+// Generate sends a generation task to the worker goroutine.
+func Generate(db *gorm.DB, proposalID uint, content, systemPrompt string) {
+	// Mark proposal as generating
+	one := 1
+	db.Model(&Proposal{}).Where("id = ?", proposalID).Updates(map[string]any{
+		"generation_id":     &one,
+		"generated_content": "",
+	})
+	workCh <- generationTask{
+		ProposalID:   proposalID,
 		Content:      content,
 		SystemPrompt: systemPrompt,
-		Status:       StatusPending,
 	}
-	err := proposalDB.Create(&task).Error
+}
+
+// CancelGeneration marks a proposal's generation as cancelled.
+func CancelGeneration(db *gorm.DB, proposalID uint) {
+	cancelMu.Lock()
+	cancelled[proposalID] = true
+	cancelMu.Unlock()
+	db.Model(&Proposal{}).Where("id = ?", proposalID).Update("generation_id", nil)
+}
+
+func isCancelled(proposalID uint) bool {
+	cancelMu.Lock()
+	defer cancelMu.Unlock()
+	if cancelled[proposalID] {
+		delete(cancelled, proposalID)
+		return true
+	}
+	return false
+}
+
+func runWorker(db *gorm.DB) {
+	clientConfig := &genai.ClientConfig{}
+	if aiConfig.APIKey != "" {
+		clientConfig.APIKey = aiConfig.APIKey
+	}
+	model := "gemini-2.5-flash"
+	if aiConfig.Model != "" {
+		model = aiConfig.Model
+	}
+
+	client, err := genai.NewClient(context.Background(), clientConfig)
 	if err != nil {
-		return 0, err
-	}
-	return task.ID, nil
-}
-
-// GenerationStatus is the result of GetGenerationStatus.
-type GenerationStatus struct {
-	ID               int64
-	Status           string
-	GeneratedContent string
-	ErrorMessage     string
-}
-
-// GetGenerationStatus returns status and optional content/error for a task.
-func GetGenerationStatus(id int64) (GenerationStatus, bool) {
-	if proposalDB == nil {
-		return GenerationStatus{}, false
-	}
-	var t GenerationQueue
-	err := proposalDB.Where("id = ?", id).First(&t).Error
-	if err != nil {
-		return GenerationStatus{}, false
-	}
-	out := GenerationStatus{ID: t.ID, Status: t.Status}
-	if t.GeneratedContent != nil {
-		out.GeneratedContent = *t.GeneratedContent
-	}
-	if t.ErrorMessage != nil {
-		out.ErrorMessage = *t.ErrorMessage
-	}
-	return out, true
-}
-
-// CancelGeneration marks the task as Canceled.
-func CancelGeneration(id int64) error {
-	if proposalDB == nil {
-		return nil
-	}
-	err := proposalDB.Model(&GenerationQueue{}).Where("id = ?", id).Updates(map[string]any{
-		"status":      StatusCanceled,
-		"updated_at": time.Now(),
-	}).Error
-	return err
-}
-
-func runWorker() {
-	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{})
-	if err != nil {
-		log.Printf("[proposals] genai client not available (set GOOGLE_API_KEY or GEMINI_API_KEY): %v", err)
+		log.Printf("[proposals] genai client not available: %v", err)
+		// Drain channel so senders don't block, mark proposals as failed
+		for task := range workCh {
+			db.Model(&Proposal{}).Where("id = ?", task.ProposalID).Update("generation_id", nil)
+		}
 		return
 	}
 
-	for {
-		time.Sleep(time.Second)
-		if proposalDB == nil {
-			continue
-		}
-
-		var task GenerationQueue
-		err := proposalDB.Where("status = ?", StatusPending).First(&task).Error
-		if err != nil || task.ID == 0 {
-			continue
-		}
-
-		// Lock
-		err = proposalDB.Model(&task).Update("status", StatusGenerating).Error
-		if err != nil {
+	for task := range workCh {
+		if isCancelled(task.ProposalID) {
 			continue
 		}
 
@@ -152,41 +100,29 @@ func runWorker() {
 		if task.SystemPrompt != "" {
 			config.SystemInstruction = genai.NewContentFromText(task.SystemPrompt, "user")
 		}
-		resp, err := client.Models.GenerateContent(ctx, "gemini-2.5-flash", genai.Text(task.Content), config)
+		resp, err := client.Models.GenerateContent(ctx, model, genai.Text(task.Content), config)
 		cancel()
 
+		if isCancelled(task.ProposalID) {
+			continue
+		}
+
 		if err != nil {
-			msg := err.Error()
-			_ = proposalDB.Model(&task).Updates(map[string]any{
-				"status":         StatusFailed,
-				"error_message":  msg,
-				"updated_at":     time.Now(),
-			})
+			log.Printf("[proposals] generation failed for proposal %d: %v", task.ProposalID, err)
+			db.Model(&Proposal{}).Where("id = ?", task.ProposalID).Update("generation_id", nil)
 			continue
 		}
 
 		respText := resp.Text()
 		if respText == "" {
-			_ = proposalDB.Model(&task).Updates(map[string]any{
-				"status":        StatusFailed,
-				"error_message": "empty response",
-				"updated_at":    time.Now(),
-			})
+			log.Printf("[proposals] empty response for proposal %d", task.ProposalID)
+			db.Model(&Proposal{}).Where("id = ?", task.ProposalID).Update("generation_id", nil)
 			continue
 		}
 
-		// Check if was canceled while we were generating
-		var current GenerationQueue
-		_ = proposalDB.Where("id = ?", task.ID).First(&current)
-		if current.Status == StatusCanceled {
-			continue
-		}
-
-		_ = proposalDB.Model(&task).Updates(map[string]any{
-			"status":             StatusSuccess,
+		db.Model(&Proposal{}).Where("id = ?", task.ProposalID).Updates(map[string]any{
 			"generated_content": respText,
-			"error_message":     nil,
-			"updated_at":        time.Now(),
+			"generation_id":     nil,
 		})
 	}
 }

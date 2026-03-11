@@ -3,7 +3,6 @@ package p_totschool_proposals
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -107,29 +106,9 @@ func detailHandler(v views.View) http.Handler {
 
 		ctx := r.Context()
 
-		// Check generation status if in progress
-		if proposal.GenerationID != nil && proposal.GeneratedContent == "" {
-			status, ok := GetGenerationStatus(int64(*proposal.GenerationID))
-			if ok {
-				switch status.Status {
-				case StatusSuccess:
-					proposal.GeneratedContent = status.GeneratedContent
-					proposal.GenerationID = nil
-					db.Model(proposal).Updates(map[string]any{"generated_content": status.GeneratedContent, "generation_id": nil})
-				case StatusFailed, StatusCanceled:
-					errMsg := status.ErrorMessage
-					if errMsg == "" {
-						errMsg = "Generation failed."
-					}
-					ctx = context.WithValue(ctx, "generation_error", errMsg)
-					proposal.GenerationID = nil
-					db.Model(proposal).Update("generation_id", nil)
-				default:
-					ctx = context.WithValue(ctx, "generation_pending", true)
-				}
-			} else {
-				ctx = context.WithValue(ctx, "generation_pending", true)
-			}
+		// If generation is in progress, signal pending to the template
+		if proposal.GenerationID != nil {
+			ctx = context.WithValue(ctx, "generation_pending", true)
 		}
 
 		proposalMap := getters.MapFromStruct(proposal)
@@ -387,18 +366,7 @@ QUESTIONNAIRE RESPONSES:
 
 Create a detailed, personalized financial proposal following the report structure provided.`, clientName, answersText)
 
-		genID, err := EnqueueGeneration(userPrompt, systemPrompt)
-		if err != nil {
-			log.Printf("proposals: EnqueueGeneration: %v", err)
-			http.Error(w, "Failed to start generation", http.StatusInternalServerError)
-			return
-		}
-		if genID != 0 {
-			id := int(genID)
-			proposal.GenerationID = &id
-			proposal.GeneratedContent = ""
-			db.Model(proposal).Updates(map[string]any{"generation_id": id, "generated_content": ""})
-		}
+		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
 		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", proposal.ID))
 	})
@@ -420,9 +388,7 @@ func cancelHandler(v views.View) http.Handler {
 		}
 
 		if proposal.GenerationID != nil {
-			_ = CancelGeneration(int64(*proposal.GenerationID))
-			proposal.GenerationID = nil
-			db.Model(proposal).Update("generation_id", nil)
+			CancelGeneration(db, proposal.ID)
 		}
 
 		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", proposal.ID))
@@ -480,18 +446,7 @@ Rules:
 
 		userPrompt := fmt.Sprintf("Here is the current proposal markdown:\n\n---\n%s\n---\n\nPlease edit this proposal according to these instructions: %s\n\nOutput only the edited markdown, nothing else.", content, instructions)
 
-		genID, err := EnqueueGeneration(userPrompt, systemPrompt)
-		if err != nil {
-			log.Printf("proposals: EnqueueGeneration (ai-edit): %v", err)
-			http.Error(w, "Failed to start generation", http.StatusInternalServerError)
-			return
-		}
-		if genID != 0 {
-			id := int(genID)
-			proposal.GenerationID = &id
-			proposal.GeneratedContent = ""
-			db.Model(proposal).Updates(map[string]any{"generation_id": id, "generated_content": ""})
-		}
+		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
 		redirectTo(w, r, fmt.Sprintf(AppUrl+"%s/", idStr))
 	})
