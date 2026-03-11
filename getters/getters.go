@@ -27,7 +27,6 @@ func GetterKey(key string) Getter {
 				return nil
 			}
 			m, ok := value.(map[string]any)
-			fmt.Println(m)
 			if !ok {
 				v := reflect.ValueOf(value)
 				if v.Kind() == reflect.Pointer {

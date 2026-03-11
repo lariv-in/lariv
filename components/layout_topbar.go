@@ -25,9 +25,6 @@ type TopbarButton struct {
 	Classes       string         // CSS classes for the button
 }
 
-// TopbarButtonsGetter is a package-level getter that provides []TopbarButton.
-// It is set by lago during initialization to read from RegistryTopbarButtons.
-// LayoutTopbar reads from this automatically — no per-page configuration needed.
 var RegistryTopbarButtons = registry.NewRegistry[TopbarButton]()
 
 type LayoutTopbar struct {
