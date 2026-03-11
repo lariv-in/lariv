@@ -1,4 +1,5 @@
 package lago
+
 func BuildAllRegistries() {
 	RegistryGenerator.Build()
 	RegistryMiddleware.Build()
@@ -6,4 +7,5 @@ func BuildAllRegistries() {
 	RegistryPlugins.Build()
 	RegistryRoute.Build()
 	RegistryView.Build()
+	RegistryConfig.Build()
 }

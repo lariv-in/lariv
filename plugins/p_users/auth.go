@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/google/uuid"
+	"github.com/lariv-in/lago"
 	"golang.org/x/crypto/scrypt"
 	"gorm.io/gorm"
 )
@@ -43,12 +44,37 @@ func Authenticate(db *gorm.DB, email string, password string) (*User, error) {
 	return &user, nil
 }
 
+type AuthConfig struct {
+	SigningKey string `toml:"signingKey"`
+	JwtIssuer  string `toml:"jwtIssuer"`
+}
+
+var Config = &AuthConfig{}
+
 var signingKey [256]byte
 var jwtIssuer [256]byte
 
 func init() {
 	rand.Read(signingKey[:])
 	rand.Read(jwtIssuer[:])
+
+	lago.RegistryConfig.Register("p_users", Config)
+}
+
+func (c *AuthConfig) PostConfig() {
+	if c.SigningKey != "" {
+		decoded, err := base64.StdEncoding.DecodeString(c.SigningKey)
+		if err == nil {
+			copy(signingKey[:], decoded)
+		}
+	}
+
+	if c.JwtIssuer != "" {
+		decoded, err := base64.StdEncoding.DecodeString(c.JwtIssuer)
+		if err == nil {
+			copy(jwtIssuer[:], decoded)
+		}
+	}
 }
 
 func (u *User) GetClaims(currentTime time.Time, expiryTime time.Time) jwt.RegisteredClaims {
@@ -76,11 +102,11 @@ func (u *User) Login(w http.ResponseWriter) {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name:    "auth-token",
-		Value:   jwt,
-		Expires: nextDayTime,
-		Secure: true,
+		Name:     "auth-token",
+		Value:    jwt,
+		Expires:  nextDayTime,
+		Secure:   true,
 		HttpOnly: true,
-		Path: "/",
+		Path:     "/",
 	})
 }
