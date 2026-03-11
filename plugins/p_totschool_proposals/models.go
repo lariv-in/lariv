@@ -89,14 +89,6 @@ func (p *Proposal) FormatAnswersForAI() (string, error) {
 	return strings.Join(lines, "\n"), nil
 }
 
-// InitializeAnswers sets Answers to QUESTIONS with empty answers.
-func (p *Proposal) InitializeAnswers() {
-	items := make([]QAItem, len(QUESTIONS))
-	for i, q := range QUESTIONS {
-		items[i] = QAItem{Question: q, Answer: ""}
-	}
-	_ = p.SetAnswers(items)
-}
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {

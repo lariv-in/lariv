@@ -13,6 +13,8 @@ import (
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
 	"gorm.io/gorm"
+	"maragu.dev/gomponents"
+	g "maragu.dev/gomponents/html"
 )
 
 func proposalScope(db *gorm.DB, user p_users.User) *gorm.DB {
@@ -57,7 +59,11 @@ func listHandler(v views.View) http.Handler {
 			query = query.Where("title LIKE ?", "%"+title+"%")
 		}
 		if sort := r.URL.Query().Get("sort"); sort != "" {
-			query = query.Order(sort)
+			switch sort {
+			case "title", "created_at", "updated_at",
+				"title desc", "created_at desc", "updated_at desc":
+				query = query.Order(sort)
+			}
 		}
 
 		var total int64
@@ -468,9 +474,22 @@ func exportPdfHandler(v views.View) http.Handler {
 			return
 		}
 
-		// Stub: not implemented
-		http.Error(w, "PDF export not implemented", http.StatusNotImplemented)
-		_ = user
+		page := g.HTML(
+			g.Head(
+				g.Meta(g.Charset("utf-8")),
+				g.TitleEl(gomponents.Text(proposal.Title)),
+				g.StyleEl(g.Type("text/css"), gomponents.Raw(`
+body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
+h1, h2, h3 { margin-top: 1.5em; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+@media print { body { margin: 0; } }
+`)),
+			),
+			g.Body(gomponents.Raw(components.RenderMarkdown(proposal.GeneratedContent))),
+		)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_ = page.Render(w)
 	})
 }
 

@@ -138,8 +138,6 @@ func registerTable() {
 	})
 }
 
-
-
 func registerDetail() {
 	generatedSection := []components.PageInterface{
 		components.ContainerColumn{Classes: "mt-2 p-4 card card-body border rounded-box border-base-300", Children: []components.PageInterface{
@@ -148,7 +146,7 @@ func registerDetail() {
 				components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 					components.ButtonLink{Label: "Export to PDF", Link: getters.GetterFormat(AppUrl+"%v/export-pdf/", getters.GetterKey("$in.ID")), Classes: "btn-secondary btn-sm"},
 					components.ButtonLink{Label: "Edit with AI", Link: getters.GetterFormat(AppUrl+"%v/ai-edit/form/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-secondary btn-sm"},
-					postButton("Regenerate Proposal", getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), "arrow-path", "btn-outline btn-primary btn-sm"),
+					components.ButtonPost{Label: "Regenerate Proposal", Url: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
 			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedContent"), Classes: "bg-base-100 p-8 rounded-lg shadow border"},
@@ -158,12 +156,12 @@ func registerDetail() {
 	pendingSection := []components.PageInterface{
 		components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
 			components.FieldText{Getter: getters.GetterStatic("Generating..."), Classes: "btn-primary"},
-			postButton("Cancel Generation", getters.GetterFormat(AppUrl+"%v/cancel/", getters.GetterKey("$in.ID")), "x-mark", "btn-outline btn-error btn-sm"),
+			components.ButtonPost{Label: "Cancel Generation", Url: getters.GetterFormat(AppUrl+"%v/cancel/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-error btn-sm"},
 		}},
 	}
 
 	idleSection := []components.PageInterface{
-		postButton("Generate Proposal with AI", getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), "sparkles", "btn-primary"),
+		components.ButtonPost{Label: "Generate Proposal with AI", Url: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-primary"},
 	}
 
 	lago.RegistryPage.Register("proposals.ProposalDetail", components.ShellScaffold{
@@ -182,7 +180,7 @@ func registerDetail() {
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedContent"), Children: generatedSection},
 	
 							components.ShowIf{Getter: getters.GetterKey("generation_pending"), Children: pendingSection},
-							components.ShowIf{Getter: getterIdleGeneration(proposalGenerationIdle), Children: idleSection},
+							components.ShowIf{Getter: getterIdleGeneration(), Children: idleSection},
 						}},
 					}},
 				},
@@ -191,32 +189,18 @@ func registerDetail() {
 	})
 }
 
-func getterIdleGeneration(f func(context.Context) bool) getters.Getter {
-	return func(ctx context.Context) any { return f(ctx) }
+func getterIdleGeneration() getters.Getter {
+	return func(ctx context.Context) any {
+		if getters.IfOrGetter(getters.GetterKey("$in.GeneratedContent"), ctx, nil) != nil {
+			return false
+		}
+		if getters.IfOrGetter(getters.GetterKey("generation_pending"), ctx, nil) != nil {
+			return false
+		}
+		return true
+	}
 }
 
-func proposalGenerationIdle(ctx context.Context) bool {
-	content := getters.IfOrGetter(getters.GetterKey("$in.GeneratedContent"), ctx, nil)
-	if content != nil && content != "" {
-		return false
-	}
-if getters.IfOrGetter(getters.GetterKey("generation_pending"), ctx, nil) != nil {
-		return false
-	}
-	if getters.IfOrGetter(getters.GetterKey("$in.GenerationID"), ctx, nil) != nil {
-		return false
-	}
-	return true
-}
-
-func postButton(label string, actionUrl getters.Getter, icon, classes string) components.PageInterface {
-	return components.FormComponent{
-		Url: actionUrl, Method: http.MethodPost,
-		ChildrenAction: []components.PageInterface{
-			components.ButtonSubmit{Label: label, Classes: classes},
-		},
-	}
-}
 
 func registerModal() {
 	lago.RegistryPage.Register("proposals.AiEditModal", components.Modal{

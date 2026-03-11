@@ -19,14 +19,17 @@ type FieldMarkdown struct {
 	Classes string
 }
 
+func RenderMarkdown(md string) string {
+	doc := mdParser.Parse([]byte(md))
+	opts := html.RendererOptions{Flags: html.CommonFlags}
+	renderer := html.NewRenderer(opts)
+	return string(markdown.Render(doc, renderer))
+}
+
 func (e FieldMarkdown) Build(ctx context.Context) Node {
 	s, _ := getters.IfOrGetter(e.Getter, ctx, "").(string)
 	if s == "" {
 		return ghtml.Div()
 	}
-	doc := mdParser.Parse([]byte(s))
-	opts := html.RendererOptions{Flags: html.CommonFlags}
-	renderer := html.NewRenderer(opts)
-	rendered := string(markdown.Render(doc, renderer))
-	return ghtml.Div(ghtml.Class(e.Classes), Raw(rendered))
+	return ghtml.Div(ghtml.Class(e.Classes), Raw(RenderMarkdown(s)))
 }
