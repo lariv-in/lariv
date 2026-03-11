@@ -246,8 +246,8 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 // --- Singleton Handler ---
 
 // SingletonView loads a singleton record of type T (via FirstOrCreate) into $in context for GET,
-// and parses the form + updates the record on POST, then redirects to successUrl.
-func SingletonView[T any](model T, successUrl string) func(View) View {
+// and parses the form + updates the record on POST, then redirects to the URL resolved by successUrl.
+func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
 	return func(v View) View {
 		// Wrap GET to load singleton into $in context
 		oldGet := v.Handlers[http.MethodGet]
@@ -285,7 +285,8 @@ func SingletonView[T any](model T, successUrl string) func(View) View {
 					return
 				}
 
-				http.Redirect(w, r, successUrl, http.StatusSeeOther)
+				redirectUrl, _ := getters.IfOrGetter(successUrl, r.Context(), "").(string)
+				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
 	}

@@ -3,6 +3,7 @@ package getters
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -58,6 +59,13 @@ func GetterKey(key string) Getter {
 			}
 		}
 		return value
+	}
+}
+
+func GetterQueryEscape(g Getter) Getter {
+	return func(ctx context.Context) any {
+		value := IfOrGetter(g, ctx, "")
+		return url.QueryEscape(fmt.Sprintf("%v", value))
 	}
 }
 

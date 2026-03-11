@@ -91,7 +91,7 @@ func init() {
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.GetterStatic("Verify OTP")},
 					components.FormComponent{
-						Url:    getters.GetterStatic("/otp/verify/"),
+						Url:    getters.GetterFormat("/otp/verify/?identifier=%v", getters.GetterQueryEscape(getters.GetterKey("$in.identifier"))),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.InputText{
@@ -185,6 +185,41 @@ func init() {
 						Name:   "email_otp_template_string",
 						Label:  "Email OTP Template String",
 						Getter: getters.GetterKey("$in.email_otp_template_string"),
+					},
+					components.ContainerRow{
+						Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+						Children: []components.PageInterface{
+							components.InputText{
+								Name:   "smtp_host",
+								Label:  "SMTP Host",
+								Getter: getters.GetterKey("$in.smtp_host"),
+							},
+							components.InputText{
+								Name:   "smtp_port",
+								Label:  "SMTP Port",
+								Getter: getters.GetterKey("$in.smtp_port"),
+							},
+						},
+					},
+					components.ContainerRow{
+						Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+						Children: []components.PageInterface{
+							components.InputText{
+								Name:   "smtp_username",
+								Label:  "SMTP Username",
+								Getter: getters.GetterKey("$in.smtp_username"),
+							},
+							components.InputText{
+								Name:   "smtp_password",
+								Label:  "SMTP Password",
+								Getter: getters.GetterKey("$in.smtp_password"),
+							},
+						},
+					},
+					components.InputText{
+						Name:   "smtp_from",
+						Label:  "SMTP From Address",
+						Getter: getters.GetterKey("$in.smtp_from"),
 					},
 				},
 				ChildrenAction: []components.PageInterface{

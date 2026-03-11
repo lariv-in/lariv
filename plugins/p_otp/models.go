@@ -17,6 +17,11 @@ type OTPPreferences struct {
 	SmsOtpFieldName        string
 	SmsOtpExtraFields      string // Stored as JSON string
 	EmailOtpTemplateString string
+	SmtpHost               string
+	SmtpPort               string
+	SmtpUsername            string
+	SmtpPassword           string
+	SmtpFrom               string
 }
 
 // GetExtraFields parses the SmsOtpExtraFields JSON string into a map.

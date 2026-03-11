@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
+	"net/mail"
+	"net/smtp"
 	"regexp"
 	"strings"
 	"sync"
@@ -181,10 +183,8 @@ func SendSmsOtp(db *gorm.DB, phone string) bool {
 	return true
 }
 
-// SendEmailOtp stores the OTP and logs it (or interfaces with an SMTP mailer if provided).
+// SendEmailOtp generates an OTP, stores it, and sends it via SMTP.
 func SendEmailOtp(db *gorm.DB, email string) bool {
-	otp := GenerateOTP()
-	StoreOtpEmail(email, otp)
 	prefs := LoadPreferences(db)
 
 	templateString := prefs.EmailOtpTemplateString
@@ -193,14 +193,38 @@ func SendEmailOtp(db *gorm.DB, email string) bool {
 		return false
 	}
 
-	// Pseudo-template engine
-	message := strings.ReplaceAll(templateString, "$otp", otp)
+	if prefs.SmtpHost == "" || prefs.SmtpFrom == "" {
+		log.Println("SMTP not configured (host and from are required)")
+		return false
+	}
 
-	// TODO: Integrate with standard SMTP or `net/mail`. For now, printing to console mimics the generic implementation gap.
-	log.Printf("--- EMAIL OTP DISPATCH (MOCK) ---")
-	log.Printf("To: %s", email)
-	log.Printf("Message: %s", message)
-	log.Printf("--- END EMAIL ---")
+	otp := GenerateOTP()
+	StoreOtpEmail(email, otp)
 
+	body := strings.ReplaceAll(templateString, "$otp", otp)
+
+	from := mail.Address{Address: prefs.SmtpFrom}
+	to := mail.Address{Address: email}
+	msg := "From: " + from.String() + "\r\n" +
+		"To: " + to.String() + "\r\n" +
+		"Subject: Your OTP Code\r\n" +
+		"MIME-Version: 1.0\r\n" +
+		"Content-Type: text/plain; charset=\"utf-8\"\r\n" +
+		"\r\n" +
+		body
+
+	addr := prefs.SmtpHost + ":" + prefs.SmtpPort
+	var auth smtp.Auth
+	if prefs.SmtpUsername != "" {
+		auth = smtp.PlainAuth("", prefs.SmtpUsername, prefs.SmtpPassword, prefs.SmtpHost)
+	}
+
+	err := smtp.SendMail(addr, auth, prefs.SmtpFrom, []string{email}, []byte(msg))
+	if err != nil {
+		log.Printf("Failed to send email OTP to %s: %v", email, err)
+		return false
+	}
+
+	log.Printf("OTP email sent to %s", email)
 	return true
 }
