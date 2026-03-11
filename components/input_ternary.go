@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -13,7 +14,7 @@ type InputTernary struct {
 	Page
 	Label      string
 	Name       string
-	Getter     Getter
+	Getter     getters.Getter
 	TrueLabel  string
 	FalseLabel string
 	NoneLabel  string
@@ -21,7 +22,7 @@ type InputTernary struct {
 }
 
 func (e InputTernary) Build(ctx context.Context) Node {
-	value := IfOrGetter(e.Getter, ctx, nil)
+	value := getters.IfOrGetter(e.Getter, ctx, nil)
 
 	trueLabel := e.TrueLabel
 	if trueLabel == "" {

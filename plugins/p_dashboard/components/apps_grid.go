@@ -7,6 +7,7 @@ import (
 
 	"github.com/lariv-in/components"
 	comp "github.com/lariv-in/components"
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -14,7 +15,7 @@ import (
 
 type AppsGrid struct {
 	components.Page
-	Apps comp.Getter
+	Apps getters.Getter
 }
 
 func (e AppsGrid) Build(ctx context.Context) Node {

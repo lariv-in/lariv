@@ -2,9 +2,11 @@ package lago
 
 import (
 	"net/http"
+
+	"github.com/lariv-in/registry"
 )
 
-var RegistryView Registry[http.Handler] = NewRegistry[http.Handler]()
+var RegistryView registry.Registry[http.Handler] = registry.NewRegistry[http.Handler]()
 
 type DynamicView struct {
 	Key string

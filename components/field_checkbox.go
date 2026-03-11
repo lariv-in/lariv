@@ -3,17 +3,18 @@ package components
 import (
 	"context"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 type FieldCheckbox struct {
 	Page
-	Getter Getter
+	Getter getters.Getter
 }
 
 func (e FieldCheckbox) Build(ctx context.Context) Node {
-	value := IfOrGetter(e.Getter, ctx, false)
+	value := getters.IfOrGetter(e.Getter, ctx, false)
 	truthy := false
 	if b, ok := value.(bool); ok {
 		truthy = b

@@ -2,6 +2,8 @@ package lago
 
 import (
 	"net/url"
+
+	"github.com/lariv-in/registry"
 )
 
 type PluginType int
@@ -25,4 +27,4 @@ type Plugin struct {
 	Classes     string
 }
 
-var RegistryPlugins Registry[Plugin] = NewRegistry[Plugin]()
+var RegistryPlugins registry.Registry[Plugin] = registry.NewRegistry[Plugin]()

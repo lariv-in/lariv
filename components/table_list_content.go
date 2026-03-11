@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	g_html "maragu.dev/gomponents/html"
 )
@@ -12,13 +13,13 @@ import (
 type TableListContent struct {
 	Page
 	Columns []TableColumn
-	Data    Getter
-	OnClick Getter
+	Data    getters.Getter
+	OnClick getters.Getter
 }
 
 func (e TableListContent) Build(ctx context.Context) Node {
 	var objects []any
-	data := IfOrGetter(e.Data, ctx, nil)
+	data := getters.IfOrGetter(e.Data, ctx, nil)
 
 	if data != nil {
 		v := reflect.ValueOf(data)
@@ -46,7 +47,7 @@ func (e TableListContent) Build(ctx context.Context) Node {
 		trs = append(trs, g_html.Tr(g_html.Td(g_html.ColSpan(fmt.Sprintf("%d", len(e.Columns))), g_html.Class("text-center opacity-50 py-8"), Text("Table is empty"))))
 	} else {
 		for _, row := range objects {
-			rowMap := MapFromStruct(row)
+			rowMap := getters.MapFromStruct(row)
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
 
 			var tds []Node
@@ -59,7 +60,7 @@ func (e TableListContent) Build(ctx context.Context) Node {
 			}
 
 			if e.OnClick != nil {
-				expr := fmt.Sprintf("%v", IfOrGetter(e.OnClick, rowCtx, ""))
+				expr := fmt.Sprintf("%v", getters.IfOrGetter(e.OnClick, rowCtx, ""))
 				if expr != "" {
 					trs = append(trs, g_html.Tr(
 						g_html.Class("cursor-pointer hover:bg-base-200 transition-colors"),

@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -10,7 +11,7 @@ import (
 type ContainerError struct {
 	Page
 	Children []PageInterface
-	Error    Getter
+	Error    getters.Getter
 }
 
 func (e ContainerError) Build(ctx context.Context) Node {

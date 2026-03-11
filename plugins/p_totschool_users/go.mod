@@ -1,4 +1,4 @@
-module github.com/lariv-in/p_otp
+module github.com/lariv-in/p_totschool_users
 
 go 1.25.5
 

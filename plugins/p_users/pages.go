@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/lariv-in/components"
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 )
 
@@ -22,45 +23,45 @@ func init() {
 
 func registerMenuPages() {
 	lago.RegistryPage.Register("users.UserMenu", components.SidebarMenu{
-		Title: components.GetterStatic("Users"),
+		Title: getters.GetterStatic("Users"),
 		Back: &components.SidebarMenuItem{
-			Title: components.GetterStatic("Back to Home"),
-			Url:   components.GetterStatic("/apps/"),
+			Title: getters.GetterStatic("Back to Home"),
+			Url:   getters.GetterStatic("/apps/"),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("All Users"),
-				Url:   components.GetterStatic(AppUrl),
+				Title: getters.GetterStatic("All Users"),
+				Url:   getters.GetterStatic(AppUrl),
 			},
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Roles"),
-				Url:   components.GetterStatic(RoleUrl),
+				Title: getters.GetterStatic("Roles"),
+				Url:   getters.GetterStatic(RoleUrl),
 			},
 		},
 	})
 
 	lago.RegistryPage.Register("users.UserDetailMenu", components.SidebarMenu{
-		Title: components.GetterFormat("User: %s", components.GetterKey("user.name")),
+		Title: getters.GetterFormat("User: %s", getters.GetterKey("user.name")),
 		Back: &components.SidebarMenuItem{
-			Title: components.GetterStatic("Back to All Users"),
-			Url:   components.GetterStatic(AppUrl),
+			Title: getters.GetterStatic("Back to All Users"),
+			Url:   getters.GetterStatic(AppUrl),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("User Detail"),
-				Url:   components.GetterFormat(AppUrl+"%v/", components.GetterKey("user.id")),
+				Title: getters.GetterStatic("User Detail"),
+				Url:   getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("user.id")),
 			},
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Edit User"),
-				Url:   components.GetterFormat(AppUrl+"%v/edit/", components.GetterKey("user.id")),
+				Title: getters.GetterStatic("Edit User"),
+				Url:   getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("user.id")),
 			},
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Delete User"),
-				Url:   components.GetterFormat(AppUrl+"%v/delete/", components.GetterKey("user.id")),
+				Title: getters.GetterStatic("Delete User"),
+				Url:   getters.GetterFormat(AppUrl+"%v/delete/", getters.GetterKey("user.id")),
 			},
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Change Password"),
-				Url:   components.GetterFormat(AppUrl+"%v/change-password/", components.GetterKey("user.id")),
+				Title: getters.GetterStatic("Change Password"),
+				Url:   getters.GetterFormat(AppUrl+"%v/change-password/", getters.GetterKey("user.id")),
 			},
 		},
 	})
@@ -70,19 +71,19 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("users.UserFilter", components.FormComponent{
-		Url:    components.GetterStatic(AppUrl),
+		Url:    getters.GetterStatic(AppUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
-			components.InputText{Label: "Email", Name: "email", Getter: components.GetterKey("$get.email")},
-			components.InputPhone{Label: "Phone", Name: "phone", Getter: components.GetterKey("$get.phone")},
+			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
+			components.InputText{Label: "Email", Name: "email", Getter: getters.GetterKey("$get.email")},
+			components.InputPhone{Label: "Phone", Name: "phone", Getter: getters.GetterKey("$get.phone")},
 			components.InputTernary{
 				Label:      "Superuser",
 				Name:       "is_superuser",
 				TrueLabel:  "Yes",
 				FalseLabel: "No",
 				NoneLabel:  "All",
-				Getter:     components.GetterKey("$get.is_superuser"),
+				Getter:     getters.GetterKey("$get.is_superuser"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -94,11 +95,11 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("users.UserSelectionFilter", components.FormComponent{
-		Url:    components.GetterStatic(AppUrl + "select/"),
+		Url:    getters.GetterStatic(AppUrl + "select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
-			components.InputText{Label: "Email", Name: "email", Getter: components.GetterKey("$get.email")},
+			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
+			components.InputText{Label: "Email", Name: "email", Getter: getters.GetterKey("$get.email")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -109,11 +110,11 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("users.UserMultiSelectionFilter", components.FormComponent{
-		Url:    components.GetterStatic(AppUrl + "multi-select/"),
+		Url:    getters.GetterStatic(AppUrl + "multi-select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
-			components.InputText{Label: "Email", Name: "email", Getter: components.GetterKey("$get.email")},
+			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
+			components.InputText{Label: "Email", Name: "email", Getter: getters.GetterKey("$get.email")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -124,10 +125,10 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("users.RoleSelectionFilter", components.FormComponent{
-		Url:    components.GetterStatic(RoleUrl + "select/"),
+		Url:    getters.GetterStatic(RoleUrl + "select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
+			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -146,22 +147,22 @@ func userFormFields() components.ContainerColumn {
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					components.InputText{Label: "Name", Name: "name", Required: true, Getter: components.GetterKey("$in.name")},
-					components.InputEmail{Label: "Email", Name: "email", Required: true, Getter: components.GetterKey("$in.email")},
+					components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+					components.InputEmail{Label: "Email", Name: "email", Required: true, Getter: getters.GetterKey("$in.email")},
 				},
 			},
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					components.InputPhone{Label: "Phone", Name: "phone", Required: true, Getter: components.GetterKey("$in.phone")},
+					components.InputPhone{Label: "Phone", Name: "phone", Required: true, Getter: getters.GetterKey("$in.phone")},
 					components.InputForeignKey{
 						Label:       "Role",
 						Name:        "role_id",
-						Url:         components.GetterStatic(RoleUrl + "select/"),
+						Url:         getters.GetterStatic(RoleUrl + "select/"),
 						DisplayAttr: "name",
 						Placeholder: "Select a role...",
 						Required:    true,
-						Getter:      components.GetterAssociation("roles", components.GetterKey("$in.role_id")),
+						Getter:      getters.GetterAssociation("roles", getters.GetterKey("$in.role_id")),
 					},
 				},
 			},
@@ -171,7 +172,7 @@ func userFormFields() components.ContainerColumn {
 				TrueLabel:  "Yes",
 				FalseLabel: "No",
 				NoneLabel:  "Not Set",
-				Getter:     components.GetterKey("$in.IsSuperuser"),
+				Getter:     getters.GetterKey("$in.IsSuperuser"),
 			},
 			components.ButtonSubmit{Label: "Save User"},
 		},
@@ -187,7 +188,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Url:      components.GetterStatic(AppUrl + "create/"),
+				Url:      getters.GetterStatic(AppUrl + "create/"),
 				Method:   http.MethodPost,
 				Title:    "Create User",
 				Subtitle: "Create a new user",
@@ -205,8 +206,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Getter:   components.GetterKey("user"),
-				Url:      components.GetterFormat(AppUrl+"%v/edit/", components.GetterKey("$in.id")),
+				Getter:   getters.GetterKey("user"),
+				Url:      getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("$in.id")),
 				Method:   http.MethodPost,
 				Title:    "Edit User",
 				Subtitle: "Update user details",
@@ -224,8 +225,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Getter:   components.GetterKey("user"),
-				Url:      components.GetterFormat(AppUrl+"%v/change-password/", components.GetterKey("$in.id")),
+				Getter:   getters.GetterKey("user"),
+				Url:      getters.GetterFormat(AppUrl+"%v/change-password/", getters.GetterKey("$in.id")),
 				Method:   http.MethodPost,
 				Title:    "Change Password",
 				Subtitle: "Update user password",
@@ -252,22 +253,22 @@ func registerTablePages() {
 			components.DataTable{
 				UID:             "user-table",
 				Classes:         "w-full",
-				Data:            components.GetterKey("users"),
-				CreateUrl:       components.GetterStatic(AppUrl + "create/"),
-				OnClick:         components.GetterNavigate(AppUrl+"%v/", components.GetterKey("$row.ID")),
+				Data:            getters.GetterKey("users"),
+				CreateUrl:       getters.GetterStatic(AppUrl + "create/"),
+				OnClick:         getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Name")},
+						components.FieldText{Getter: getters.GetterKey("$row.Name")},
 					}},
 					{Label: "Email", Key: "Email", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Email")},
+						components.FieldText{Getter: getters.GetterKey("$row.Email")},
 					}},
 					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Phone")},
+						components.FieldText{Getter: getters.GetterKey("$row.Phone")},
 					}},
 					{Label: "Superuser", Key: "IsSuperuser", Children: []components.PageInterface{
-						components.FieldCheckbox{Getter: components.GetterKey("$row.IsSuperuser")},
+						components.FieldCheckbox{Getter: getters.GetterKey("$row.IsSuperuser")},
 					}},
 				},
 			},
@@ -284,29 +285,29 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			components.Detail{
-				Getter: components.GetterKey("user"),
+				Getter: getters.GetterKey("user"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Children: []components.PageInterface{
-							components.FieldTitle{Getter: components.GetterKey("$in.Name")},
-							components.FieldSubtitle{Getter: components.GetterKey("$in.Email")},
+							components.FieldTitle{Getter: getters.GetterKey("$in.Name")},
+							components.FieldSubtitle{Getter: getters.GetterKey("$in.Email")},
 							components.LabelInline{
 								Title:   "Phone",
 								Classes: "mt-2",
 								Children: []components.PageInterface{
-									components.FieldText{Getter: components.GetterKey("$in.Phone")},
+									components.FieldText{Getter: getters.GetterKey("$in.Phone")},
 								},
 							},
 							components.LabelInline{
 								Title: "Superuser",
 								Children: []components.PageInterface{
-									components.FieldCheckbox{Getter: components.GetterKey("$in.IsSuperuser")},
+									components.FieldCheckbox{Getter: getters.GetterKey("$in.IsSuperuser")},
 								},
 							},
 							components.LabelInline{
 								Title: "Role",
 								Children: []components.PageInterface{
-									components.FieldText{Getter: components.GetterForeignKey[Role](components.GetterKey("$in.RoleID"), "Name")},
+									components.FieldText{Getter: getters.GetterForeignKey[Role](getters.GetterKey("$in.RoleID"), "Name")},
 								},
 							},
 						},
@@ -324,7 +325,7 @@ func registerDetailPages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this user?",
-				CancelUrl: components.GetterFormat(AppUrl+"%v/", components.GetterKey("user.id")),
+				CancelUrl: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("user.id")),
 			},
 		},
 	})
@@ -336,25 +337,25 @@ func registerAuthPages() {
 	lago.RegistryPage.Register("users.LoginPage", components.ShellAuthScaffold{
 		Children: []components.PageInterface{
 			components.ContainerColumn{Classes: "w-80", Children: []components.PageInterface{
-				components.FieldTitle{Getter: components.GetterStatic("Login")},
+				components.FieldTitle{Getter: getters.GetterStatic("Login")},
 				components.FormComponent{
-					Getter: components.GetterKey("user"),
-					Url:    components.GetterNil(),
+					Getter: getters.GetterKey("user"),
+					Url:    getters.GetterNil(),
 					Method: http.MethodPost,
 					ChildrenInput: []components.PageInterface{
 						components.ContainerError{
-							Error: components.GetterKey("$error.email"),
+							Error: getters.GetterKey("$error.email"),
 							Children: []components.PageInterface{
 								components.InputEmail{
 									Label:    "Email",
 									Required: true,
-									Getter:   components.GetterKey("$in.email"),
+									Getter:   getters.GetterKey("$in.email"),
 									Name:     "email",
 								},
 							},
 						},
 						components.ContainerError{
-							Error: components.GetterKey("$error.password"),
+							Error: getters.GetterKey("$error.password"),
 							Children: []components.PageInterface{
 								components.InputPassword{
 									Label:    "Password",
@@ -383,46 +384,46 @@ func registerAuthPages() {
 	lago.RegistryPage.Register("users.SignupPage", components.ShellAuthScaffold{
 		Children: []components.PageInterface{
 			components.ContainerColumn{Classes: "w-96", Children: []components.PageInterface{
-				components.FieldTitle{Getter: components.GetterStatic("Create an Account")},
+				components.FieldTitle{Getter: getters.GetterStatic("Create an Account")},
 				components.FormComponent{
-					Getter: components.GetterKey("user"),
-					Url:    components.GetterNil(),
+					Getter: getters.GetterKey("user"),
+					Url:    getters.GetterNil(),
 					Method: http.MethodPost,
 					ChildrenInput: []components.PageInterface{
 						components.ContainerError{
-							Error: components.GetterKey("$error.name"),
+							Error: getters.GetterKey("$error.name"),
 							Children: []components.PageInterface{
-								components.InputText{Label: "Full Name", Required: true, Getter: components.GetterKey("$in.name"), Name: "name"},
+								components.InputText{Label: "Full Name", Required: true, Getter: getters.GetterKey("$in.name"), Name: "name"},
 							},
 						},
 						components.ContainerError{
-							Error: components.GetterKey("$error.email"),
+							Error: getters.GetterKey("$error.email"),
 							Children: []components.PageInterface{
-								components.InputEmail{Label: "Email", Required: true, Getter: components.GetterKey("$in.email"), Name: "email"},
+								components.InputEmail{Label: "Email", Required: true, Getter: getters.GetterKey("$in.email"), Name: "email"},
 							},
 						},
 						components.ContainerError{
-							Error: components.GetterKey("$error.phone"),
+							Error: getters.GetterKey("$error.phone"),
 							Children: []components.PageInterface{
-								components.InputPhone{Label: "Phone Number", Required: true, Getter: components.GetterKey("$in.phone"), Name: "phone"},
+								components.InputPhone{Label: "Phone Number", Required: true, Getter: getters.GetterKey("$in.phone"), Name: "phone"},
 							},
 						},
 						components.ContainerError{
-							Error: components.GetterKey("$error.password1"),
+							Error: getters.GetterKey("$error.password1"),
 							Children: []components.PageInterface{
 								components.InputPassword{Name: "password1", Label: "Password", Required: true},
 							},
 						},
 						components.ContainerError{
-							Error: components.GetterKey("$error.password2"),
+							Error: getters.GetterKey("$error.password2"),
 							Children: []components.PageInterface{
 								components.InputPassword{Name: "password2", Label: "Confirm Password", Required: true},
 							},
 						},
 						components.ContainerError{
-							Error: components.GetterKey("$error.terms_accepted"),
+							Error: getters.GetterKey("$error.terms_accepted"),
 							Children: []components.PageInterface{
-								components.InputCheckbox{Name: "terms_accepted", Label: "I accept the terms and conditions", Getter: components.GetterKey("$in.terms_accepted"), Required: true},
+								components.InputCheckbox{Name: "terms_accepted", Label: "I accept the terms and conditions", Getter: getters.GetterKey("$in.terms_accepted"), Required: true},
 							},
 						},
 					},
@@ -438,8 +439,8 @@ func registerAuthPages() {
 	lago.RegistryPage.Register("users.UnauthenticatedPage", components.ShellAuthScaffold{
 		Children: []components.PageInterface{
 			components.ContainerColumn{Classes: "w-80 items-center text-center", Children: []components.PageInterface{
-				components.FieldTitle{Getter: components.GetterStatic("Welcome")},
-				components.FieldSubtitle{Getter: components.GetterStatic("Please log in or create an account to continue.")},
+				components.FieldTitle{Getter: getters.GetterStatic("Welcome")},
+				components.FieldSubtitle{Getter: getters.GetterStatic("Please log in or create an account to continue.")},
 				components.ContainerColumn{Classes: "w-full mt-4 gap-2", Children: []components.PageInterface{
 					components.ButtonLink{Label: "Login", Classes: "btn btn-primary text-white w-full", Link: lago.RoutePathGetter("users.LoginRoute")},
 					components.ButtonLink{Label: "Sign Up", Classes: "btn btn-outline w-full", Link: lago.RoutePathGetter("users.SignupRoute")},
@@ -458,18 +459,18 @@ func registerSelectionPages() {
 		Children: []components.PageInterface{
 			components.DataTable{
 				UID:             "user-selection-table",
-				Data:            components.GetterKey("users"),
-				OnClick:         components.GetterSelect("user", components.GetterKey("$row.ID"), components.GetterKey("$row.Name")),
+				Data:            getters.GetterKey("users"),
+				OnClick:         getters.GetterSelect("user", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Name")},
+						components.FieldText{Getter: getters.GetterKey("$row.Name")},
 					}},
 					{Label: "Email", Key: "Email", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Email")},
+						components.FieldText{Getter: getters.GetterKey("$row.Email")},
 					}},
 					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Phone")},
+						components.FieldText{Getter: getters.GetterKey("$row.Phone")},
 					}},
 				},
 			},
@@ -482,15 +483,15 @@ func registerSelectionPages() {
 		Children: []components.PageInterface{
 			components.DataTable{
 				UID:             "user-multi-selection-table",
-				Data:            components.GetterKey("users"),
-				OnClick:         components.GetterMultiSelect("role", components.GetterKey("$row.ID"), components.GetterKey("$row.Name")),
+				Data:            getters.GetterKey("users"),
+				OnClick:         getters.GetterMultiSelect("role", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserMultiSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Name")},
+						components.FieldText{Getter: getters.GetterKey("$row.Name")},
 					}},
 					{Label: "Email", Key: "Email", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Email")},
+						components.FieldText{Getter: getters.GetterKey("$row.Email")},
 					}},
 				},
 			},
@@ -503,12 +504,12 @@ func registerSelectionPages() {
 		Children: []components.PageInterface{
 			components.DataTable{
 				UID:             "role-multi-selection-table",
-				Data:            components.GetterKey("roles"),
-				OnClick:         components.GetterMultiSelect("role", components.GetterKey("$row.ID"), components.GetterKey("$row.Name")),
+				Data:            getters.GetterKey("roles"),
+				OnClick:         getters.GetterMultiSelect("role", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Name")},
+						components.FieldText{Getter: getters.GetterKey("$row.Name")},
 					}},
 				},
 			},
@@ -521,12 +522,12 @@ func registerSelectionPages() {
 		Children: []components.PageInterface{
 			components.DataTable{
 				UID:             "role-selection-table",
-				Data:            components.GetterKey("roles"),
-				OnClick:         components.GetterSelect("role_id", components.GetterKey("$row.ID"), components.GetterKey("$row.Name")),
+				Data:            getters.GetterKey("roles"),
+				OnClick:         getters.GetterSelect("role_id", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Name")},
+						components.FieldText{Getter: getters.GetterKey("$row.Name")},
 					}},
 				},
 			},
@@ -539,33 +540,33 @@ func registerSelectionPages() {
 func registerRolePages() {
 	// Role Menu
 	lago.RegistryPage.Register("users.RoleDetailMenu", components.SidebarMenu{
-		Title: components.GetterFormat("Role: %s", components.GetterKey("role.name")),
+		Title: getters.GetterFormat("Role: %s", getters.GetterKey("role.name")),
 		Back: &components.SidebarMenuItem{
-			Title: components.GetterStatic("Back to All Roles"),
-			Url:   components.GetterStatic(RoleUrl),
+			Title: getters.GetterStatic("Back to All Roles"),
+			Url:   getters.GetterStatic(RoleUrl),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Role Detail"),
-				Url:   components.GetterFormat(RoleUrl+"%v/", components.GetterKey("role.id")),
+				Title: getters.GetterStatic("Role Detail"),
+				Url:   getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.id")),
 			},
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Edit Role"),
-				Url:   components.GetterFormat(RoleUrl+"%v/edit/", components.GetterKey("role.id")),
+				Title: getters.GetterStatic("Edit Role"),
+				Url:   getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("role.id")),
 			},
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Delete Role"),
-				Url:   components.GetterFormat(RoleUrl+"%v/delete/", components.GetterKey("role.id")),
+				Title: getters.GetterStatic("Delete Role"),
+				Url:   getters.GetterFormat(RoleUrl+"%v/delete/", getters.GetterKey("role.id")),
 			},
 		},
 	})
 
 	// Role Filter
 	lago.RegistryPage.Register("users.RoleFilter", components.FormComponent{
-		Url:    components.GetterStatic(RoleUrl),
+		Url:    getters.GetterStatic(RoleUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: components.GetterKey("$get.name")},
+			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -584,13 +585,13 @@ func registerRolePages() {
 			components.DataTable{
 				UID:             "role-table",
 				Classes:         "w-full",
-				Data:            components.GetterKey("roles"),
+				Data:            getters.GetterKey("roles"),
 				CreateUrl:       lago.RoutePathGetter("users.RoleCreateRoute"),
-				OnClick:         components.GetterNavigate(RoleUrl+"%v/", components.GetterKey("$row.ID")),
+				OnClick:         getters.GetterNavigate(RoleUrl+"%v/", getters.GetterKey("$row.ID")),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						components.FieldText{Getter: components.GetterKey("$row.Name")},
+						components.FieldText{Getter: getters.GetterKey("$row.Name")},
 					}},
 				},
 			},
@@ -604,12 +605,12 @@ func registerRolePages() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Url:      components.GetterStatic(RoleUrl + "create/"),
+				Url:      getters.GetterStatic(RoleUrl + "create/"),
 				Method:   http.MethodPost,
 				Title:    "Create Role",
 				Subtitle: "Create a new role",
 				ChildrenInput: []components.PageInterface{
-					components.InputText{Label: "Name", Name: "name", Required: true, Getter: components.GetterKey("$in.name")},
+					components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
 				},
 				ChildrenAction: []components.PageInterface{
 					components.ButtonSubmit{Label: "Save Role"},
@@ -625,13 +626,13 @@ func registerRolePages() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Getter:   components.GetterKey("role"),
-				Url:      components.GetterFormat(RoleUrl+"%v/edit/", components.GetterKey("$in.id")),
+				Getter:   getters.GetterKey("role"),
+				Url:      getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("$in.id")),
 				Method:   http.MethodPost,
 				Title:    "Edit Role",
 				Subtitle: "Update role details",
 				ChildrenInput: []components.PageInterface{
-					components.InputText{Label: "Name", Name: "name", Required: true, Getter: components.GetterKey("$in.name")},
+					components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
 				},
 				ChildrenAction: []components.PageInterface{
 					components.ButtonSubmit{Label: "Save Role"},
@@ -647,11 +648,11 @@ func registerRolePages() {
 		},
 		Children: []components.PageInterface{
 			components.Detail{
-				Getter: components.GetterKey("role"),
+				Getter: getters.GetterKey("role"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Children: []components.PageInterface{
-							components.FieldTitle{Getter: components.GetterKey("$in.Name")},
+							components.FieldTitle{Getter: getters.GetterKey("$in.Name")},
 						},
 					},
 				},
@@ -668,7 +669,7 @@ func registerRolePages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this role?",
-				CancelUrl: components.GetterFormat(RoleUrl+"%v/", components.GetterKey("role.id")),
+				CancelUrl: getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.id")),
 			},
 		},
 	})

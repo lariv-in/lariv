@@ -10,8 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func Start(address string, certFile *string, keyFile *string) error {
-	db, err := InitDb()
+func Start(config LagoConfig) error {
+	db, err := InitDB(config)
 	if err != nil {
 		return err
 	}
@@ -20,6 +20,8 @@ func Start(address string, certFile *string, keyFile *string) error {
 	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
 	RegistryMiddleware.Register("core.HtmxBoostMiddleware", MiddlewareHtmxBoost)
 
+	BuildAllRegistries()
+
 	// Applying all middlewares
 	middlewares := RegistryMiddleware.All()
 	var router http.Handler = GetRouter()
@@ -27,17 +29,18 @@ func Start(address string, certFile *string, keyFile *string) error {
 		router = middleware(router)
 	}
 
-	if certFile != nil && keyFile != nil {
-		return http.ListenAndServeTLS(address, *certFile, *keyFile, router)
+	if len(config.CertFile) != 0 && len(config.KeyFile) != 0 {
+		return http.ListenAndServeTLS(config.Address, config.CertFile, config.KeyFile, router)
 	}
-	if certFile != nil {
+
+	if len(config.CertFile) != 0 {
 		slog.Warn("certFile for tls was not provided")
 	}
-	if keyFile != nil {
+	if len(config.KeyFile) != 0 {
 		slog.Warn("keyFile for tls was not provided")
 	}
 	slog.Warn("Using plain http without tls, ensure this is running in debug or behind a reverse proxy")
-	return http.ListenAndServe(address, router)
+	return http.ListenAndServe(config.Address, router)
 }
 
 func MiddlewareDb(db *gorm.DB) Middleware {

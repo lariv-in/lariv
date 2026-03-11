@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/lariv-in/registry"
 	"gorm.io/gorm"
 )
 
-var RegistryGenerator Registry[Generator] = NewRegistry[Generator]()
+var RegistryGenerator registry.Registry[Generator] = registry.NewRegistry[Generator]()
 
 type Generator struct {
 	Create func(*gorm.DB)
 	Remove func(*gorm.DB)
 }
 
-func RunGenerators() {
-	db, err := InitDb()
+func RunGenerators(config LagoConfig) {
+	db, err := InitDB(config)
 	if err != nil {
 		slog.Error("Failed to initialize database for generators", "error", err)
 		return

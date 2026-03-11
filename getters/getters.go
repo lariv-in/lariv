@@ -1,8 +1,9 @@
-package components
+package getters
 
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"gorm.io/gorm"
@@ -25,8 +26,16 @@ func GetterKey(key string) Getter {
 				return nil
 			}
 			m, ok := value.(map[string]any)
+			fmt.Println(m)
 			if !ok {
-				return nil
+				v := reflect.ValueOf(value)
+				if v.Kind() == reflect.Pointer {
+					v = v.Elem()
+				}
+				if v.Kind() != reflect.Struct {
+					return nil
+				}
+				m = MapFromStruct(value)
 			}
 
 			if v, exists := m[parts[i]]; exists {

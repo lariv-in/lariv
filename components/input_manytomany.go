@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -13,16 +14,16 @@ type InputManyToMany struct {
 	Page
 	Label       string
 	Name        string
-	Getter      Getter
+	Getter      getters.Getter
 	DisplayAttr string
 	Placeholder string
-	Url         Getter
+	Url         getters.Getter
 	Required    bool
 	Classes     string
 }
 
 func (e InputManyToMany) Build(ctx context.Context) Node {
-	values := IfOrGetter(e.Getter, ctx, nil)
+	values := getters.IfOrGetter(e.Getter, ctx, nil)
 
 	placeholder := e.Placeholder
 	if placeholder == "" {
@@ -82,7 +83,7 @@ func (e InputManyToMany) Build(ctx context.Context) Node {
 
 	removeHandler := "items = items.filter((_, j) => j !== i)"
 
-	url := fmt.Sprintf("%v", IfOrGetter(e.Url, ctx, ""))
+	url := fmt.Sprintf("%v", getters.IfOrGetter(e.Url, ctx, ""))
 
 	return Div(
 		Class(fmt.Sprintf("my-1 relative %s", e.Classes)),

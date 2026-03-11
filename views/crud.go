@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/lariv-in/components"
+	"github.com/lariv-in/getters"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -155,7 +156,7 @@ func DetailView[T any](model T, key string) func(View) View {
 						return
 					}
 
-					ctx := context.WithValue(r.Context(), key, components.MapFromStruct(instance))
+					ctx := context.WithValue(r.Context(), key, getters.MapFromStruct(instance))
 					oldHandler(innerView).ServeHTTP(w, r.WithContext(ctx))
 				})
 			}
@@ -255,7 +256,7 @@ func SingletonView[T any](model T, successUrl string) func(View) View {
 				db := r.Context().Value("$db").(*gorm.DB)
 				instance := new(T)
 				db.FirstOrCreate(instance)
-				ctx := context.WithValue(r.Context(), "$in", components.MapFromStruct(instance))
+				ctx := context.WithValue(r.Context(), "$in", getters.MapFromStruct(instance))
 				oldGet(innerView).ServeHTTP(w, r.WithContext(ctx))
 			})
 		}

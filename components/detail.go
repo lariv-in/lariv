@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -11,16 +12,16 @@ import (
 // Child fields can then resolve their values via GetterKey("$in.FieldName").
 type Detail struct {
 	Page
-	Getter   Getter
+	Getter   getters.Getter
 	Children []PageInterface
 }
 
 func (e Detail) Build(ctx context.Context) Node {
-	value := IfOrGetter(e.Getter, ctx, nil)
+	value := getters.IfOrGetter(e.Getter, ctx, nil)
 
 	childCtx := ctx
 	if value != nil {
-		objMap := MapFromStruct(value)
+		objMap := getters.MapFromStruct(value)
 		childCtx = context.WithValue(ctx, "$in", objMap)
 	}
 

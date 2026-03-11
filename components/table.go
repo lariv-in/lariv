@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -19,25 +20,25 @@ type DataTable struct {
 	Page
 	UID      string
 	Columns  []TableColumn
-	Data     Getter
+	Data     getters.Getter
 	Title    string
 	Subtitle string
 	Classes  string
 	// Displays is a map of view name to display component
 	// e.g. "List": TableListContent, "Grid": TableGridContent
-	Displays        map[string]func([]TableColumn, Getter, Getter) PageInterface
+	Displays        map[string]func([]TableColumn, getters.Getter, getters.Getter) PageInterface
 	FilterComponent PageInterface
-	CreateUrl       Getter
-	OnClick         Getter // Per-row Alpine @click expression (use GetterNavigate, GetterSelect, or GetterMultiSelect)
+	CreateUrl       getters.Getter
+	OnClick         getters.Getter // Per-row Alpine @click expression (use GetterNavigate, GetterSelect, or GetterMultiSelect)
 }
 
 func (e DataTable) Build(ctx context.Context) Node {
 	if e.Displays == nil {
-		e.Displays = map[string]func([]TableColumn, Getter, Getter) PageInterface{
-			"List": func(cols []TableColumn, data Getter, onClick Getter) PageInterface {
+		e.Displays = map[string]func([]TableColumn, getters.Getter, getters.Getter) PageInterface{
+			"List": func(cols []TableColumn, data getters.Getter, onClick getters.Getter) PageInterface {
 				return TableListContent{Columns: cols, Data: data, OnClick: onClick}
 			},
-			"Grid": func(cols []TableColumn, data Getter, onClick Getter) PageInterface {
+			"Grid": func(cols []TableColumn, data getters.Getter, onClick getters.Getter) PageInterface {
 				return TableGridContent{Columns: cols, Data: data, OnClick: onClick}
 			},
 		}
@@ -70,7 +71,7 @@ func (e DataTable) Build(ctx context.Context) Node {
 	// Create button
 	var createNode Node
 	if e.CreateUrl != nil {
-		createUrl := fmt.Sprintf("%s", IfOrGetter(e.CreateUrl, ctx, ""))
+		createUrl := fmt.Sprintf("%s", getters.IfOrGetter(e.CreateUrl, ctx, ""))
 		if createUrl != "" {
 			createNode = A(Href(createUrl), Class("btn btn-square btn-outline btn-sm"), Render(Icon{Name: "plus"}, ctx))
 		}

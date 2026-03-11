@@ -7,19 +7,24 @@ import (
 	_ "github.com/lariv-in/p_dashboard"
 	_ "github.com/lariv-in/p_otp"
 	_ "github.com/lariv-in/p_users"
+	_ "github.com/lariv-in/p_totschool_users"
 )
 
 func main() {
 	lago.ParseFlags()
 
+	config, err := lago.LoadConfigFromFile("nirmancampus.toml")
+	if err != nil {
+		panic(err)
+	}
 	if *lago.GenerateFlag {
-		lago.RunGenerators()
+		lago.RunGenerators(config)
 		return
 	}
 
 	if *lago.TuiFlag {
 		lago.RunTui()
 	} else {
-		slog.Error(lago.Start("127.0.0.1:42069", nil, nil).Error())
+		slog.Error(lago.Start(config).Error())
 	}
 }

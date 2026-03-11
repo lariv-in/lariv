@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lariv-in/getters"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
@@ -11,7 +12,7 @@ import (
 type ButtonLink struct {
 	Page
 	Label   string
-	Link    Getter
+	Link    getters.Getter
 	Classes string
 }
 

@@ -48,7 +48,7 @@ func (u *User) hashPassword() error {
 }
 
 func init() {
-	lago.OnDbInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
 		d.AutoMigrate(User{})
 		d.AutoMigrate(Role{})
 		return d

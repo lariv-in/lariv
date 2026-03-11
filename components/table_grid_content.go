@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	g_html "maragu.dev/gomponents/html"
 )
@@ -12,13 +13,13 @@ import (
 type TableGridContent struct {
 	Page
 	Columns []TableColumn
-	Data    Getter
-	OnClick Getter
+	Data    getters.Getter
+	OnClick getters.Getter
 }
 
 func (e TableGridContent) Build(ctx context.Context) Node {
 	var objects []any
-	data := IfOrGetter(e.Data, ctx, nil)
+	data := getters.IfOrGetter(e.Data, ctx, nil)
 
 	if data != nil {
 		v := reflect.ValueOf(data)
@@ -41,7 +42,7 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 		cards = append(cards, g_html.Div(g_html.Class("col-span-full text-center opacity-50 py-8"), Text("Table is empty")))
 	} else {
 		for _, row := range objects {
-			rowMap := MapFromStruct(row)
+			rowMap := getters.MapFromStruct(row)
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
 
 			var contentNodes []Node
@@ -67,7 +68,7 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 			}
 
 			if e.OnClick != nil {
-				expr := fmt.Sprintf("%v", IfOrGetter(e.OnClick, rowCtx, ""))
+				expr := fmt.Sprintf("%v", getters.IfOrGetter(e.OnClick, rowCtx, ""))
 				if expr != "" {
 					cards = append(cards, g_html.Div(
 						g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200"),

@@ -6,17 +6,18 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 type TablePagination struct {
 	Page
-	Data Getter
+	Data getters.Getter
 }
 
 func (e TablePagination) Build(ctx context.Context) Node {
-	data := IfOrGetter(e.Data, ctx, nil)
+	data := getters.IfOrGetter(e.Data, ctx, nil)
 	if data == nil {
 		return nil
 	}
@@ -58,17 +59,11 @@ func (e TablePagination) Build(ctx context.Context) Node {
 	// Calculate window (similar to table_page_range in python but simpler logic)
 	// Just showing a window block
 	windowSize := 5
-	startPage := number - windowSize/2
-	if startPage < 1 {
-		startPage = 1
-	}
+	startPage := max(number-windowSize/2, 1)
 	endPage := startPage + windowSize - 1
 	if endPage > numPages {
 		endPage = numPages
-		startPage = endPage - windowSize + 1
-		if startPage < 1 {
-			startPage = 1
-		}
+		startPage = max(endPage-windowSize+1, 1)
 	}
 
 	if startPage > 1 {

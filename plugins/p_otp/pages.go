@@ -1,10 +1,10 @@
 package p_otp
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/components"
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
@@ -15,9 +15,9 @@ func init() {
 			components.ContainerColumn{
 				Classes: "w-80",
 				Children: []components.PageInterface{
-					components.FieldTitle{Getter: components.GetterStatic("Login via SMS")},
+					components.FieldTitle{Getter: getters.GetterStatic("Login via SMS")},
 					components.FormComponent{
-						Url:    components.GetterStatic("/otp/login/sms/"),
+						Url:    getters.GetterStatic("/otp/login/sms/"),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.InputPhone{
@@ -38,7 +38,7 @@ func init() {
 						Children: []components.PageInterface{
 							components.ButtonLink{
 								Label: "Back to Login",
-								Link:  components.GetterStatic("/users/login/"),
+								Link:  getters.GetterStatic("/users/login/"),
 							},
 						},
 					},
@@ -52,9 +52,9 @@ func init() {
 			components.ContainerColumn{
 				Classes: "w-80",
 				Children: []components.PageInterface{
-					components.FieldTitle{Getter: components.GetterStatic("Login via Email")},
+					components.FieldTitle{Getter: getters.GetterStatic("Login via Email")},
 					components.FormComponent{
-						Url:    components.GetterStatic("/otp/login/email/"),
+						Url:    getters.GetterStatic("/otp/login/email/"),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.InputEmail{
@@ -75,7 +75,7 @@ func init() {
 						Children: []components.PageInterface{
 							components.ButtonLink{
 								Label: "Back to Login",
-								Link:  components.GetterStatic("/users/login/"),
+								Link:  getters.GetterStatic("/users/login/"),
 							},
 						},
 					},
@@ -89,9 +89,9 @@ func init() {
 			components.ContainerColumn{
 				Classes: "w-80",
 				Children: []components.PageInterface{
-					components.FieldTitle{Getter: components.GetterStatic("Verify OTP")},
+					components.FieldTitle{Getter: getters.GetterStatic("Verify OTP")},
 					components.FormComponent{
-						Url:    components.GetterStatic("/otp/verify/"),
+						Url:    getters.GetterStatic("/otp/verify/"),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.InputText{
@@ -112,7 +112,7 @@ func init() {
 						Children: []components.PageInterface{
 							components.ButtonLink{
 								Label: "Cancel",
-								Link:  components.GetterStatic("/users/login/"),
+								Link:  getters.GetterStatic("/users/login/"),
 							},
 						},
 					},
@@ -121,15 +121,15 @@ func init() {
 		},
 	})
 	lago.RegistryPage.Register("otp.OTPPreferencesMenu", components.SidebarMenu{
-		Title: components.GetterStatic("OTP Preferences"),
+		Title: getters.GetterStatic("OTP Preferences"),
 		Back: &components.SidebarMenuItem{
-			Title: components.GetterStatic("Back to Home"),
-			Url:   components.GetterStatic("/apps/"),
+			Title: getters.GetterStatic("Back to Home"),
+			Url:   getters.GetterStatic("/apps/"),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
-				Title: components.GetterStatic("Preferences"),
-				Url:   components.GetterStatic("/otp/preferences/"),
+				Title: getters.GetterStatic("Preferences"),
+				Url:   getters.GetterStatic("/otp/preferences/"),
 			},
 		},
 	})
@@ -140,18 +140,18 @@ func init() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Url:      components.GetterStatic("/otp/preferences/"),
+				Url:      getters.GetterStatic("/otp/preferences/"),
 				Title:    "OTP Preferences",
 				Subtitle: "Configure OTP settings for SMS and Email",
 				Method:   http.MethodPost,
 				ChildrenInput: []components.PageInterface{
 					components.FieldTitle{
-						Getter: components.GetterStatic("SMS OTP Settings"),
+						Getter: getters.GetterStatic("SMS OTP Settings"),
 					},
 					components.InputText{
 						Name:   "msg91_auth_key",
 						Label:  "MSG91 Auth Key",
-						Getter: components.GetterKey("$in.msg91_auth_key"),
+						Getter: getters.GetterKey("$in.msg91_auth_key"),
 					},
 					components.ContainerRow{
 						Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
@@ -159,32 +159,32 @@ func init() {
 							components.InputText{
 								Name:   "sms_otp_template_id",
 								Label:  "SMS OTP Template ID",
-								Getter: components.GetterKey("$in.sms_otp_template_id"),
+								Getter: getters.GetterKey("$in.sms_otp_template_id"),
 							},
 							components.InputText{
 								Name:   "otp_template_id",
 								Label:  "General OTP Template ID (Fallback)",
-								Getter: components.GetterKey("$in.otp_template_id"),
+								Getter: getters.GetterKey("$in.otp_template_id"),
 							},
 						},
 					},
 					components.InputText{
 						Name:   "sms_otp_field_name",
 						Label:  "SMS OTP Field Name",
-						Getter: components.GetterKey("$in.sms_otp_field_name"),
+						Getter: getters.GetterKey("$in.sms_otp_field_name"),
 					},
 					components.InputText{
 						Name:   "sms_otp_extra_fields",
 						Label:  "SMS OTP Extra Fields (JSON)",
-						Getter: components.GetterKey("$in.sms_otp_extra_fields"),
+						Getter: getters.GetterKey("$in.sms_otp_extra_fields"),
 					},
 					components.FieldTitle{
-						Getter: components.GetterStatic("Email OTP Settings"),
+						Getter: getters.GetterStatic("Email OTP Settings"),
 					},
 					components.InputText{
 						Name:   "email_otp_template_string",
 						Label:  "Email OTP Template String",
-						Getter: components.GetterKey("$in.email_otp_template_string"),
+						Getter: getters.GetterKey("$in.email_otp_template_string"),
 					},
 				},
 				ChildrenAction: []components.PageInterface{
@@ -198,8 +198,8 @@ func init() {
 }
 
 func init() {
-	lago.OnDbInit(func(d *gorm.DB) *gorm.DB {
-		err := lago.RegistryPage.Patch("users.LoginPage", func(oldPage components.PageInterface) components.PageInterface {
+	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+		lago.RegistryPage.Patch("users.LoginPage", func(oldPage components.PageInterface) components.PageInterface {
 			basePage := oldPage
 			if scaffold, ok := basePage.(components.ShellAuthScaffold); ok {
 				if len(scaffold.Children) > 0 {
@@ -211,11 +211,11 @@ func init() {
 									Children: []components.PageInterface{
 										components.ButtonLink{
 											Label: "Login with SMS OTP",
-											Link:  components.GetterStatic("/otp/login/sms/"),
+											Link:  getters.GetterStatic("/otp/login/sms/"),
 										},
 										components.ButtonLink{
 											Label: "Login with Email OTP",
-											Link:  components.GetterStatic("/otp/login/email/"),
+											Link:  getters.GetterStatic("/otp/login/email/"),
 										},
 									},
 								})
@@ -229,9 +229,6 @@ func init() {
 			}
 			return basePage
 		})
-		if err != nil {
-			fmt.Printf("Failed to patch users.LoginPage: %v\n", err)
-		}
 		return d
 	})
 }

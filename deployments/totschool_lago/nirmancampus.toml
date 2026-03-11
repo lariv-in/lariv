@@ -1,0 +1,6 @@
+Debug = true
+DBType = "Sqlite"
+Address = ":42069"
+
+[SqliteConfig]
+  DSN = "test.db"

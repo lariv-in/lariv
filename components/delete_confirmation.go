@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -12,12 +13,12 @@ type DeleteConfirmation struct {
 	Page
 	Title     string
 	Message   string
-	CancelUrl Getter
+	CancelUrl getters.Getter
 	Classes   string
 }
 
 func (e DeleteConfirmation) Build(ctx context.Context) Node {
-	cancelUrl := fmt.Sprintf("%s", IfOrGetter(e.CancelUrl, ctx, "#"))
+	cancelUrl := fmt.Sprintf("%s", getters.IfOrGetter(e.CancelUrl, ctx, "#"))
 
 	return Div(Class("container mx-auto "+e.Classes),
 		H2(Class("text-xl font-bold text-error"), Text(e.Title)),

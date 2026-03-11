@@ -4,21 +4,22 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 type SidebarMenuItem struct {
 	Page
-	Title  Getter
-	Url    Getter
+	Title  getters.Getter
+	Url    getters.Getter
 	Icon   string
 	Active bool
 }
 
 func (e SidebarMenuItem) Build(ctx context.Context) Node {
-	title := fmt.Sprintf("%s", IfOrGetter(e.Title, ctx, ""))
-	url := fmt.Sprintf("%s", IfOrGetter(e.Url, ctx, "#"))
+	title := fmt.Sprintf("%s", getters.IfOrGetter(e.Title, ctx, ""))
+	url := fmt.Sprintf("%s", getters.IfOrGetter(e.Url, ctx, "#"))
 
 	var iconNode Node
 	if e.Icon != "" {
@@ -40,7 +41,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 
 type SidebarMenu struct {
 	Page
-	Title    Getter
+	Title    getters.Getter
 	Back     *SidebarMenuItem
 	Children []PageInterface
 }
@@ -50,8 +51,8 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 
 	// Back button
 	if e.Back != nil {
-		backTitle := fmt.Sprintf("%s", IfOrGetter(e.Back.Title, ctx, ""))
-		backUrl := fmt.Sprintf("%s", IfOrGetter(e.Back.Url, ctx, "#"))
+		backTitle := fmt.Sprintf("%s", getters.IfOrGetter(e.Back.Title, ctx, ""))
+		backUrl := fmt.Sprintf("%s", getters.IfOrGetter(e.Back.Url, ctx, "#"))
 		items = append(items, Li(
 			A(Href(backUrl), Class("btn btn-sm mb-2"), Render(Icon{Name: "arrow-left"}, ctx), Text(backTitle)),
 		))
@@ -59,7 +60,7 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 
 	// Title
 	if e.Title != nil {
-		title := fmt.Sprintf("%s", IfOrGetter(e.Title, ctx, ""))
+		title := fmt.Sprintf("%s", getters.IfOrGetter(e.Title, ctx, ""))
 		if title != "" {
 			items = append(items, Li(Class("menu-title font-semibold opacity-70"), Text(title)))
 		}

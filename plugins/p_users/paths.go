@@ -1,7 +1,6 @@
 package p_users
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago"
 )
@@ -12,13 +11,10 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("base.HomeView"),
 	})
 	if err != nil {
-		err2 := lago.RegistryRoute.Patch("base.HomePage", func(oldRoute lago.Route) lago.Route {
+		lago.RegistryRoute.Patch("base.HomePage", func(oldRoute lago.Route) lago.Route {
 			oldRoute.Handler = lago.NewDynamicView("base.HomeView")
 			return oldRoute
 		})
-		if err2 != nil {
-			log.Panicf("Can't register, Can't patch, something wierd is going on.\nRegister Error: %e\nPatch Error: %e", err, err2)
-		}
 	}
 	_ = lago.RegistryRoute.Register("users.ListRoute", lago.Route{
 		Path:    AppUrl,

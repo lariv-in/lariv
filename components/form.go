@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 type FormComponent struct {
 	Page
-	Getter         Getter
-	Url            Getter
+	Getter         getters.Getter
+	Url            getters.Getter
 	Method         string
 	ChildrenInput  []PageInterface
 	ChildrenAction []PageInterface
@@ -28,7 +29,7 @@ func (e FormComponent) Build(ctx context.Context) Node {
 	if e.Getter != nil {
 		value := e.Getter(ctx)
 		if value != nil {
-			objMap := MapFromStruct(value)
+			objMap := getters.MapFromStruct(value)
 			childCtx = context.WithValue(ctx, "$in", objMap)
 		}
 	}
@@ -41,7 +42,7 @@ func (e FormComponent) Build(ctx context.Context) Node {
 	for _, child := range e.ChildrenAction {
 		submitGroup = append(submitGroup, Render(child, childCtx))
 	}
-	urlString := fmt.Sprintf("%s", IfOrGetter(e.Url, childCtx, ""))
+	urlString := fmt.Sprintf("%s", getters.IfOrGetter(e.Url, childCtx, ""))
 
 	var headerNodes []Node
 	if e.Title != "" {

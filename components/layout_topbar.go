@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lariv-in/getters"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
@@ -16,7 +17,7 @@ type TopbarButton struct {
 	Icon          string // heroicon name
 	IconAlt       string // alternate icon (for toggling, e.g. sun/moon)
 	IconCondition string // Alpine.js condition for showing the primary icon vs alt
-	URL           Getter // lazily resolved URL (e.g. from route registry)
+	URL           getters.Getter // lazily resolved URL (e.g. from route registry)
 	Target        string // Turbo frame target selector
 	Method        string // HTTP method: get (default), post, put, delete
 	OnClick       string // JavaScript onclick handler
@@ -26,7 +27,7 @@ type TopbarButton struct {
 // TopbarButtonsGetter is a package-level getter that provides []TopbarButton.
 // It is set by lago during initialization to read from RegistryTopbarButtons.
 // LayoutTopbar reads from this automatically — no per-page configuration needed.
-var TopbarButtonsGetter Getter
+var TopbarButtonsGetter getters.Getter
 
 type LayoutTopbar struct {
 	Page

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -12,16 +13,16 @@ type InputForeignKey struct {
 	Page
 	Label       string
 	Name        string
-	Getter      Getter
+	Getter      getters.Getter
 	DisplayAttr string
 	Placeholder string
-	Url         Getter
+	Url         getters.Getter
 	Required    bool
 	Classes     string
 }
 
 func (e InputForeignKey) Build(ctx context.Context) Node {
-	value := IfOrGetter(e.Getter, ctx, nil)
+	value := getters.IfOrGetter(e.Getter, ctx, nil)
 
 	valuePk := ""
 	displayValue := ""
@@ -59,7 +60,7 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 			If(e.Required, Required())),
 		Div(Class("input input-bordered w-full flex items-center cursor-pointer"),
 			Attr(":class", "display ? '' : 'opacity-50'"),
-			Attr("hx-get", fmt.Sprintf("%v", IfOrGetter(e.Url, ctx, ""))),
+			Attr("hx-get", fmt.Sprintf("%v", getters.IfOrGetter(e.Url, ctx, ""))),
 			Attr("hx-target", "next .fk-modal-container"),
 			Attr("hx-swap", "innerHTML"),
 			Attr("hx-push-url", "false"),

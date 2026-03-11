@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -13,7 +14,7 @@ type InputCheckbox struct {
 	Page
 	Label    string
 	Name     string
-	Getter   Getter
+	Getter   getters.Getter
 	Required bool
 	Classes  string
 }
@@ -28,7 +29,7 @@ func (e InputCheckbox) Build(ctx context.Context) Node {
 				Name(e.Name),
 				Value("true"),
 				Class("checkbox"),
-				GetterIf(e.Getter, ctx,
+				getters.GetterIf(e.Getter, ctx,
 					func(ctx context.Context, v any) Node {
 						isChecked, isBool := v.(bool)
 						if isChecked && isBool {
