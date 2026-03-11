@@ -13,6 +13,27 @@ import (
 	"gorm.io/gorm"
 )
 
+// getSessionFromEnvironment looks up the session selected in the $environment cookie,
+// falling back to the current quarter if none is selected.
+func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSession {
+	if envMap, ok := ctx.Value("$environment").(map[string]string); ok {
+		if name, exists := envMap["session"]; exists && name != "" {
+			var session TotSchoolSession
+			if err := db.Where("name = ?", name).First(&session).Error; err == nil {
+				return session
+			}
+		}
+	}
+	return EnsureSessionForDate(db, time.Now())
+}
+
+// getAllSessionNames returns all TotSchoolSession names ordered by start date descending.
+func getAllSessionNames(db *gorm.DB) []string {
+	var names []string
+	db.Model(&TotSchoolSession{}).Order("start DESC").Pluck("name", &names)
+	return names
+}
+
 // TallyDashboardHandler displays user stats.
 func TallyDashboardHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,13 +50,14 @@ func TallyDashboardHandler(v views.View) http.Handler {
 			userID = &user.ID
 		}
 
-		session := EnsureSessionForDate(db, time.Now())
+		session := getSessionFromEnvironment(db, r.Context())
 
 		dashboard := GetDashboardStats(db, userID, &session)
 
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"dashboard": dashboard,
-			"session":   session,
+			"dashboard":     dashboard,
+			"session":       session,
+			"session_names": getAllSessionNames(db),
 		})
 
 		v.RenderPage(w, r.WithContext(ctx))
@@ -48,13 +70,14 @@ func TallyLeaderboardHandler(v views.View) http.Handler {
 		user := r.Context().Value("$user").(p_users.User)
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		session := EnsureSessionForDate(db, time.Now())
+		session := getSessionFromEnvironment(db, r.Context())
 
 		leaderboards := GetLeaderboards(db, &user.ID, &session)
 
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"leaderboards": leaderboards,
-			"title":        fmt.Sprintf("Leaderboard for %s", session.Name),
+			"leaderboards":  leaderboards,
+			"title":         fmt.Sprintf("Leaderboard for %s", session.Name),
+			"session_names": getAllSessionNames(db),
 		})
 
 		v.RenderPage(w, r.WithContext(ctx))
@@ -112,7 +135,7 @@ func TallyListHandler(v views.View) http.Handler {
 		user := r.Context().Value("$user").(p_users.User)
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		session := EnsureSessionForDate(db, time.Now())
+		session := getSessionFromEnvironment(db, r.Context())
 
 		var roleName string
 		if !user.IsSuperuser {
@@ -128,7 +151,8 @@ func TallyListHandler(v views.View) http.Handler {
 		query.Order("date DESC").Find(&tallies)
 
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"tallies": tallies,
+			"tallies":       tallies,
+			"session_names": getAllSessionNames(db),
 		})
 		v.RenderPage(w, r.WithContext(ctx))
 	})

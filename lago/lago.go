@@ -2,8 +2,10 @@ package lago
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	_ "gorm.io/driver/sqlite"
@@ -19,6 +21,7 @@ func Start(config LagoConfig) error {
 	RegistryMiddleware.Register("core.DbMiddleware", MiddlewareDb(db))
 	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
 	RegistryMiddleware.Register("core.HtmxBoostMiddleware", MiddlewareHtmxBoost)
+	RegistryMiddleware.Register("core.EnvironmentMiddleware", MiddlewareEnvironment)
 
 	BuildAllRegistries()
 
@@ -78,6 +81,20 @@ type statusWriter struct {
 func (w *statusWriter) WriteHeader(code int) {
 	w.status = code
 	w.ResponseWriter.WriteHeader(code)
+}
+
+func MiddlewareEnvironment(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		envMap := map[string]string{}
+		if cookie, err := r.Cookie("environment"); err == nil {
+			decoded, err := url.QueryUnescape(cookie.Value)
+			if err == nil {
+				json.Unmarshal([]byte(decoded), &envMap)
+			}
+		}
+		ctx := context.WithValue(r.Context(), "$environment", envMap)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func MiddlewareHtmxBoost(next http.Handler) http.Handler {

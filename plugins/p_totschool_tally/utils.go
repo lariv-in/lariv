@@ -1,6 +1,7 @@
 package p_totschool_tally
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -42,4 +43,11 @@ func EnsureSessionForDate(db *gorm.DB, date time.Time) TotSchoolSession {
 		}
 	}
 	return session
+}
+
+func CurrentSessionNameForDateGetter(ctx context.Context) any {
+	db := ctx.Value("$db").(*gorm.DB)
+	date := time.Now()
+	session := EnsureSessionForDate(db, date)
+	return session.Name
 }

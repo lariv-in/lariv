@@ -275,10 +275,19 @@ func init() {
 		},
 	}
 
+	// Session environment selector (shared across list, dashboard, leaderboard)
+	sessionEnvironment := components.Environment{
+		Label:   "Session",
+		Key:     getters.GetterStatic("session"),
+		Options: getters.GetterKey("$in.session_names"),
+		Default: CurrentSessionNameForDateGetter,
+	}
+
 	// Tally Table
 	lago.RegistryPage.Register("tally.TallyTable", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
+			sessionEnvironment,
 			components.DataTable{
 				Title:           "Tallies List",
 				Subtitle:        "All tallies in the system",
@@ -302,6 +311,7 @@ func init() {
 	lago.RegistryPage.Register("tally.TallyDashboard", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
+			sessionEnvironment,
 			TallyDashboardComponent{},
 		},
 	})
@@ -309,6 +319,7 @@ func init() {
 	lago.RegistryPage.Register("tally.TallyLeaderboard", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
+			sessionEnvironment,
 			TallyLeaderboardComponent{},
 		},
 	})

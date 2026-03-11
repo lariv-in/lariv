@@ -77,6 +77,7 @@ Each plugin's `init()` calls register on the appropriate registries.
 - `"$user"` — authenticated `User` injected by `AuthMiddleware`
 - `"$error.<field>"` — form validation errors (e.g. `"$error.email"`)
 - `"$in"` — `map[string]any` of form values for pre-population (accessed via `GetterKey("$in.fieldname")`)
+- `"$environment"` — `map[string]string` parsed from the `environment` cookie by `MiddlewareEnvironment` (accessed via `GetterKey("$environment.keyname")`)
 
 Helper constructors: `GetterStatic(v)`, `GetterKey("dot.path")`, `GetterNil()`, `GetterFormat(fmt, getters...)`, `GetterQueryEscape(getter)`.
 
@@ -94,6 +95,10 @@ Pre-composed layout wrappers in `components/` that implement the `Shell` interfa
 ### Form Handling
 
 `FormComponent.ParseForm(r)` iterates child components implementing `InputInterface`, calling each input's `Parse()` to validate and clean the value. Returns `(values map[string]any, errors map[string]error, err error)`. Input types: `InputText`, `InputEmail`, `InputPassword`, `InputPhone`, `InputCheckbox`.
+
+### Environment Component & Middleware
+
+`Environment` is a `<select>` component that persists its value in a client-side `environment` cookie (JSON map of key→value). Fields: `Key` (getter → string key in the map), `Options` (getter → `[]string`), `Label`, `Classes`. On change, JavaScript updates the cookie. `MiddlewareEnvironment` reads and parses the cookie into `$environment` (`map[string]string`) in context. Registered as `"core.EnvironmentMiddleware"`.
 
 ### View Helper Methods
 
