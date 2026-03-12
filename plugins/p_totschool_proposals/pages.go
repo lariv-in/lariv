@@ -146,7 +146,7 @@ func registerDetail() {
 				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
 					components.ButtonDownload{Label: "Export to PDF", Link: getters.GetterFormat(AppUrl+"%v/export-pdf/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-secondary btn-sm"},
 					components.ButtonModal{Label: "Edit with AI", Url: getters.GetterFormat(AppUrl+"%v/ai-edit/form/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-secondary btn-sm"},
-					components.ButtonPost{Label: "Regenerate Proposal", Url: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-primary btn-sm"},
+					components.ButtonPost{Label: "Regenerate Proposal", URL: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
 			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedContent"), Classes: "bg-base-100 p-8 rounded-lg shadow border"},
@@ -156,12 +156,12 @@ func registerDetail() {
 	pendingSection := []components.PageInterface{
 		components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
 			components.FieldText{Getter: getters.GetterStatic("Generating..."), Classes: "btn-primary"},
-			components.ButtonPost{Label: "Cancel Generation", Url: getters.GetterFormat(AppUrl+"%v/cancel/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-error btn-sm"},
+			components.ButtonPost{Label: "Cancel Generation", URL: getters.GetterFormat(AppUrl+"%v/cancel/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-error btn-sm"},
 		}},
 	}
 
 	idleSection := []components.PageInterface{
-		components.ButtonPost{Label: "Generate Proposal with AI", Url: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-primary"},
+		components.ButtonPost{Label: "Generate Proposal with AI", URL: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-primary"},
 	}
 
 	lago.RegistryPage.Register("proposals.ProposalDetail", components.ShellScaffold{

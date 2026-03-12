@@ -13,14 +13,14 @@ import (
 type ButtonPost struct {
 	Page
 	Label   string
-	Url     getters.Getter
+	URL     getters.Getter
 	Classes string
 }
 
 func (e ButtonPost) Build(ctx context.Context) Node {
 	url := ""
-	if e.Url != nil {
-		if val := e.Url(ctx); val != nil {
+	if e.URL != nil {
+		if val := e.URL(ctx); val != nil {
 			url = fmt.Sprintf("%s", val)
 		}
 	}

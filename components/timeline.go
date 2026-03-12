@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -24,8 +25,17 @@ func (e Timeline) Build(ctx context.Context) Node {
 	var data []any
 	if e.Data != nil {
 		if rawData := getters.IfOrGetter(e.Data, ctx, nil); rawData != nil {
-			if slice, ok := rawData.([]any); ok {
-				data = slice
+			v := reflect.ValueOf(rawData)
+			if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
+				v = v.Elem()
+			}
+			if v.Kind() == reflect.Struct {
+				itemsField := v.FieldByName("Items")
+				if itemsField.IsValid() && (itemsField.Kind() == reflect.Slice || itemsField.Kind() == reflect.Array) {
+					for i := 0; i < itemsField.Len(); i++ {
+						data = append(data, itemsField.Index(i).Interface())
+					}
+				}
 			}
 		}
 	}
@@ -63,7 +73,8 @@ func (e Timeline) Build(ctx context.Context) Node {
 		cardsGroup = append(cardsGroup, Div(Class("text-center opacity-60 py-8"), Text("No items found")))
 	} else {
 		for _, item := range data {
-			itemCtx := context.WithValue(ctx, "$row", item)
+			rowMap := getters.MapFromStruct(item)
+			itemCtx := context.WithValue(ctx, "$row", rowMap)
 
 			var childrenNodes Group
 			for _, child := range e.Children {
@@ -106,6 +117,7 @@ func (e Timeline) Build(ctx context.Context) Node {
 			verticalLine,
 			cardsGroup,
 		),
+		Render(TablePagination{Data: e.Data}, ctx),
 	)
 }
 

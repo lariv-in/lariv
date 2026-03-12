@@ -328,7 +328,7 @@ func registerSelectionPages() {
 				Title:           "Appointments Timeline",
 				Data:            getters.GetterKey("appointments"),
 				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentCardTimelineFilter"},
-				OnClick:         getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
+				OnClick:         getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("$row.ID")),
 				Children: []components.PageInterface{
 					components.ContainerColumn{Children: []components.PageInterface{
 						components.ContainerRow{Classes: "flex justify-between items-start mb-2", Children: []components.PageInterface{
