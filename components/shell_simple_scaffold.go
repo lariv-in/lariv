@@ -9,10 +9,12 @@ import (
 type ShellSimpleScaffold struct {
 	Page
 	Children []PageInterface
+	ExtraHead []PageInterface
 }
 
 func (e ShellSimpleScaffold) Body(ctx context.Context) Node {
 	return ShellBase{
+		ExtraHead: e.ExtraHead,
 		Children: []PageInterface{
 			LayoutSimple{
 				Children: e.Children,
@@ -23,6 +25,7 @@ func (e ShellSimpleScaffold) Body(ctx context.Context) Node {
 
 func (e ShellSimpleScaffold) Build(ctx context.Context) Node {
 	return Render(ShellBase{
+		ExtraHead: e.ExtraHead,
 		Children: []PageInterface{
 			LayoutSimple{
 				Children: e.Children,

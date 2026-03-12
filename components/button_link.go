@@ -11,9 +11,10 @@ import (
 
 type ButtonLink struct {
 	Page
-	Label   string
-	Link    getters.Getter
-	Classes string
+	Label       string
+	LabelGetter getters.Getter
+	Link        getters.Getter
+	Classes     string
 }
 
 func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
@@ -23,5 +24,9 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 			link = fmt.Sprintf("%s", val)
 		}
 	}
-	return html.A(html.Href(link), html.Class(fmt.Sprintf("link link-primary %s", e.Classes)), gomponents.Text(e.Label))
+	label := e.Label
+	if e.LabelGetter != nil {
+		label = fmt.Sprintf("%v", e.LabelGetter(ctx))
+	}
+	return html.A(html.Href(link), html.Class(fmt.Sprintf("link link-primary %s", e.Classes)), gomponents.Text(label))
 }

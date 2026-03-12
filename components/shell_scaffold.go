@@ -10,10 +10,12 @@ type ShellScaffold struct {
 	Page
 	Sidebar  []PageInterface
 	Children []PageInterface
+	ExtraHead []PageInterface
 }
 
 func (e ShellScaffold) Body(ctx context.Context) Node {
 	return ShellBase{
+		ExtraHead: e.ExtraHead,
 		Children: []PageInterface{
 			LayoutTopbar{
 				Children: []PageInterface{
@@ -29,6 +31,7 @@ func (e ShellScaffold) Body(ctx context.Context) Node {
 
 func (e ShellScaffold) Build(ctx context.Context) Node {
 	return Render(ShellBase{
+		ExtraHead: e.ExtraHead,
 		Children: []PageInterface{
 			LayoutTopbar{
 				Children: []PageInterface{

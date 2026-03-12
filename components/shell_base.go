@@ -10,6 +10,7 @@ import (
 type ShellBase struct {
 	Page
 	Children []PageInterface
+	ExtraHead []PageInterface
 }
 
 func (e ShellBase) Body(ctx context.Context) Node {
@@ -26,6 +27,11 @@ func (e ShellBase) Body(ctx context.Context) Node {
 }
 
 func (e ShellBase) Build(ctx context.Context) Node {
+	extraHeadGroup := Group{}
+	for _, child := range e.ExtraHead {
+		extraHeadGroup = append(extraHeadGroup, Render(child, ctx))
+	}
+
 	title, titlePresent := ctx.Value("PWA_APP_NAME").(string)
 	return HTML(
 		Lang("en"),
@@ -77,6 +83,7 @@ func (e ShellBase) Build(ctx context.Context) Node {
 					`opacity: 1;`+
 					`}`,
 			)),
+			extraHeadGroup,
 		),
 		e.Body(ctx),
 	)

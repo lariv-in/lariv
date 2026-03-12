@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
+	"github.com/lariv-in/p_users"
 )
 
 func init() {
@@ -17,6 +18,7 @@ func init() {
 	registerDetail()
 	registerModal()
 	registerDelete()
+	registerSelectionPages()
 }
 
 func registerMenus() {
@@ -28,6 +30,7 @@ func registerMenus() {
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{Title: getters.GetterStatic("All Appointments"), Url: lago.RoutePathGetter("appointments.ListRoute")},
+			components.SidebarMenuItem{Title: getters.GetterStatic("Appointments Timeline"), Url: lago.RoutePathGetter("appointments.CardTimelineRoute")},
 			components.SidebarMenuItem{Title: getters.GetterStatic("Create Appointment"), Url: lago.RoutePathGetter("appointments.CreateRoute")},
 		},
 	})
@@ -54,6 +57,14 @@ func registerFilter() {
 			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
 			components.InputText{Label: "Location", Name: "location", Getter: getters.GetterKey("$get.location")},
 			components.InputText{Label: "Date", Name: "date", Getter: getters.GetterKey("$get.date")},
+			components.InputManyToMany{
+				Label:       "Created By",
+				Name:        "created_by",
+				Url:         getters.GetterStatic(p_users.AppUrl + "multi-select/"),
+				DisplayAttr: "Name",
+				Placeholder: "Select users...",
+				Getter:      getters.GetterKey("$get.created_by"),
+			},
 			components.InputCheckbox{Label: "Overlaps Only", Name: "overlapping", Getter: getters.GetterKey("$get.overlapping")},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -126,6 +137,7 @@ func registerTable() {
 					{Label: "Location", Key: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Location")}}},
 					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Phone")}}},
 					{Label: "Date & Time", Key: "Datetime", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Datetime")}}},
+					{Label: "Created By", Key: "CreatedBy", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterForeignKey[p_users.User](getters.GetterKey("$row.CreatedByID"), "Name")}}},
 					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.CreatedAt")}}},
 				},
 			},
@@ -143,7 +155,7 @@ func registerDetail() {
 					components.ButtonPost{Label: "Regenerate Letter", Url: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
-			components.FieldText{Getter: getters.GetterKey("$in.GeneratedLetter"), Classes: "bg-base-100 p-8 rounded-lg shadow border whitespace-pre-wrap"},
+			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedLetter"), Classes: "bg-base-100 p-8 rounded-lg shadow border whitespace-pre-wrap"},
 		}},
 	}
 
@@ -167,15 +179,35 @@ func registerDetail() {
 					components.ContainerColumn{Children: []components.PageInterface{
 						components.ShowIf{Getter: getters.GetterKey("overlap_warning"), Children: []components.PageInterface{
 							components.ContainerColumn{Classes: "bg-warning rounded-box border border-base-300 mb-4 shadow-sm gap-4 p-4", Children: []components.PageInterface{
-								components.FieldText{Getter: getters.GetterKey("overlap_warning")},
+								components.ContainerRow{Classes: "flex items-center gap-2 font-semibold", Children: []components.PageInterface{
+									components.Icon{Name: "exclamation-triangle", Classes: "w-5 h-5"},
+									components.FieldText{Getter: getters.GetterStatic("Overlapping Appointments:")},
+								}},
+								components.FieldList{
+									Getter:  getters.GetterKey("overlap_warning_list"),
+									Classes: "flex flex-col gap-2 pl-4",
+									Children: []components.PageInterface{
+										components.ContainerRow{Classes: "flex items-center gap-2", Children: []components.PageInterface{
+											components.ButtonLink{LabelGetter: getters.GetterKey("$row.Name"), Link: getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")), Classes: "link link-primary font-medium"},
+											components.FieldText{Getter: getters.GetterStatic(" — ")},
+											components.FieldText{Getter: getters.GetterKey("$row.Date")},
+										}},
+									},
+								},
 							}},
 						}},
-						components.FieldTitle{Getter: getters.GetterKey("$in.Name")},
-						components.FieldSubtitle{Getter: getters.GetterKey("$in.Location")},
+						components.ContainerRow{Classes: "flex justify-between items-start", Children: []components.PageInterface{
+							components.ContainerColumn{Children: []components.PageInterface{
+								components.FieldTitle{Getter: getters.GetterKey("$in.Name")},
+								components.FieldSubtitle{Getter: getters.GetterKey("$in.Location")},
+							}},
+							components.ButtonLink{Label: "Send via WhatsApp", Link: getters.GetterFormat("https://wa.me/%v", getters.GetterKey("$in.Phone")), Classes: "btn-outline btn-success btn-sm"},
+						}},
 						components.LabelInline{Title: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Phone")}}},
 						components.LabelInline{Title: "Date & Time", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Datetime")}}},
 						components.LabelInline{Title: "Remarks", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Remarks")}}},
 						components.LabelInline{Title: "Extra Info", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.ExtraInfo")}}},
+						components.LabelInline{Title: "Created By", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterForeignKey[p_users.User](getters.GetterKey("$in.CreatedByID"), "Name")}}},
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.CreatedAt")}}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedLetter"), Children: generatedSection},
@@ -236,3 +268,89 @@ func registerDelete() {
 		},
 	})
 }
+
+// --- Selection Tables ---
+
+func registerSelectionPages() {
+	lago.RegistryPage.Register("appointments.AppointmentSelectionTable", components.Modal{
+		UID:   "appointment-selection-modal",
+		Title: "Select Appointment",
+		Children: []components.PageInterface{
+			components.DataTable{
+				UID:             "appointment-selection-table",
+				Data:            getters.GetterKey("appointments"),
+				OnClick:         getters.GetterSelect("appointment", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
+				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentFilter"},
+				Columns: []components.TableColumn{
+					{Label: "Name", Key: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Name")}}},
+					{Label: "Location", Key: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Location")}}},
+					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Phone")}}},
+					{Label: "Date & Time", Key: "Datetime", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Datetime")}}},
+				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("appointments.TemplateSelectionTable", components.Modal{
+		UID:   "template-selection-modal",
+		Title: "Select Template",
+		Children: []components.PageInterface{
+			components.DataTable{
+				UID:             "template-selection-table",
+				Data:            getters.GetterKey("templates"),
+				OnClick:         getters.GetterSelect("template", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
+				Columns: []components.TableColumn{
+					{Label: "Name", Key: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Name")}}},
+				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("appointments.AppointmentCardTimelineFilter", components.FormComponent{
+		Url:    lago.RoutePathGetter("appointments.CardTimelineRoute"),
+		Method: http.MethodGet,
+		ChildrenInput: []components.PageInterface{
+			components.InputText{Label: "Date", Name: "date", Getter: getters.GetterKey("$get.date")},
+		},
+		ChildrenAction: []components.PageInterface{
+			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
+				components.ButtonSubmit{Label: "Apply Filters"},
+				components.InputClear{Label: "Clear"},
+			}},
+		},
+	})
+
+	lago.RegistryPage.Register("appointments.AppointmentCardTimeline", components.ShellScaffold{
+		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
+		Children: []components.PageInterface{
+			components.Timeline{
+				UID:             "appointment-timeline",
+				Title:           "Appointments Timeline",
+				Data:            getters.GetterKey("appointments"),
+				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentCardTimelineFilter"},
+				OnClick:         getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
+				Children: []components.PageInterface{
+					components.ContainerColumn{Children: []components.PageInterface{
+						components.ContainerRow{Classes: "flex justify-between items-start mb-2", Children: []components.PageInterface{
+							components.FieldTitle{Getter: getters.GetterKey("$row.Name")},
+							components.FieldText{Getter: getters.GetterKey("$row.Datetime"), Classes: "text-sm text-gray-500 font-medium whitespace-nowrap"},
+						}},
+						components.ContainerRow{Classes: "flex items-center gap-1 text-sm text-gray-600 mb-1", Children: []components.PageInterface{
+							components.Icon{Name: "map-pin", Classes: "w-4 h-4"},
+							components.FieldText{Getter: getters.GetterKey("$row.Location")},
+						}},
+						components.ContainerRow{Classes: "flex items-center gap-1 text-sm text-gray-600 mb-2", Children: []components.PageInterface{
+							components.Icon{Name: "phone", Classes: "w-4 h-4"},
+							components.FieldText{Getter: getters.GetterKey("$row.Phone")},
+						}},
+						components.ShowIf{Getter: getters.GetterKey("$row.Remarks"), Children: []components.PageInterface{
+							components.FieldText{Getter: getters.GetterKey("$row.Remarks"), Classes: "text-sm italic border-t pt-2 mt-2"},
+						}},
+					}},
+				},
+			},
+		},
+	})
+}
+
+
