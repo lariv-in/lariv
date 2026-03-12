@@ -7,14 +7,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/alnah/go-md2pdf"
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
 	"gorm.io/gorm"
-	"maragu.dev/gomponents"
-	g "maragu.dev/gomponents/html"
 )
 
 func proposalScope(db *gorm.DB, user p_users.User) *gorm.DB {
@@ -474,22 +473,24 @@ func exportPdfHandler(v views.View) http.Handler {
 			return
 		}
 
-		page := g.HTML(
-			g.Head(
-				g.Meta(g.Charset("utf-8")),
-				g.TitleEl(gomponents.Text(proposal.Title)),
-				g.StyleEl(g.Type("text/css"), gomponents.Raw(`
-body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
-h1, h2, h3 { margin-top: 1.5em; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-@media print { body { margin: 0; } }
-`)),
-			),
-			g.Body(gomponents.Raw(components.RenderMarkdown(proposal.GeneratedContent))),
-		)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = page.Render(w)
+		conv, err := md2pdf.NewConverter()
+		if err != nil {
+			http.Error(w, "PDF converter unavailable", http.StatusInternalServerError)
+			return
+		}
+		defer conv.Close()
+
+		result, err := conv.Convert(r.Context(), md2pdf.Input{
+			Markdown: proposal.GeneratedContent,
+		})
+		if err != nil {
+			http.Error(w, "PDF generation failed", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/pdf")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, proposal.Title))
+		w.Write(result.PDF)
 	})
 }
 

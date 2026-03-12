@@ -1,0 +1,45 @@
+package components
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/lariv-in/getters"
+	. "maragu.dev/gomponents"
+	. "maragu.dev/gomponents/html"
+)
+
+type InputDatetime struct {
+	Page
+	Label    string
+	Name     string
+	Getter   getters.Getter
+	Required bool
+	Classes  string
+}
+
+func (e InputDatetime) Build(ctx context.Context) Node {
+	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
+		Label(Class("label text-sm font-bold"), Text(e.Label)),
+		Input(Type("datetime-local"), Name(e.Name),
+			getters.GetterIf(e.Getter, ctx, func(ctx context.Context, value any) Node {
+				if t, ok := value.(time.Time); ok {
+					return Value(t.Format("2006-01-02T15:04"))
+				}
+				return Value(fmt.Sprintf("%s", value))
+			}), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+	)
+}
+
+func (e InputDatetime) Parse(v any) (any, error) {
+	vals, _ := v.([]string)
+	if len(vals) == 0 || vals[0] == "" {
+		return nil, nil
+	}
+	return time.Parse("2006-01-02T15:04", vals[0])
+}
+
+func (e InputDatetime) GetName() string {
+	return e.Name
+}

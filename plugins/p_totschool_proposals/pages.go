@@ -126,7 +126,7 @@ func registerTable() {
 				Title:     "Proposals",
 				Subtitle:  "List of financial proposals",
 				CreateUrl: lago.RoutePathGetter("proposals.CreateRoute"),
-				OnClick:   getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("$row.ID")),
+				OnClick:   getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
 				FilterComponent: lago.DynamicPage{Name: "proposals.ProposalFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Title", Key: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Title")}}},
@@ -143,9 +143,9 @@ func registerDetail() {
 		components.ContainerColumn{Classes: "mt-2 p-4 card card-body border rounded-box border-base-300", Children: []components.PageInterface{
 			components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
 				components.FieldTitle{Getter: getters.GetterStatic("Generated Proposal")},
-				components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
-					components.ButtonLink{Label: "Export to PDF", Link: getters.GetterFormat(AppUrl+"%v/export-pdf/", getters.GetterKey("$in.ID")), Classes: "btn-secondary btn-sm"},
-					components.ButtonLink{Label: "Edit with AI", Link: getters.GetterFormat(AppUrl+"%v/ai-edit/form/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-secondary btn-sm"},
+				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
+					components.ButtonDownload{Label: "Export to PDF", Link: getters.GetterFormat(AppUrl+"%v/export-pdf/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-secondary btn-sm"},
+					components.ButtonModal{Label: "Edit with AI", Url: getters.GetterFormat(AppUrl+"%v/ai-edit/form/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-secondary btn-sm"},
 					components.ButtonPost{Label: "Regenerate Proposal", Url: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
@@ -173,8 +173,10 @@ func registerDetail() {
 					components.ContainerColumn{Children: []components.PageInterface{
 						components.FieldTitle{Getter: getters.GetterKey("$in.Title")},
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.CreatedAt")}}},
-						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
-							components.LabelInline{Title: "Questionnaire Answers", Children: []components.PageInterface{components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers"), KeyField: "Question", ValueField: "Answer", Classes: "mt-6"}}},
+						components.Accordion{Classes: "mt-6", Items: []components.AccordionItem{
+							{Title: "Questionnaire Answers", Children: []components.PageInterface{
+								components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers"), KeyField: "Question", ValueField: "Answer"},
+							}},
 						}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedContent"), Children: generatedSection},
@@ -191,7 +193,7 @@ func registerDetail() {
 
 func getterIdleGeneration() getters.Getter {
 	return func(ctx context.Context) any {
-		if getters.IfOrGetter(getters.GetterKey("$in.GeneratedContent"), ctx, nil) != nil {
+		if content, _ := getters.IfOrGetter(getters.GetterKey("$in.GeneratedContent"), ctx, "").(string); content != "" {
 			return false
 		}
 		if getters.IfOrGetter(getters.GetterKey("generation_pending"), ctx, nil) != nil {

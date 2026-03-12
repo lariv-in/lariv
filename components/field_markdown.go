@@ -11,7 +11,7 @@ import (
 	ghtml "maragu.dev/gomponents/html"
 )
 
-var mdParser = parser.NewWithExtensions(parser.CommonExtensions | parser.AutoHeadingIDs )
+var mdExtensions = parser.CommonExtensions | parser.AutoHeadingIDs
 
 type FieldMarkdown struct {
 	Page
@@ -20,7 +20,7 @@ type FieldMarkdown struct {
 }
 
 func RenderMarkdown(md string) string {
-	doc := mdParser.Parse([]byte(md))
+	doc := parser.NewWithExtensions(mdExtensions).Parse([]byte(md))
 	opts := html.RendererOptions{Flags: html.CommonFlags}
 	renderer := html.NewRenderer(opts)
 	return string(markdown.Render(doc, renderer))
