@@ -1,3 +1,5 @@
 test.db
 tmp/
 bin/
+
+*.toml
