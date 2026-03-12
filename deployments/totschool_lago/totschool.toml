@@ -5,6 +5,3 @@ Address = ":42069"
 [SqliteConfig]
   DSN = "test.db"
 
-[plugins.p_totschool_appointments]
-apiKey = "nicetry"
-
