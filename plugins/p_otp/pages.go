@@ -235,6 +235,14 @@ func init() {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+		prefs := LoadPreferences(d)
+		smsEnabled := prefs.SmsOtpTemplateId != "" || prefs.OtpTemplateId != ""
+		emailEnabled := prefs.EmailOtpTemplateString != ""
+
+		if !smsEnabled && !emailEnabled {
+			return d
+		}
+
 		lago.RegistryPage.Patch("users.LoginPage", func(oldPage components.PageInterface) components.PageInterface {
 			basePage := oldPage
 			if scaffold, ok := basePage.(components.ShellAuthScaffold); ok {
@@ -242,18 +250,22 @@ func init() {
 					if col, ok := scaffold.Children[0].(components.ContainerColumn); ok {
 						if len(col.Children) > 1 {
 							if form, ok := col.Children[1].(components.FormComponent); ok {
+								var buttons []components.PageInterface
+								if smsEnabled {
+									buttons = append(buttons, components.ButtonLink{
+										Label: "Login with SMS OTP",
+										Link:  getters.GetterStatic("/otp/login/sms/"),
+									})
+								}
+								if emailEnabled {
+									buttons = append(buttons, components.ButtonLink{
+										Label: "Login with Email OTP",
+										Link:  getters.GetterStatic("/otp/login/email/"),
+									})
+								}
 								form.ChildrenAction = append(form.ChildrenAction, components.ContainerColumn{
 									Classes: "flex flex-col gap-2 mt-4 items-center border-t border-base-300 pt-4 w-full",
-									Children: []components.PageInterface{
-										components.ButtonLink{
-											Label: "Login with SMS OTP",
-											Link:  getters.GetterStatic("/otp/login/sms/"),
-										},
-										components.ButtonLink{
-											Label: "Login with Email OTP",
-											Link:  getters.GetterStatic("/otp/login/email/"),
-										},
-									},
+									Children: buttons,
 								})
 								col.Children[1] = form
 								scaffold.Children[0] = col
