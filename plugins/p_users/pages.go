@@ -147,32 +147,57 @@ func userFormFields() components.ContainerColumn {
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
-					components.InputEmail{Label: "Email", Name: "email", Required: true, Getter: getters.GetterKey("$in.email")},
+					components.ContainerError{
+						Error: getters.GetterKey("$error.name"),
+						Children: []components.PageInterface{
+							components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+						},
+					},
+					components.ContainerError{
+						Error: getters.GetterKey("$error.email"),
+						Children: []components.PageInterface{
+							components.InputEmail{Label: "Email", Name: "email", Required: true, Getter: getters.GetterKey("$in.email")},
+						},
+					},
 				},
 			},
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					components.InputPhone{Label: "Phone", Name: "phone", Required: true, Getter: getters.GetterKey("$in.phone")},
-					components.InputForeignKey{
-						Label:       "Role",
-						Name:        "role_id",
-						Url:         getters.GetterStatic(RoleUrl + "select/"),
-						DisplayAttr: "name",
-						Placeholder: "Select a role...",
-						Required:    true,
-						Getter:      getters.GetterAssociation("roles", getters.GetterKey("$in.role_id")),
+					components.ContainerError{
+						Error: getters.GetterKey("$error.phone"),
+						Children: []components.PageInterface{
+							components.InputPhone{Label: "Phone", Name: "phone", Required: true, Getter: getters.GetterKey("$in.phone")},
+						},
+					},
+					components.ContainerError{
+						Error: getters.GetterKey("$error.role_id"),
+						Children: []components.PageInterface{
+							components.InputForeignKey{
+								Label:       "Role",
+								Name:        "role_id",
+								Url:         getters.GetterStatic(RoleUrl + "select/"),
+								DisplayAttr: "name",
+								Placeholder: "Select a role...",
+								Required:    true,
+								Getter:      getters.GetterAssociation("roles", getters.GetterKey("$in.role_id")),
+							},
+						},
 					},
 				},
 			},
-			components.InputTernary{
-				Label:      "Superuser",
-				Name:       "is_superuser",
-				TrueLabel:  "Yes",
-				FalseLabel: "No",
-				NoneLabel:  "Not Set",
-				Getter:     getters.GetterKey("$in.IsSuperuser"),
+			components.ContainerError{
+				Error: getters.GetterKey("$error.is_superuser"),
+				Children: []components.PageInterface{
+					components.InputTernary{
+						Label:      "Superuser",
+						Name:       "is_superuser",
+						TrueLabel:  "Yes",
+						FalseLabel: "No",
+						NoneLabel:  "Not Set",
+						Getter:     getters.GetterKey("$in.IsSuperuser"),
+					},
+				},
 			},
 			components.ButtonSubmit{Label: "Save User"},
 		},
@@ -231,8 +256,18 @@ func registerFormPages() {
 				Title:    "Change Password",
 				Subtitle: "Update user password",
 				ChildrenInput: []components.PageInterface{
-					components.InputPassword{Name: "new_password", Label: "New Password", Required: true},
-					components.InputPassword{Name: "confirm_password", Label: "Confirm New Password", Required: true},
+					components.ContainerError{
+						Error: getters.GetterKey("$error.new_password"),
+						Children: []components.PageInterface{
+							components.InputPassword{Name: "new_password", Label: "New Password", Required: true},
+						},
+					},
+					components.ContainerError{
+						Error: getters.GetterKey("$error.confirm_password"),
+						Children: []components.PageInterface{
+							components.InputPassword{Name: "confirm_password", Label: "Confirm New Password", Required: true},
+						},
+					},
 				},
 				ChildrenAction: []components.PageInterface{
 					components.ButtonSubmit{Label: "Change Password"},
@@ -610,7 +645,12 @@ func registerRolePages() {
 				Title:    "Create Role",
 				Subtitle: "Create a new role",
 				ChildrenInput: []components.PageInterface{
-					components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+					components.ContainerError{
+						Error: getters.GetterKey("$error.name"),
+						Children: []components.PageInterface{
+							components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+						},
+					},
 				},
 				ChildrenAction: []components.PageInterface{
 					components.ButtonSubmit{Label: "Save Role"},
@@ -632,7 +672,12 @@ func registerRolePages() {
 				Title:    "Edit Role",
 				Subtitle: "Update role details",
 				ChildrenInput: []components.PageInterface{
-					components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+					components.ContainerError{
+						Error: getters.GetterKey("$error.name"),
+						Children: []components.PageInterface{
+							components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+						},
+					},
 				},
 				ChildrenAction: []components.PageInterface{
 					components.ButtonSubmit{Label: "Save Role"},

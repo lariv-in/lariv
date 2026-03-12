@@ -52,12 +52,20 @@ func (e FormComponent) Build(ctx context.Context) Node {
 		headerNodes = append(headerNodes, Div(Class("text-sm text-gray-500"), Text(e.Subtitle)))
 	}
 
+	var formErrorNode Node
+	if formErr := childCtx.Value("$error._form"); formErr != nil {
+		if err, ok := formErr.(error); ok {
+			formErrorNode = Span(Class("text-sm text-error"), Text(err.Error()))
+		}
+	}
+
 	return Form(
 		Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
 		If(e.Method != "", Method(e.Method)),
 		If(urlString != "", Action(urlString)),
 		Group(headerNodes),
 		inputGroup,
+		formErrorNode,
 		submitGroup)
 }
 
