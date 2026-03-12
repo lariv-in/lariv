@@ -68,8 +68,10 @@ func (e FormComponent) GetChildren() []PageInterface {
 // Calls ParseMultipartForm or ParseForm based on Content-Type and for each Child under it that implements InputIterface, calls its clean method and stores that value in the map, and stores the error in the error map
 func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]error, error) {
 	var err error
+	isMultipart := false
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		err = r.ParseMultipartForm(4 * 1024 * 1024)
+		isMultipart = true
 	} else {
 		err = r.ParseForm()
 	}
@@ -84,7 +86,11 @@ func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]er
 
 	for _, input := range inputs {
 		name := input.GetName()
-		inputValues[name], inputErrors[name] = input.Parse(r.Form[name])
+		if isMultipart {
+			inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name])
+		} else {
+			inputValues[name], inputErrors[name] = input.Parse(r.Form[name])
+		}
 	}
 
 	return inputValues, inputErrors, nil

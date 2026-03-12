@@ -1,18 +1,22 @@
 package views
 
 import (
-	"maps"
 	"context"
+	"errors"
 	"log/slog"
+	"maps"
 	"net/http"
 
 	"github.com/lariv-in/components"
 )
 
+type FormPatcher = func(view View, r *http.Request, formData map[string]any) map[string]any
+
 type View struct {
-	PageName string
-	Registry *map[string]components.PageInterface
-	Handlers map[string]func(View) http.Handler
+	PageName    string
+	Registry    *map[string]components.PageInterface
+	Handlers    map[string]func(View) http.Handler
+	FormPatcher FormPatcher
 }
 
 func (v View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -55,19 +59,22 @@ func (v View) WithMethod(method string, viewHandler func(View) http.Handler) Vie
 
 // ParseForm finds the first FormComponent in the view's page, parses the request form,
 // and returns the values and field errors. Returns true if parsing failed (error already written to w).
-func (v View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any, map[string]error, bool) {
+func (v View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any, map[string]error, error) {
 	page, _ := v.GetPage()
 	forms := components.FindChildren[components.FormComponent](page.(components.ParentInterface))
 	if len(forms) == 0 {
 		http.Error(w, "Internal Server Error: No form found", http.StatusInternalServerError)
-		return nil, nil, true
+		return nil, nil, errors.New("Internal Server Error: No form found")
 	}
 	values, fieldErrors, err := forms[0].ParseForm(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return nil, nil, true
+		return nil, nil, err
 	}
-	return values, fieldErrors, false
+	if v.FormPatcher != nil {
+		values = v.FormPatcher(v, r, values)
+	}
+	return values, fieldErrors, nil
 }
 
 // RenderWithErrors re-renders the view's page with field errors and previously submitted values in context.
@@ -93,4 +100,9 @@ func HasErrors(errs map[string]error) bool {
 		}
 	}
 	return false
+}
+
+func (v View) WithFormPatcher(formPatcher FormPatcher) View {
+	v.FormPatcher = formPatcher
+	return v
 }

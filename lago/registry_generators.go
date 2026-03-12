@@ -11,8 +11,8 @@ import (
 var RegistryGenerator registry.Registry[Generator] = registry.NewRegistry[Generator]()
 
 type Generator struct {
-	Create func(*gorm.DB)
-	Remove func(*gorm.DB)
+	Create func(*gorm.DB) error
+	Remove func(*gorm.DB) error
 }
 
 func RunGenerators(config LagoConfig) {

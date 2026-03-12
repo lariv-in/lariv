@@ -8,32 +8,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lariv-in/lago"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
 
-type AIConfig struct {
-	APIKey string `toml:"apiKey"`
-	Model  string `toml:"model"`
-}
 
-var aiConfig = &AIConfig{}
 
-func (c *AIConfig) PostConfig() {}
-
-func init() {
-	lago.RegistryConfig.Register("p_totschool_appointments", aiConfig)
-}
-
-type generationTask struct {
+type GenerationTask struct {
 	AppointmentID uint
 	Content       string
 	SystemPrompt  string
 }
 
 var (
-	workCh    = make(chan generationTask, 64)
+	workCh    = make(chan GenerationTask, 64)
 	cancelMu  sync.Mutex
 	cancelled = map[uint]bool{}
 )
@@ -44,7 +32,7 @@ func Generate(db *gorm.DB, appointmentID uint, content, systemPrompt string) {
 		"generation_id":    &one,
 		"generated_letter": "",
 	})
-	workCh <- generationTask{
+	workCh <- GenerationTask{
 		AppointmentID: appointmentID,
 		Content:       content,
 		SystemPrompt:  systemPrompt,
@@ -70,12 +58,12 @@ func isCancelled(appointmentID uint) bool {
 
 func runWorker(db *gorm.DB) {
 	clientConfig := &genai.ClientConfig{}
-	if aiConfig.APIKey != "" {
-		clientConfig.APIKey = aiConfig.APIKey
+	if totschoolAppointmentConfig.APIKey != "" {
+		clientConfig.APIKey = totschoolAppointmentConfig.APIKey
 	}
 	model := "gemini-2.5-flash"
-	if aiConfig.Model != "" {
-		model = aiConfig.Model
+	if totschoolAppointmentConfig.Model != "" {
+		model = totschoolAppointmentConfig.Model
 	}
 
 	client, err := genai.NewClient(context.Background(), clientConfig)

@@ -12,6 +12,15 @@ import (
 	"gorm.io/gorm"
 )
 
+func redirectTo(w http.ResponseWriter, r *http.Request, url string) {
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", url)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Redirect(w, r, url, http.StatusSeeOther)
+}
+
 func detailHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
@@ -52,8 +61,6 @@ func detailHandler(v views.View) http.Handler {
 	})
 }
 
-
-
 func generateHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -73,8 +80,7 @@ func generateHandler(v views.View) http.Handler {
 		content := buildLetterContent(db, &appointment, user.Name)
 		Generate(db, appointment.ID, content, letterWriterSystemPrompt)
 
-		redirectTo := lago.NewRedirectView(fmt.Sprintf(AppUrl+"%d/", appointment.ID))
-		redirectTo.ServeHTTP(w, r)
+		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", appointment.ID))
 	})
 }
 
@@ -97,8 +103,7 @@ func cancelHandler(v views.View) http.Handler {
 			CancelGeneration(db, appointment.ID)
 		}
 
-		redirectTo := lago.NewRedirectView(fmt.Sprintf(AppUrl+"%d/", appointment.ID))
-		redirectTo.ServeHTTP(w, r)
+		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", appointment.ID))
 	})
 }
 
@@ -143,9 +148,15 @@ func aiEditHandler(v views.View) http.Handler {
 		userPrompt := fmt.Sprintf("Here is the current letter content:\n\n%s\n\nPlease edit this letter according to these instructions: %s\n\nOutput only the edited text, nothing else.", content, instructions)
 		Generate(db, appointment.ID, userPrompt, letterEditorSystemPrompt)
 
-		redirectTo := lago.NewRedirectView(fmt.Sprintf(AppUrl+"%s/", idStr))
-		redirectTo.ServeHTTP(w, r)
+		redirectTo(w, r, fmt.Sprintf(AppUrl+"%s/", idStr))
 	})
+}
+
+func FormCreatedByPatcher(v views.View, r *http.Request, formData map[string]any) map[string]any {
+	user := r.Context().Value("$user").(p_users.User)
+	formData["created_by_id"] = user.ID
+	fmt.Println("sldfkghl")
+	return formData
 }
 
 func init() {
@@ -156,10 +167,10 @@ func init() {
 		views.DetailView[*Appointment](nil, "appointment")(lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodGet, detailHandler))))
 
 	lago.RegistryView.Register("appointments.CreateView", p_users.AuthMiddleware(
-		views.CreateView[*Appointment](nil, AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentCreateForm"))))
+		views.CreateView[*Appointment](nil, AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentCreateForm")).WithFormPatcher(FormCreatedByPatcher)))
 
 	lago.RegistryView.Register("appointments.UpdateView", p_users.AuthMiddleware(
-		views.UpdateView[*Appointment](nil, AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentUpdateForm"))))
+		views.UpdateView[*Appointment](nil, AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentUpdateForm")).WithFormPatcher(FormCreatedByPatcher)))
 
 	lago.RegistryView.Register("appointments.DeleteView", p_users.AuthMiddleware(
 		views.DeleteView[*Appointment](nil, AppUrl)(lago.GetPageView("appointments.AppointmentDeleteForm"))))

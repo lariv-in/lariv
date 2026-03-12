@@ -151,6 +151,7 @@ func registerDetail() {
 			components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
 				components.FieldTitle{Getter: getters.GetterStatic("Generated Letter")},
 				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
+					components.ButtonLink{Label: "Send via WhatsApp", Link: getters.GetterFormat("https://wa.me/%v?text=%v", getters.GetterKey("$in.Phone"), getters.GetterQueryEscape(getters.GetterKey("$in.GeneratedLetter"))), Classes: "btn-outline btn-success btn-sm"},
 					components.ButtonModal{Label: "Edit with AI", Url: getters.GetterFormat(AppUrl+"%v/ai-edit/form/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-secondary btn-sm"},
 					components.ButtonPost{Label: "Regenerate Letter", Url: getters.GetterFormat(AppUrl+"%v/generate/", getters.GetterKey("$in.ID")), Classes: "btn-outline btn-primary btn-sm"},
 				}},
@@ -201,7 +202,6 @@ func registerDetail() {
 								components.FieldTitle{Getter: getters.GetterKey("$in.Name")},
 								components.FieldSubtitle{Getter: getters.GetterKey("$in.Location")},
 							}},
-							components.ButtonLink{Label: "Send via WhatsApp", Link: getters.GetterFormat("https://wa.me/%v", getters.GetterKey("$in.Phone")), Classes: "btn-outline btn-success btn-sm"},
 						}},
 						components.LabelInline{Title: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Phone")}}},
 						components.LabelInline{Title: "Date & Time", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Datetime")}}},

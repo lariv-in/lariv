@@ -12,17 +12,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// parseFormFromView finds the first FormComponent in the view's page tree and parses the request.
-func parseFormFromView(v View, r *http.Request) (components.FormComponent, map[string]any, map[string]error, error) {
-	page, _ := v.GetPage()
-	forms := components.FindChildren[components.FormComponent](page.(components.ParentInterface))
-	if len(forms) == 0 {
-		return components.FormComponent{}, nil, nil, fmt.Errorf("no form component found in page")
-	}
-	form := forms[0]
-	values, fieldErrors, err := form.ParseForm(r)
-	return form, values, fieldErrors, err
-}
 
 // renderFormErrors re-renders the page with validation errors and submitted values in context.
 func renderFormErrors(v View, w http.ResponseWriter, ctx context.Context, values map[string]any, fieldErrors map[string]error) {
@@ -174,7 +163,7 @@ func CreateView[T any](model T, successUrl string) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				_, values, fieldErrors, err := parseFormFromView(innerView, r)
+				values, fieldErrors, err := innerView.ParseForm(w, r)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -187,6 +176,7 @@ func CreateView[T any](model T, successUrl string) func(View) View {
 
 				db := r.Context().Value("$db").(*gorm.DB)
 
+				fmt.Println(values)
 				// Create using the map directly with RETURNING to get the generated ID
 				err = db.Model(new(T)).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(values).Error
 				if err != nil {
@@ -209,7 +199,7 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				_, values, fieldErrors, err := parseFormFromView(innerView, r)
+				values, fieldErrors, err := innerView.ParseForm(w, r)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -264,8 +254,8 @@ func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
 		// Add POST handler for form save
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				values, fieldErrors, failed := innerView.ParseForm(w, r)
-				if failed {
+				values, fieldErrors, err := innerView.ParseForm(w, r)
+				if err != nil {
 					return
 				}
 
@@ -278,7 +268,7 @@ func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
 				instance := new(T)
 				db.FirstOrCreate(instance)
 
-				err := db.Model(instance).Updates(values).Error
+				err = db.Model(instance).Updates(values).Error
 				if err != nil {
 					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", err))
 					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)

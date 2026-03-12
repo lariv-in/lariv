@@ -28,5 +28,5 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 	if e.LabelGetter != nil {
 		label = fmt.Sprintf("%v", e.LabelGetter(ctx))
 	}
-	return html.A(html.Href(link), html.Class(fmt.Sprintf("link link-primary %s", e.Classes)), gomponents.Text(label))
+	return html.A(html.Href(link), html.Class(fmt.Sprintf("btn btn-primary w-full %s", e.Classes)), gomponents.Text(label))
 }

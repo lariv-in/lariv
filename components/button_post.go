@@ -26,6 +26,6 @@ func (e ButtonPost) Build(ctx context.Context) Node {
 	}
 	return Form(
 		Action(url), Method(http.MethodPost),
-		Button(Type("submit"), Class(fmt.Sprintf("btn %s", e.Classes)), Text(e.Label)),
+		Button(Type("submit"), Class(fmt.Sprintf("btn w-full %s", e.Classes)), Text(e.Label)),
 	)
 }

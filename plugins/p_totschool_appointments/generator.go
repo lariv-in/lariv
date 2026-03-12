@@ -120,8 +120,6 @@ func GenerateAppointmentsForUser(db *gorm.DB, user p_users.User, count int) {
 
 func init() {
 	lago.RegistryGenerator.Register("appointments.Generator", lago.Generator{
-		Name:        "Appointments",
-		Description: "Generates sample appointments and letter templates",
 		Create: func(db *gorm.DB) error {
 			var users []p_users.User
 			if err := db.Find(&users).Error; err != nil {

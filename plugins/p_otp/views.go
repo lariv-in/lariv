@@ -27,8 +27,8 @@ func PhoneOtpRequestHandler(v views.View) http.Handler {
 			return
 		}
 
-		values, fieldErrors, failed := v.ParseForm(w, r)
-		if failed {
+		values, fieldErrors, err := v.ParseForm(w, r)
+		if err != nil {
 			return
 		}
 
@@ -80,8 +80,8 @@ func EmailOtpRequestHandler(v views.View) http.Handler {
 			return
 		}
 
-		values, fieldErrors, failed := v.ParseForm(w, r)
-		if failed {
+		values, fieldErrors, err := v.ParseForm(w, r)
+		if err != nil {
 			return
 		}
 
@@ -138,8 +138,8 @@ func OtpVerifyHandler(v views.View) http.Handler {
 			return
 		}
 
-		values, fieldErrors, failed := v.ParseForm(w, r)
-		if failed {
+		values, fieldErrors, err := v.ParseForm(w, r)
+		if err != nil {
 			return
 		}
 
