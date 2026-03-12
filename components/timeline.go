@@ -81,27 +81,26 @@ func (e Timeline) Build(ctx context.Context) Node {
 				childrenNodes = append(childrenNodes, Render(child, itemCtx))
 			}
 
-			var clickableAttrs []Node
 			var clickableClasses string
+
+			timelineContent := Div(Class("timeline-item relative flex items-center gap-4 pb-6 last:pb-0"),
+				Div(Class("timeline-indicator relative z-10 flex items-center"),
+					Div(Class("w-3 h-3 rounded-full bg-primary")),
+					Div(Class("h-0.5 w-4 bg-primary")),
+				),
+				Div(Class(fmt.Sprintf("timeline-card flex-1 p-4 rounded-box border border-base-300 bg-base-100 shadow-sm %s", clickableClasses)),
+					childrenNodes,
+				),
+			)
 			if e.OnClick != nil {
 				url := fmt.Sprintf("%v", getters.IfOrGetter(e.OnClick, itemCtx, ""))
 				if url != "" {
-					clickableAttrs = append(clickableAttrs, Attr("hx-get", url), Attr("hx-target", "#app-layout"), Attr("hx-push-url", "true"))
-					clickableClasses = "cursor-pointer hover:border-primary hover:shadow-md transition-all"
+					timelineContent = A(Href(url), timelineContent)
 				}
 			}
 
 			cardsGroup = append(cardsGroup,
-				Div(Class("timeline-item relative flex items-center gap-4 pb-6 last:pb-0"),
-					Div(Class("timeline-indicator relative z-10 flex items-center"),
-						Div(Class("w-3 h-3 rounded-full bg-primary")),
-						Div(Class("h-0.5 w-4 bg-primary")),
-					),
-					Div(Class(fmt.Sprintf("timeline-card flex-1 p-4 rounded-box border border-base-300 bg-base-100 shadow-sm %s", clickableClasses)),
-						Group(clickableAttrs),
-						childrenNodes,
-					),
-				),
+				timelineContent,
 			)
 		}
 	}
