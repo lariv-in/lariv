@@ -293,6 +293,7 @@ func init() {
 				Subtitle:        "All tallies in the system",
 				Data:            getters.GetterKey("$in.Tallies"),
 				FilterComponent: tallyFilter,
+				Classes:         "mt-2",
 				Columns: []components.TableColumn{
 					{Label: "Date", Key: "Date"},
 					{Label: "User", Key: "User.Name"},
