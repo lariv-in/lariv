@@ -24,7 +24,7 @@ jobs:
           for dir in deployments/*/; do
             name=$(basename "$dir")
             echo "Building $name..."
-            go build -o "dist/${name}" "./${dir}"
+            go build -ldflags "-s -w" -o "dist/${name}" "./${dir}"
           done
 
       - name: Create release
