@@ -35,6 +35,12 @@ This is a Go web framework called **lago** structured as a `go.work` monorepo wi
 | `plugins/p_users/` | Auth plugin: JWT cookies, User/Role models, login/signup pages |
 | `plugins/p_dashboard/` | Dashboard plugin: apps grid, topbar buttons |
 | `plugins/p_otp/` | OTP plugin: SMS/email OTP login, preferences management |
+| `plugins/p_courses/` | Courses CRUD plugin |
+| `plugins/p_filesystem/` | Filesystem plugin |
+| `plugins/p_totschool_appointments/` | Appointments with AI letter generation |
+| `plugins/p_totschool_proposals/` | Proposals with AI content generation |
+| `plugins/p_totschool_tally/` | Daily tally, dashboard, leaderboard |
+| `plugins/p_totschool_users/` | Totschool-specific user/role config |
 | `deployments/totschool_lago/` | Application entry point (main package) |
 
 ### Registry Pattern
@@ -55,9 +61,14 @@ All plugins register themselves in `init()` functions. The application activates
 
 ```go
 import (
-    _ "github.com/lariv-in/p_users"
+    _ "github.com/lariv-in/p_courses"
     _ "github.com/lariv-in/p_dashboard"
     _ "github.com/lariv-in/p_otp"
+    _ "github.com/lariv-in/p_totschool_appointments"
+    _ "github.com/lariv-in/p_totschool_proposals"
+    _ "github.com/lariv-in/p_totschool_tally"
+    _ "github.com/lariv-in/p_totschool_users"
+    _ "github.com/lariv-in/p_users"
 )
 ```
 
@@ -79,7 +90,7 @@ Each plugin's `init()` calls register on the appropriate registries.
 - `"$in"` — `map[string]any` of form values for pre-population (accessed via `GetterKey("$in.FieldName")`)
 - `"$environment"` — `map[string]string` parsed from the `environment` cookie by `MiddlewareEnvironment` (accessed via `GetterKey("$environment.keyname")`)
 
-Helper constructors: `GetterStatic(v)`, `GetterKey("dot.path")`, `GetterNil()`, `GetterFormat(fmt, getters...)`, `GetterQueryEscape(getter)`.
+Helper constructors: `GetterStatic(v)`, `GetterKey("dot.path")`, `GetterNil()`, `GetterFormat(fmt, getters...)`, `GetterQueryEscape(getter)`, `GetterIf(getter, trueVal, falseVal)`, `GetterAssociation(table, idGetter)`, `GetterForeignKey[T](idGetter, displayField)`, `GetterNavigate(urlFmt, getters...)`, `GetterSelect(name, idGetter, displayGetter)`, `GetterMultiSelect(name, idGetter, displayGetter)`.
 
 ### DB Initialization
 
@@ -94,11 +105,11 @@ Pre-composed layout wrappers in `components/` that implement the `Shell` interfa
 
 ### Form Handling
 
-`FormComponent.ParseForm(r)` iterates child components implementing `InputInterface`, calling each input's `Parse()` to validate and clean the value. Returns `(values map[string]any, errors map[string]error, err error)`. Input types: `InputText`, `InputEmail`, `InputPassword`, `InputPhone`, `InputCheckbox`.
+`FormComponent.ParseForm(r)` iterates child components implementing `InputInterface`, calling each input's `Parse()` to validate and clean the value. Returns `(values map[string]any, errors map[string]error, err error)`. Input types: `InputText`, `InputTextarea`, `InputEmail`, `InputPassword`, `InputPhone`, `InputNumber`, `InputDatetime`, `InputCheckbox`, `InputTernary`, `InputForeignKey`, `InputManyToMany`.
 
 ### Environment Component & Middleware
 
-`Environment` is a `<select>` component that persists its value in a client-side `environment` cookie (JSON map of key→value). Fields: `Key` (getter → string key in the map), `Options` (getter → `[]string`), `Label`, `Classes`. On change, JavaScript updates the cookie. `MiddlewareEnvironment` reads and parses the cookie into `$environment` (`map[string]string`) in context. Registered as `"core.EnvironmentMiddleware"`.
+`Environment` is a `<select>` component that persists its value in a client-side `environment` cookie (JSON map of key→value). Fields: `Key` (getter → string key in the map), `Options` (getter → `[]string`), `Default` (getter → default value if none selected), `Label`, `Classes`. On change, JavaScript updates the cookie. `MiddlewareEnvironment` reads and parses the cookie into `$environment` (`map[string]string`) in context. Registered as `"core.EnvironmentMiddleware"`.
 
 ### View Helper Methods
 
@@ -109,9 +120,9 @@ Pre-composed layout wrappers in `components/` that implement the `Shell` interfa
 
 ### CRUD Views (Generics)
 
-`views/crud.go` provides generic CRUD view wrappers: `ListView[T]`, `DetailView[T]`, `CreateView[T]`, `UpdateView[T]`, `DeleteView[T]`, `SingletonView[T]`. They accept a model instance for type inference (e.g. `views.CreateView(User{}, "/users/%v/")`).
+`views/crud.go` provides generic CRUD view wrappers: `ListView[T]`, `DetailView[T]`, `CreateView[T]`, `UpdateView[T]`, `DeleteView[T]`, `SingletonView[T]`. Each returns a `func(View) View` wrapper. Usage: `views.CreateView[User]("/users/%v/")`, `views.ListView[User]("users")`, `views.DetailView[User]("user")`.
 
-`SingletonView[T](model, successUrlGetter)` handles singleton config forms — loads via `FirstOrCreate` into `$in` context for GET, parses + updates on POST. The `successUrl` is a `Getter` (use `lago.RoutePathGetter("route.Name")` to pull from the route registry).
+`SingletonView[T](successUrlGetter)` handles singleton config forms — loads via `FirstOrCreate` into `$in` context for GET, parses + updates on POST. The `successUrl` is a `Getter` (use `lago.RoutePathGetter("route.Name")` to pull from the route registry).
 
 ### `GetterKey` resolves `$in` as a map, not flat keys
 
