@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lariv-in/components"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/views"
 	"gorm.io/gorm"
@@ -16,33 +15,13 @@ import (
 
 func LoginHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		page, _ := v.GetPage()
-		forms := components.FindChildren[components.FormComponent](page.(components.ParentInterface))
-		if len(forms) == 0 {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		form := forms[0]
-		values, fieldErrors, err := form.ParseForm(r)
+		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		hasErrors := false
-		ctx := r.Context()
-		errorMap := map[string]any{}
-		for name, fieldErr := range fieldErrors {
-			if fieldErr != nil {
-				hasErrors = true
-				errorMap[name] = fieldErr
-			}
-		}
-
-		if hasErrors {
-			ctx = context.WithValue(ctx, "$error", errorMap)
-			ctx = context.WithValue(ctx, "$in", values)
-			page.Build(ctx).Render(w)
+		if views.HasErrors(fieldErrors) {
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
@@ -52,10 +31,8 @@ func LoginHandler(v views.View) http.Handler {
 		db := r.Context().Value("$db").(*gorm.DB)
 		user, err := Authenticate(db, email, password)
 		if err != nil {
-			errorMap["password"] = fmt.Errorf("Invalid email or password")
-			ctx = context.WithValue(ctx, "$error", errorMap)
-			ctx = context.WithValue(ctx, "$in", values)
-			page.Build(ctx).Render(w)
+			fieldErrors["password"] = fmt.Errorf("Invalid email or password")
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 		user.Login(w)
@@ -65,25 +42,9 @@ func LoginHandler(v views.View) http.Handler {
 
 func SignupHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		page, _ := v.GetPage()
-		forms := components.FindChildren[components.FormComponent](page.(components.ParentInterface))
-		if len(forms) == 0 {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		form := forms[0]
-		values, fieldErrors, err := form.ParseForm(r)
+		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		}
-
-		ctx := r.Context()
-		errorMap := map[string]any{}
-		for name, fieldErr := range fieldErrors {
-			if fieldErr != nil {
-				errorMap[name] = fieldErr
-			}
 		}
 
 		password1Str, _ := values["password1"].(string)
@@ -91,18 +52,15 @@ func SignupHandler(v views.View) http.Handler {
 
 		termsAndConditions, _ := values["terms_accepted"].(bool)
 		if !termsAndConditions {
-			errorMap["terms_accepted"] = fmt.Errorf("Terms and conditions need to be accepted")
+			fieldErrors["terms_accepted"] = fmt.Errorf("Terms and conditions need to be accepted")
 		}
-
 
 		if password1Str != password2Str {
-			errorMap["password2"] = fmt.Errorf("Passwords do not match")
+			fieldErrors["password2"] = fmt.Errorf("Passwords do not match")
 		}
 
-		if len(errorMap) > 0 {
-			ctx = context.WithValue(ctx, "$error", errorMap)
-			ctx = context.WithValue(ctx, "$in", values)
-			page.Build(ctx).Render(w)
+		if views.HasErrors(fieldErrors) {
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
@@ -126,7 +84,8 @@ func SignupHandler(v views.View) http.Handler {
 		err = db.Create(&user).Error
 
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			ctx := context.WithValue(r.Context(), views.GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
+			v.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 			return
 		}
 		user.Login(w)
@@ -149,40 +108,20 @@ func LogoutHandler(v views.View) http.Handler {
 // ChangePasswordHandler is user-specific so it stays here.
 func ChangePasswordHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		page, _ := v.GetPage()
-		forms := components.FindChildren[components.FormComponent](page.(components.ParentInterface))
-		if len(forms) == 0 {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		form := forms[0]
-		values, fieldErrors, err := form.ParseForm(r)
+		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		}
-
-		ctx := r.Context()
-		hasErrors := false
-		errorMap := map[string]any{}
-		for name, fieldErr := range fieldErrors {
-			if fieldErr != nil {
-				hasErrors = true
-				errorMap[name] = fieldErr
-			}
 		}
 
 		newPassword, _ := values["new_password"].(string)
 		confirmPassword, _ := values["confirm_password"].(string)
 
 		if newPassword != confirmPassword {
-			hasErrors = true
-			errorMap["confirm_password"] = fmt.Errorf("Passwords do not match")
+			fieldErrors["confirm_password"] = fmt.Errorf("Passwords do not match")
 		}
 
-		if hasErrors {
-			ctx = context.WithValue(ctx, "$error", errorMap)
-			page.Build(ctx).Render(w)
+		if views.HasErrors(fieldErrors) {
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
@@ -192,7 +131,8 @@ func ChangePasswordHandler(v views.View) http.Handler {
 		user.Password = []byte(newPassword)
 		err = db.Save(&user).Error
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			ctx := context.WithValue(r.Context(), views.GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
+			v.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 			return
 		}
 
