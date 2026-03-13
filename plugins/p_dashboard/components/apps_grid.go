@@ -57,9 +57,8 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 				Text(app.VerboseName),
 			),
 		))
-
 	}
-	return Div(Class("container max-w-5xl mx-auto p-6 @container"), Attr("x-data", "{ search: ''}"),
+	return Div(Class("container max-w-5xl mx-auto mt-4 @container"), Attr("x-data", "{ search: ''}"),
 		Div(Class("mb-4"),
 			Input(Type("text"), Attr("x-model", "search"), Placeholder("Search apps..."), Class("input input-bordered w-full")),
 		),
