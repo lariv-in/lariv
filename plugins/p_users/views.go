@@ -99,8 +99,7 @@ func SignupHandler(v views.View) http.Handler {
 				Name: "Unassigned",
 			},
 		}
-		err = db.Create(&user).Error
-
+		err = db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&user).Error
 		if err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
 			v.RenderWithErrors(w, r, fieldErrors, values)
