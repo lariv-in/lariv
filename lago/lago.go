@@ -22,6 +22,7 @@ func Start(config LagoConfig) error {
 	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
 	RegistryMiddleware.Register("core.HtmxBoostMiddleware", MiddlewareHtmxBoost)
 	RegistryMiddleware.Register("core.EnvironmentMiddleware", MiddlewareEnvironment)
+	RegistryMiddleware.Register("core.CacheDisableMiddlware", MiddlewareCacheDisable)
 
 	BuildAllRegistries()
 
@@ -101,5 +102,17 @@ func MiddlewareHtmxBoost(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		isBoosted := r.Header.Get("HX-Boosted") == "true"
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "isHtmxBoosted", isBoosted)))
+	})
+}
+
+func MiddlewareCacheDisable(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+
+		w.Header().Del("ETag")
+		w.Header().Del("Last-Modified")
+		next.ServeHTTP(w, r)
 	})
 }
