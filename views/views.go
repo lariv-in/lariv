@@ -14,7 +14,7 @@ type FormPatcher = func(view View, r *http.Request, formData map[string]any) map
 
 type View struct {
 	PageName    string
-	Registry    *map[string]components.PageInterface
+	Registry    map[string]components.PageInterface
 	Handlers    map[string]func(View) http.Handler
 	FormPatcher FormPatcher
 }
@@ -30,7 +30,7 @@ func (v View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (v View) GetPage() (components.PageInterface, bool) {
-	page, isPagePresent := (*v.Registry)[v.PageName]
+	page, isPagePresent := v.Registry[v.PageName]
 	return page, isPagePresent
 }
 

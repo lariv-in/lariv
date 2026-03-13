@@ -217,9 +217,9 @@ func init() {
 	lago.RegistryView.Register("tally.TallyDailyFormView", p_users.AuthMiddleware(lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler)))
 
 	// Admin CRUD mappings using standard views
-	lago.RegistryView.Register("tally.TallyCreateView", p_users.AuthMiddleware(RequireAdmin(views.CreateView(Tally{}, "/tally/")(lago.GetPageView("tally.TallyCreateForm")))))
-	lago.RegistryView.Register("tally.TallyUpdateView", p_users.AuthMiddleware(RequireAdmin(views.UpdateView(Tally{}, "/tally/")(lago.GetPageView("tally.TallyUpdateForm")))))
-	lago.RegistryView.Register("tally.TallyDeleteView", p_users.AuthMiddleware(RequireAdmin(views.DeleteView(Tally{}, "/tally/")(lago.GetPageView("tally.TallyDeleteForm")))))
+	lago.RegistryView.Register("tally.TallyCreateView", p_users.AuthMiddleware(RequireAdmin(views.CreateView[Tally]("/tally/")(lago.GetPageView("tally.TallyCreateForm")))))
+	lago.RegistryView.Register("tally.TallyUpdateView", p_users.AuthMiddleware(RequireAdmin(views.UpdateView[Tally]("/tally/")(lago.GetPageView("tally.TallyUpdateForm")))))
+	lago.RegistryView.Register("tally.TallyDeleteView", p_users.AuthMiddleware(RequireAdmin(views.DeleteView[Tally]("/tally/")(lago.GetPageView("tally.TallyDeleteForm")))))
 
 	// Detail View allows access if user owns it or is admin
 	lago.RegistryView.Register("tally.TallyDetailView", p_users.AuthMiddleware(func(v views.View) http.Handler {

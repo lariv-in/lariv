@@ -28,6 +28,7 @@ func GetterKey(key string) Getter {
 		value := ctx.Value(parts[0])
 		for i := 1; i < len(parts); i++ {
 			if value == nil {
+				fmt.Printf("Key not found for %s\n", key)
 				return nil
 			}
 			m, ok := value.(map[string]any)
@@ -37,6 +38,7 @@ func GetterKey(key string) Getter {
 					v = v.Elem()
 				}
 				if v.Kind() != reflect.Struct {
+					fmt.Printf("Key not found for %s\n", key)
 					return nil
 				}
 				m = MapFromStruct(value)
@@ -45,6 +47,7 @@ func GetterKey(key string) Getter {
 			if v, exists := m[parts[i]]; exists {
 				value = v
 			} else {
+				fmt.Printf("Key not found for %s\n", key)
 				return nil
 			}
 		}

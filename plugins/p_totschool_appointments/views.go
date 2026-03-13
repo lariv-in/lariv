@@ -154,26 +154,25 @@ func aiEditHandler(v views.View) http.Handler {
 
 func FormCreatedByPatcher(v views.View, r *http.Request, formData map[string]any) map[string]any {
 	user := r.Context().Value("$user").(p_users.User)
-	formData["created_by_id"] = user.ID
-	fmt.Println("sldfkghl")
+	formData["CreatedByID"] = user.ID
 	return formData
 }
 
 func init() {
 	lago.RegistryView.Register("appointments.ListView", p_users.AuthMiddleware(
-		views.ListView[*Appointment](nil, "appointments")(lago.GetPageView("appointments.AppointmentTable"))))
+		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentTable"))))
 
 	lago.RegistryView.Register("appointments.DetailView", p_users.AuthMiddleware(
-		views.DetailView[*Appointment](nil, "appointment")(lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodGet, detailHandler))))
+		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodGet, detailHandler))))
 
 	lago.RegistryView.Register("appointments.CreateView", p_users.AuthMiddleware(
-		views.CreateView[*Appointment](nil, AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentCreateForm")).WithFormPatcher(FormCreatedByPatcher)))
+		views.CreateView[Appointment](AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentCreateForm")).WithFormPatcher(FormCreatedByPatcher)))
 
 	lago.RegistryView.Register("appointments.UpdateView", p_users.AuthMiddleware(
-		views.UpdateView[*Appointment](nil, AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentUpdateForm")).WithFormPatcher(FormCreatedByPatcher)))
+		views.UpdateView[Appointment](AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentUpdateForm")).WithFormPatcher(FormCreatedByPatcher)))
 
 	lago.RegistryView.Register("appointments.DeleteView", p_users.AuthMiddleware(
-		views.DeleteView[*Appointment](nil, AppUrl)(lago.GetPageView("appointments.AppointmentDeleteForm"))))
+		views.DeleteView[Appointment](AppUrl)(lago.GetPageView("appointments.AppointmentDeleteForm"))))
 
 	lago.RegistryView.Register("appointments.GenerateView", p_users.AuthMiddleware(
 		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, generateHandler)))
@@ -188,11 +187,11 @@ func init() {
 		lago.GetPageView("appointments.AiEditModal").WithMethod(http.MethodPost, aiEditHandler)))
 
 	lago.RegistryView.Register("appointments.SelectView", p_users.AuthMiddleware(
-		views.ListView[*Appointment](nil, "appointments")(lago.GetPageView("appointments.AppointmentSelectionTable"))))
+		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentSelectionTable"))))
 
 	lago.RegistryView.Register("appointments.TemplateSelectView", p_users.AuthMiddleware(
-		views.ListView[*LetterTemplate](nil, "templates")(lago.GetPageView("appointments.TemplateSelectionTable"))))
+		views.ListView[LetterTemplate]("templates")(lago.GetPageView("appointments.TemplateSelectionTable"))))
 
 	lago.RegistryView.Register("appointments.CardTimelineView", p_users.AuthMiddleware(
-		views.ListView[*Appointment](nil, "appointments")(lago.GetPageView("appointments.AppointmentCardTimeline"))))
+		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentCardTimeline"))))
 }

@@ -31,7 +31,7 @@ func LoadConfigFromFile(path string) (LagoConfig, error) {
 		return config, err
 	}
 
-	for key, cfgPointer := range *RegistryConfig.All() {
+	for key, cfgPointer := range RegistryConfig.All() {
 		if prim, ok := config.Plugins[key]; ok {
 			err = md.PrimitiveDecode(prim, cfgPointer)
 			if err != nil {

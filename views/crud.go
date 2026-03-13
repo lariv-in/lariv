@@ -4,19 +4,27 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
+)
+
+type GlobalContextKeys (string)
+
+const (
+	GlobalContextError = GlobalContextKeys("$error")
+	GlobalContextIn    = GlobalContextKeys("$in")
 )
 
 // --- List View ---
 
 // ListView loads all records for model T into context under the given key.
 // Supports query param filtering and sorting.
-func ListView[T any](model T, key string) func(View) View {
+func ListView[T any](key string) func(View) View {
 	return func(v View) View {
 		oldHandlers := v.Handlers
 		newHandlers := make(map[string]func(View) http.Handler)
@@ -97,7 +105,7 @@ func ListView[T any](model T, key string) func(View) View {
 // --- Detail Middleware ---
 
 // DetailView loads a single record by {id} path param into context under the given key.
-func DetailView[T any](model T, key string) func(View) View {
+func DetailView[T any](key string) func(View) View {
 	return func(v View) View {
 		oldHandlers := v.Handlers
 		newHandlers := make(map[string]func(View) http.Handler)
@@ -130,11 +138,20 @@ func DetailView[T any](model T, key string) func(View) View {
 	}
 }
 
+func PopulateFromMap[T any](v *T, values map[string]any) error {
+	decodeConfig := mapstructure.DecoderConfig{Result: v, Deep: true, Squash: true}
+	decoder, err := mapstructure.NewDecoder(&decodeConfig)
+	if err != nil {
+		return err
+	}
+	return decoder.Decode(values)
+}
+
 // --- Create Handler ---
 
 // CreateView parses the form, validates, creates a record of type T, and redirects to successUrl.
 // successUrl is a format string that receives the new record's ID (e.g. "/users/%v/").
-func CreateView[T any](model T, successUrl string) func(View) View {
+func CreateView[T any](successURL string) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -151,16 +168,21 @@ func CreateView[T any](model T, successUrl string) func(View) View {
 
 				db := r.Context().Value("$db").(*gorm.DB)
 
-				fmt.Println(values)
-				// Create using the map directly with RETURNING to get the generated ID
-				err = db.Model(new(T)).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(values).Error
+				record := new(T)
+				if err = PopulateFromMap(record, values); err != nil {
+					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
+					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+					return
+				}
+				err = db.Create(record).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), "$error", map[string]any{"_form": fmt.Errorf("%v", err)})
+					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
 					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 					return
 				}
 
-				http.Redirect(w, r, fmt.Sprintf(successUrl, values["id"]), http.StatusSeeOther)
+				id := reflect.ValueOf(*record).FieldByName("ID").Uint()
+				http.Redirect(w, r, fmt.Sprintf(successURL, id), http.StatusSeeOther)
 			})
 		})
 	}
@@ -170,7 +192,7 @@ func CreateView[T any](model T, successUrl string) func(View) View {
 
 // UpdateView parses the form, validates, updates the record by {id} path param, and redirects.
 // successUrl is a format string that receives the record's ID (e.g. "/users/%v/").
-func UpdateView[T any](model T, successUrl string) func(View) View {
+func UpdateView[T any](successURL string) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -197,12 +219,12 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 				// Update using the map directly, ID already known from path
 				err = db.Model(new(T)).Where("id = ?", id).Updates(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), "$error", map[string]any{"_form": fmt.Errorf("%v", err)})
+					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
 					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 					return
 				}
 
-				http.Redirect(w, r, fmt.Sprintf(successUrl, id), http.StatusSeeOther)
+				http.Redirect(w, r, fmt.Sprintf(successURL, id), http.StatusSeeOther)
 			})
 		})
 	}
@@ -212,7 +234,7 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 
 // SingletonView loads a singleton record of type T (via FirstOrCreate) into $in context for GET,
 // and parses the form + updates the record on POST, then redirects to the URL resolved by successUrl.
-func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
+func SingletonView[T any](successURL getters.Getter) func(View) View {
 	return func(v View) View {
 		// Wrap GET to load singleton into $in context
 		oldGet := v.Handlers[http.MethodGet]
@@ -221,7 +243,7 @@ func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
 				db := r.Context().Value("$db").(*gorm.DB)
 				instance := new(T)
 				db.FirstOrCreate(instance)
-				ctx := context.WithValue(r.Context(), "$in", getters.MapFromStruct(instance))
+				ctx := context.WithValue(r.Context(), GlobalContextIn, getters.MapFromStruct(instance))
 				oldGet(innerView).ServeHTTP(w, r.WithContext(ctx))
 			})
 		}
@@ -245,12 +267,12 @@ func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
 
 				err = db.Model(instance).Updates(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), "$error", map[string]any{"_form": fmt.Errorf("%v", err)})
+					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
 					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 					return
 				}
 
-				redirectUrl, _ := getters.IfOrGetter(successUrl, r.Context(), "").(string)
+				redirectUrl, _ := getters.IfOrGetter(successURL, r.Context(), "").(string)
 				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
@@ -260,7 +282,7 @@ func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
 // --- Delete Handler ---
 
 // DeleteView deletes the record by {id} path param and redirects to successUrl.
-func DeleteView[T any](model T, successUrl string) func(View) View {
+func DeleteView[T any](successUrl string) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

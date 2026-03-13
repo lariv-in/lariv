@@ -116,11 +116,11 @@ func (r *Registry[T]) Getter(name string) getters.Getter {
 	}
 }
 
-func (r *Registry[T]) All() *map[string]T {
+func (r *Registry[T]) All() map[string]T {
 	if !r.isBuilt {
 		r.Build()
 	}
-	return &r.items
+	return r.items
 }
 
 func (r *Registry[T]) AllStable() *[]Pair[string, T] {

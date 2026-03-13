@@ -25,7 +25,7 @@ func EchoServer(ws *websocket.Conn) {
 func GetRouter() *http.ServeMux {
 	baseRouter := http.NewServeMux()
 	routes := RegistryRoute.All()
-	for _, route := range *routes {
+	for _, route := range routes {
 		baseRouter.Handle(route.Path+"{$}", route.Handler)
 	}
 	return baseRouter

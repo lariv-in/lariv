@@ -23,7 +23,7 @@ func RunGenerators(config LagoConfig) {
 	}
 
 	generators := RegistryGenerator.All()
-	for name, gen := range *generators {
+	for name, gen := range generators {
 		fmt.Printf("\n=== Running generator: %s ===\n", name)
 		if gen.Remove != nil {
 			gen.Remove(db)
