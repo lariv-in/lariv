@@ -37,7 +37,7 @@ func detailHandler(v views.View) http.Handler {
 		ctx := r.Context()
 
 		if appointment.GenerationID != nil {
-			ctx = context.WithValue(ctx, "generation_pending", true)
+			ctx = context.WithValue(ctx, "GenerationPending", true)
 		}
 
 		appointmentMap := getters.MapFromStruct(&appointment)
@@ -52,8 +52,8 @@ func detailHandler(v views.View) http.Handler {
 					"Date": o.Datetime.Format("Jan 02, 15:04"),
 				})
 			}
-			ctx = context.WithValue(ctx, "overlap_warning_list", overlapList)
-			ctx = context.WithValue(ctx, "overlap_warning", true)
+			ctx = context.WithValue(ctx, "OverlapWarningList", overlapList)
+			ctx = context.WithValue(ctx, "OverlapWarning", true)
 		}
 
 		ctx = context.WithValue(ctx, "appointment", appointmentMap)

@@ -75,8 +75,8 @@ Each plugin's `init()` calls register on the appropriate registries.
 
 - `"$db"` — `*gorm.DB` injected by `MiddlewareDb`
 - `"$user"` — authenticated `User` injected by `AuthMiddleware`
-- `"$error.<field>"` — form validation errors (e.g. `"$error.email"`)
-- `"$in"` — `map[string]any` of form values for pre-population (accessed via `GetterKey("$in.fieldname")`)
+- `"$error.<field>"` — form validation errors (e.g. `"$error.Email"`)
+- `"$in"` — `map[string]any` of form values for pre-population (accessed via `GetterKey("$in.FieldName")`)
 - `"$environment"` — `map[string]string` parsed from the `environment` cookie by `MiddlewareEnvironment` (accessed via `GetterKey("$environment.keyname")`)
 
 Helper constructors: `GetterStatic(v)`, `GetterKey("dot.path")`, `GetterNil()`, `GetterFormat(fmt, getters...)`, `GetterQueryEscape(getter)`.
@@ -115,7 +115,7 @@ Pre-composed layout wrappers in `components/` that implement the `Shell` interfa
 
 ### `GetterKey` resolves `$in` as a map, not flat keys
 
-`GetterKey("$in.fieldname")` splits on `"."` and first looks up `ctx.Value("$in")` expecting a `map[string]any`, then navigates into `"fieldname"`. Setting flat context keys like `context.WithValue(ctx, "$in.fieldname", val)` will NOT work — you must set `"$in"` as a single `map[string]any`.
+`GetterKey("$in.FieldName")` splits on `"."` and first looks up `ctx.Value("$in")` expecting a `map[string]any`, then navigates into `"FieldName"`. Setting flat context keys like `context.WithValue(ctx, "$in.FieldName", val)` will NOT work — you must set `"$in"` as a single `map[string]any`.
 
 ### Handlers must be registered for the methods they handle
 
@@ -126,11 +126,11 @@ Pre-composed layout wrappers in `components/` that implement the `Shell` interfa
 ### Route conflicts with Go 1.22 ServeMux
 Nested resource paths like `/users/roles/{id}/` conflict with `/users/{id}/delete/` because neither pattern is more specific. Give sub-resources their own top-level path (e.g. `/roles/` instead of `/users/roles/`).
 
-### Form field names must match DB column names
-`InputForeignKey` and other inputs submit values under their `Name` field. This must match the GORM column name (snake_case of the struct field). E.g. for a `RoleID int` struct field, use `Name: "role_id"`, not `Name: "role"`.
+### Use PascalCase for all names: input Names, getter keys, and context map keys
+`MapFromStruct` produces PascalCase keys matching Go struct field names. Input `Name` fields, `$in`/`$error`/`$get` getter keys, and custom context map keys must all use PascalCase to stay consistent. E.g. for a `RoleID int` struct field, use `Name: "RoleID"`, `GetterKey("$in.RoleID")`, `GetterKey("$error.RoleID")`. For custom context data, use `map[string]any{"SessionNames": names}` not `"session_names"`.
 
 ### `InputForeignKey` selection event name must match input Name
-`GetterSelect(name, ...)` dispatches an event with the given name. The `InputForeignKey` listens for events matching its own `Name` field. These must be identical — e.g. if the input has `Name: "role_id"`, use `GetterSelect("role_id", ...)`.
+`GetterSelect(name, ...)` dispatches an event with the given name. The `InputForeignKey` listens for events matching its own `Name` field. These must be identical — e.g. if the input has `Name: "RoleID"`, use `GetterSelect("RoleID", ...)`.
 
 ### `MapFromStruct` flattens embedded structs
 `getters.MapFromStruct` promotes fields from anonymous embedded structs (like `gorm.Model`) to the top level. So `ID`, `CreatedAt`, etc. are accessed directly (e.g. `$row.ID`), not nested under `$row.Model.ID`.

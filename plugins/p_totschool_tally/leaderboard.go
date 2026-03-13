@@ -20,12 +20,12 @@ func (l TallyLeaderboardComponent) Build(ctx context.Context) Node {
 		return Div(Text("Error loading leaderboard data"))
 	}
 
-	leaderboards, ok := inMap["leaderboards"].(map[string]LeaderboardResult)
+	leaderboards, ok := inMap["Leaderboards"].(map[string]LeaderboardResult)
 	if !ok {
 		return Div(Text("Error parsing leaderboard stats"))
 	}
 
-	title, _ := inMap["title"].(string)
+	title, _ := inMap["Title"].(string)
 
 	metrics := []string{"visits", "demos", "policies", "premium"}
 	metricTitles := map[string]string{

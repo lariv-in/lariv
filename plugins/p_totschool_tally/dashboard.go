@@ -29,7 +29,7 @@ func (d TallyDashboardComponent) Build(ctx context.Context) Node {
 		return Div(Text("Error loading dashboard data"))
 	}
 
-	dashboard, ok := inMap["dashboard"].(DashboardStats)
+	dashboard, ok := inMap["Dashboard"].(DashboardStats)
 	if !ok {
 		return Div(Text("Error parsing dashboard stats"))
 	}

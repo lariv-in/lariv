@@ -55,9 +55,9 @@ func TallyDashboardHandler(v views.View) http.Handler {
 		dashboard := GetDashboardStats(db, userID, &session)
 
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"dashboard":     dashboard,
-			"session":       session,
-			"session_names": getAllSessionNames(db),
+			"Dashboard":    dashboard,
+			"Session":      session,
+			"SessionNames": getAllSessionNames(db),
 		})
 
 		v.RenderPage(w, r.WithContext(ctx))
@@ -75,9 +75,9 @@ func TallyLeaderboardHandler(v views.View) http.Handler {
 		leaderboards := GetLeaderboards(db, &user.ID, &session)
 
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"leaderboards":  leaderboards,
-			"title":         fmt.Sprintf("Leaderboard for %s", session.Name),
-			"session_names": getAllSessionNames(db),
+			"Leaderboards": leaderboards,
+			"Title":        fmt.Sprintf("Leaderboard for %s", session.Name),
+			"SessionNames": getAllSessionNames(db),
 		})
 
 		v.RenderPage(w, r.WithContext(ctx))
@@ -151,8 +151,8 @@ func TallyListHandler(v views.View) http.Handler {
 		query.Order("date DESC").Find(&tallies)
 
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"tallies":       tallies,
-			"session_names": getAllSessionNames(db),
+			"Tallies":      tallies,
+			"SessionNames": getAllSessionNames(db),
 		})
 		v.RenderPage(w, r.WithContext(ctx))
 	})
@@ -172,7 +172,7 @@ func TallyDailyFormHandler(v views.View) http.Handler {
 		}
 
 		if r.Method == http.MethodGet {
-			ctx := context.WithValue(r.Context(), "$in", map[string]any{"tally": tally})
+			ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": tally})
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
@@ -183,7 +183,7 @@ func TallyDailyFormHandler(v views.View) http.Handler {
 		}
 
 		if views.HasErrors(fieldErrors) {
-			ctx := context.WithValue(r.Context(), "$in", map[string]any{"tally": tally})
+			ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": tally})
 			v.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 			return
 		}
@@ -232,7 +232,7 @@ func init() {
 			if tally == nil {
 				return
 			}
-			ctx := context.WithValue(r.Context(), "$in", map[string]any{"tally": getters.MapFromStruct(tally)})
+			ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": getters.MapFromStruct(tally)})
 			v.RenderPage(w, r.WithContext(ctx))
 		})
 	}(lago.GetPageView("tally.TallyDetail")))) // Using new TallyDetail component

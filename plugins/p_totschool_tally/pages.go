@@ -11,16 +11,16 @@ func tallyCommonFields() []components.PageInterface {
 		components.ContainerRow{
 			Classes: "grid grid-cols-1 md:grid-cols-2 gap-4",
 			Children: []components.PageInterface{
-				components.InputNumber{Name: "Visits", Label: "Visits", Required: true, Getter: getters.GetterKey("$in.tally.Visits")},
-				components.InputNumber{Name: "Appointments", Label: "Appointments", Required: true, Getter: getters.GetterKey("$in.tally.Appointments")},
-				components.InputNumber{Name: "Leads", Label: "Leads", Required: true, Getter: getters.GetterKey("$in.tally.Leads")},
-				components.InputNumber{Name: "Presentations", Label: "Presentations", Required: true, Getter: getters.GetterKey("$in.tally.Presentations")},
-				components.InputNumber{Name: "Demos", Label: "Demonstrations", Required: true, Getter: getters.GetterKey("$in.tally.Demos")},
-				components.InputNumber{Name: "Letters", Label: "Follow Up Letters Sent", Required: true, Getter: getters.GetterKey("$in.tally.Letters")},
-				components.InputNumber{Name: "FollowUps", Label: "Follow Ups", Required: true, Getter: getters.GetterKey("$in.tally.FollowUps")},
-				components.InputNumber{Name: "Proposals", Label: "Proposals Given", Required: true, Getter: getters.GetterKey("$in.tally.Proposals")},
-				components.InputNumber{Name: "Policies", Label: "Policies Sold", Required: true, Getter: getters.GetterKey("$in.tally.Policies")},
-				components.InputNumber{Name: "Premium", Label: "Premium", Required: true, Getter: getters.GetterKey("$in.tally.Premium")},
+				components.InputNumber{Name: "Visits", Label: "Visits", Required: true, Getter: getters.GetterKey("$in.Tally.Visits")},
+				components.InputNumber{Name: "Appointments", Label: "Appointments", Required: true, Getter: getters.GetterKey("$in.Tally.Appointments")},
+				components.InputNumber{Name: "Leads", Label: "Leads", Required: true, Getter: getters.GetterKey("$in.Tally.Leads")},
+				components.InputNumber{Name: "Presentations", Label: "Presentations", Required: true, Getter: getters.GetterKey("$in.Tally.Presentations")},
+				components.InputNumber{Name: "Demos", Label: "Demonstrations", Required: true, Getter: getters.GetterKey("$in.Tally.Demos")},
+				components.InputNumber{Name: "Letters", Label: "Follow Up Letters Sent", Required: true, Getter: getters.GetterKey("$in.Tally.Letters")},
+				components.InputNumber{Name: "FollowUps", Label: "Follow Ups", Required: true, Getter: getters.GetterKey("$in.Tally.FollowUps")},
+				components.InputNumber{Name: "Proposals", Label: "Proposals Given", Required: true, Getter: getters.GetterKey("$in.Tally.Proposals")},
+				components.InputNumber{Name: "Policies", Label: "Policies Sold", Required: true, Getter: getters.GetterKey("$in.Tally.Policies")},
+				components.InputNumber{Name: "Premium", Label: "Premium", Required: true, Getter: getters.GetterKey("$in.Tally.Premium")},
 			},
 		},
 	}
@@ -72,15 +72,15 @@ func init() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Details"),
-				Url:   getters.GetterFormat("/tally/%v/", getters.GetterKey("$in.tally.ID")),
+				Url:   getters.GetterFormat("/tally/%v/", getters.GetterKey("$in.Tally.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Edit"),
-				Url:   getters.GetterFormat("/tally/%v/update/", getters.GetterKey("$in.tally.ID")),
+				Url:   getters.GetterFormat("/tally/%v/update/", getters.GetterKey("$in.Tally.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete"),
-				Url:   getters.GetterFormat("/tally/%v/delete/", getters.GetterKey("$in.tally.ID")),
+				Url:   getters.GetterFormat("/tally/%v/delete/", getters.GetterKey("$in.Tally.ID")),
 			},
 		},
 	})
@@ -109,14 +109,14 @@ func init() {
 			Name:     "UserID",
 			Label:    "User ID",
 			Required: true,
-			Getter:   getters.GetterKey("$in.tally.UserID"),
+			Getter:   getters.GetterKey("$in.Tally.UserID"),
 		},
 		components.InputText{
 			Page:     components.Page{RenderKeys: []string{"totschool_admin", "superuser"}},
 			Name:     "Date",
 			Label:    "Date (YYYY-MM-DD)",
 			Required: true,
-			Getter:   getters.GetterKey("$in.tally.Date"),
+			Getter:   getters.GetterKey("$in.Tally.Date"),
 		},
 	}, tallyCommonFields()...)
 
@@ -141,7 +141,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Url:           getters.GetterFormat("/tally/%v/update/", getters.GetterKey("$in.tally.ID")),
+				Url:           getters.GetterFormat("/tally/%v/update/", getters.GetterKey("$in.Tally.ID")),
 				Method:        "POST",
 				Title:         "Update Tally",
 				Subtitle:      "Edit tally details",
@@ -160,7 +160,7 @@ func init() {
 			components.DeleteConfirmation{
 				Title:     "Delete Tally?",
 				Message:   "Are you sure you want to delete this tally? This action cannot be undone.",
-				CancelUrl: getters.GetterFormat("/tally/%v/update/", getters.GetterKey("$in.tally.ID")),
+				CancelUrl: getters.GetterFormat("/tally/%v/update/", getters.GetterKey("$in.Tally.ID")),
 			},
 		},
 	})
@@ -176,7 +176,7 @@ func init() {
 				},
 			},
 			components.Detail{
-				Getter: getters.GetterKey("$in.tally"),
+				Getter: getters.GetterKey("$in.Tally"),
 				Children: []components.PageInterface{
 					components.ContainerRow{
 						Classes: "grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-4 bg-base-100 shadow rounded-box",
@@ -279,7 +279,7 @@ func init() {
 	sessionEnvironment := components.Environment{
 		Label:   "Session",
 		Key:     getters.GetterStatic("session"),
-		Options: getters.GetterKey("$in.session_names"),
+		Options: getters.GetterKey("$in.SessionNames"),
 		Default: CurrentSessionNameForDateGetter,
 	}
 
@@ -291,7 +291,7 @@ func init() {
 			components.DataTable{
 				Title:           "Tallies List",
 				Subtitle:        "All tallies in the system",
-				Data:            getters.GetterKey("$in.tallies"),
+				Data:            getters.GetterKey("$in.Tallies"),
 				FilterComponent: tallyFilter,
 				Columns: []components.TableColumn{
 					{Label: "Date", Key: "Date"},
@@ -301,7 +301,7 @@ func init() {
 					{Label: "Policies", Key: "Policies"},
 					{Label: "Premium", Key: "Premium"},
 				},
-				OnClick:   getters.GetterNavigate("/tally/%v/", getters.GetterKey("$in.row.ID")),
+				OnClick:   getters.GetterNavigate("/tally/%v/", getters.GetterKey("$row.ID")),
 				CreateUrl: getters.GetterStatic("/tally/create/"),
 			},
 		},

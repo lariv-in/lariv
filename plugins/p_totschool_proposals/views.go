@@ -113,7 +113,7 @@ func detailHandler(v views.View) http.Handler {
 
 		// If generation is in progress, signal pending to the template
 		if proposal.GenerationID != nil {
-			ctx = context.WithValue(ctx, "generation_pending", true)
+			ctx = context.WithValue(ctx, "GenerationPending", true)
 		}
 
 		proposalMap := getters.MapFromStruct(proposal)

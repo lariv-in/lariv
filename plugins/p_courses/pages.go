@@ -182,7 +182,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Getter:   getters.GetterKey("course"),
-				Url:      getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("$in.id")),
+				Url:      getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("$in.ID")),
 				Method:   http.MethodPost,
 				Title:    "Edit Course",
 				Subtitle: "Update course details",

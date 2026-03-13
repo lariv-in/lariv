@@ -178,14 +178,14 @@ func registerDetail() {
 				Getter: getters.GetterKey("appointment"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{Children: []components.PageInterface{
-						components.ShowIf{Getter: getters.GetterKey("overlap_warning"), Children: []components.PageInterface{
+						components.ShowIf{Getter: getters.GetterKey("OverlapWarning"), Children: []components.PageInterface{
 							components.ContainerColumn{Classes: "bg-warning rounded-box border border-base-300 mb-4 shadow-sm gap-4 p-4", Children: []components.PageInterface{
 								components.ContainerRow{Classes: "flex items-center gap-2 font-semibold", Children: []components.PageInterface{
 									components.Icon{Name: "exclamation-triangle", Classes: "w-5 h-5"},
 									components.FieldText{Getter: getters.GetterStatic("Overlapping Appointments:")},
 								}},
 								components.FieldList{
-									Getter:  getters.GetterKey("overlap_warning_list"),
+									Getter:  getters.GetterKey("OverlapWarningList"),
 									Classes: "flex flex-col gap-2 pl-4",
 									Children: []components.PageInterface{
 										components.ContainerRow{Classes: "flex items-center gap-2", Children: []components.PageInterface{
@@ -211,7 +211,7 @@ func registerDetail() {
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.CreatedAt")}}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedLetter"), Children: generatedSection},
-							components.ShowIf{Getter: getters.GetterKey("generation_pending"), Children: pendingSection},
+							components.ShowIf{Getter: getters.GetterKey("GenerationPending"), Children: pendingSection},
 							components.ShowIf{Getter: getterIdleGeneration(), Children: idleSection},
 						}},
 					}},
@@ -226,7 +226,7 @@ func getterIdleGeneration() getters.Getter {
 		if content, _ := getters.IfOrGetter(getters.GetterKey("$in.GeneratedLetter"), ctx, "").(string); content != "" {
 			return false
 		}
-		if getters.IfOrGetter(getters.GetterKey("generation_pending"), ctx, nil) != nil {
+		if getters.IfOrGetter(getters.GetterKey("GenerationPending"), ctx, nil) != nil {
 			return false
 		}
 		return true
@@ -310,7 +310,7 @@ func registerSelectionPages() {
 		Url:    lago.RoutePathGetter("appointments.CardTimelineRoute"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Date", Name: "date", Getter: getters.GetterKey("$get.date")},
+			components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey("$get.Date")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{

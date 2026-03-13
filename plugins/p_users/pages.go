@@ -148,15 +148,15 @@ func userFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					components.ContainerError{
-						Error: getters.GetterKey("$error.name"),
+						Error: getters.GetterKey("$error.Name"),
 						Children: []components.PageInterface{
-							components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+							components.InputText{Label: "Name", Name: "Name", Required: true, Getter: getters.GetterKey("$in.Name")},
 						},
 					},
 					components.ContainerError{
-						Error: getters.GetterKey("$error.email"),
+						Error: getters.GetterKey("$error.Email"),
 						Children: []components.PageInterface{
-							components.InputEmail{Label: "Email", Name: "email", Required: true, Getter: getters.GetterKey("$in.email")},
+							components.InputEmail{Label: "Email", Name: "Email", Required: true, Getter: getters.GetterKey("$in.Email")},
 						},
 					},
 				},
@@ -165,33 +165,33 @@ func userFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					components.ContainerError{
-						Error: getters.GetterKey("$error.phone"),
+						Error: getters.GetterKey("$error.Phone"),
 						Children: []components.PageInterface{
-							components.InputPhone{Label: "Phone", Name: "phone", Required: true, Getter: getters.GetterKey("$in.phone")},
+							components.InputPhone{Label: "Phone", Name: "Phone", Required: true, Getter: getters.GetterKey("$in.Phone")},
 						},
 					},
 					components.ContainerError{
-						Error: getters.GetterKey("$error.role_id"),
+						Error: getters.GetterKey("$error.RoleID"),
 						Children: []components.PageInterface{
 							components.InputForeignKey{
 								Label:       "Role",
-								Name:        "role_id",
+								Name:        "RoleID",
 								Url:         getters.GetterStatic(RoleUrl + "select/"),
-								DisplayAttr: "name",
+								DisplayAttr: "Name",
 								Placeholder: "Select a role...",
 								Required:    true,
-								Getter:      getters.GetterAssociation("roles", getters.GetterKey("$in.role_id")),
+								Getter:      getters.GetterAssociation("roles", getters.GetterKey("$in.RoleID")),
 							},
 						},
 					},
 				},
 			},
 			components.ContainerError{
-				Error: getters.GetterKey("$error.is_superuser"),
+				Error: getters.GetterKey("$error.IsSuperuser"),
 				Children: []components.PageInterface{
 					components.InputTernary{
 						Label:      "Superuser",
-						Name:       "is_superuser",
+						Name:       "IsSuperuser",
 						TrueLabel:  "Yes",
 						FalseLabel: "No",
 						NoneLabel:  "Not Set",
@@ -232,7 +232,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Getter:   getters.GetterKey("user"),
-				Url:      getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("$in.id")),
+				Url:      getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("$in.ID")),
 				Method:   http.MethodPost,
 				Title:    "Edit User",
 				Subtitle: "Update user details",
@@ -251,7 +251,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Getter:   getters.GetterKey("user"),
-				Url:      getters.GetterFormat(AppUrl+"%v/change-password/", getters.GetterKey("$in.id")),
+				Url:      getters.GetterFormat(AppUrl+"%v/change-password/", getters.GetterKey("$in.ID")),
 				Method:   http.MethodPost,
 				Title:    "Change Password",
 				Subtitle: "Update user password",
@@ -379,23 +379,23 @@ func registerAuthPages() {
 					Method: http.MethodPost,
 					ChildrenInput: []components.PageInterface{
 						components.ContainerError{
-							Error: getters.GetterKey("$error.email"),
+							Error: getters.GetterKey("$error.Email"),
 							Children: []components.PageInterface{
 								components.InputEmail{
 									Label:    "Email",
 									Required: true,
-									Getter:   getters.GetterKey("$in.email"),
-									Name:     "email",
+									Getter:   getters.GetterKey("$in.Email"),
+									Name:     "Email",
 								},
 							},
 						},
 						components.ContainerError{
-							Error: getters.GetterKey("$error.password"),
+							Error: getters.GetterKey("$error.Password"),
 							Children: []components.PageInterface{
 								components.InputPassword{
 									Label:    "Password",
 									Required: true,
-									Name:     "password",
+									Name:     "Password",
 								},
 							},
 						},
@@ -426,21 +426,21 @@ func registerAuthPages() {
 					Method: http.MethodPost,
 					ChildrenInput: []components.PageInterface{
 						components.ContainerError{
-							Error: getters.GetterKey("$error.name"),
+							Error: getters.GetterKey("$error.Name"),
 							Children: []components.PageInterface{
-								components.InputText{Label: "Full Name", Required: true, Getter: getters.GetterKey("$in.name"), Name: "name"},
+								components.InputText{Label: "Full Name", Required: true, Getter: getters.GetterKey("$in.Name"), Name: "Name"},
 							},
 						},
 						components.ContainerError{
-							Error: getters.GetterKey("$error.email"),
+							Error: getters.GetterKey("$error.Email"),
 							Children: []components.PageInterface{
-								components.InputEmail{Label: "Email", Required: true, Getter: getters.GetterKey("$in.email"), Name: "email"},
+								components.InputEmail{Label: "Email", Required: true, Getter: getters.GetterKey("$in.Email"), Name: "Email"},
 							},
 						},
 						components.ContainerError{
-							Error: getters.GetterKey("$error.phone"),
+							Error: getters.GetterKey("$error.Phone"),
 							Children: []components.PageInterface{
-								components.InputPhone{Label: "Phone Number", Required: true, Getter: getters.GetterKey("$in.phone"), Name: "phone"},
+								components.InputPhone{Label: "Phone Number", Required: true, Getter: getters.GetterKey("$in.Phone"), Name: "Phone"},
 							},
 						},
 						components.ContainerError{
@@ -558,7 +558,7 @@ func registerSelectionPages() {
 			components.DataTable{
 				UID:             "role-selection-table",
 				Data:            getters.GetterKey("roles"),
-				OnClick:         getters.GetterSelect("role_id", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
+				OnClick:         getters.GetterSelect("RoleID", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
@@ -601,7 +601,7 @@ func registerRolePages() {
 		Url:    getters.GetterStatic(RoleUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -646,9 +646,9 @@ func registerRolePages() {
 				Subtitle: "Create a new role",
 				ChildrenInput: []components.PageInterface{
 					components.ContainerError{
-						Error: getters.GetterKey("$error.name"),
+						Error: getters.GetterKey("$error.Name"),
 						Children: []components.PageInterface{
-							components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+							components.InputText{Label: "Name", Name: "Name", Required: true, Getter: getters.GetterKey("$in.Name")},
 						},
 					},
 				},
@@ -667,15 +667,15 @@ func registerRolePages() {
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Getter:   getters.GetterKey("role"),
-				Url:      getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("$in.id")),
+				Url:      getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("$in.ID")),
 				Method:   http.MethodPost,
 				Title:    "Edit Role",
 				Subtitle: "Update role details",
 				ChildrenInput: []components.PageInterface{
 					components.ContainerError{
-						Error: getters.GetterKey("$error.name"),
+						Error: getters.GetterKey("$error.Name"),
 						Children: []components.PageInterface{
-							components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
+							components.InputText{Label: "Name", Name: "Name", Required: true, Getter: getters.GetterKey("$in.Name")},
 						},
 					},
 				},

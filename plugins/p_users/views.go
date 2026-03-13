@@ -25,13 +25,13 @@ func LoginHandler(v views.View) http.Handler {
 			return
 		}
 
-		email, _ := values["email"].(string)
-		password, _ := values["password"].(string)
+		email, _ := values["Email"].(string)
+		password, _ := values["Password"].(string)
 
 		db := r.Context().Value("$db").(*gorm.DB)
 		user, err := Authenticate(db, email, password)
 		if err != nil {
-			fieldErrors["password"] = fmt.Errorf("Invalid email or password")
+			fieldErrors["Password"] = fmt.Errorf("Invalid email or password")
 			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
@@ -64,9 +64,9 @@ func SignupHandler(v views.View) http.Handler {
 			return
 		}
 
-		name, _ := values["name"].(string)
-		email, _ := values["email"].(string)
-		phone, _ := values["phone"].(string)
+		name, _ := values["Name"].(string)
+		email, _ := values["Email"].(string)
+		phone, _ := values["Phone"].(string)
 		db := r.Context().Value("$db").(*gorm.DB)
 		// Setting the default to true, best if data is not changed in case of failure of assumptions
 		userAlreadyExists := true
