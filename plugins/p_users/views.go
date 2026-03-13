@@ -34,17 +34,17 @@ func LoginHandler(v views.View) http.Handler {
 
 		hasErrors := false
 		ctx := r.Context()
+		errorMap := map[string]any{}
 		for name, fieldErr := range fieldErrors {
 			if fieldErr != nil {
 				hasErrors = true
-				ctx = context.WithValue(ctx, "$error."+name, fieldErr)
+				errorMap[name] = fieldErr
 			}
 		}
 
 		if hasErrors {
-			for name, value := range values {
-				ctx = context.WithValue(ctx, "$in."+name, value)
-			}
+			ctx = context.WithValue(ctx, "$error", errorMap)
+			ctx = context.WithValue(ctx, "$in", values)
 			page.Build(ctx).Render(w)
 			return
 		}
@@ -55,10 +55,9 @@ func LoginHandler(v views.View) http.Handler {
 		db := r.Context().Value("$db").(*gorm.DB)
 		user, err := Authenticate(db, email, password)
 		if err != nil {
-			ctx = context.WithValue(ctx, "$error.password", fmt.Errorf("Invalid email or password"))
-			for name, value := range values {
-				ctx = context.WithValue(ctx, "$in."+name, value)
-			}
+			errorMap["password"] = fmt.Errorf("Invalid email or password")
+			ctx = context.WithValue(ctx, "$error", errorMap)
+			ctx = context.WithValue(ctx, "$in", values)
 			page.Build(ctx).Render(w)
 			return
 		}
@@ -84,10 +83,11 @@ func SignupHandler(v views.View) http.Handler {
 
 		ctx := r.Context()
 		hasErrors := false
+		errorMap := map[string]any{}
 		for name, fieldErr := range fieldErrors {
 			if fieldErr != nil {
 				hasErrors = true
-				ctx = context.WithValue(ctx, "$error."+name, fieldErr)
+				errorMap[name] = fieldErr
 			}
 		}
 
@@ -96,13 +96,12 @@ func SignupHandler(v views.View) http.Handler {
 
 		if password1Str != password2Str {
 			hasErrors = true
-			ctx = context.WithValue(ctx, "$error.password2", fmt.Errorf("Passwords do not match"))
+			errorMap["password2"] = fmt.Errorf("Passwords do not match")
 		}
 
 		if hasErrors {
-			for name, value := range values {
-				ctx = context.WithValue(ctx, "$in."+name, value)
-			}
+			ctx = context.WithValue(ctx, "$error", errorMap)
+			ctx = context.WithValue(ctx, "$in", values)
 			page.Build(ctx).Render(w)
 			return
 		}
@@ -166,10 +165,11 @@ func ChangePasswordHandler(v views.View) http.Handler {
 
 		ctx := r.Context()
 		hasErrors := false
+		errorMap := map[string]any{}
 		for name, fieldErr := range fieldErrors {
 			if fieldErr != nil {
 				hasErrors = true
-				ctx = context.WithValue(ctx, "$error."+name, fieldErr)
+				errorMap[name] = fieldErr
 			}
 		}
 
@@ -178,10 +178,11 @@ func ChangePasswordHandler(v views.View) http.Handler {
 
 		if newPassword != confirmPassword {
 			hasErrors = true
-			ctx = context.WithValue(ctx, "$error.confirm_password", fmt.Errorf("Passwords do not match"))
+			errorMap["confirm_password"] = fmt.Errorf("Passwords do not match")
 		}
 
 		if hasErrors {
+			ctx = context.WithValue(ctx, "$error", errorMap)
 			page.Build(ctx).Render(w)
 			return
 		}

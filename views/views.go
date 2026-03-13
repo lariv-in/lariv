@@ -81,11 +81,16 @@ func (v View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any,
 func (v View) RenderWithErrors(w http.ResponseWriter, r *http.Request, fieldErrors map[string]error, values map[string]any) {
 	page, _ := v.GetPage()
 	ctx := r.Context()
+	errorMap := map[string]any{}
+	if existing, ok := ctx.Value("$error").(map[string]any); ok {
+		maps.Copy(errorMap, existing)
+	}
 	for name, fieldErr := range fieldErrors {
 		if fieldErr != nil {
-			ctx = context.WithValue(ctx, "$error."+name, fieldErr)
+			errorMap[name] = fieldErr
 		}
 	}
+	ctx = context.WithValue(ctx, "$error", errorMap)
 	inMap := map[string]any{}
 	maps.Copy(inMap, values)
 	ctx = context.WithValue(ctx, "$in", inMap)

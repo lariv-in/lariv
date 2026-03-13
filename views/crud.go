@@ -13,30 +13,6 @@ import (
 )
 
 
-// renderFormErrors re-renders the page with validation errors and submitted values in context.
-func renderFormErrors(v View, w http.ResponseWriter, ctx context.Context, values map[string]any, fieldErrors map[string]error) {
-	for name, fieldErr := range fieldErrors {
-		if fieldErr != nil {
-			ctx = context.WithValue(ctx, "$error."+name, fieldErr)
-		}
-	}
-	for name, value := range values {
-		ctx = context.WithValue(ctx, "$in."+name, value)
-	}
-	page, _ := v.GetPage()
-	components.Render(page, ctx).Render(w)
-}
-
-// hasFieldErrors returns true if any field error is non-nil.
-func hasFieldErrors(fieldErrors map[string]error) bool {
-	for _, err := range fieldErrors {
-		if err != nil {
-			return true
-		}
-	}
-	return false
-}
-
 // --- List View ---
 
 // ListView loads all records for model T into context under the given key.
@@ -169,8 +145,8 @@ func CreateView[T any](model T, successUrl string) func(View) View {
 					return
 				}
 
-				if hasFieldErrors(fieldErrors) {
-					renderFormErrors(innerView, w, r.Context(), values, fieldErrors)
+				if HasErrors(fieldErrors) {
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
 					return
 				}
 
@@ -180,8 +156,8 @@ func CreateView[T any](model T, successUrl string) func(View) View {
 				// Create using the map directly with RETURNING to get the generated ID
 				err = db.Model(new(T)).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", err))
-					renderFormErrors(innerView, w, ctx, values, fieldErrors)
+					ctx := context.WithValue(r.Context(), "$error", map[string]any{"_form": fmt.Errorf("%v", err)})
+					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 					return
 				}
 
@@ -205,8 +181,8 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 					return
 				}
 
-				if hasFieldErrors(fieldErrors) {
-					renderFormErrors(innerView, w, r.Context(), values, fieldErrors)
+				if HasErrors(fieldErrors) {
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
 					return
 				}
 
@@ -222,8 +198,8 @@ func UpdateView[T any](model T, successUrl string) func(View) View {
 				// Update using the map directly, ID already known from path
 				err = db.Model(new(T)).Where("id = ?", id).Updates(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", err))
-					renderFormErrors(innerView, w, ctx, values, fieldErrors)
+					ctx := context.WithValue(r.Context(), "$error", map[string]any{"_form": fmt.Errorf("%v", err)})
+					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 					return
 				}
 
@@ -270,7 +246,7 @@ func SingletonView[T any](model T, successUrl getters.Getter) func(View) View {
 
 				err = db.Model(instance).Updates(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), "$error._form", fmt.Errorf("%v", err))
+					ctx := context.WithValue(r.Context(), "$error", map[string]any{"_form": fmt.Errorf("%v", err)})
 					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 					return
 				}

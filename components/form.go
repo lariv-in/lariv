@@ -53,9 +53,11 @@ func (e FormComponent) Build(ctx context.Context) Node {
 	}
 
 	var formErrorNode Node
-	if formErr := childCtx.Value("$error._form"); formErr != nil {
-		if err, ok := formErr.(error); ok {
-			formErrorNode = Span(Class("text-sm text-error"), Text(err.Error()))
+	if errorMap, ok := childCtx.Value("$error").(map[string]any); ok {
+		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
+			if err, ok := formErr.(error); ok {
+				formErrorNode = Span(Class("text-sm text-error"), Text(err.Error()))
+			}
 		}
 	}
 
