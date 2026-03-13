@@ -35,8 +35,9 @@ type LayoutTopbar struct {
 func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 	buttonNodes := gomponents.Group{}
 
-	for _, btn := range (*RegistryTopbarButtons.All()) {
+	for _, btnItem := range (*RegistryTopbarButtons.AllStable()) {
 		// Resolve URL from getter
+		btn := btnItem.Value
 		url := ""
 		if btn.URL != nil {
 			if u, ok := btn.URL(ctx).(string); ok {

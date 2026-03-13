@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
+	"slices"
+	"strings"
+	"sync"
 
 	"github.com/lariv-in/getters"
 )
@@ -15,17 +18,28 @@ func NewRegistry[T any]() Registry[T] {
 		patches:        map[string][]func(T) T{},
 		items:          map[string]T{},
 		isBuilt:        false,
+		itemsList:      []Pair[string, T]{},
+		lock:           sync.Mutex{},
 	}
+}
+
+type Pair[K any, V any] struct {
+	Key   K
+	Value V
 }
 
 type Registry[T any] struct {
 	unpatchedItems map[string]T
 	patches        map[string][]func(T) T
 	items          map[string]T
+	itemsList      []Pair[string, T]
 	isBuilt        bool
+	lock           sync.Mutex
 }
 
 func (r *Registry[T]) Register(name string, unpatchedItem T) error {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	_, isPresent := r.unpatchedItems[name]
 	if isPresent {
 		return fmt.Errorf("Entry with name %s is already present in the registry %#v, consider patching it instead", name, *r)
@@ -36,6 +50,8 @@ func (r *Registry[T]) Register(name string, unpatchedItem T) error {
 }
 
 func (r *Registry[T]) Patch(name string, patcher func(T) T) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	if len(r.patches[name]) == 0 {
 		r.patches[name] = []func(T) T{patcher}
 	} else {
@@ -45,6 +61,8 @@ func (r *Registry[T]) Patch(name string, patcher func(T) T) {
 }
 
 func (r *Registry[T]) Build() {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	items := maps.Clone(r.unpatchedItems)
 	patches := maps.Clone(r.patches)
 
@@ -65,6 +83,19 @@ func (r *Registry[T]) Build() {
 	if len(patches) > 0 {
 		slog.Warn("The following patches were not applied since no corresponding keys were found in the registry", "registry", *r, "patches", patches)
 	}
+
+	r.itemsList = []Pair[string, T]{}
+	for k, v := range items {
+		r.itemsList = append(r.itemsList, Pair[string, T]{
+			Key:   k,
+			Value: v,
+		})
+	}
+
+	slices.SortFunc(r.itemsList, func(a Pair[string, T], b Pair[string, T]) int {
+		return strings.Compare(a.Key, b.Key)
+	})
+
 	r.isBuilt = true
 }
 
@@ -90,4 +121,11 @@ func (r *Registry[T]) All() *map[string]T {
 		r.Build()
 	}
 	return &r.items
+}
+
+func (r *Registry[T]) AllStable() *[]Pair[string, T] {
+	if !r.isBuilt {
+		r.Build()
+	}
+	return &r.itemsList
 }

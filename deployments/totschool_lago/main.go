@@ -7,10 +7,10 @@ import (
 	_ "github.com/lariv-in/p_courses"
 	_ "github.com/lariv-in/p_dashboard"
 	_ "github.com/lariv-in/p_otp"
-	_ "github.com/lariv-in/p_totschool_users"
 	_ "github.com/lariv-in/p_totschool_appointments"
 	_ "github.com/lariv-in/p_totschool_proposals"
 	_ "github.com/lariv-in/p_totschool_tally"
+	_ "github.com/lariv-in/p_totschool_users"
 	_ "github.com/lariv-in/p_users"
 )
 
@@ -26,9 +26,5 @@ func main() {
 		return
 	}
 
-	if *lago.TuiFlag {
-		lago.RunTui()
-	} else {
-		slog.Error(lago.Start(config).Error())
-	}
+	slog.Error(lago.Start(config).Error())
 }
