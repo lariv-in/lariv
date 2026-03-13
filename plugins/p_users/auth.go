@@ -62,18 +62,18 @@ func init() {
 func (c *AuthConfig) PostConfig() {
 	if c.SigningKey != "" {
 		decoded, err := base64.StdEncoding.DecodeString(c.SigningKey)
-		if err == nil {
-			copy(signingKey[:], decoded)
+		if err != nil {
+			log.Panicf("Signing Key specified in config is invalid %s\n", c.SigningKey)
 		}
-		log.Panicf("Signing Key specified in config is invalid %s\n", c.SigningKey)
+		copy(signingKey[:], decoded)
 	}
 
 	if c.JwtIssuer != "" {
 		decoded, err := base64.StdEncoding.DecodeString(c.JwtIssuer)
-		if err == nil {
-			copy(jwtIssuer[:], decoded)
+		if err != nil {
+			log.Panicf("JwtIssuer specified in config is invalid %s\n", c.SigningKey)
 		}
-		log.Panicf("JwtIssuer specified in config is invalid %s\n", c.SigningKey)
+		copy(jwtIssuer[:], decoded)
 	}
 }
 
