@@ -10,14 +10,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// Getter defines a common type for fetching data that could be dynamic
 type Getter func(context.Context) any
 
+// GetterStatic returns a Getter which will always return a static value
 func GetterStatic(value any) Getter {
 	return func(ctx context.Context) any {
 		return value
 	}
 }
 
+// GetterKey returns a Getter that gets the value from the context.
+// '.' can be used to traverse map or struct fields. Keys must match exactly.
 func GetterKey(key string) Getter {
 	return func(ctx context.Context) any {
 		parts := strings.Split(key, ".")
@@ -40,21 +44,8 @@ func GetterKey(key string) Getter {
 
 			if v, exists := m[parts[i]]; exists {
 				value = v
-			} else if v, exists := m[strings.ToLower(parts[i])]; exists {
-				value = v
 			} else {
-				found := false
-				targetKey := strings.ToLower(strings.ReplaceAll(parts[i], "_", ""))
-				for k, val := range m {
-					if strings.ToLower(strings.ReplaceAll(k, "_", "")) == targetKey {
-						value = val
-						found = true
-						break
-					}
-				}
-				if !found {
-					return nil
-				}
+				return nil
 			}
 		}
 		return value

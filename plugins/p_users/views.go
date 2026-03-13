@@ -82,11 +82,9 @@ func SignupHandler(v views.View) http.Handler {
 		}
 
 		ctx := r.Context()
-		hasErrors := false
 		errorMap := map[string]any{}
 		for name, fieldErr := range fieldErrors {
 			if fieldErr != nil {
-				hasErrors = true
 				errorMap[name] = fieldErr
 			}
 		}
@@ -94,12 +92,17 @@ func SignupHandler(v views.View) http.Handler {
 		password1Str, _ := values["password1"].(string)
 		password2Str, _ := values["password2"].(string)
 
+		termsAndConditions, _ := values["terms_accepted"].(bool)
+		if !termsAndConditions {
+			errorMap["terms_accepted"] = fmt.Errorf("Terms and conditions need to be accepted")
+		}
+
+
 		if password1Str != password2Str {
-			hasErrors = true
 			errorMap["password2"] = fmt.Errorf("Passwords do not match")
 		}
 
-		if hasErrors {
+		if len(errorMap) > 0 {
 			ctx = context.WithValue(ctx, "$error", errorMap)
 			ctx = context.WithValue(ctx, "$in", values)
 			page.Build(ctx).Render(w)
@@ -109,7 +112,6 @@ func SignupHandler(v views.View) http.Handler {
 		name, _ := values["name"].(string)
 		email, _ := values["email"].(string)
 		phone, _ := values["phone"].(string)
-
 		db := r.Context().Value("$db").(*gorm.DB)
 		// Setting the default to true, best if data is not changed in case of failure of assumptions
 		userAlreadyExists := true

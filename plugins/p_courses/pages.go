@@ -35,7 +35,7 @@ func registerMenuPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseDetailMenu", components.SidebarMenu{
-		Title: getters.GetterFormat("Course: %s", getters.GetterKey("course.name")),
+		Title: getters.GetterFormat("Course: %s", getters.GetterKey("course.Name")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to All Courses"),
 			Url:   lago.RoutePathGetter("courses.DefaultRoute"),
@@ -43,15 +43,15 @@ func registerMenuPages() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Course Detail"),
-				Url:   getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("course.id")),
+				Url:   getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("course.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Edit Course"),
-				Url:   getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("course.id")),
+				Url:   getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("course.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete Course"),
-				Url:   getters.GetterFormat(AppUrl+"%v/delete/", getters.GetterKey("course.id")),
+				Url:   getters.GetterFormat(AppUrl+"%v/delete/", getters.GetterKey("course.ID")),
 			},
 		},
 	})
@@ -64,17 +64,17 @@ func registerFilterPages() {
 		Url:    lago.RoutePathGetter("courses.DefaultRoute"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
-			components.InputText{Label: "Code", Name: "code", Getter: getters.GetterKey("$get.code")},
-			components.InputText{Label: "Subject", Name: "subject", Getter: getters.GetterKey("$get.subject")},
-			components.InputText{Label: "Level", Name: "level", Getter: getters.GetterKey("$get.level")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
+			components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey("$get.Code")},
+			components.InputText{Label: "Subject", Name: "Subject", Getter: getters.GetterKey("$get.Subject")},
+			components.InputText{Label: "Level", Name: "Level", Getter: getters.GetterKey("$get.Level")},
 			components.InputTernary{
 				Label:      "Active",
-				Name:       "is_active",
+				Name:       "IsActive",
 				TrueLabel:  "Active Only",
 				FalseLabel: "Inactive Only",
 				NoneLabel:  "All",
-				Getter:     getters.GetterKey("$get.is_active"),
+				Getter:     getters.GetterKey("$get.IsActive"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -89,8 +89,8 @@ func registerFilterPages() {
 		Url:    lago.RoutePathGetter("courses.SelectRoute"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
-			components.InputText{Label: "Code", Name: "code", Getter: getters.GetterKey("$get.code")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
+			components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey("$get.Code")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -104,8 +104,8 @@ func registerFilterPages() {
 		Url:    lago.RoutePathGetter("courses.MultiSelectRoute"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
-			components.InputText{Label: "Code", Name: "code", Getter: getters.GetterKey("$get.code")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
+			components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey("$get.Code")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -124,30 +124,30 @@ func courseFormFields() components.ContainerColumn {
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					components.InputText{Label: "Course Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.name")},
-					components.InputText{Label: "Code", Name: "code", Getter: getters.GetterKey("$in.code")},
+					components.InputText{Label: "Course Name", Name: "Name", Required: true, Getter: getters.GetterKey("$in.Name")},
+					components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey("$in.Code")},
 				},
 			},
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					components.InputText{Label: "Subject", Name: "subject", Getter: getters.GetterKey("$in.subject")},
-					components.InputText{Label: "Level", Name: "level", Getter: getters.GetterKey("$in.level")},
+					components.InputText{Label: "Subject", Name: "Subject", Getter: getters.GetterKey("$in.Subject")},
+					components.InputText{Label: "Level", Name: "Level", Getter: getters.GetterKey("$in.Level")},
 				},
 			},
 			components.InputTernary{
 				Label:      "Active",
-				Name:       "is_active",
+				Name:       "IsActive",
 				TrueLabel:  "Yes",
 				FalseLabel: "No",
 				NoneLabel:  "Not Set",
-				Getter:     getters.GetterKey("$in.is_active"),
+				Getter:     getters.GetterKey("$in.IsActive"),
 			},
 			components.InputTextarea{
 				Label:  "Description",
-				Name:   "description",
+				Name:   "Description",
 				Rows:   3,
-				Getter: getters.GetterKey("$in.description"),
+				Getter: getters.GetterKey("$in.Description"),
 			},
 			components.ButtonSubmit{Label: "Save Course"},
 		},
@@ -287,7 +287,7 @@ func registerDetailPages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this course?",
-				CancelUrl: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("course.id")),
+				CancelUrl: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("course.ID")),
 			},
 		},
 	})

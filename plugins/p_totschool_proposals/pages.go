@@ -52,7 +52,7 @@ func registerFilter() {
 		Url:    getters.GetterStatic(AppUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Title", Name: "title", Getter: getters.GetterKey("$get.title")},
+			components.InputText{Label: "Title", Name: "Title", Getter: getters.GetterKey("$get.Title")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -65,7 +65,7 @@ func registerFilter() {
 
 func proposalFormFields() []components.PageInterface {
 	inputs := []components.PageInterface{
-		components.InputText{Label: "Proposal Title", Name: "title", Required: true, Getter: getters.GetterKey("$in.Title")},
+		components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.GetterKey("$in.Title")},
 	}
 	for i := 0; i < len(QUESTIONS); i++ {
 		key := fmt.Sprintf("$in.answer_%d", i)
@@ -214,7 +214,7 @@ func registerModal() {
 				Url:    getters.GetterFormat(AppUrl+"%v/ai-edit/", getters.GetterKey("proposal.ID")),
 				Method: http.MethodPost,
 				ChildrenInput: []components.PageInterface{
-					components.InputTextarea{Name: "generated_content", Label: "Current Proposal Markdown", Getter: getters.GetterKey("$in.GeneratedContent"), Rows: 8},
+					components.InputTextarea{Name: "GeneratedContent", Label: "Current Proposal Markdown", Getter: getters.GetterKey("$in.GeneratedContent"), Rows: 8},
 					components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Getter: getters.GetterKey("$in.instructions"), Rows: 4, Required: true},
 				},
 				ChildrenAction: []components.PageInterface{

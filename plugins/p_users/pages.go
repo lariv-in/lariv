@@ -41,7 +41,7 @@ func registerMenuPages() {
 	})
 
 	lago.RegistryPage.Register("users.UserDetailMenu", components.SidebarMenu{
-		Title: getters.GetterFormat("User: %s", getters.GetterKey("user.name")),
+		Title: getters.GetterFormat("User: %s", getters.GetterKey("user.Name")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to All Users"),
 			Url:   getters.GetterStatic(AppUrl),
@@ -49,19 +49,19 @@ func registerMenuPages() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("User Detail"),
-				Url:   getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("user.id")),
+				Url:   getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("user.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Edit User"),
-				Url:   getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("user.id")),
+				Url:   getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("user.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete User"),
-				Url:   getters.GetterFormat(AppUrl+"%v/delete/", getters.GetterKey("user.id")),
+				Url:   getters.GetterFormat(AppUrl+"%v/delete/", getters.GetterKey("user.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Change Password"),
-				Url:   getters.GetterFormat(AppUrl+"%v/change-password/", getters.GetterKey("user.id")),
+				Url:   getters.GetterFormat(AppUrl+"%v/change-password/", getters.GetterKey("user.ID")),
 			},
 		},
 	})
@@ -74,16 +74,16 @@ func registerFilterPages() {
 		Url:    getters.GetterStatic(AppUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
-			components.InputText{Label: "Email", Name: "email", Getter: getters.GetterKey("$get.email")},
-			components.InputPhone{Label: "Phone", Name: "phone", Getter: getters.GetterKey("$get.phone")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
+			components.InputText{Label: "Email", Name: "Email", Getter: getters.GetterKey("$get.Email")},
+			components.InputPhone{Label: "Phone", Name: "Phone", Getter: getters.GetterKey("$get.Phone")},
 			components.InputTernary{
 				Label:      "Superuser",
-				Name:       "is_superuser",
+				Name:       "IsSuperuser",
 				TrueLabel:  "Yes",
 				FalseLabel: "No",
 				NoneLabel:  "All",
-				Getter:     getters.GetterKey("$get.is_superuser"),
+				Getter:     getters.GetterKey("$get.IsSuperuser"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -98,8 +98,8 @@ func registerFilterPages() {
 		Url:    getters.GetterStatic(AppUrl + "select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
-			components.InputText{Label: "Email", Name: "email", Getter: getters.GetterKey("$get.email")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
+			components.InputText{Label: "Email", Name: "Email", Getter: getters.GetterKey("$get.Email")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -113,8 +113,8 @@ func registerFilterPages() {
 		Url:    getters.GetterStatic(AppUrl + "multi-select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
-			components.InputText{Label: "Email", Name: "email", Getter: getters.GetterKey("$get.email")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
+			components.InputText{Label: "Email", Name: "Email", Getter: getters.GetterKey("$get.Email")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -128,7 +128,7 @@ func registerFilterPages() {
 		Url:    getters.GetterStatic(RoleUrl + "select/"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -360,7 +360,7 @@ func registerDetailPages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this user?",
-				CancelUrl: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("user.id")),
+				CancelUrl: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("user.ID")),
 			},
 		},
 	})
@@ -575,7 +575,7 @@ func registerSelectionPages() {
 func registerRolePages() {
 	// Role Menu
 	lago.RegistryPage.Register("users.RoleDetailMenu", components.SidebarMenu{
-		Title: getters.GetterFormat("Role: %s", getters.GetterKey("role.name")),
+		Title: getters.GetterFormat("Role: %s", getters.GetterKey("role.Name")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to All Roles"),
 			Url:   getters.GetterStatic(RoleUrl),
@@ -583,15 +583,15 @@ func registerRolePages() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Role Detail"),
-				Url:   getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.id")),
+				Url:   getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Edit Role"),
-				Url:   getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("role.id")),
+				Url:   getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("role.ID")),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete Role"),
-				Url:   getters.GetterFormat(RoleUrl+"%v/delete/", getters.GetterKey("role.id")),
+				Url:   getters.GetterFormat(RoleUrl+"%v/delete/", getters.GetterKey("role.ID")),
 			},
 		},
 	})
@@ -714,7 +714,7 @@ func registerRolePages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this role?",
-				CancelUrl: getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.id")),
+				CancelUrl: getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.ID")),
 			},
 		},
 	})

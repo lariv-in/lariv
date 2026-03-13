@@ -54,18 +54,18 @@ func registerFilter() {
 		Url:    getters.GetterStatic(AppUrl),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "name", Getter: getters.GetterKey("$get.name")},
-			components.InputText{Label: "Location", Name: "location", Getter: getters.GetterKey("$get.location")},
-			components.InputText{Label: "Date", Name: "date", Getter: getters.GetterKey("$get.date")},
+			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
+			components.InputText{Label: "Location", Name: "Location", Getter: getters.GetterKey("$get.Location")},
+			components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey("$get.Date")},
 			components.InputManyToMany{
 				Label:       "Created By",
-				Name:        "created_by",
+				Name:        "CreatedBy",
 				Url:         getters.GetterStatic(p_users.AppUrl + "multi-select/"),
 				DisplayAttr: "Name",
 				Placeholder: "Select users...",
-				Getter:      getters.GetterKey("$get.created_by"),
+				Getter:      getters.GetterKey("$get.CreatedBy"),
 			},
-			components.InputCheckbox{Label: "Overlaps Only", Name: "overlapping", Getter: getters.GetterKey("$get.overlapping")},
+			components.InputCheckbox{Label: "Overlaps Only", Name: "Overlapping", Getter: getters.GetterKey("$get.Overlapping")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -78,14 +78,14 @@ func registerFilter() {
 
 func appointmentFormFields() []components.PageInterface {
 	return []components.PageInterface{
-		components.InputText{Label: "Name", Name: "name", Required: true, Getter: getters.GetterKey("$in.Name")},
-		components.InputTextarea{Label: "Location", Name: "location", Required: true, Getter: getters.GetterKey("$in.Location"), Rows: 2},
+		components.InputText{Label: "Name", Name: "Name", Required: true, Getter: getters.GetterKey("$in.Name")},
+		components.InputTextarea{Label: "Location", Name: "Location", Required: true, Getter: getters.GetterKey("$in.Location"), Rows: 2},
 		components.ContainerRow{Classes: "grid grid-cols-1 gap-1 md:grid-cols-2", Children: []components.PageInterface{
-			components.InputPhone{Label: "Phone", Name: "phone", Required: true, Getter: getters.GetterKey("$in.Phone")},
-			components.InputDatetime{Label: "Date & Time", Name: "datetime", Required: true, Getter: getters.GetterKey("$in.Datetime")},
+			components.InputPhone{Label: "Phone", Name: "Phone", Required: true, Getter: getters.GetterKey("$in.Phone")},
+			components.InputDatetime{Label: "Date & Time", Name: "Datetime", Required: true, Getter: getters.GetterKey("$in.Datetime")},
 		}},
-		components.InputTextarea{Label: "Remarks", Name: "remarks", Getter: getters.GetterKey("$in.Remarks"), Rows: 2},
-		components.InputTextarea{Label: "Extra Info (For AI)", Name: "extra_info", Getter: getters.GetterKey("$in.ExtraInfo"), Rows: 2},
+		components.InputTextarea{Label: "Remarks", Name: "Remarks", Getter: getters.GetterKey("$in.Remarks"), Rows: 2},
+		components.InputTextarea{Label: "Extra Info (For AI)", Name: "ExtraInfo", Getter: getters.GetterKey("$in.ExtraInfo"), Rows: 2},
 	}
 }
 

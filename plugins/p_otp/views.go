@@ -32,7 +32,7 @@ func PhoneOtpRequestHandler(v views.View) http.Handler {
 			return
 		}
 
-		identifier, _ := values["identifier"].(string)
+		identifier, _ := values["Identifier"].(string)
 		identifier = strings.TrimSpace(identifier)
 
 		if identifier == "" {
@@ -85,7 +85,7 @@ func EmailOtpRequestHandler(v views.View) http.Handler {
 			return
 		}
 
-		identifier, _ := values["identifier"].(string)
+		identifier, _ := values["Identifier"].(string)
 		identifier = strings.TrimSpace(identifier)
 
 		if identifier == "" {
@@ -143,7 +143,7 @@ func OtpVerifyHandler(v views.View) http.Handler {
 			return
 		}
 
-		otp, _ := values["otp"].(string)
+		otp, _ := values["Otp"].(string)
 		otp = strings.TrimSpace(otp)
 
 		if otp == "" {
@@ -175,7 +175,7 @@ func OtpVerifyHandler(v views.View) http.Handler {
 		}
 
 		// Keep identifier around so form URL resolves correctly on re-render
-		values["identifier"] = identifier
+		values["Identifier"] = identifier
 		v.RenderWithErrors(w, r, fieldErrors, values)
 	})
 }

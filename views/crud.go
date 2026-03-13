@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-
 // --- List View ---
 
 // ListView loads all records for model T into context under the given key.
@@ -49,7 +48,7 @@ func ListView[T any](model T, key string) func(View) View {
 						if param == "page" {
 							continue
 						}
-						query = query.Where(fmt.Sprintf("%s LIKE ?", param), "%"+values[0]+"%")
+						query = query.Where(param, values[0])
 					}
 
 					var total int64

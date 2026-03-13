@@ -266,8 +266,8 @@ func init() {
 		Url:    getters.GetterStatic("/tally/list/"),
 		Method: "GET",
 		ChildrenInput: []components.PageInterface{
-			components.InputNumber{Name: "user_id", Label: "User ID", Getter: getters.GetterKey("$get.user_id")},
-			components.InputText{Name: "date", Label: "Date", Getter: getters.GetterKey("$get.date")},
+			components.InputNumber{Name: "UserID", Label: "User ID", Getter: getters.GetterKey("$get.UserID")},
+			components.InputText{Name: "Date", Label: "Date", Getter: getters.GetterKey("$get.Date")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ButtonSubmit{Label: "Apply Filter"},
