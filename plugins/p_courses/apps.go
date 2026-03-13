@@ -18,7 +18,7 @@ func init() {
 	err = lago.RegistryPlugins.Register("p_courses", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "book-open",
-		Url:         u,
+		URL:         u,
 		VerboseName: "Courses",
 	})
 	if err != nil {

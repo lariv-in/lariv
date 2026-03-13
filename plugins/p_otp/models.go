@@ -2,6 +2,7 @@ package p_otp
 
 import (
 	"encoding/json"
+	"log/slog"
 
 	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
@@ -41,6 +42,7 @@ func (p *OTPPreferences) GetExtraFields() map[string]any {
 func LoadPreferences(db *gorm.DB) OTPPreferences {
 	var prefs OTPPreferences
 	if err := db.FirstOrCreate(&prefs, OTPPreferences{Model: gorm.Model{ID: 1}}).Error; err != nil {
+		slog.Warn("Error while loading preference", "err", err)
 		// Log error if needed, but return default empty struct or the partially filled struct
 	}
 	return prefs

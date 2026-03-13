@@ -7,10 +7,10 @@ import (
 	"github.com/lariv-in/lago"
 )
 
-const AppUrl = "/otp/preferences/"
+const AppURL = "/otp/preferences/"
 
 func init() {
-	u, err := url.Parse(AppUrl)
+	u, err := url.Parse(AppURL)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -18,7 +18,7 @@ func init() {
 	err = lago.RegistryPlugins.Register("p_otp", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "key", // Using a relevant icon
-		Url:         u,
+		URL:         u,
 		VerboseName: "OTP Preferences",
 		RenderKeys:  []string{"superuser", "totschool_admin"},
 	})

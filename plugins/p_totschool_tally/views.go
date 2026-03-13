@@ -85,7 +85,7 @@ func TallyLeaderboardHandler(v views.View) http.Handler {
 }
 
 // Ensure the user owns or is admin for the queried tally
-func getTallyOr404(w http.ResponseWriter, r *http.Request, db *gorm.DB, tallyID string, user p_users.User) *Tally {
+func getTallyOr404(w http.ResponseWriter, _ *http.Request, db *gorm.DB, tallyID string, user p_users.User) *Tally {
 	var roleName string
 	if !user.IsSuperuser {
 		db.Model(&p_users.Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)

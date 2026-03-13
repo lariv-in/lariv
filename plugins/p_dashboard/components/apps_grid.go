@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	"github.com/lariv-in/components"
-	comp "github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	. "maragu.dev/gomponents"
@@ -50,10 +49,10 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 	group := Group{}
 	for _, app := range apps {
 		group = append(group, A(
-			Href(app.Url.String()),
+			Href(app.URL.String()),
 			Class("btn btn-md h-auto flex-col space-y-1 py-4"),
 			Attr("x-show", fmt.Sprintf("'%s'.toLowerCase().includes(search.toLowerCase())", app.VerboseName)),
-			Attr("x-cloak"), components.Render(comp.Icon{Name: app.Icon, Classes: "w-8 h-8"}, ctx), Div(
+			Attr("x-cloak"), components.Render(components.Icon{Name: app.Icon, Classes: "w-8 h-8"}, ctx), Div(
 				Class("text-sm truncate min-w-0 w-full"),
 				Text(app.VerboseName),
 			),

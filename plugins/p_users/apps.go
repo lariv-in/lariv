@@ -19,7 +19,7 @@ func init() {
 	err = lago.RegistryPlugins.Register("p_users", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "users",
-		Url:         u,
+		URL:         u,
 		VerboseName: "Users",
 	})
 	if err != nil {

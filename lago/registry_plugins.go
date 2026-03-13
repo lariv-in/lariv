@@ -20,7 +20,7 @@ const (
 type Plugin struct {
 	Type        PluginType
 	Icon        string
-	Url         *url.URL
+	URL         *url.URL
 	VerboseName string
 	Method      string
 	OnClick     string

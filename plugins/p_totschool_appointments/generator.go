@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var APPOINTMENT_NAMES = []string{
+var AppointmentNames = []string{
 	"Initial Consultation",
 	"Follow-up Meeting",
 	"Project Kickoff",
@@ -28,7 +28,7 @@ var APPOINTMENT_NAMES = []string{
 	"Vendor Negotiation",
 }
 
-var LOCATIONS = []string{
+var Locations = []string{
 	"Conference Room A (Headquarters)",
 	"Conference Room B (Headquarters)",
 	"Virtual (Zoom Link: https://zoom.us/j/123456789)",
@@ -41,7 +41,7 @@ var LOCATIONS = []string{
 	"Branch Office (East)",
 }
 
-var TEMPLATES = []LetterTemplate{
+var Templates = []LetterTemplate{
 	{
 		Name:    "Standard Appointment Confirmation",
 		Content: "Dear {Client Name},\n\nWe are writing to confirm your appointment for '{Appointment Name}' scheduled on {Appointment Date} at {Appointment Time}.\n\nThe meeting will take place at: {Location}.\n\nIf you have any questions or need to reschedule, please contact us at {Phone Number}.\n\nAdditional details:\n{Remarks}\n\nWe look forward to seeing you.\n\nBest regards,\n{Your Name}",
@@ -59,14 +59,14 @@ var TEMPLATES = []LetterTemplate{
 func GenerateAppointmentsForUser(db *gorm.DB, user p_users.User, count int) {
 	now := time.Now()
 	// Create templates if they don't exist
-	for _, tmpl := range TEMPLATES {
+	for _, tmpl := range Templates {
 		var existing LetterTemplate
 		if err := db.Where("name = ?", tmpl.Name).First(&existing).Error; err != nil {
 			db.Create(&tmpl)
 		}
 	}
 
-	for i := 0; i < count; i++ {
+	for range count {
 		// Calculate a random datetime within the next 30 days, between 9 AM and 5 PM
 		daysOffset := rand.Intn(30) + 1 // 1 to 30 days from now
 		hoursOffset := rand.Intn(8) + 9 // 9 AM to 4 PM (inclusive)
@@ -89,8 +89,8 @@ func GenerateAppointmentsForUser(db *gorm.DB, user p_users.User, count int) {
 			apptDate = apptDate.Add(30 * time.Minute)
 		}
 
-		name := APPOINTMENT_NAMES[rand.Intn(len(APPOINTMENT_NAMES))]
-		location := LOCATIONS[rand.Intn(len(LOCATIONS))]
+		name := AppointmentNames[rand.Intn(len(AppointmentNames))]
+		location := Locations[rand.Intn(len(Locations))]
 
 		// Random phone number (US format)
 		phone := fmt.Sprintf("(%03d) %03d-%04d", rand.Intn(800)+200, rand.Intn(900)+100, rand.Intn(10000))

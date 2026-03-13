@@ -45,7 +45,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		userId, err := strconv.ParseInt(strings.Split(subject, "-")[0], 10, 32)
+		userID, err := strconv.ParseInt(strings.Split(subject, "-")[0], 10, 32)
 		if err != nil {
 			slog.Warn("Error while parsing user id", "err", err)
 			http.Redirect(w, r, unauthenticatedRoute.Path, http.StatusMovedPermanently)
@@ -54,7 +54,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		db := r.Context().Value("$db").(*gorm.DB)
 		var user User
-		err = db.Model(User{}).Last(&user, "ID = ?", userId).Error
+		err = db.Model(User{}).Last(&user, "ID = ?", userID).Error
 		if err != nil {
 			slog.Warn("Error while parsing user id", "err", err)
 			http.Redirect(w, r, unauthenticatedRoute.Path, http.StatusMovedPermanently)

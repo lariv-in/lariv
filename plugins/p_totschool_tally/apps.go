@@ -18,7 +18,7 @@ func init() {
 	err = lago.RegistryPlugins.Register("p_totschool_tally", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "table-cells",
-		Url:         u,
+		URL:         u,
 		VerboseName: "Totschool Tally",
 	})
 	if err != nil {

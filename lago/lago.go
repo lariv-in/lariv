@@ -18,7 +18,7 @@ func Start(config LagoConfig) error {
 		return err
 	}
 
-	RegistryMiddleware.Register("core.DbMiddleware", MiddlewareDb(db))
+	RegistryMiddleware.Register("core.DbMiddleware", MiddlewareDB(db))
 	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
 	RegistryMiddleware.Register("core.HtmxBoostMiddleware", MiddlewareHtmxBoost)
 	RegistryMiddleware.Register("core.EnvironmentMiddleware", MiddlewareEnvironment)
@@ -46,7 +46,7 @@ func Start(config LagoConfig) error {
 	return http.ListenAndServe(config.Address, router)
 }
 
-func MiddlewareDb(db *gorm.DB) Middleware {
+func MiddlewareDB(db *gorm.DB) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "$db", db)))
