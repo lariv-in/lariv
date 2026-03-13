@@ -71,7 +71,7 @@ func (l TallyLeaderboardComponent) Build(ctx context.Context) Node {
 			TBody(rowsNodes),
 		)
 
-		boardsHTML = append(boardsHTML, Div(Class("card bg-base-100 shadow-xl"),
+		boardsHTML = append(boardsHTML, Div(Class("card bg-base-100 border border-base-300 rounded-box"),
 			Div(Class("card-body"),
 				H2(Class("card-title"), Text(metricTitles[metric])),
 				tableNode,
@@ -80,8 +80,8 @@ func (l TallyLeaderboardComponent) Build(ctx context.Context) Node {
 	}
 
 	return Div(
-		If(title != "", Div(Class("text-2xl font-bold p-4"), Text(title))),
-		Div(Class("grid grid-cols-1 md:grid-cols-2 gap-6 p-4"), boardsHTML),
+		If(title != "", Div(Class("text-xl font-bold mt-4"), Text(title))),
+		Div(Class("grid grid-cols-1 md:grid-cols-2 gap-2 mt-2"), boardsHTML),
 	)
 }
 
