@@ -1,6 +1,7 @@
 package p_users
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -25,22 +26,16 @@ func HashPassword(password []byte, passwordSalt []byte) []byte {
 }
 
 func Authenticate(db *gorm.DB, email string, password string) (*User, error) {
-	var salt [][]byte
-	err := db.Model(User{}).Select("PasswordSalt").Last(&salt, "email = ?", email).Error
-	if err != nil {
+	var user User
+	if err := db.Where("email = ?", email).Last(&user).Error; err != nil {
 		return nil, err
 	}
-	if len(salt) == 0 {
+
+	passwordKey := HashPassword([]byte(password), user.PasswordSalt)
+	if !bytes.Equal(passwordKey, user.Password) {
 		return nil, errors.New("Could not authenticate user")
 	}
-	passwordKey := HashPassword([]byte(password), []byte(salt[0]))
 
-	var user User
-
-	err = db.Last(&user, "Password = ?", passwordKey, "Email = ?", email).Error
-	if err != nil {
-		return nil, err
-	}
 	return &user, nil
 }
 
