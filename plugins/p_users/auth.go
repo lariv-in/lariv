@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -46,8 +47,10 @@ type AuthConfig struct {
 
 var Config = &AuthConfig{}
 
-var signingKey [256]byte
-var jwtIssuer [256]byte
+var (
+	signingKey [256]byte
+	jwtIssuer  [256]byte
+)
 
 func init() {
 	rand.Read(signingKey[:])
@@ -62,6 +65,7 @@ func (c *AuthConfig) PostConfig() {
 		if err == nil {
 			copy(signingKey[:], decoded)
 		}
+		log.Panicf("Signing Key specified in config is invalid %s\n", c.SigningKey)
 	}
 
 	if c.JwtIssuer != "" {
@@ -69,6 +73,7 @@ func (c *AuthConfig) PostConfig() {
 		if err == nil {
 			copy(jwtIssuer[:], decoded)
 		}
+		log.Panicf("JwtIssuer specified in config is invalid %s\n", c.SigningKey)
 	}
 }
 
