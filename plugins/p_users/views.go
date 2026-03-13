@@ -1,7 +1,6 @@
 package p_users
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -17,6 +16,8 @@ func LoginHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			fieldErrors["_form"] = fmt.Errorf("%v", err)
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
@@ -44,6 +45,8 @@ func SignupHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			fieldErrors["_form"] = fmt.Errorf("%v", err)
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
@@ -67,6 +70,7 @@ func SignupHandler(v views.View) http.Handler {
 		name, _ := values["Name"].(string)
 		email, _ := values["Email"].(string)
 		phone, _ := values["Phone"].(string)
+		fmt.Println(values)
 		db := r.Context().Value("$db").(*gorm.DB)
 		// Setting the default to true, best if data is not changed in case of failure of assumptions
 		userAlreadyExists := true
@@ -84,8 +88,8 @@ func SignupHandler(v views.View) http.Handler {
 		err = db.Create(&user).Error
 
 		if err != nil {
-			ctx := context.WithValue(r.Context(), views.GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
-			v.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+			fieldErrors["_form"] = fmt.Errorf("%v", err)
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 		user.Login(w)
@@ -131,8 +135,8 @@ func ChangePasswordHandler(v views.View) http.Handler {
 		user.Password = []byte(newPassword)
 		err = db.Save(&user).Error
 		if err != nil {
-			ctx := context.WithValue(r.Context(), views.GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
-			v.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+			fieldErrors["_form"] = fmt.Errorf("%v", err)
+			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
