@@ -34,7 +34,7 @@ func (d TallyDashboardComponent) Build(ctx context.Context) Node {
 		return Div(Text("Error parsing dashboard stats"))
 	}
 
-	statsHTML := Div(Class("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4"),
+	statsHTML := Div(Class("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mt-2"),
 		createStatCard(ctx, "Total Visits", fmt.Sprintf("%d", dashboard.TotalVisits), "users"),
 		createStatCard(ctx, "Total Appts", fmt.Sprintf("%d", dashboard.TotalAppointments), "calendar"),
 		createStatCard(ctx, "Total Demos", fmt.Sprintf("%d", dashboard.TotalDemos), "presentation-chart-line"),
@@ -44,16 +44,16 @@ func (d TallyDashboardComponent) Build(ctx context.Context) Node {
 		createStatCard(ctx, "Premium", fmt.Sprintf("₹%d", dashboard.TotalPremium), "currency-rupee"),
 	)
 
-	ratiosHTML := Div(Class("grid grid-cols-1 md:grid-cols-3 gap-4 p-4"),
+	ratiosHTML := Div(Class("grid grid-cols-1 md:grid-cols-3 gap-2 mt-2"),
 		createStatCard(ctx, "Appt / Visit", fmt.Sprintf("%.1f%%", dashboard.ApptVisitRatio), "chart-bar"),
 		createStatCard(ctx, "Demo / Appt", fmt.Sprintf("%.1f%%", dashboard.DemoApptRatio), "chart-pie"),
 		createStatCard(ctx, "Policy / Demo", fmt.Sprintf("%.1f%%", dashboard.PolicyDemoRatio), "arrow-trending-up"),
 	)
 
 	return Div(
-		Div(Class("text-2xl font-bold p-4"), Text("Tally Dashboard")),
+		Div(Class("text-xl font-bold mt-4"), Text("Tally Dashboard")),
 		statsHTML,
-		Div(Class("text-xl font-bold p-4 mt-4"), Text("Conversion Rates")),
+		Div(Class("text-xl font-bold mt-4"), Text("Conversion Rates")),
 		ratiosHTML,
 	)
 }
