@@ -89,15 +89,19 @@ func SignupHandler(v views.View) http.Handler {
 			return
 		}
 
+		var unassignedRole Role
+		unassignedRole.Name = "Unassigned"
+		if err := db.Where(unassignedRole).Attrs(unassignedRole).FirstOrCreate(&unassignedRole).Error; err == nil {
+			fieldErrors["_form"] = fmt.Errorf("Unknown error with role %e", err)
+		}
+
 		user := User{
 			Name:        name,
 			Email:       email,
 			Phone:       phone,
 			IsSuperuser: false,
 			Password:    []byte(password1Str),
-			Role: Role{
-				Name: "Unassigned",
-			},
+			Role:        unassignedRole,
 		}
 		err = db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&user).Error
 		if err != nil {
