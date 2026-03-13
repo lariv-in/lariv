@@ -68,9 +68,23 @@ func SignupHandler(v views.View) http.Handler {
 		email, _ := values["Email"].(string)
 		phone, _ := values["Phone"].(string)
 		db := r.Context().Value("$db").(*gorm.DB)
-		// Setting the default to true, best if data is not changed in case of failure of assumptions
-		userAlreadyExists := true
-		db.Model(User{}).Select("Email = ?", email).Find(&userAlreadyExists)
+
+		// Check for existing user by email and phone to surface friendly errors
+		var existingByEmail User
+		if err := db.Where("email = ?", email).Last(&existingByEmail).Error; err == nil {
+			fieldErrors["Email"] = fmt.Errorf("An account with this email already exists")
+		}
+
+		var existingByPhone User
+		if err := db.Where("phone = ?", phone).Last(&existingByPhone).Error; err == nil {
+			fieldErrors["Phone"] = fmt.Errorf("An account with this phone number already exists")
+		}
+
+		if views.HasErrors(fieldErrors) {
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
 		user := User{
 			Name:        name,
 			Email:       email,
