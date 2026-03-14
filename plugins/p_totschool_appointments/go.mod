@@ -1,6 +1,6 @@
 module github.com/lariv-in/p_totschool_appointments
 
-go 1.25.5
+go 1.26.1
 
 require (
 	google.golang.org/genai v1.49.0

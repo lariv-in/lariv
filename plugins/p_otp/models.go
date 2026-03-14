@@ -20,7 +20,7 @@ type OTPPreferences struct {
 	EmailOtpTemplateString string
 	SmtpHost               string
 	SmtpPort               string
-	SmtpUsername            string
+	SmtpUsername           string
 	SmtpPassword           string
 	SmtpFrom               string
 }
@@ -53,4 +53,6 @@ func init() {
 		d.AutoMigrate(OTPPreferences{})
 		return d
 	})
+
+	lago.RegistryAdmin.Register("p_otp", lago.AdminPanel[OTPPreferences]{SearchField: ""})
 }

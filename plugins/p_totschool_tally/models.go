@@ -45,4 +45,6 @@ func init() {
 		}
 		return d
 	})
+	lago.RegistryAdmin.Register("p_totschool_tally.TotSchoolSession", lago.AdminPanel[TotSchoolSession]{SearchField: "Name"})
+	lago.RegistryAdmin.Register("p_totschool_tally.Tally", lago.AdminPanel[Tally]{SearchField: "UserID"})
 }

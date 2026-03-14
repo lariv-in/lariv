@@ -52,4 +52,6 @@ func init() {
 		go runWorker(d)
 		return d
 	})
+	lago.RegistryAdmin.Register("p_totschool_appointments.Apointment", lago.AdminPanel[Appointment]{SearchField: "Name"})
+	lago.RegistryAdmin.Register("p_totschool_appointments.LetterTemplate", lago.AdminPanel[LetterTemplate]{SearchField: "Name"})
 }

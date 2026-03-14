@@ -53,4 +53,5 @@ func init() {
 		d.AutoMigrate(Role{})
 		return d
 	})
+	lago.RegistryAdmin.Register("p_users", lago.AdminPanel[User]{SearchField: "Name", ListFields: []string{"Name", "Email", "IsSuperuser", "Role.Name"}, Preload: []string{"Role"}})
 }

@@ -1,6 +1,8 @@
 package getters
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // MapFromStruct converts a struct into a map[string]any using reflection.
 func MapFromStruct(s any) map[string]any {
@@ -9,7 +11,12 @@ func MapFromStruct(s any) map[string]any {
 	}
 
 	m := make(map[string]any)
-	v := reflect.ValueOf(s)
+	var v reflect.Value
+	if _, ok := s.(reflect.Value); ok {
+		v = s.(reflect.Value)
+	} else {
+		v = reflect.ValueOf(s)
+	}
 
 	if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
 		v = v.Elem()
@@ -32,6 +39,12 @@ func flattenStruct(v reflect.Value, m map[string]any) {
 		}
 		if field.Anonymous && v.Field(i).Kind() == reflect.Struct {
 			flattenStruct(v.Field(i), m)
+			continue
+		}
+		if v.Field(i).Kind() == reflect.Struct {
+			for k, v := range MapFromStruct(v.Field(i)) {
+				m[field.Name+"."+k] = v
+			}
 			continue
 		}
 		m[field.Name] = v.Field(i).Interface()

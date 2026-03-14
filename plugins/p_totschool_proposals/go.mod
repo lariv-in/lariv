@@ -1,6 +1,6 @@
 module github.com/lariv-in/p_totschool_proposals
 
-go 1.25.5
+go 1.26.1
 
 require (
 	github.com/alnah/go-md2pdf v1.9.2

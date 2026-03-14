@@ -1,6 +1,6 @@
 module github.com/lariv-in/p_courses
 
-go 1.25.5
+go 1.26.1
 
 require gorm.io/gorm v1.31.1
 

@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Start(config LagoConfig) error {
+func StartServer(config LagoConfig) error {
 	db, err := InitDB(config)
 	if err != nil {
 		return err

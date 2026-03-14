@@ -100,4 +100,5 @@ func init() {
 		go runWorker(d)
 		return d
 	})
+	lago.RegistryAdmin.Register("p_totschool_proposals", lago.AdminPanel[Proposal]{SearchField: "Title"})
 }

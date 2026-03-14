@@ -21,5 +21,6 @@ func init() {
 		d.AutoMigrate(Course{})
 		return d
 	})
+	lago.RegistryAdmin.Register("p_courses", lago.AdminPanel[Course]{SearchField: "Name"})
 }
 
