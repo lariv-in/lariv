@@ -26,25 +26,25 @@ func GetterKey(key string) Getter {
 	return func(ctx context.Context) any {
 		parts := strings.Split(key, ".")
 		value := ctx.Value(parts[0])
-		for i := 1; i < len(parts); i++ {
+		for _, part := range parts[1:] {
 			if value == nil {
 				fmt.Printf("Key not found for %s\n", key)
 				return nil
 			}
 			m, ok := value.(map[string]any)
 			if !ok {
-				v := reflect.ValueOf(value)
+				v, ok := value.(reflect.Value)
+				if !ok {
+					v = reflect.ValueOf(value)
+				}
+
 				if v.Kind() == reflect.Pointer {
 					v = v.Elem()
 				}
-				if v.Kind() != reflect.Struct {
-					fmt.Printf("Key not found for %s\n", key)
-					return nil
-				}
-				m = MapFromStruct(value)
+				m = MapFromStruct(v)
 			}
 
-			if v, exists := m[parts[i]]; exists {
+			if v, exists := m[part]; exists {
 				value = v
 			} else {
 				fmt.Printf("Key not found for %s\n", key)

@@ -80,7 +80,7 @@ func registerFilterPages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply Filters"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -95,7 +95,7 @@ func registerFilterPages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -110,7 +110,7 @@ func registerFilterPages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})

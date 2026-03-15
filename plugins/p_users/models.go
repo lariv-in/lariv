@@ -18,6 +18,7 @@ type User struct {
 	Role         Role   `gorm:"notnull"`
 	Password     []byte `gorm:"notnull"`
 	PasswordSalt []byte `gorm:"notnull"`
+	Timezone string 	`gorm:"default:Asia/Kolkata"`
 }
 
 type Role struct {

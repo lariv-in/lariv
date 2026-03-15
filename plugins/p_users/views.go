@@ -70,7 +70,6 @@ func SignupHandler(v views.View) http.Handler {
 		name, _ := values["Name"].(string)
 		email, _ := values["Email"].(string)
 		phone, _ := values["Phone"].(string)
-		fmt.Println(values)
 		db := r.Context().Value("$db").(*gorm.DB)
 
 		// Check for existing user by email and phone to surface friendly errors

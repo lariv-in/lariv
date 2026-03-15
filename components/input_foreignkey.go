@@ -70,7 +70,7 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputForeignKey) Parse(v any) (any, error) {
+func (e InputForeignKey) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
 		return "", nil

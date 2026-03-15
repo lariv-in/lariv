@@ -24,6 +24,5 @@ func main() {
 		lago.RunGenerators(config)
 		return
 	}
-
 	slog.Error(lago.Start(config).Error())
 }

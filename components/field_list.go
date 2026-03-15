@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/lariv-in/getters"
+	"reflect"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -20,8 +21,9 @@ func (e FieldList) Build(ctx context.Context) Node {
 
 	if e.Getter != nil {
 		if rawData := getters.IfOrGetter(e.Getter, ctx, nil); rawData != nil {
-			if slice, ok := rawData.([]any); ok {
-				for _, item := range slice {
+			value := reflect.ValueOf(rawData)
+			if value.Type().CanSeq2() {
+				for _, item := range value.Seq2() {
 					itemCtx := context.WithValue(ctx, "$row", item)
 					var childrenNodes Group
 					for _, child := range e.Children {

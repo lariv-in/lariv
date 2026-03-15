@@ -29,7 +29,7 @@ func (e InputNumber) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputNumber) Parse(v any) (any, error) {
+func (e InputNumber) Parse(v any, _ context.Context) (any, error) {
 	vals, ok := v.([]string)
 	if !ok || len(vals) == 0 || vals[0] == "" {
 		return 0, nil

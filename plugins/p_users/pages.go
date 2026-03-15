@@ -77,19 +77,11 @@ func registerFilterPages() {
 			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
 			components.InputText{Label: "Email", Name: "Email", Getter: getters.GetterKey("$get.Email")},
 			components.InputPhone{Label: "Phone", Name: "Phone", Getter: getters.GetterKey("$get.Phone")},
-			components.InputTernary{
-				Label:      "Superuser",
-				Name:       "IsSuperuser",
-				TrueLabel:  "Yes",
-				FalseLabel: "No",
-				NoneLabel:  "All",
-				Getter:     getters.GetterKey("$get.IsSuperuser"),
-			},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply Filters"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -104,7 +96,7 @@ func registerFilterPages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -119,7 +111,7 @@ func registerFilterPages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -133,7 +125,7 @@ func registerFilterPages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -300,10 +292,7 @@ func registerTablePages() {
 						components.FieldText{Getter: getters.GetterKey("$row.Email")},
 					}},
 					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{
-						components.FieldText{Getter: getters.GetterKey("$row.Phone")},
-					}},
-					{Label: "Superuser", Key: "IsSuperuser", Children: []components.PageInterface{
-						components.FieldCheckbox{Getter: getters.GetterKey("$row.IsSuperuser")},
+						components.FieldPhone{Getter: getters.GetterKey("$row.Phone")},
 					}},
 				},
 			},
@@ -606,7 +595,7 @@ func registerRolePages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply Filters"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})

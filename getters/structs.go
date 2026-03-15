@@ -12,18 +12,17 @@ func MapFromStruct(s any) map[string]any {
 
 	m := make(map[string]any)
 	var v reflect.Value
-	if _, ok := s.(reflect.Value); ok {
-		v = s.(reflect.Value)
-	} else {
+	v, ok := s.(reflect.Value)
+	if !ok {
 		v = reflect.ValueOf(s)
+	}
+
+	if m, ok := v.Interface().(map[string]any); ok {
+		return m
 	}
 
 	if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
 		v = v.Elem()
-	}
-
-	if v.Kind() != reflect.Struct {
-		return m
 	}
 
 	flattenStruct(v, m)
@@ -45,7 +44,6 @@ func flattenStruct(v reflect.Value, m map[string]any) {
 			for k, v := range MapFromStruct(v.Field(i)) {
 				m[field.Name+"."+k] = v
 			}
-			continue
 		}
 		m[field.Name] = v.Field(i).Interface()
 	}

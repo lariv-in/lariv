@@ -219,7 +219,7 @@ func UpdateView[T any](successURL string) func(View) View {
 				// Update using the map directly, ID already known from path
 				err = db.Model(new(T)).Where("id = ?", id).Updates(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
+					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": err})
 					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 					return
 				}

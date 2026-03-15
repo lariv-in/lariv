@@ -60,7 +60,7 @@ func (e InputTernary) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputTernary) Parse(v any) (any, error) {
+func (e InputTernary) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 || vals[0] == "" {
 		return nil, nil

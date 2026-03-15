@@ -70,7 +70,7 @@ func registerFilter() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply Filters"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -136,7 +136,7 @@ func registerTable() {
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Name")}}},
 					{Label: "Location", Key: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Location")}}},
 					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Phone")}}},
-					{Label: "Date & Time", Key: "Datetime", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Datetime")}}},
+					{Label: "Date & Time", Key: "Datetime", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$row.Datetime")}}},
 					{Label: "Created By", Key: "CreatedBy", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterForeignKey[p_users.User](getters.GetterKey("$row.CreatedByID"), "Name")}}},
 					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.CreatedAt")}}},
 				},
@@ -188,8 +188,8 @@ func registerDetail() {
 									Getter:  getters.GetterKey("OverlapWarningList"),
 									Classes: "flex flex-col gap-2 pl-4",
 									Children: []components.PageInterface{
-										components.ContainerRow{Classes: "flex items-center gap-2", Children: []components.PageInterface{
-											components.ButtonLink{LabelGetter: getters.GetterKey("$row.Name"), Link: getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")), Classes: "link link-primary font-medium"},
+										components.ContainerRow{Classes: "items-center gap-2", Children: []components.PageInterface{
+											components.ButtonLink{LabelGetter: getters.GetterKey("$row.Name"), Link: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("$row.ID"))},
 											components.FieldText{Getter: getters.GetterStatic(" — ")},
 											components.FieldText{Getter: getters.GetterKey("$row.Date")},
 										}},
@@ -296,9 +296,9 @@ func registerSelectionPages() {
 		Title: "Select Template",
 		Children: []components.PageInterface{
 			components.DataTable{
-				UID:             "template-selection-table",
-				Data:            getters.GetterKey("templates"),
-				OnClick:         getters.GetterSelect("template", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
+				UID:     "template-selection-table",
+				Data:    getters.GetterKey("templates"),
+				OnClick: getters.GetterSelect("template", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Name")}}},
 				},
@@ -315,7 +315,7 @@ func registerSelectionPages() {
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
 				components.ButtonSubmit{Label: "Apply Filters"},
-				components.InputClear{Label: "Clear"},
+				components.ButtonClear{Label: "Clear"},
 			}},
 		},
 	})
@@ -352,5 +352,3 @@ func registerSelectionPages() {
 		},
 	})
 }
-
-

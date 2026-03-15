@@ -37,7 +37,7 @@ func (e InputTextarea) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputTextarea) Parse(v any) (any, error) {
+func (e InputTextarea) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
 		return "", nil

@@ -136,7 +136,7 @@ func (e InputManyToMany) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputManyToMany) Parse(v any) (any, error) {
+func (e InputManyToMany) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	// Return the full slice of selected IDs
 	return vals, nil

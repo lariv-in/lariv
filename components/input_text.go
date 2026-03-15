@@ -28,7 +28,7 @@ func (e InputText) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputText) Parse(v any) (any, error) {
+func (e InputText) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
 		return "", nil

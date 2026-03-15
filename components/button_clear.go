@@ -8,13 +8,13 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-type InputClear struct {
+type ButtonClear struct {
 	Page
 	Label   string
 	Classes string
 }
 
-func (e InputClear) Build(ctx context.Context) Node {
+func (e ButtonClear) Build(ctx context.Context) Node {
 	label := e.Label
 	if label == "" {
 		label = "Clear"

@@ -85,7 +85,7 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 		}
 	}
 
-	return g_html.Div(g_html.Class("flex flex-col gap-4"),
+	return g_html.Div(g_html.Class("flex flex-col gap-4, @container"),
 		g_html.Div(g_html.Class("overflow-x-auto"),
 			g_html.Div(g_html.Class("grid grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3 @3xl:grid-cols-4 gap-2"),
 				Group(cards),

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/lariv-in/getters"
+	"github.com/lariv-in/views"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -53,6 +54,7 @@ func (e FormComponent) Build(ctx context.Context) Node {
 	}
 
 	var formErrorNode Node
+	fmt.Println(childCtx.Value(views.GlobalContextError))
 	if errorMap, ok := childCtx.Value("$error").(map[string]any); ok {
 		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
 			if err, ok := formErr.(error); ok {
@@ -97,9 +99,9 @@ func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]er
 	for _, input := range inputs {
 		name := input.GetName()
 		if isMultipart {
-			inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name])
+			inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name], r.Context())
 		} else {
-			inputValues[name], inputErrors[name] = input.Parse(r.Form[name])
+			inputValues[name], inputErrors[name] = input.Parse(r.Form[name], r.Context())
 		}
 	}
 

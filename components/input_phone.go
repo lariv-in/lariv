@@ -21,15 +21,30 @@ type InputPhone struct {
 }
 
 func (e InputPhone) Build(ctx context.Context) Node {
+	value := e.Getter(ctx)
+	v, ok := value.(*phonenumbers.PhoneNumber)
+	if !ok {
+		vStr, ok := value.(string)
+		if ok {
+			val, err := phonenumbers.Parse(vStr, "IN")
+			if err == nil {
+				v = val
+			}
+		}
+	}
+	var vStr string
+	if v != nil {
+		vStr = phonenumbers.Format(v, phonenumbers.E164)
+	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
 		Input(Type("tel"), Name(e.Name), getters.GetterIf(e.Getter, ctx, func(ctx context.Context, value any) Node {
-			return Value(fmt.Sprintf("%s", value))
+			return Value(vStr)
 		}), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
 	)
 }
 
-func (e InputPhone) Parse(v any) (any, error) {
+func (e InputPhone) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
 		return "", nil

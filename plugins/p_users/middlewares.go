@@ -69,6 +69,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), "$user", user)
 		ctx = context.WithValue(ctx, "$render_key", roleName)
+		timezone, err := time.LoadLocation(user.Timezone)
+		if err != nil {
+			slog.Warn("Invalid timezone for user", "error", err)
+		} else {
+			ctx = context.WithValue(ctx, "$tz", timezone)
+		}
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

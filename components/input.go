@@ -1,7 +1,11 @@
 package components
 
+import (
+	"context"
+)
+
 type InputInterface interface {
-	Parse(any) (any, error)
+	Parse(any, context.Context) (any, error)
 	GetName() string
 }
 
