@@ -13,12 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type GlobalContextKeys (string)
-
-const (
-	GlobalContextError = GlobalContextKeys("$error")
-	GlobalContextIn    = GlobalContextKeys("$in")
-)
 
 // --- List View ---
 
@@ -170,14 +164,14 @@ func CreateView[T any](successURL string) func(View) View {
 
 				record := new(T)
 				if err = PopulateFromMap(record, values); err != nil {
-					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
-					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+					fieldErrors["_form"] = fmt.Errorf("%v", err)
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
 					return
 				}
 				err = db.Create(record).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
-					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+					fieldErrors["_form"] = fmt.Errorf("%v", err)
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
 					return
 				}
 
@@ -219,8 +213,8 @@ func UpdateView[T any](successURL string) func(View) View {
 				// Update using the map directly, ID already known from path
 				err = db.Model(new(T)).Where("id = ?", id).Updates(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": err})
-					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+					fieldErrors["_form"] = err
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
 					return
 				}
 
@@ -243,7 +237,7 @@ func SingletonView[T any](successURL getters.Getter) func(View) View {
 				db := r.Context().Value("$db").(*gorm.DB)
 				instance := new(T)
 				db.FirstOrCreate(instance)
-				ctx := context.WithValue(r.Context(), GlobalContextIn, getters.MapFromStruct(instance))
+				ctx := context.WithValue(r.Context(), getters.ContextKeyIn, getters.MapFromStruct(instance))
 				oldGet(innerView).ServeHTTP(w, r.WithContext(ctx))
 			})
 		}
@@ -267,8 +261,8 @@ func SingletonView[T any](successURL getters.Getter) func(View) View {
 
 				err = db.Model(instance).Updates(values).Error
 				if err != nil {
-					ctx := context.WithValue(r.Context(), GlobalContextError, map[string]any{"_form": fmt.Errorf("%v", err)})
-					innerView.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+					fieldErrors["_form"] = fmt.Errorf("%v", err)
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
 					return
 				}
 

@@ -191,7 +191,6 @@ func userFormFields() components.ContainerColumn {
 					},
 				},
 			},
-			components.ButtonSubmit{Label: "Save User"},
 		},
 	}
 }
@@ -213,6 +212,9 @@ func registerFormPages() {
 				ChildrenInput: []components.PageInterface{
 					userFormFields(),
 				},
+				ChildrenAction: []components.PageInterface{
+					components.ButtonSubmit{Label: "Save User"},
+				},
 			},
 		},
 	})
@@ -231,6 +233,9 @@ func registerFormPages() {
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
 					userFormFields(),
+				},
+				ChildrenAction: []components.PageInterface{
+					components.ButtonSubmit{Label: "Save User"},
 				},
 			},
 		},

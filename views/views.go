@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/lariv-in/components"
+	"github.com/lariv-in/getters"
 )
 
 type FormPatcher = func(view View, r *http.Request, formData map[string]any) map[string]any
@@ -82,7 +83,7 @@ func (v View) RenderWithErrors(w http.ResponseWriter, r *http.Request, fieldErro
 	page, _ := v.GetPage()
 	ctx := r.Context()
 	errorMap := map[string]any{}
-	if existing, ok := ctx.Value("$error").(map[string]any); ok {
+	if existing, ok := ctx.Value(getters.ContextKeyError).(map[string]any); ok {
 		maps.Copy(errorMap, existing)
 	}
 	for name, fieldErr := range fieldErrors {
@@ -90,10 +91,10 @@ func (v View) RenderWithErrors(w http.ResponseWriter, r *http.Request, fieldErro
 			errorMap[name] = fieldErr
 		}
 	}
-	ctx = context.WithValue(ctx, "$error", errorMap)
+	ctx = context.WithValue(ctx, getters.ContextKeyError, errorMap)
 	inMap := map[string]any{}
 	maps.Copy(inMap, values)
-	ctx = context.WithValue(ctx, "$in", inMap)
+	ctx = context.WithValue(ctx, getters.ContextKeyIn, inMap)
 	components.Render(page, ctx).Render(w)
 }
 

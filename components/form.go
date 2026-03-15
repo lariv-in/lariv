@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/lariv-in/getters"
-	"github.com/lariv-in/views"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -31,7 +30,7 @@ func (e FormComponent) Build(ctx context.Context) Node {
 		value := e.Getter(ctx)
 		if value != nil {
 			objMap := getters.MapFromStruct(value)
-			childCtx = context.WithValue(ctx, "$in", objMap)
+			childCtx = context.WithValue(ctx, getters.ContextKeyIn, objMap)
 		}
 	}
 
@@ -54,8 +53,7 @@ func (e FormComponent) Build(ctx context.Context) Node {
 	}
 
 	var formErrorNode Node
-	fmt.Println(childCtx.Value(views.GlobalContextError))
-	if errorMap, ok := childCtx.Value("$error").(map[string]any); ok {
+	if errorMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]any); ok {
 		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
 			if err, ok := formErr.(error); ok {
 				formErrorNode = Span(Class("text-sm text-error"), Text(err.Error()))

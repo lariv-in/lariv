@@ -3,6 +3,7 @@ package p_users
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/lariv-in/lago"
@@ -145,18 +146,43 @@ func ChangePasswordHandler(v views.View) http.Handler {
 			return
 		}
 
-		user := r.Context().Value("user").(User)
+		user := r.Context().Value("$user").(User)
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		user.Password = []byte(newPassword)
-		err = db.Save(&user).Error
+		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
 			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
-		http.Redirect(w, r, fmt.Sprintf("%s%d/", AppUrl, user.ID), http.StatusSeeOther)
+		if !user.IsSuperuser {
+			if uint(id) != user.ID {
+				fieldErrors["_form"] = fmt.Errorf("Unauthorized")
+				v.RenderWithErrors(w, r, fieldErrors, values)
+				return
+
+			}
+		}
+
+		var targetUser User
+
+		err = db.Model(User{}).Last(&targetUser, "ID = ?", id).Error
+		if err != nil {
+			fieldErrors["_form"] = err
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		targetUser.Password = []byte(newPassword)
+		err = db.Save(&targetUser).Error
+		if err != nil {
+			fieldErrors["_form"] = fmt.Errorf("%v", err)
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("%s%d/", AppUrl, targetUser.ID), http.StatusSeeOther)
 	})
 }
 

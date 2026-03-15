@@ -10,6 +10,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// Context key constants for shared use across packages.
+const (
+	ContextKeyError = "$error"
+	ContextKeyIn    = "$in"
+)
+
 // Getter defines a common type for fetching data that could be dynamic
 type Getter func(context.Context) any
 
