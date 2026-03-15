@@ -82,6 +82,11 @@ func (e ShellBase) Build(ctx context.Context) Node {
 					`:root {`+
 					`font-family: var(--font-sans);`+
 					`}`+
+					`[data-theme="dark"] {`+
+					`--color-base-100: oklch(14% 0.014 253);`+
+					`--color-base-200: oklch(24% 0.014 253);`+
+					`--color-base-300: oklch(30% 0.016 252);`+
+					`}`+
 					`#global-loading-indicator {`+
 					`opacity: 0;`+
 					`transition: opacity 200ms ease-in;`+
