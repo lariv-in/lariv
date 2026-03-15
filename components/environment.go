@@ -18,6 +18,14 @@ type Environment struct {
 	Classes string
 }
 
+func (e Environment) GetKey() string {
+	return e.Page.Key
+}
+
+func (e Environment) GetRoles() []string {
+	return e.Roles
+}
+
 func (e Environment) Build(ctx context.Context) Node {
 	key, _ := getters.IfOrGetter(e.Key, ctx, "").(string)
 	options, _ := getters.IfOrGetter(e.Options, ctx, []string{}).([]string)

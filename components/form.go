@@ -71,8 +71,40 @@ func (e FormComponent) Build(ctx context.Context) Node {
 		submitGroup)
 }
 
+func (e FormComponent) GetKey() string {
+	return e.Key
+}
+
+func (e FormComponent) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FormComponent) GetChildren() []PageInterface {
 	return append(e.ChildrenInput, e.ChildrenAction...)
+}
+
+func (e *FormComponent) SetChildren(children []PageInterface) {
+	offset := 0
+	nInput := len(e.ChildrenInput)
+	end := offset + nInput
+	if end > len(children) {
+		end = len(children)
+	}
+	e.ChildrenInput = children[offset:end]
+	offset = end
+	if offset >= len(children) {
+		return
+	}
+	nAction := len(e.ChildrenAction)
+	end = offset + nAction
+	if end > len(children) {
+		end = len(children)
+	}
+	e.ChildrenAction = children[offset:end]
+	offset = end
+	if offset < len(children) {
+		e.ChildrenAction = append(e.ChildrenAction, children[offset:]...)
+	}
 }
 
 // Calls ParseMultipartForm or ParseForm based on Content-Type and for each Child under it that implements InputIterface, calls its clean method and stores that value in the map, and stores the error in the error map
@@ -92,7 +124,7 @@ func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]er
 
 	inputValues, inputErrors := map[string]any{}, map[string]error{}
 
-	inputs := FindInputs(e)
+	inputs := FindInputs(&e)
 
 	for _, input := range inputs {
 		name := input.GetName()

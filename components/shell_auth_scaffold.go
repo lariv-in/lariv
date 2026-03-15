@@ -26,6 +26,18 @@ func (e ShellAuthScaffold) Build(ctx context.Context) Node {
 	}, ctx)
 }
 
+func (e ShellAuthScaffold) GetKey() string {
+	return e.Key
+}
+
+func (e ShellAuthScaffold) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ShellAuthScaffold) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ShellAuthScaffold) SetChildren(children []PageInterface) {
+	e.Children = children
 }

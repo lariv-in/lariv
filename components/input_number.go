@@ -19,6 +19,14 @@ type InputNumber struct {
 	Classes  string
 }
 
+func (e InputNumber) GetKey() string {
+	return e.Key
+}
+
+func (e InputNumber) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputNumber) Build(ctx context.Context) Node {
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),

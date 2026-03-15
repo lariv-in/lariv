@@ -16,6 +16,14 @@ type ButtonDownload struct {
 	Classes string
 }
 
+func (e ButtonDownload) GetKey() string {
+	return e.Key
+}
+
+func (e ButtonDownload) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ButtonDownload) Build(ctx context.Context) Node {
 	link := ""
 	if e.Link != nil {

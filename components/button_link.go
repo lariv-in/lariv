@@ -17,6 +17,14 @@ type ButtonLink struct {
 	Classes     string
 }
 
+func (e ButtonLink) GetKey() string {
+	return e.Key
+}
+
+func (e ButtonLink) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 	link := ""
 	if e.Link != nil {

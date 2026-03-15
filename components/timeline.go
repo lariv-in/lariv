@@ -120,6 +120,14 @@ func (e Timeline) Build(ctx context.Context) Node {
 	)
 }
 
+func (e Timeline) GetKey() string {
+	return e.Key
+}
+
+func (e Timeline) GetRoles() []string {
+	return e.Roles
+}
+
 func (e Timeline) GetChildren() []PageInterface {
 	var children []PageInterface
 	if e.FilterComponent != nil {
@@ -127,4 +135,13 @@ func (e Timeline) GetChildren() []PageInterface {
 	}
 	children = append(children, e.Children...)
 	return children
+}
+
+func (e *Timeline) SetChildren(children []PageInterface) {
+	offset := 0
+	if e.FilterComponent != nil && len(children) > 0 {
+		e.FilterComponent = children[0]
+		offset = 1
+	}
+	e.Children = children[offset:]
 }

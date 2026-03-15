@@ -34,6 +34,18 @@ func (e ShellSimpleScaffold) Build(ctx context.Context) Node {
 	}, ctx)
 }
 
+func (e ShellSimpleScaffold) GetKey() string {
+	return e.Key
+}
+
+func (e ShellSimpleScaffold) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ShellSimpleScaffold) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ShellSimpleScaffold) SetChildren(children []PageInterface) {
+	e.Children = children
 }

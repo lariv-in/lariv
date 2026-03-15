@@ -17,6 +17,14 @@ type SidebarMenuItem struct {
 	Active bool
 }
 
+func (e SidebarMenuItem) GetKey() string {
+	return e.Key
+}
+
+func (e SidebarMenuItem) GetRoles() []string {
+	return e.Roles
+}
+
 func (e SidebarMenuItem) Build(ctx context.Context) Node {
 	title := fmt.Sprintf("%s", getters.IfOrGetter(e.Title, ctx, ""))
 	url := fmt.Sprintf("%s", getters.IfOrGetter(e.Url, ctx, "#"))
@@ -74,6 +82,18 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 	return Ul(Class("menu w-full wrap-anywhere"), Group(items))
 }
 
+func (e SidebarMenu) GetKey() string {
+	return e.Key
+}
+
+func (e SidebarMenu) GetRoles() []string {
+	return e.Roles
+}
+
 func (e SidebarMenu) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *SidebarMenu) SetChildren(children []PageInterface) {
+	e.Children = children
 }

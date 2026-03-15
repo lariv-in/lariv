@@ -26,6 +26,18 @@ func (e LabelInline) Build(ctx context.Context) Node {
 	)
 }
 
+func (e LabelInline) GetKey() string {
+	return e.Key
+}
+
+func (e LabelInline) GetRoles() []string {
+	return e.Roles
+}
+
 func (e LabelInline) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *LabelInline) SetChildren(children []PageInterface) {
+	e.Children = children
 }

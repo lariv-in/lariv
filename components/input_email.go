@@ -19,6 +19,14 @@ type InputEmail struct {
 	Classes  string
 }
 
+func (e InputEmail) GetKey() string {
+	return e.Key
+}
+
+func (e InputEmail) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputEmail) Build(ctx context.Context) Node {
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),

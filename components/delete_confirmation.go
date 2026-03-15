@@ -17,6 +17,14 @@ type DeleteConfirmation struct {
 	Classes   string
 }
 
+func (e DeleteConfirmation) GetKey() string {
+	return e.Key
+}
+
+func (e DeleteConfirmation) GetRoles() []string {
+	return e.Roles
+}
+
 func (e DeleteConfirmation) Build(ctx context.Context) Node {
 	cancelUrl := fmt.Sprintf("%s", getters.IfOrGetter(e.CancelUrl, ctx, "#"))
 

@@ -23,6 +23,18 @@ func (e LayoutSimple) Build(ctx context.Context) Node {
 	}, ctx)
 }
 
+func (e LayoutSimple) GetKey() string {
+	return e.Key
+}
+
+func (e LayoutSimple) GetRoles() []string {
+	return e.Roles
+}
+
 func (e LayoutSimple) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *LayoutSimple) SetChildren(children []PageInterface) {
+	e.Children = children
 }

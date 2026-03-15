@@ -14,6 +14,14 @@ type ButtonClear struct {
 	Classes string
 }
 
+func (e ButtonClear) GetKey() string {
+	return e.Key
+}
+
+func (e ButtonClear) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ButtonClear) Build(ctx context.Context) Node {
 	label := e.Label
 	if label == "" {

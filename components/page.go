@@ -10,10 +10,13 @@ import (
 
 type PageInterface interface {
 	Build(context.Context) gomponents.Node
+	GetKey() string
+	GetRoles() []string
 }
 
 // Page struct defines fields that are common in all components
 type Page struct {
+	Key   string
 	Roles []string
 }
 

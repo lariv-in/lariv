@@ -16,6 +16,14 @@ type ButtonModal struct {
 	Classes string
 }
 
+func (e ButtonModal) GetKey() string {
+	return e.Key
+}
+
+func (e ButtonModal) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ButtonModal) Build(ctx context.Context) Node {
 	url := ""
 	if e.Url != nil {

@@ -40,6 +40,14 @@ func RenderMarkdown(md string) string {
 	return s
 }
 
+func (e FieldMarkdown) GetKey() string {
+	return e.Key
+}
+
+func (e FieldMarkdown) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldMarkdown) Build(ctx context.Context) Node {
 	s, _ := getters.IfOrGetter(e.Getter, ctx, "").(string)
 	if s == "" {

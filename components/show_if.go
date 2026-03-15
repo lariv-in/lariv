@@ -28,8 +28,20 @@ func (e ShowIf) Build(ctx context.Context) Node {
 	return Div(Group(nodes))
 }
 
+func (e ShowIf) GetKey() string {
+	return e.Key
+}
+
+func (e ShowIf) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ShowIf) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ShowIf) SetChildren(children []PageInterface) {
+	e.Children = children
 }
 
 func isTruthy(v any) bool {

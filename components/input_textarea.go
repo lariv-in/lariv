@@ -19,6 +19,14 @@ type InputTextarea struct {
 	Classes  string
 }
 
+func (e InputTextarea) GetKey() string {
+	return e.Key
+}
+
+func (e InputTextarea) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputTextarea) Build(ctx context.Context) Node {
 	rows := e.Rows
 	if rows <= 0 {

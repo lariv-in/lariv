@@ -21,6 +21,14 @@ type InputTernary struct {
 	Classes    string
 }
 
+func (e InputTernary) GetKey() string {
+	return e.Key
+}
+
+func (e InputTernary) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputTernary) Build(ctx context.Context) Node {
 	value := getters.IfOrGetter(e.Getter, ctx, nil)
 

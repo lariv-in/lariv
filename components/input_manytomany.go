@@ -22,6 +22,14 @@ type InputManyToMany struct {
 	Classes     string
 }
 
+func (e InputManyToMany) GetKey() string {
+	return e.Key
+}
+
+func (e InputManyToMany) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputManyToMany) Build(ctx context.Context) Node {
 	values := getters.IfOrGetter(e.Getter, ctx, nil)
 

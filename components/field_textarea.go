@@ -15,6 +15,14 @@ type FieldTextArea struct {
 	Classes string
 }
 
+func (e FieldTextArea) GetKey() string {
+	return e.Key
+}
+
+func (e FieldTextArea) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldTextArea) Build(ctx context.Context) Node {
 	value := fmt.Sprintf("%s", getters.IfOrGetter(e.Getter, ctx, ""))
 	return Div(Class(fmt.Sprintf("%s whitespace-pre-wrap", e.Classes)), Text(value))

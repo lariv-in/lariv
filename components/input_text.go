@@ -18,6 +18,14 @@ type InputText struct {
 	Classes  string
 }
 
+func (e InputText) GetKey() string {
+	return e.Key
+}
+
+func (e InputText) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputText) Build(ctx context.Context) Node {
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),

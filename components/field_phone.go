@@ -16,6 +16,14 @@ type FieldPhone struct {
 	Classes string
 }
 
+func (e FieldPhone) GetKey() string {
+	return e.Key
+}
+
+func (e FieldPhone) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldPhone) Build(ctx context.Context) Node {
 	value := e.Getter(ctx)
 	v, ok := value.(*phonenumbers.PhoneNumber)

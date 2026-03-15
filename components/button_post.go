@@ -17,6 +17,14 @@ type ButtonPost struct {
 	Classes string
 }
 
+func (e ButtonPost) GetKey() string {
+	return e.Key
+}
+
+func (e ButtonPost) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ButtonPost) Build(ctx context.Context) Node {
 	url := ""
 	if e.URL != nil {

@@ -31,6 +31,18 @@ func (e ContainerError) Build(ctx context.Context) Node {
 	return Div(Class("flex flex-col gap-1 w-full"), group, errorNode)
 }
 
+func (e ContainerError) GetKey() string {
+	return e.Key
+}
+
+func (e ContainerError) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ContainerError) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ContainerError) SetChildren(children []PageInterface) {
+	e.Children = children
 }

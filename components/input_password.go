@@ -18,6 +18,14 @@ type InputPassword struct {
 	Classes  string
 }
 
+func (e InputPassword) GetKey() string {
+	return e.Key
+}
+
+func (e InputPassword) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputPassword) Build(ctx context.Context) Node {
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
