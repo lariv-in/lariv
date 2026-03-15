@@ -158,7 +158,7 @@ func CreateView[T any](successURL getters.Getter) func(View) View {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				values, fieldErrors, err := innerView.ParseForm(w, r)
 				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
+					innerView.RenderWithErrors(w, r, map[string]error{"_form": err}, values)
 					return
 				}
 

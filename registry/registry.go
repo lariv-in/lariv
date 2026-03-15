@@ -107,12 +107,13 @@ func (r *Registry[T]) Get(name string) (T, bool) {
 	return v, isPresent
 }
 
-func (r *Registry[T]) Getter(name string) getters.Getter {
-	return func(ctx context.Context) any {
+func (r *Registry[T]) Getter(name string) getters.Getter[T] {
+	var zero T
+	return func(ctx context.Context) (T, error) {
 		if v, isPresent := r.Get(name); isPresent {
-			return v
+			return v, nil
 		}
-		return nil
+		return zero, fmt.Errorf("Couldn't find the value for %s in the registry", name)
 	}
 }
 

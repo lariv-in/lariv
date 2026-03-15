@@ -27,15 +27,19 @@ func GetRouter() *http.ServeMux {
 }
 
 // GetterRoutePath returns a Getter that resolves to the route's Path string.
-func GetterRoutePath(name string, args map[string]getters.Getter) getters.Getter {
-	return func(ctx context.Context) any {
+func GetterRoutePath(name string, args map[string]getters.Getter[any]) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
 		if route, ok := RegistryRoute.Get(name); ok {
 			r := route.Path
 			for k, g := range args {
-				r = strings.ReplaceAll(r, fmt.Sprintf("{%s}", k), fmt.Sprintf("%v", g(ctx)))
+				v, err := g(ctx)
+				if err != nil {
+					return "", err
+				}
+				r = strings.ReplaceAll(r, fmt.Sprintf("{%s}", k), fmt.Sprintf("%v", v))
 			}
-			return r
+			return r, nil
 		}
-		return nil
+		return "", fmt.Errorf("Route for %s not found", name)
 	}
 }

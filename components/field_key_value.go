@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/lariv-in/getters"
+	"github.com/lariv-in/registry"
 	"gorm.io/datatypes"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -14,8 +15,6 @@ import (
 type FieldKeyValue struct {
 	Page
 	Getter     getters.Getter
-	KeyField   string
-	ValueField string
 	Classes    string
 }
 
@@ -36,22 +35,21 @@ func (e FieldKeyValue) Build(ctx context.Context) Node {
 		return Div()
 	}
 
-	var val []map[string]string
+	var val []registry.Pair[string, string]
 
 	err = json.Unmarshal([]byte(value.(string)), &val)
 	if err != nil {
 		fmt.Println(err)
 		return Div()
 	}
+	fmt.Println(value.(string))
 
 	var nodes []Node
 	for _, r := range val {
-		k := r[e.KeyField]
-		v := r[e.ValueField]
 		nodes = append(nodes,
 			Div(Class("mb-4 pb-4 border-b border-base-300 last:border-b-0"),
-				Div(Class("font-medium text-sm text-base-content/70 mb-1"), Text(k)),
-				Div(Class("whitespace-pre-wrap"), Text(v)),
+				Div(Class("font-medium text-sm text-base-content/70 mb-1"), Text(r.Key)),
+				Div(Class("whitespace-pre-wrap"), Text(r.Value)),
 			),
 		)
 	}

@@ -14,7 +14,7 @@ import (
 type FormComponent struct {
 	Page
 	Getter         getters.Getter
-	Url            getters.Getter
+	Url            getters.Getter[string]
 	Method         string
 	ChildrenInput  []PageInterface
 	ChildrenAction []PageInterface
@@ -100,6 +100,7 @@ func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]er
 			inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name], r.Context())
 		} else {
 			inputValues[name], inputErrors[name] = input.Parse(r.Form[name], r.Context())
+			fmt.Println(inputValues)
 		}
 	}
 

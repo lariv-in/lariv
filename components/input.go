@@ -5,6 +5,7 @@ import (
 )
 
 type InputInterface interface {
+	PageInterface
 	Parse(any, context.Context) (any, error)
 	GetName() string
 }

@@ -16,12 +16,13 @@ type InputText struct {
 	Getter   getters.Getter
 	Required bool
 	Classes  string
+	Hidden   bool
 }
 
 func (e InputText) Build(ctx context.Context) Node {
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Input(Type("text"), Name(e.Name),
+		Input(If(!e.Hidden, Type("text")), If(e.Hidden, Type("hidden")), Name(e.Name),
 			getters.GetterIf(e.Getter, ctx, func(ctx context.Context, value any) Node {
 				return Value(fmt.Sprintf("%s", value))
 			}), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),

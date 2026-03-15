@@ -11,7 +11,7 @@ import (
 type ContainerError struct {
 	Page
 	Children []PageInterface
-	Error    getters.Getter
+	Error    getters.Getter[error]
 }
 
 func (e ContainerError) Build(ctx context.Context) Node {
@@ -22,7 +22,7 @@ func (e ContainerError) Build(ctx context.Context) Node {
 
 	var errorNode Node
 	if e.Error != nil {
-		err := e.Error(ctx)
+		err, _ := e.Error(ctx)
 		if err != nil {
 			errorNode = Span(Class("text-sm text-error"), Text(err.(error).Error()))
 		}

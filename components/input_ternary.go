@@ -14,7 +14,7 @@ type InputTernary struct {
 	Page
 	Label      string
 	Name       string
-	Getter     getters.Getter
+	Getter     getters.Getter[bool]
 	TrueLabel  string
 	FalseLabel string
 	NoneLabel  string
@@ -22,7 +22,7 @@ type InputTernary struct {
 }
 
 func (e InputTernary) Build(ctx context.Context) Node {
-	value := getters.IfOrGetter(e.Getter, ctx, nil)
+	value, err := getters.IfOrGetter(e.Getter, ctx, false)
 
 	trueLabel := e.TrueLabel
 	if trueLabel == "" {
@@ -40,14 +40,12 @@ func (e InputTernary) Build(ctx context.Context) Node {
 	noneSelected := ""
 	trueSelected := ""
 	falseSelected := ""
-	if b, ok := value.(bool); ok {
-		if b {
-			trueSelected = "selected"
-		} else {
-			falseSelected = "selected"
-		}
-	} else {
+	if err != nil {
 		noneSelected = "selected"
+	} else if value {
+		trueSelected = "selected"
+	} else {
+		falseSelected = "selected"
 	}
 
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),

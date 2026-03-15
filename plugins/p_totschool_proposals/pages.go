@@ -2,7 +2,6 @@ package p_totschool_proposals
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/components"
@@ -63,26 +62,10 @@ func registerFilter() {
 	})
 }
 
-func proposalFormFields() []components.PageInterface {
-	inputs := []components.PageInterface{
-		components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.GetterKey("$in.Title")},
-	}
-	for i := 0; i < len(QUESTIONS); i++ {
-		key := fmt.Sprintf("$in.answer_%d", i)
-		inputs = append(inputs, components.InputTextarea{
-			Label:  fmt.Sprintf("Q%d: %s", i+1, QUESTIONS[i]),
-			Name:   fmt.Sprintf("answers[%d]", i),
-			Getter: getters.GetterKey(key),
-			Rows:   2,
-		})
-	}
-	return inputs
-}
-
 func registerForms() {
 	lago.RegistryPage.Register("proposals.ProposalFormFields", components.ContainerColumn{
 		Children: []components.PageInterface{
-			components.ContainerColumn{Children: append(proposalFormFields(), components.ButtonSubmit{Label: "Save Proposal"})},
+			components.ContainerColumn{Children: []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.GetterKey("$in.Title")}, components.InputKeyValue{Getter: getters.GetterKey("$in.Answers"), Keys: getters.GetterStatic(QUESTIONS), Name: "Answers"}, components.ButtonSubmit{Label: "Save Proposal"}}},
 		},
 	})
 
@@ -94,7 +77,7 @@ func registerForms() {
 				Method:         http.MethodPost,
 				Title:          "Create Proposal",
 				Subtitle:       "Fill in the questionnaire answers",
-				ChildrenInput:  proposalFormFields(),
+				ChildrenInput:  []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.GetterKey("$in.Title")}, components.InputKeyValue{Getter: getters.GetterKey("$in.Answers"), Keys: getters.GetterStatic(QUESTIONS), Name: "Answers"}},
 				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
 			},
 		},
@@ -109,7 +92,14 @@ func registerForms() {
 				Method:         http.MethodPost,
 				Title:          "Edit Proposal",
 				Subtitle:       "Update questionnaire answers",
-				ChildrenInput:  proposalFormFields(),
+				ChildrenInput:  []components.PageInterface{
+
+			components.InputText{Label: "Title", Name: "Title", Getter: getters.GetterKey("$get.Title")},
+					components.InputKeyValue{
+						Getter: getters.GetterKey("$in.Answers"),
+						Keys: getters.GetterStatic(QUESTIONS),
+						Name: "Answers",
+					}},
 				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
 			},
 		},
@@ -177,7 +167,7 @@ func registerDetail() {
 							{
 								Title: components.FieldTitle{Getter: getters.GetterStatic("Questionnaire Answers")},
 								Children: []components.PageInterface{
-									components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers"), KeyField: "Question", ValueField: "Answer"},
+									components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers")},
 								},
 							},
 						}},
