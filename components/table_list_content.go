@@ -84,10 +84,37 @@ func (e TableListContent) Build(ctx context.Context) Node {
 	)
 }
 
+func (e TableListContent) GetKey() string {
+	return e.Key
+}
+
+func (e TableListContent) GetRoles() []string {
+	return e.Roles
+}
+
 func (e TableListContent) GetChildren() []PageInterface {
 	children := []PageInterface{}
 	for _, col := range e.Columns {
 		children = append(children, col.Children...)
 	}
 	return children
+}
+
+func (e *TableListContent) SetChildren(children []PageInterface) {
+	offset := 0
+	for i := range e.Columns {
+		n := len(e.Columns[i].Children)
+		end := offset + n
+		if end > len(children) {
+			end = len(children)
+		}
+		e.Columns[i].Children = children[offset:end]
+		offset = end
+		if offset >= len(children) {
+			return
+		}
+	}
+	if offset < len(children) && len(e.Columns) > 0 {
+		e.Columns[len(e.Columns)-1].Children = append(e.Columns[len(e.Columns)-1].Children, children[offset:]...)
+	}
 }

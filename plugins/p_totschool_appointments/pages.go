@@ -291,21 +291,6 @@ func registerSelectionPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("appointments.TemplateSelectionTable", components.Modal{
-		UID:   "template-selection-modal",
-		Title: "Select Template",
-		Children: []components.PageInterface{
-			components.DataTable{
-				UID:     "template-selection-table",
-				Data:    getters.GetterKey("templates"),
-				OnClick: getters.GetterSelect("template", getters.GetterKey("$row.ID"), getters.GetterKey("$row.Name")),
-				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Name")}}},
-				},
-			},
-		},
-	})
-
 	lago.RegistryPage.Register("appointments.AppointmentCardTimelineFilter", components.FormComponent{
 		Url:    lago.GetterRoutePath("appointments.CardTimelineRoute", nil),
 		Method: http.MethodGet,

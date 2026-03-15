@@ -102,6 +102,18 @@ func (e ShellBase) Build(ctx context.Context) Node {
 	)
 }
 
+func (e ShellBase) GetKey() string {
+	return e.Key
+}
+
+func (e ShellBase) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ShellBase) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ShellBase) SetChildren(children []PageInterface) {
+	e.Children = children
 }

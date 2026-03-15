@@ -3,8 +3,9 @@ package components
 import (
 	"context"
 
-	"github.com/lariv-in/getters"
 	"reflect"
+
+	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -38,6 +39,18 @@ func (e FieldList) Build(ctx context.Context) Node {
 	return Div(Class(e.Classes), listNodes)
 }
 
+func (e FieldList) GetKey() string {
+	return e.Key
+}
+
+func (e FieldList) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldList) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *FieldList) SetChildren(children []PageInterface) {
+	e.Children = children
 }

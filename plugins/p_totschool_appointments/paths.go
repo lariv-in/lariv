@@ -45,10 +45,6 @@ func init() {
 		Path:    AppUrl + "select/",
 		Handler: lago.NewDynamicView("appointments.SelectView"),
 	})
-	_ = lago.RegistryRoute.Register("appointments.TemplateSelectRoute", lago.Route{
-		Path:    AppUrl + "templates/select/",
-		Handler: lago.NewDynamicView("appointments.TemplateSelectView"),
-	})
 	_ = lago.RegistryRoute.Register("appointments.CardTimelineRoute", lago.Route{
 		Path:    AppUrl + "cards/",
 		Handler: lago.NewDynamicView("appointments.CardTimelineView"),

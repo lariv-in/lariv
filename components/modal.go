@@ -48,6 +48,18 @@ func (e Modal) Build(ctx context.Context) Node {
 	)
 }
 
+func (e Modal) GetKey() string {
+	return e.Key
+}
+
+func (e Modal) GetRoles() []string {
+	return e.Roles
+}
+
 func (e Modal) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *Modal) SetChildren(children []PageInterface) {
+	e.Children = children
 }

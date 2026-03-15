@@ -19,6 +19,14 @@ type InputDate struct {
 	Classes  string
 }
 
+func (e InputDate) GetKey() string {
+	return e.Key
+}
+
+func (e InputDate) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputDate) Build(ctx context.Context) Node {
 	timezone := ctx.Value("$tz").(*time.Location)
 	if timezone == nil {

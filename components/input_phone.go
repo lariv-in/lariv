@@ -20,6 +20,14 @@ type InputPhone struct {
 	Classes  string
 }
 
+func (e InputPhone) GetKey() string {
+	return e.Key
+}
+
+func (e InputPhone) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputPhone) Build(ctx context.Context) Node {
 	value := e.Getter(ctx)
 	v, ok := value.(*phonenumbers.PhoneNumber)

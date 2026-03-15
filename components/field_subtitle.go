@@ -14,6 +14,14 @@ type FieldSubtitle struct {
 	Getter getters.Getter
 }
 
+func (e FieldSubtitle) GetKey() string {
+	return e.Key
+}
+
+func (e FieldSubtitle) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldSubtitle) Build(ctx context.Context) Node {
 	value := fmt.Sprintf("%s", getters.IfOrGetter(e.Getter, ctx, ""))
 	return Div(Class("text-md text-gray-500"), Text(value))

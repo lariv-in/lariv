@@ -305,37 +305,37 @@ func exportPdfHandler(v views.View) http.Handler {
 }
 
 func init() {
-	lago.RegistryView.Register("proposals.ListView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.ListView", p_users.AuthenticationMiddleware(
 		views.ListView[Proposal]("proposals")(lago.GetPageView("proposals.ProposalTable")).WithQueryPatcher(ProposalQueryPatcher)))
 
-	lago.RegistryView.Register("proposals.DetailView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.DetailView", p_users.AuthenticationMiddleware(
 		views.DetailView[Proposal]("proposal")(
 			lago.GetPageView("proposals.ProposalDetail"))))
 
-	lago.RegistryView.Register("proposals.CreateView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.CreateView", p_users.AuthenticationMiddleware(
 		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalCreateForm")).WithFormPatcher(ProposalFormPatcher)))
 
-	lago.RegistryView.Register("proposals.UpdateView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.UpdateView", p_users.AuthenticationMiddleware(
 		views.DetailView[Proposal]("proposal")(
 			views.UpdateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalUpdateForm")).WithFormPatcher(ProposalFormPatcher))))
 
-	lago.RegistryView.Register("proposals.DeleteView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.DeleteView", p_users.AuthenticationMiddleware(
 		views.DetailView[Proposal]("proposal")(
 			views.DeleteView[Proposal](lago.GetterRoutePath("proposals.ListRoute", nil))(
 				lago.GetPageView("proposals.ProposalDeleteForm")))))
 
-	lago.RegistryView.Register("proposals.GenerateView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.GenerateView", p_users.AuthenticationMiddleware(
 		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodPost, generateHandler)))
 
-	lago.RegistryView.Register("proposals.CancelView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.CancelView", p_users.AuthenticationMiddleware(
 		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodPost, cancelHandler)))
 
-	lago.RegistryView.Register("proposals.AiEditFormView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.AiEditFormView", p_users.AuthenticationMiddleware(
 		lago.GetPageView("proposals.AiEditModal").WithMethod(http.MethodGet, aiEditFormHandler)))
 
-	lago.RegistryView.Register("proposals.AiEditView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.AiEditView", p_users.AuthenticationMiddleware(
 		lago.GetPageView("proposals.AiEditModal").WithMethod(http.MethodPost, aiEditHandler)))
 
-	lago.RegistryView.Register("proposals.ExportPdfView", p_users.AuthMiddleware(
+	lago.RegistryView.Register("proposals.ExportPdfView", p_users.AuthenticationMiddleware(
 		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodGet, exportPdfHandler)))
 }

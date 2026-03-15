@@ -32,6 +32,18 @@ func (e Detail) Build(ctx context.Context) Node {
 	return Div(Group(childNodes))
 }
 
+func (e Detail) GetKey() string {
+	return e.Key
+}
+
+func (e Detail) GetRoles() []string {
+	return e.Roles
+}
+
 func (e Detail) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *Detail) SetChildren(children []PageInterface) {
+	e.Children = children
 }

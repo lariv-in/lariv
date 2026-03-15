@@ -52,6 +52,14 @@ func (e InputCheckbox) Parse(v any, _ context.Context) (any, error) {
 	return strconv.ParseBool(vals[0])
 }
 
+func (e InputCheckbox) GetKey() string {
+	return e.Key
+}
+
+func (e InputCheckbox) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputCheckbox) GetName() string {
 	return e.Name
 }

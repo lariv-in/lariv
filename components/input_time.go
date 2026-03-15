@@ -48,6 +48,14 @@ func (e InputTime) Parse(v any, ctx context.Context) (any, error) {
 	return time.ParseInLocation("15:04", vals[0], timezone)
 }
 
+func (e InputTime) GetKey() string {
+	return e.Key
+}
+
+func (e InputTime) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputTime) GetName() string {
 	return e.Name
 }

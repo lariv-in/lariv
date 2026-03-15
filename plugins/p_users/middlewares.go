@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AuthMiddleware(next http.Handler) http.Handler {
+func AuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authCookie, err := r.Cookie("auth-token")
 		unauthenticatedRoute, _ := lago.RegistryRoute.Get("users.UnauthenticatedRoute")
@@ -69,7 +69,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), "$user", user)
-		ctx = context.WithValue(ctx, "$render_key", roleName)
+		ctx = context.WithValue(ctx, "$role", roleName)
 		timezone, err := time.LoadLocation(user.Timezone)
 		if err != nil {
 			slog.Warn("Invalid timezone for user", "error", err)
@@ -91,18 +91,17 @@ func RoleAuthorizationMiddleware(roles []string) func(http.Handler) http.Handler
 			}
 
 			var roleName string
-			if user.IsSuperuser {
-				roleName = "superuser"
-			} else {
-				db, ok := r.Context().Value("$db").(*gorm.DB)
-				if !ok {
-					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-					return
-				}
-				db.Model(&Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
+			db, ok := r.Context().Value("$db").(*gorm.DB)
+			if !ok {
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
 			}
+			db.Model(&Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
 
 			authorized := slices.Contains(roles, roleName)
+			if user.IsSuperuser {
+				authorized = true
+			}
 
 			if !authorized {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)

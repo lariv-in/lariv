@@ -10,26 +10,30 @@ import (
 
 type PageInterface interface {
 	Build(context.Context) gomponents.Node
+	GetKey() string
+	GetRoles() []string
 }
 
+// Page struct defines fields that are common in all components
 type Page struct {
-	RenderKeys []string
+	Key   string
+	Roles []string
 }
 
 func Render(p PageInterface, ctx context.Context) gomponents.Node {
-	keys := GetRenderKeys(p)
+	roles := GetRequiredRoles(p)
 
-	if keys == nil {
+	if roles == nil {
 		return p.Build(ctx)
 	}
 
-	if slices.Contains(keys, ctx.Value("$render_key").(string)) {
+	if slices.Contains(roles, ctx.Value("$role").(string)) {
 		return p.Build(ctx)
 	}
 	return gomponents.Group{}
 }
 
-func GetRenderKeys(p PageInterface) []string {
+func GetRequiredRoles(p PageInterface) []string {
 	v := reflect.ValueOf(p)
 	if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
 		v = v.Elem()
@@ -38,5 +42,5 @@ func GetRenderKeys(p PageInterface) []string {
 	if !ok {
 		return nil
 	}
-	return page.RenderKeys
+	return page.Roles
 }

@@ -85,6 +85,14 @@ func (l TallyLeaderboardComponent) Build(ctx context.Context) Node {
 	)
 }
 
+func (l TallyLeaderboardComponent) GetKey() string {
+	return l.Key
+}
+
+func (l TallyLeaderboardComponent) GetRoles() []string {
+	return l.Roles
+}
+
 func (l TallyLeaderboardComponent) GetChildren() []components.PageInterface {
 	return nil
 }

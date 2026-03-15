@@ -15,6 +15,14 @@ type FieldDate struct {
 	Classes string
 }
 
+func (e FieldDate) GetKey() string {
+	return e.Key
+}
+
+func (e FieldDate) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldDate) Build(ctx context.Context) Node {
 	v, ok := e.Getter(ctx).(time.Time)
 	if !ok {

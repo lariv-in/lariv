@@ -2,7 +2,6 @@ package p_totschool_appointments
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -11,8 +10,6 @@ import (
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
-
-
 
 type GenerationTask struct {
 	AppointmentID uint
@@ -112,15 +109,19 @@ func runWorker(db *gorm.DB) {
 	}
 }
 
-const letterWriterSystemPrompt = `You are an expert letter writer. Your task is to rewrite or generate the given letter while incorporating any provided remarks/notes.
+const letterWriterSystemPrompt = `You are an expert letter writer. You will receive:
+1. A letter draft with some placeholders already filled (appointment name, dates, user name).
+2. Separately: the meeting location and any extra info/context.
+
+Your task: Produce the final letter by incorporating the location and extra info naturally into the draft. Weave in where the meeting will take place and any extra context in an appropriate place—do not just paste them as separate lines.
 
 Rules:
-1. Only output the letter content - no explanations, no markdown formatting, no code blocks
-2. Preserve all factual information (names, dates, times, locations) from the original letter
-3. Incorporate any remarks naturally into the letter's tone, style, or content as appropriate
-4. Maintain a professional tone unless the remarks suggest otherwise
-5. Output plain text only - no special formatting
-6. If no suitable output can be produced, write a sample template`
+1. Only output the final letter content - no explanations, no markdown formatting, no code blocks
+2. Keep all factual information from the draft (names, dates, times) as given
+3. Incorporate the provided location naturally (e.g. "We've blocked at ... at [location] for our meeting")
+4. Incorporate the extra info naturally into the letter's tone or content where it fits
+5. Maintain a professional tone
+6. Output plain text only - no special formatting`
 
 const letterEditorSystemPrompt = `You are an expert letter editor. Your task is to edit or rewrite the given letter according to the user's instructions.
 
@@ -132,26 +133,44 @@ Rules:
 5. Output plain text only - no special formatting
 6. If no suitable output can be produced, write a sample template`
 
-func buildLetterContent(db *gorm.DB, appointment *Appointment, userName string) string {
-	var template LetterTemplate
-	if err := db.First(&template).Error; err != nil {
-		return fmt.Sprintf("Write a professional appointment letter for %s.", appointment.Name)
-	}
+// Single letter template. Only direct factual placeholders are filled here;
+// location and extra_info are passed to the AI separately for natural incorporation.
+const letterTemplate = `Dear {{appointment_name}} SIR,
 
-	content := template.Content
+Thank you for the brief conversation on {{appointment_created_at_date}}. It was a pleasure interacting with you to exchanging my brochure.
+We've blocked at {{appointment_datetime}} for our next meeting.
+
+I'm looking forward to showing you the wealth-building demonstrations and financial wisdom concepts we discussed.
+
+
+I am attaching my brochure below so you can get a reminder of our meeting for the work.
+
+See you as per the decided schedule and thank you once again
+
+
+{{user_name}}
+Family Wealth Educator
+`
+
+func buildLetterContent(db *gorm.DB, appointment *Appointment, userName string) (userContent, systemPrompt string) {
 	replacements := map[string]string{
 		"{{appointment_name}}":            appointment.Name,
-		"{{appointment_location}}":        appointment.Location,
 		"{{appointment_datetime}}":        appointment.Datetime.Format("January 02, 2006 03:04 PM"),
-		"{{appointment_phone}}":           appointment.Phone,
-		"{{appointment_extra_info}}":      appointment.ExtraInfo,
-		"{{appointment_created_at}}":      appointment.CreatedAt.Format("January 02, 2006 03:04 PM"),
 		"{{appointment_created_at_date}}": appointment.CreatedAt.Format("January 02, 2006"),
 		"{{user_name}}":                   userName,
 	}
-
+	content := letterTemplate
 	for placeholder, value := range replacements {
 		content = strings.ReplaceAll(content, placeholder, value)
 	}
-	return content
+
+	// Pass location and extra_info to the AI separately so it can incorporate them naturally.
+	userContent = "Letter draft:\n\n" + content
+	if appointment.Location != "" {
+		userContent += "\n\nMeeting location (incorporate naturally into the letter): " + appointment.Location
+	}
+	if appointment.ExtraInfo != "" {
+		userContent += "\n\nExtra context to incorporate naturally: " + appointment.ExtraInfo
+	}
+	return userContent, letterWriterSystemPrompt
 }

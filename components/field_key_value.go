@@ -18,6 +18,14 @@ type FieldKeyValue struct {
 	Classes    string
 }
 
+func (e FieldKeyValue) GetKey() string {
+	return e.Key
+}
+
+func (e FieldKeyValue) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldKeyValue) Build(ctx context.Context) Node {
 	raw := getters.IfOrGetter(e.Getter, ctx, nil)
 	if raw == nil {

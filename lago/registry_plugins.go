@@ -25,7 +25,7 @@ type Plugin struct {
 	Method      string
 	OnClick     string
 	Classes     string
-	RenderKeys  []string
+	Roles       []string
 }
 
-var RegistryPlugins registry.Registry[Plugin] = registry.NewRegistry[Plugin]()
+var RegistryPlugin registry.Registry[Plugin] = registry.NewRegistry[Plugin]()

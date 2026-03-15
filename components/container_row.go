@@ -22,6 +22,18 @@ func (e ContainerRow) Build(ctx context.Context) Node {
 	return Div(Class(fmt.Sprintf("flex flex-row gap-1 %s", e.Classes)), group)
 }
 
+func (e ContainerRow) GetKey() string {
+	return e.Key
+}
+
+func (e ContainerRow) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ContainerRow) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ContainerRow) SetChildren(children []PageInterface) {
+	e.Children = children
 }

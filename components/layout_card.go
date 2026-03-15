@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -24,6 +25,18 @@ func (e LayoutCard) Build(ctx context.Context) Node {
 	)
 }
 
+func (e LayoutCard) GetKey() string {
+	return e.Key
+}
+
+func (e LayoutCard) GetRoles() []string {
+	return e.Roles
+}
+
 func (e LayoutCard) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *LayoutCard) SetChildren(children []PageInterface) {
+	e.Children = children
 }

@@ -45,6 +45,38 @@ func (e ShellScaffold) Build(ctx context.Context) Node {
 	}, ctx)
 }
 
+func (e ShellScaffold) GetKey() string {
+	return e.Key
+}
+
+func (e ShellScaffold) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ShellScaffold) GetChildren() []PageInterface {
 	return append(e.Sidebar, e.Children...)
+}
+
+func (e *ShellScaffold) SetChildren(children []PageInterface) {
+	offset := 0
+	nSidebar := len(e.Sidebar)
+	end := offset + nSidebar
+	if end > len(children) {
+		end = len(children)
+	}
+	e.Sidebar = children[offset:end]
+	offset = end
+	if offset >= len(children) {
+		return
+	}
+	nContent := len(e.Children)
+	end = offset + nContent
+	if end > len(children) {
+		end = len(children)
+	}
+	e.Children = children[offset:end]
+	offset = end
+	if offset < len(children) {
+		e.Children = append(e.Children, children[offset:]...)
+	}
 }

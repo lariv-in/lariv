@@ -34,6 +34,18 @@ func (e ShellTopbarScaffold) Build(ctx context.Context) Node {
 	}, ctx)
 }
 
+func (e ShellTopbarScaffold) GetKey() string {
+	return e.Key
+}
+
+func (e ShellTopbarScaffold) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ShellTopbarScaffold) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ShellTopbarScaffold) SetChildren(children []PageInterface) {
+	e.Children = children
 }

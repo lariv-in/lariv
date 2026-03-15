@@ -105,6 +105,14 @@ func (e DataTable) Build(ctx context.Context) Node {
 	)
 }
 
+func (e DataTable) GetKey() string {
+	return e.Key
+}
+
+func (e DataTable) GetRoles() []string {
+	return e.Roles
+}
+
 func (e DataTable) GetChildren() []PageInterface {
 	var children []PageInterface
 	if e.FilterComponent != nil {
@@ -114,4 +122,27 @@ func (e DataTable) GetChildren() []PageInterface {
 		children = append(children, col.Children...)
 	}
 	return children
+}
+
+func (e *DataTable) SetChildren(children []PageInterface) {
+	offset := 0
+	if e.FilterComponent != nil && len(children) > 0 {
+		e.FilterComponent = children[0]
+		offset = 1
+	}
+	for i := range e.Columns {
+		n := len(e.Columns[i].Children)
+		end := offset + n
+		if end > len(children) {
+			end = len(children)
+		}
+		e.Columns[i].Children = children[offset:end]
+		offset = end
+		if offset >= len(children) {
+			return
+		}
+	}
+	if offset < len(children) && len(e.Columns) > 0 {
+		e.Columns[len(e.Columns)-1].Children = append(e.Columns[len(e.Columns)-1].Children, children[offset:]...)
+	}
 }

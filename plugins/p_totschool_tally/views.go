@@ -218,18 +218,18 @@ func TallyDailyFormHandler(v views.View) http.Handler {
 }
 
 func init() {
-	lago.RegistryView.Register("tally.TallyDashboardView", p_users.AuthMiddleware(lago.GetPageView("tally.TallyDashboard").WithMethod(http.MethodGet, TallyDashboardHandler)))
-	lago.RegistryView.Register("tally.TallyLeaderboardView", p_users.AuthMiddleware(lago.GetPageView("tally.TallyLeaderboard").WithMethod(http.MethodGet, TallyLeaderboardHandler)))
-	lago.RegistryView.Register("tally.TallyListView", p_users.AuthMiddleware(lago.GetPageView("tally.TallyTable").WithMethod(http.MethodGet, TallyListHandler)))
-	lago.RegistryView.Register("tally.TallyDailyFormView", p_users.AuthMiddleware(lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler)))
+	lago.RegistryView.Register("tally.TallyDashboardView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyDashboard").WithMethod(http.MethodGet, TallyDashboardHandler)))
+	lago.RegistryView.Register("tally.TallyLeaderboardView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyLeaderboard").WithMethod(http.MethodGet, TallyLeaderboardHandler)))
+	lago.RegistryView.Register("tally.TallyListView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyTable").WithMethod(http.MethodGet, TallyListHandler)))
+	lago.RegistryView.Register("tally.TallyDailyFormView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler)))
 
 	// Admin CRUD mappings using standard views
-	lago.RegistryView.Register("tally.TallyCreateView", p_users.AuthMiddleware(RequireAdmin(views.CreateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyCreateForm")))))
-	lago.RegistryView.Register("tally.TallyUpdateView", p_users.AuthMiddleware(RequireAdmin(views.UpdateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")))))
-	lago.RegistryView.Register("tally.TallyDeleteView", p_users.AuthMiddleware(RequireAdmin(views.DeleteView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")))))
+	lago.RegistryView.Register("tally.TallyCreateView", p_users.AuthenticationMiddleware(RequireAdmin(views.CreateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyCreateForm")))))
+	lago.RegistryView.Register("tally.TallyUpdateView", p_users.AuthenticationMiddleware(RequireAdmin(views.UpdateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")))))
+	lago.RegistryView.Register("tally.TallyDeleteView", p_users.AuthenticationMiddleware(RequireAdmin(views.DeleteView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")))))
 
 	// Detail View allows access if user owns it or is admin
-	lago.RegistryView.Register("tally.TallyDetailView", p_users.AuthMiddleware(func(v views.View) http.Handler {
+	lago.RegistryView.Register("tally.TallyDetailView", p_users.AuthenticationMiddleware(func(v views.View) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			idStr := r.PathValue("id")
 			db := r.Context().Value("$db").(*gorm.DB)

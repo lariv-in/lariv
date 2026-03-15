@@ -21,6 +21,14 @@ type InputForeignKey struct {
 	Classes     string
 }
 
+func (e InputForeignKey) GetKey() string {
+	return e.Key
+}
+
+func (e InputForeignKey) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputForeignKey) Build(ctx context.Context) Node {
 	value := getters.IfOrGetter(e.Getter, ctx, nil)
 

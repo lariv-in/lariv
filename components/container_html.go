@@ -23,6 +23,18 @@ func (e ContainerHTML) Build(ctx context.Context) gomponents.Node {
 	return group
 }
 
+func (e ContainerHTML) GetKey() string {
+	return e.Key
+}
+
+func (e ContainerHTML) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ContainerHTML) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ContainerHTML) SetChildren(children []PageInterface) {
+	e.Children = children
 }

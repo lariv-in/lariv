@@ -16,6 +16,14 @@ type TablePagination struct {
 	Data getters.Getter
 }
 
+func (e TablePagination) GetKey() string {
+	return e.Key
+}
+
+func (e TablePagination) GetRoles() []string {
+	return e.Roles
+}
+
 func (e TablePagination) Build(ctx context.Context) Node {
 	data := getters.IfOrGetter(e.Data, ctx, nil)
 	if data == nil {

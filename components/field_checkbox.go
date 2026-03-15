@@ -13,6 +13,14 @@ type FieldCheckbox struct {
 	Getter getters.Getter
 }
 
+func (e FieldCheckbox) GetKey() string {
+	return e.Key
+}
+
+func (e FieldCheckbox) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldCheckbox) Build(ctx context.Context) Node {
 	value := getters.IfOrGetter(e.Getter, ctx, false)
 	truthy := false

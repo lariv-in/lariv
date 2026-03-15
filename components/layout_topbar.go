@@ -111,6 +111,18 @@ func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 	)
 }
 
+func (e LayoutTopbar) GetKey() string {
+	return e.Key
+}
+
+func (e LayoutTopbar) GetRoles() []string {
+	return e.Roles
+}
+
 func (e LayoutTopbar) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *LayoutTopbar) SetChildren(children []PageInterface) {
+	e.Children = children
 }

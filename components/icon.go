@@ -15,6 +15,14 @@ type Icon struct {
 	Attrs   []gomponents.Node
 }
 
+func (e Icon) GetKey() string {
+	return e.Key
+}
+
+func (e Icon) GetRoles() []string {
+	return e.Roles
+}
+
 func (e Icon) Build(ctx context.Context) gomponents.Node {
 	nodes := []gomponents.Node{
 		html.Class(fmt.Sprintf("heroicon %s", e.Classes)),

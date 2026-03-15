@@ -15,6 +15,14 @@ type FieldText struct {
 	Classes string
 }
 
+func (e FieldText) GetKey() string {
+	return e.Key
+}
+
+func (e FieldText) GetRoles() []string {
+	return e.Roles
+}
+
 func (e FieldText) Build(ctx context.Context) Node {
 	value := fmt.Sprintf("%s", getters.IfOrGetter(e.Getter, ctx, ""))
 	return Div(Class(e.Classes), Text(value))

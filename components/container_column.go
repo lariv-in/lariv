@@ -22,6 +22,18 @@ func (e ContainerColumn) Build(ctx context.Context) gomponents.Node {
 	return html.Div(html.Class(fmt.Sprintf("flex flex-col gap-1 %s", e.Classes)), group)
 }
 
+func (e ContainerColumn) GetKey() string {
+	return e.Key
+}
+
+func (e ContainerColumn) GetRoles() []string {
+	return e.Roles
+}
+
 func (e ContainerColumn) GetChildren() []PageInterface {
 	return e.Children
+}
+
+func (e *ContainerColumn) SetChildren(children []PageInterface) {
+	e.Children = children
 }

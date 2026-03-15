@@ -36,22 +36,14 @@ func (a *Appointment) GetOverlappingAppointments(db *gorm.DB) []Appointment {
 	return results
 }
 
-type LetterTemplate struct {
-	gorm.Model
-	Name              string `gorm:"size:255;notnull"`
-	Content           string `gorm:"type:text"`
-	ReplaceableFields string `gorm:"type:text"`
-}
-
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Appointment{}, &LetterTemplate{}); err != nil {
+		if err := d.AutoMigrate(&Appointment{}); err != nil {
 			panic(err)
 		}
 		d.Model(&Appointment{}).Where("generation_id IS NOT NULL").Update("generation_id", nil)
 		go runWorker(d)
 		return d
 	})
-	lago.RegistryAdmin.Register("p_totschool_appointments.Apointment", lago.AdminPanel[Appointment]{SearchField: "Name"})
-	lago.RegistryAdmin.Register("p_totschool_appointments.LetterTemplate", lago.AdminPanel[LetterTemplate]{SearchField: "Name"})
+	lago.RegistryAdmin.Register("p_totschool_appointments.Appointment", lago.AdminPanel[Appointment]{SearchField: "Name"})
 }
