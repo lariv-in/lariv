@@ -15,13 +15,10 @@ type TallyDashboardComponent struct {
 	components.Page
 }
 
-func createStatCard(ctx context.Context, title string, value string, icon string) Node {
-	return Div(Class("stat bg-base-100 shadow rounded-box"),
-		Div(Class("stat-figure text-primary"),
-			components.Render(components.Icon{Name: icon}, ctx),
-		),
+func createStatCard(_ context.Context, title string, value string, classes string) Node {
+	return Div(Class("stat rounded-box border border-base-300"),
 		Div(Class("stat-title"), Text(title)),
-		Div(Class("stat-value text-primary"), Text(value)),
+		Div(Class(fmt.Sprintf("stat-value %s", classes)), Text(value)),
 	)
 }
 
@@ -80,20 +77,23 @@ func (d TallyDashboardComponent) Build(ctx context.Context) Node {
 	}
 
 	statsHTML := Div(Class("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mt-2"),
-		createStatCard(ctx, "Total Visits", fmt.Sprintf("%d", dashboard.TotalVisits), "users"),
-		createStatCard(ctx, "Total Appts", fmt.Sprintf("%d", dashboard.TotalAppointments), "calendar"),
-		createStatCard(ctx, "Total Demos", fmt.Sprintf("%d", dashboard.TotalDemos), "presentation-chart-line"),
-		createStatCard(ctx, "Total Policies", fmt.Sprintf("%d", dashboard.TotalPolicies), "document-check"),
-		createStatCard(ctx, "Letters Sent", fmt.Sprintf("%d", dashboard.TotalLetters), "envelope"),
-		createStatCard(ctx, "Proposals Given", fmt.Sprintf("%d", dashboard.TotalProposals), "document-text"),
-		createStatCard(ctx, "Premium", FormatCurrencyIndian(dashboard.TotalPremium), "currency-rupee"),
+		createStatCard(ctx, "Total Visits", fmt.Sprintf("%d", dashboard.TotalVisits), ""),
+		createStatCard(ctx, "Total Appts", fmt.Sprintf("%d", dashboard.TotalAppointments), ""),
+		createStatCard(ctx, "Total Leads", fmt.Sprintf("%d", dashboard.TotalLeads), ""),
+		createStatCard(ctx, "Total Presentations", fmt.Sprintf("%d", dashboard.TotalPresentations), ""),
+		createStatCard(ctx, "Total Demos", fmt.Sprintf("%d", dashboard.TotalDemos), ""),
+		createStatCard(ctx, "Total Letters", fmt.Sprintf("%d", dashboard.TotalLetters), ""),
+		createStatCard(ctx, "Total Follow Ups", fmt.Sprintf("%d", dashboard.TotalFollowUps), ""),
+		createStatCard(ctx, "Total Proposals", fmt.Sprintf("%d", dashboard.TotalProposals), ""),
+		createStatCard(ctx, "Total Policies", fmt.Sprintf("%d", dashboard.TotalPolicies), ""),
+		createStatCard(ctx, "Total Premium", FormatCurrencyIndian(dashboard.TotalPremium), "text-success"),
 	)
 
 	ratiosHTML := Div(Class("grid grid-cols-1 md:grid-cols-4 gap-2 mt-2"),
-		createStatCard(ctx, "Appt / Visit", fmt.Sprintf("%.1f%%", dashboard.ApptVisitRatio), "chart-bar"),
-		createStatCard(ctx, "Demo / Appt", fmt.Sprintf("%.1f%%", dashboard.DemoApptRatio), "chart-pie"),
-		createStatCard(ctx, "Policy / Demo", fmt.Sprintf("%.1f%%", dashboard.PolicyDemoRatio), "arrow-trending-up"),
-		createStatCard(ctx, "Forms Filled", fmt.Sprintf("%d", dashboard.FormsFilled), "clipboard-list"),
+		createStatCard(ctx, "Appt / Visit", fmt.Sprintf("%.1f%%", dashboard.ApptVisitRatio), ""),
+		createStatCard(ctx, "Demo / Appt", fmt.Sprintf("%.1f%%", dashboard.DemoApptRatio), ""),
+		createStatCard(ctx, "Policy / Demo", fmt.Sprintf("%.1f%%", dashboard.PolicyDemoRatio), ""),
+		createStatCard(ctx, "Forms Filled", fmt.Sprintf("%d", dashboard.FormsFilled), ""),
 	)
 
 	return Div(

@@ -49,7 +49,7 @@ func (l TallyLeaderboardComponent) Build(ctx context.Context) Node {
 				Td(Text(entry.UserName)),
 				Td(Text(fmt.Sprintf("%d", entry.Value))),
 			))
-		}	
+		}
 
 		// Add current user summary row if present
 		if board.CurrentUser != nil {
