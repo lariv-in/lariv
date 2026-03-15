@@ -24,7 +24,7 @@ func registerMenuPages() {
 		Title: getters.GetterStatic("Courses"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to Home"),
-			Url:   getters.GetterStatic("/apps/"),
+			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
@@ -43,15 +43,15 @@ func registerMenuPages() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Course Detail"),
-				Url:   getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("course.ID")),
+				Url:   lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("course.ID")}),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Edit Course"),
-				Url:   getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("course.ID")),
+				Url:   lago.GetterRoutePath("courses.UpdateRoute", map[string]getters.Getter{"id": getters.GetterKey("course.ID")}),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete Course"),
-				Url:   getters.GetterFormat(AppUrl+"%v/delete/", getters.GetterKey("course.ID")),
+				Url:   lago.GetterRoutePath("courses.DeleteRoute", map[string]getters.Getter{"id": getters.GetterKey("course.ID")}),
 			},
 		},
 	})
@@ -182,7 +182,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Getter:   getters.GetterKey("course"),
-				Url:      getters.GetterFormat(AppUrl+"%v/edit/", getters.GetterKey("$in.ID")),
+				Url:      lago.GetterRoutePath("courses.UpdateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}),
 				Method:   http.MethodPost,
 				Title:    "Edit Course",
 				Subtitle: "Update course details",
@@ -208,7 +208,7 @@ func registerTablePages() {
 				Classes:         "w-full",
 				Data:            getters.GetterKey("courses"),
 				CreateUrl:       lago.GetterRoutePath("courses.CreateRoute", nil),
-				OnClick:         getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
+				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$row.ID")})),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
@@ -287,7 +287,7 @@ func registerDetailPages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this course?",
-				CancelUrl: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("course.ID")),
+				CancelUrl: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("course.ID")}),
 			},
 		},
 	})

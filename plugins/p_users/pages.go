@@ -44,7 +44,7 @@ func registerMenuPages() {
 		Title: getters.GetterFormat("User: %s", getters.GetterKey("user.Name")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to All Users"),
-			Url:   getters.GetterStatic(AppUrl),
+			Url:   lago.GetterRoutePath("users.ListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
@@ -79,7 +79,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("users.UserFilter", components.FormComponent{
-		Url:    getters.GetterStatic(AppUrl),
+		Url:    lago.GetterRoutePath("users.ListRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
@@ -258,7 +258,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Getter:   getters.GetterKey("user"),
-				Url:      getters.GetterFormat(AppUrl+"%v/change-password/", getters.GetterKey("$in.ID")),
+				Url:      lago.GetterRoutePath("users.ChangePasswordRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}),
 				Method:   http.MethodPost,
 				Title:    "Change Password",
 				Subtitle: "Update user password",
@@ -296,8 +296,8 @@ func registerTablePages() {
 				UID:             "user-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey("users"),
-				CreateUrl:       getters.GetterStatic(AppUrl + "create/"),
-				OnClick:         getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
+				CreateUrl:       lago.GetterRoutePath("users.CreateRoute", nil),
+				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$row.ID")})),
 				FilterComponent: lago.DynamicPage{Name: "users.UserFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
@@ -364,7 +364,7 @@ func registerDetailPages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this user?",
-				CancelUrl: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("user.ID")),
+				CancelUrl: lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("user.ID")}),
 			},
 		},
 	})
@@ -582,27 +582,27 @@ func registerRolePages() {
 		Title: getters.GetterFormat("Role: %s", getters.GetterKey("role.Name")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to All Roles"),
-			Url:   getters.GetterStatic(RoleUrl),
+			Url:   lago.GetterRoutePath("users.RoleListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Role Detail"),
-				Url:   getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.ID")),
+				Url:   lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter{"id": getters.GetterKey("role.ID")}),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Edit Role"),
-				Url:   getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("role.ID")),
+				Url:   lago.GetterRoutePath("users.RoleUpdateRoute", map[string]getters.Getter{"id": getters.GetterKey("role.ID")}),
 			},
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete Role"),
-				Url:   getters.GetterFormat(RoleUrl+"%v/delete/", getters.GetterKey("role.ID")),
+				Url:   lago.GetterRoutePath("users.RoleDeleteRoute", map[string]getters.Getter{"id": getters.GetterKey("role.ID")}),
 			},
 		},
 	})
 
 	// Role Filter
 	lago.RegistryPage.Register("users.RoleFilter", components.FormComponent{
-		Url:    getters.GetterStatic(RoleUrl),
+		Url:    lago.GetterRoutePath("users.RoleListRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
@@ -626,7 +626,7 @@ func registerRolePages() {
 				Classes:         "w-full",
 				Data:            getters.GetterKey("roles"),
 				CreateUrl:       lago.GetterRoutePath("users.RoleCreateRoute", nil),
-				OnClick:         getters.GetterNavigate(RoleUrl+"%v/", getters.GetterKey("$row.ID")),
+				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$row.ID")})),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
@@ -644,7 +644,7 @@ func registerRolePages() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Url:      getters.GetterStatic(RoleUrl + "create/"),
+				Url:      lago.GetterRoutePath("users.RoleCreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Role",
 				Subtitle: "Create a new role",
@@ -671,7 +671,7 @@ func registerRolePages() {
 		Children: []components.PageInterface{
 			components.FormComponent{
 				Getter:   getters.GetterKey("role"),
-				Url:      getters.GetterFormat(RoleUrl+"%v/edit/", getters.GetterKey("$in.ID")),
+				Url:      lago.GetterRoutePath("users.RoleUpdateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}),
 				Method:   http.MethodPost,
 				Title:    "Edit Role",
 				Subtitle: "Update role details",
@@ -718,7 +718,7 @@ func registerRolePages() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this role?",
-				CancelUrl: getters.GetterFormat(RoleUrl+"%v/", getters.GetterKey("role.ID")),
+				CancelUrl: lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter{"id": getters.GetterKey("role.ID")}),
 			},
 		},
 	})

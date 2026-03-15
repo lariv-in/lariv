@@ -1,11 +1,13 @@
 package p_users
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/views"
 	"gorm.io/gorm"
@@ -182,7 +184,10 @@ func ChangePasswordHandler(v views.View) http.Handler {
 			return
 		}
 
-		http.Redirect(w, r, fmt.Sprintf("%s%d/", AppUrl, targetUser.ID), http.StatusSeeOther)
+		ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", targetUser.ID))
+		lago.NewRedirectView("users.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterKey("$id"),
+		}).ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -204,21 +209,21 @@ func init() {
 	// Create view
 	lago.RegistryView.Register("users.CreateView",
 		AuthMiddleware(
-			views.CreateView[User](AppUrl+"%v/")(
+			views.CreateView[User](lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(
 				lago.GetPageView("users.UserCreateForm"))))
 
 	// Update view
 	lago.RegistryView.Register("users.UpdateView",
 		AuthMiddleware(
 			views.DetailView[User]("user")(
-				views.UpdateView[User](AppUrl+"%v/")(
+				views.UpdateView[User](lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(
 					lago.GetPageView("users.UserUpdateForm")))))
 
 	// Delete view
 	lago.RegistryView.Register("users.DeleteView",
 		AuthMiddleware(
 			views.DetailView[User]("user")(
-				views.DeleteView[User](AppUrl)(
+				views.DeleteView[User](lago.GetterRoutePath("users.ListRoute", nil))(
 					lago.GetPageView("users.UserDeleteForm")))))
 
 	// Change password view (user-specific handler)
@@ -262,19 +267,19 @@ func init() {
 
 	lago.RegistryView.Register("users.RoleCreateView",
 		AuthMiddleware(
-			views.CreateView[Role](RoleUrl+"%v/")(
+			views.CreateView[Role](lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(
 				lago.GetPageView("users.RoleCreateForm"))))
 
 	lago.RegistryView.Register("users.RoleUpdateView",
 		AuthMiddleware(
 			views.DetailView[Role]("role")(
-				views.UpdateView[Role](RoleUrl+"%v/")(
+				views.UpdateView[Role](lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(
 					lago.GetPageView("users.RoleUpdateForm")))))
 
 	lago.RegistryView.Register("users.RoleDeleteView",
 		AuthMiddleware(
 			views.DetailView[Role]("role")(
-				views.DeleteView[Role](RoleUrl)(
+				views.DeleteView[Role](lago.GetterRoutePath("users.RoleListRoute", nil))(
 					lago.GetPageView("users.RoleDeleteForm")))))
 
 	// Auth views

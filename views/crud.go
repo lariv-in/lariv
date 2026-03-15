@@ -144,8 +144,8 @@ func PopulateFromMap[T any](v *T, values map[string]any) error {
 // --- Create Handler ---
 
 // CreateView parses the form, validates, creates a record of type T, and redirects to successUrl.
-// successUrl is a format string that receives the new record's ID (e.g. "/users/%v/").
-func CreateView[T any](successURL string) func(View) View {
+// successUrl is a Getter that receives "$id" in context with the new record's ID.
+func CreateView[T any](successURL getters.Getter) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +176,9 @@ func CreateView[T any](successURL string) func(View) View {
 				}
 
 				id := reflect.ValueOf(*record).FieldByName("ID").Uint()
-				http.Redirect(w, r, fmt.Sprintf(successURL, id), http.StatusSeeOther)
+				ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", id))
+				redirectUrl, _ := getters.IfOrGetter(successURL, ctx, "").(string)
+				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
 	}
@@ -185,8 +187,8 @@ func CreateView[T any](successURL string) func(View) View {
 // --- Update Handler ---
 
 // UpdateView parses the form, validates, updates the record by {id} path param, and redirects.
-// successUrl is a format string that receives the record's ID (e.g. "/users/%v/").
-func UpdateView[T any](successURL string) func(View) View {
+// successUrl is a Getter that receives "$id" in context with the record's ID.
+func UpdateView[T any](successURL getters.Getter) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -218,7 +220,9 @@ func UpdateView[T any](successURL string) func(View) View {
 					return
 				}
 
-				http.Redirect(w, r, fmt.Sprintf(successURL, id), http.StatusSeeOther)
+				ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", id))
+				redirectUrl, _ := getters.IfOrGetter(successURL, ctx, "").(string)
+				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
 	}
@@ -276,7 +280,7 @@ func SingletonView[T any](successURL getters.Getter) func(View) View {
 // --- Delete Handler ---
 
 // DeleteView deletes the record by {id} path param and redirects to successUrl.
-func DeleteView[T any](successUrl string) func(View) View {
+func DeleteView[T any](successUrl getters.Getter) func(View) View {
 	return func(v View) View {
 		return v.WithMethod(http.MethodPost, func(innerView View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -294,7 +298,8 @@ func DeleteView[T any](successUrl string) func(View) View {
 					return
 				}
 
-				http.Redirect(w, r, successUrl, http.StatusSeeOther)
+				redirectUrl, _ := getters.IfOrGetter(successUrl, r.Context(), "").(string)
+				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
 	}

@@ -160,7 +160,9 @@ func createHandler(v views.View) http.Handler {
 			return
 		}
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", proposal.ID))
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
+		}).ServeHTTP(w, r)
 	})
 }
 
@@ -207,7 +209,9 @@ func updateHandler(v views.View) http.Handler {
 			return
 		}
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", proposal.ID))
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
+		}).ServeHTTP(w, r)
 	})
 }
 
@@ -233,17 +237,8 @@ func deleteHandler(v views.View) http.Handler {
 			return
 		}
 
-		redirectTo(w, r, AppUrl)
+		lago.NewRedirectView("proposals.ListRoute").ServeHTTP(w, r)
 	})
-}
-
-func redirectTo(w http.ResponseWriter, r *http.Request, url string) {
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", url)
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func generateHandler(v views.View) http.Handler {
@@ -373,7 +368,9 @@ Create a detailed, personalized financial proposal following the report structur
 
 		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", proposal.ID))
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
+		}).ServeHTTP(w, r)
 	})
 }
 
@@ -396,7 +393,9 @@ func cancelHandler(v views.View) http.Handler {
 			CancelGeneration(db, proposal.ID)
 		}
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", proposal.ID))
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
+		}).ServeHTTP(w, r)
 	})
 }
 
@@ -453,7 +452,9 @@ Rules:
 
 		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%s/", idStr))
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(idStr),
+		}).ServeHTTP(w, r)
 	})
 }
 

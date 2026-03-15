@@ -179,6 +179,14 @@ func GetterNavigate(urlFormat string, getters ...Getter) Getter {
 	}
 }
 
+// GetterNavigateGetter is like GetterNavigate but takes a pre-built Getter for the URL.
+func GetterNavigateGetter(urlGetter Getter) Getter {
+	return func(ctx context.Context) any {
+		url := IfOrGetter(urlGetter, ctx, "")
+		return fmt.Sprintf("htmx.ajax('GET', '%v', {target: 'body', swap: 'outerHTML'})", url)
+	}
+}
+
 // GetterSelect returns an Alpine @click expression that dispatches an 'fk-select' event for single selection.
 // name is the input field name. valueGetter and displayGetter resolve per-row.
 func GetterSelect(name string, valueGetter Getter, displayGetter Getter) Getter {

@@ -4,7 +4,6 @@ toolchain go1.26.1
 
 use (
 	./components
-	./linter
 	./deployments/totschool_lago
 	./getters
 	./lago

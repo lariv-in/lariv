@@ -1,6 +1,7 @@
 package p_courses
 
 import (
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
@@ -24,21 +25,21 @@ func init() {
 	// Create view
 	lago.RegistryView.Register("courses.CreateView",
 		p_users.AuthMiddleware(
-			views.CreateView[Course](AppUrl+"%v/")(
+			views.CreateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(
 				lago.GetPageView("courses.CourseCreateForm"))))
 
 	// Update view
 	lago.RegistryView.Register("courses.UpdateView",
 		p_users.AuthMiddleware(
 			views.DetailView[Course]("course")(
-				views.UpdateView[Course](AppUrl+"%v/")(
+				views.UpdateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(
 					lago.GetPageView("courses.CourseUpdateForm")))))
 
 	// Delete view
 	lago.RegistryView.Register("courses.DeleteView",
 		p_users.AuthMiddleware(
 			views.DetailView[Course]("course")(
-				views.DeleteView[Course](AppUrl)(
+				views.DeleteView[Course](lago.GetterRoutePath("courses.DefaultRoute", nil))(
 					lago.GetPageView("courses.CourseDeleteForm")))))
 
 	// Selection views

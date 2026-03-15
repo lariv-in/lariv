@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
@@ -49,13 +50,9 @@ func PhoneOtpRequestHandler(v views.View) http.Handler {
 			} else {
 				sent := SendSmsOtp(db, identifier)
 				if sent {
-					successUrl := "/otp/verify/?identifier=" + url.QueryEscape(identifier)
-					if r.Header.Get("HX-Request") == "true" {
-						w.Header().Set("HX-Redirect", successUrl)
-						w.WriteHeader(http.StatusOK)
-					} else {
-						http.Redirect(w, r, successUrl, http.StatusSeeOther)
-					}
+					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "").(string)
+					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
+					lago.Redirect(w, r, successUrl)
 					return
 				} else {
 					fieldErrors["identifier"] = fmt.Errorf("Failed to send OTP. Please check configuration.")
@@ -102,13 +99,9 @@ func EmailOtpRequestHandler(v views.View) http.Handler {
 			} else {
 				sent := SendEmailOtp(db, identifier)
 				if sent {
-					successUrl := "/otp/verify/?identifier=" + url.QueryEscape(identifier)
-					if r.Header.Get("HX-Request") == "true" {
-						w.Header().Set("HX-Redirect", successUrl)
-						w.WriteHeader(http.StatusOK)
-					} else {
-						http.Redirect(w, r, successUrl, http.StatusSeeOther)
-					}
+					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "").(string)
+					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
+					lago.Redirect(w, r, successUrl)
 					return
 				} else {
 					fieldErrors["identifier"] = fmt.Errorf("Failed to send OTP. Please check configuration.")
@@ -161,13 +154,7 @@ func OtpVerifyHandler(v views.View) http.Handler {
 			err := db.Where("phone = ? OR email = ?", identifier, identifier).First(&user).Error
 			if err == nil {
 				user.Login(w)
-				successUrl := "/users/"
-				if r.Header.Get("HX-Request") == "true" {
-					w.Header().Set("HX-Redirect", successUrl)
-					w.WriteHeader(http.StatusOK)
-				} else {
-					http.Redirect(w, r, successUrl, http.StatusSeeOther)
-				}
+				lago.NewRedirectView("users.LoginSuccessRoute").ServeHTTP(w, r)
 				return
 			} else {
 				fieldErrors["otp"] = fmt.Errorf("User not found.")

@@ -2,7 +2,6 @@ package p_totschool_appointments
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/getters"
@@ -11,15 +10,6 @@ import (
 	"github.com/lariv-in/views"
 	"gorm.io/gorm"
 )
-
-func redirectTo(w http.ResponseWriter, r *http.Request, url string) {
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", url)
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	http.Redirect(w, r, url, http.StatusSeeOther)
-}
 
 func detailHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +70,9 @@ func generateHandler(v views.View) http.Handler {
 		content := buildLetterContent(db, &appointment, user.Name)
 		Generate(db, appointment.ID, content, letterWriterSystemPrompt)
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", appointment.ID))
+		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(idStr),
+		}).ServeHTTP(w, r)
 	})
 }
 
@@ -103,7 +95,9 @@ func cancelHandler(v views.View) http.Handler {
 			CancelGeneration(db, appointment.ID)
 		}
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%d/", appointment.ID))
+		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(idStr),
+		}).ServeHTTP(w, r)
 	})
 }
 
@@ -145,10 +139,12 @@ func aiEditHandler(v views.View) http.Handler {
 			return
 		}
 
-		userPrompt := fmt.Sprintf("Here is the current letter content:\n\n%s\n\nPlease edit this letter according to these instructions: %s\n\nOutput only the edited text, nothing else.", content, instructions)
+		userPrompt := "Here is the current letter content:\n\n" + content + "\n\nPlease edit this letter according to these instructions: " + instructions + "\n\nOutput only the edited text, nothing else."
 		Generate(db, appointment.ID, userPrompt, letterEditorSystemPrompt)
 
-		redirectTo(w, r, fmt.Sprintf(AppUrl+"%s/", idStr))
+		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter{
+			"id": getters.GetterStatic(idStr),
+		}).ServeHTTP(w, r)
 	})
 }
 
@@ -166,13 +162,13 @@ func init() {
 		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodGet, detailHandler))))
 
 	lago.RegistryView.Register("appointments.CreateView", p_users.AuthMiddleware(
-		views.CreateView[Appointment](AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentCreateForm")).WithFormPatcher(FormCreatedByPatcher)))
+		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("appointments.AppointmentCreateForm")).WithFormPatcher(FormCreatedByPatcher)))
 
 	lago.RegistryView.Register("appointments.UpdateView", p_users.AuthMiddleware(
-		views.UpdateView[Appointment](AppUrl+"%v/")(lago.GetPageView("appointments.AppointmentUpdateForm")).WithFormPatcher(FormCreatedByPatcher)))
+		views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("appointments.AppointmentUpdateForm")).WithFormPatcher(FormCreatedByPatcher)))
 
 	lago.RegistryView.Register("appointments.DeleteView", p_users.AuthMiddleware(
-		views.DeleteView[Appointment](AppUrl)(lago.GetPageView("appointments.AppointmentDeleteForm"))))
+		views.DeleteView[Appointment](lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm"))))
 
 	lago.RegistryView.Register("appointments.GenerateView", p_users.AuthMiddleware(
 		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, generateHandler)))
