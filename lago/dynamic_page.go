@@ -15,6 +15,14 @@ type DynamicPage struct {
 	Name string
 }
 
+func (d DynamicPage) GetKey() string {
+	return d.Key
+}
+
+func (d DynamicPage) GetRoles() []string {
+	return d.Roles
+}
+
 func (d DynamicPage) Build(ctx context.Context) gomponents.Node {
 	page, ok := RegistryPage.Get(d.Name)
 	if !ok {

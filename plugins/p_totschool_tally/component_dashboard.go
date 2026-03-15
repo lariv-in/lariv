@@ -105,6 +105,14 @@ func (d TallyDashboardComponent) Build(ctx context.Context) Node {
 	)
 }
 
+func (d TallyDashboardComponent) GetKey() string {
+	return d.Key
+}
+
+func (d TallyDashboardComponent) GetRoles() []string {
+	return d.Roles
+}
+
 func (d TallyDashboardComponent) GetChildren() []components.PageInterface {
 	return nil
 }

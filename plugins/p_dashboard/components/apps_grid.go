@@ -18,6 +18,14 @@ type AppsGrid struct {
 	Apps getters.Getter
 }
 
+func (e AppsGrid) GetKey() string {
+	return e.Key
+}
+
+func (e AppsGrid) GetRoles() []string {
+	return e.Roles
+}
+
 func (e AppsGrid) Build(ctx context.Context) Node {
 	var apps []lago.Plugin
 	if e.Apps != nil {
