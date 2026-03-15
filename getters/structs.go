@@ -25,6 +25,10 @@ func MapFromStruct(s any) map[string]any {
 		v = v.Elem()
 	}
 
+	if v.Kind() != reflect.Struct {
+		return m
+	}
+
 	flattenStruct(v, m)
 	return m
 }

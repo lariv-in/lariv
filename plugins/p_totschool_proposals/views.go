@@ -2,7 +2,6 @@ package p_totschool_proposals
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -12,9 +11,16 @@ import (
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
+
+func ProposalQueryPatcher(v views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	user := r.Context().Value("$user").(p_users.User)
+	if !(user.IsSuperuser || user.Role.Name == "totschool_admin") {
+		query = query.Where("CreatedByID = ?", user.ID)
+	}
+	return query
+}
 
 // ProposalFormPatcher enriches form data for CRUD handlers:
 // - sets CreatedByID from the authenticated user
@@ -42,58 +48,6 @@ func ProposalFormPatcher(v views.View, r *http.Request, formData map[string]any)
 	return formData
 }
 
-// updateFormGetHandler enriches the proposal loaded by DetailView with parsed answer_N fields
-// so the form inputs are pre-populated on GET.
-func updateFormGetHandler(v views.View) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		proposalMap, _ := r.Context().Value("proposal").(map[string]any)
-
-		var p Proposal
-		if raw, ok := proposalMap["Answers"]; ok {
-			if b, err := json.Marshal(raw); err == nil {
-				p.Answers = datatypes.JSON(b)
-			}
-		}
-		items, _ := p.ParseAnswers()
-		for i := 0; i < len(QUESTIONS); i++ {
-			val := ""
-			if i < len(items) {
-				val = items[i].Answer
-			}
-			proposalMap[fmt.Sprintf("answer_%d", i)] = val
-		}
-
-		ctx := context.WithValue(r.Context(), "$in", proposalMap)
-		ctx = context.WithValue(ctx, "proposal", proposalMap)
-		v.RenderPage(w, r.WithContext(ctx))
-	})
-}
-
-func detailHandler(v views.View) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
-
-		var proposal Proposal
-		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
-			http.NotFound(w, r)
-			return
-		}
-
-		ctx := r.Context()
-
-		// If generation is in progress, signal pending to the template
-		if proposal.GenerationID != nil {
-			ctx = context.WithValue(ctx, "GenerationPending", true)
-		}
-
-		proposalMap := getters.MapFromStruct(&proposal)
-		items, _ := proposal.ParseAnswers()
-		proposalMap["Answers"] = items
-		ctx = context.WithValue(ctx, "proposal", proposalMap)
-		v.RenderPage(w, r.WithContext(ctx))
-	})
-}
 
 func generateHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -352,20 +306,18 @@ func exportPdfHandler(v views.View) http.Handler {
 
 func init() {
 	lago.RegistryView.Register("proposals.ListView", p_users.AuthMiddleware(
-		views.ListView[Proposal]("proposals")(lago.GetPageView("proposals.ProposalTable"))))
+		views.ListView[Proposal]("proposals")(lago.GetPageView("proposals.ProposalTable")).WithQueryPatcher(ProposalQueryPatcher)))
 
 	lago.RegistryView.Register("proposals.DetailView", p_users.AuthMiddleware(
 		views.DetailView[Proposal]("proposal")(
-			lago.GetPageView("proposals.ProposalDetail").
-				WithMethod(http.MethodGet, detailHandler))))
+			lago.GetPageView("proposals.ProposalDetail"))))
 
 	lago.RegistryView.Register("proposals.CreateView", p_users.AuthMiddleware(
 		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalCreateForm")).WithFormPatcher(ProposalFormPatcher)))
 
 	lago.RegistryView.Register("proposals.UpdateView", p_users.AuthMiddleware(
 		views.DetailView[Proposal]("proposal")(
-			views.UpdateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalUpdateForm").
-				WithMethod(http.MethodGet, updateFormGetHandler)).WithFormPatcher(ProposalFormPatcher))))
+			views.UpdateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalUpdateForm")).WithFormPatcher(ProposalFormPatcher))))
 
 	lago.RegistryView.Register("proposals.DeleteView", p_users.AuthMiddleware(
 		views.DetailView[Proposal]("proposal")(
