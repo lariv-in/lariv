@@ -15,12 +15,12 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugins.Register("p_otp", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_otp", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "key", // Using a relevant icon
 		URL:         u,
 		VerboseName: "OTP Preferences",
-		RenderKeys:  []string{"superuser", "totschool_admin"},
+		Roles:  []string{"superuser", "totschool_admin"},
 	})
 	if err != nil {
 		log.Panic(err)

@@ -1,7 +1,6 @@
 package p_users
 
 import (
-
 	"github.com/lariv-in/lago"
 )
 
@@ -20,7 +19,6 @@ func registerRoutes() {
 		Path:    AppUrl,
 		Handler: lago.NewDynamicView("users.ListView"),
 	})
-
 
 	_ = lago.RegistryRoute.Register("users.CreateRoute", lago.Route{
 		Path:    AppUrl + "create/",

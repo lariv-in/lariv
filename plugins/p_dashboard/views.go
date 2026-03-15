@@ -9,7 +9,7 @@ import (
 
 
 func init() {
-	lago.RegistryView.Register("dashboard.AppsView", p_users.AuthMiddleware(lago.GetPageView("dashboard.AppsPage")))
+	lago.RegistryView.Register("dashboard.AppsView", p_users.AuthenticationMiddleware(lago.GetPageView("dashboard.AppsPage")))
 	lago.RegistryView.Patch("users.LoginSuccessView", func(_ http.Handler) http.Handler {
 		return lago.NewRedirectView("dashboard.AppsPage")
 	})

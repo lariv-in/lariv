@@ -16,7 +16,7 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugins.Register("p_users", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_users", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "users",
 		URL:         u,

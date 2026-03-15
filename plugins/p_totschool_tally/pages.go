@@ -55,7 +55,7 @@ func init() {
 				Icon:  "pencil-square",
 			},
 			components.SidebarMenuItem{
-				Page:  components.Page{RenderKeys: []string{"totschool_admin", "superuser"}},
+				Page:  components.Page{Roles: []string{"totschool_admin", "superuser"}},
 				Title: getters.GetterStatic("Create Tally (Admin)"),
 				Url:   lago.GetterRoutePath("tally.TallyCreateRoute", nil),
 				Icon:  "plus-circle",
@@ -112,14 +112,14 @@ func init() {
 	// Create Form (Admin)
 	createAdminFields := append([]components.PageInterface{
 		components.InputNumber{
-			Page:     components.Page{RenderKeys: []string{"totschool_admin", "superuser"}},
+			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},
 			Name:     "UserID",
 			Label:    "User ID",
 			Required: true,
 			Getter:   getters.GetterKey("$in.Tally.UserID"),
 		},
 		components.InputText{
-			Page:     components.Page{RenderKeys: []string{"totschool_admin", "superuser"}},
+			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},
 			Name:     "Date",
 			Label:    "Date (YYYY-MM-DD)",
 			Required: true,
@@ -273,7 +273,7 @@ func init() {
 
 	// Tally Filter
 	tallyFilter := components.FormComponent{
-		Page:   components.Page{RenderKeys: []string{"totschool_admin", "superuser"}},
+		Page:   components.Page{Roles: []string{"totschool_admin", "superuser"}},
 		Url:    lago.GetterRoutePath("tally.TallyListRoute", nil),
 		Method: "GET",
 		ChildrenInput: []components.PageInterface{

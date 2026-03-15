@@ -14,7 +14,7 @@ func init() {
 	if err != nil {
 		log.Panic(err)
 	}
-	err = lago.RegistryPlugins.Register("p_totschool_proposals", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_totschool_proposals", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "document-text",
 		URL:         u,

@@ -27,14 +27,14 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 	}
 
 	if len(apps) == 0 {
-		pluginsMap := lago.RegistryPlugins.AllStable()
-		roleName, _ := ctx.Value("$render_key").(string)
+		pluginsMap := lago.RegistryPlugin.AllStable()
+		roleName, _ := ctx.Value("$role").(string)
 		for _, pluginItem := range *pluginsMap {
 			plugin := pluginItem.Value
 
 			if plugin.Type == lago.PluginTypeApp {
-				if len(plugin.RenderKeys) > 0 {
-					if !slices.Contains(plugin.RenderKeys, roleName) {
+				if len(plugin.Roles) > 0 {
+					if !slices.Contains(plugin.Roles, roleName) {
 						continue
 					}
 				}

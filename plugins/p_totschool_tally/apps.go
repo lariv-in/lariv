@@ -15,7 +15,7 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugins.Register("p_totschool_tally", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_totschool_tally", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "table-cells",
 		URL:         u,

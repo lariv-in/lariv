@@ -186,7 +186,7 @@ func init() {
 
 	// OTP Preferences
 	lago.RegistryView.Register("otp.OTPPreferencesView",
-		p_users.AuthMiddleware(
+		p_users.AuthenticationMiddleware(
 			p_users.RoleAuthorizationMiddleware([]string{"superuser"})(
 				views.SingletonView[OTPPreferences](lago.GetterRoutePath("otp.OTPPreferencesRoute", nil))(
 					lago.GetPageView("otp.OTPPreferencesForm")))))
