@@ -48,13 +48,17 @@ type AuthConfig struct {
 var Config = &AuthConfig{}
 
 var (
-	signingKey [256]byte
-	jwtIssuer  [256]byte
+	signingKey []byte
+	jwtIssuer  []byte
 )
 
 func init() {
-	rand.Read(signingKey[:])
-	rand.Read(jwtIssuer[:])
+	// Default to randomized keys so that when not configured,
+	// sessions are invalidated on every server restart.
+	signingKey = make([]byte, 64)
+	jwtIssuer = make([]byte, 64)
+	_, _ = rand.Read(signingKey)
+	_, _ = rand.Read(jwtIssuer)
 
 	lago.RegistryConfig.Register("p_users", Config)
 }
@@ -65,7 +69,7 @@ func (c *AuthConfig) PostConfig() {
 		if err != nil {
 			log.Panicf("Signing Key specified in config is invalid %s\n", c.SigningKey)
 		}
-		copy(signingKey[:], decoded)
+		signingKey = decoded
 	}
 
 	if c.JwtIssuer != "" {
@@ -73,7 +77,7 @@ func (c *AuthConfig) PostConfig() {
 		if err != nil {
 			log.Panicf("JwtIssuer specified in config is invalid %s\n", c.SigningKey)
 		}
-		copy(jwtIssuer[:], decoded)
+		jwtIssuer = decoded
 	}
 }
 
@@ -81,7 +85,7 @@ func (u *User) GetClaims(currentTime time.Time, expiryTime time.Time) jwt.Regist
 	return jwt.RegisteredClaims{
 		Issuer:    "lariv",
 		Subject:   fmt.Sprintf("%d-%s", u.ID, base64.StdEncoding.EncodeToString(u.PasswordSalt)),
-		Audience:  jwt.ClaimStrings{"lariv-" + base64.StdEncoding.EncodeToString(jwtIssuer[:])},
+		Audience:  jwt.ClaimStrings{"lariv-" + base64.StdEncoding.EncodeToString(jwtIssuer)},
 		ExpiresAt: jwt.NewNumericDate(expiryTime),
 		IssuedAt:  jwt.NewNumericDate(currentTime),
 		NotBefore: jwt.NewNumericDate(currentTime),

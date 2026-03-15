@@ -24,9 +24,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Redirect(w, r, unauthenticatedRoute.Path, http.StatusMovedPermanently)
 			return
 		}
+
 		token, err := jwt.Parse(authCookie.Value, func(token *jwt.Token) (any, error) {
-			return signingKey[:], nil
-		}, jwt.WithAllAudiences("lariv-"+base64.StdEncoding.EncodeToString(jwtIssuer[:])),
+			return signingKey, nil
+		}, jwt.WithAllAudiences("lariv-"+base64.StdEncoding.EncodeToString(jwtIssuer)),
 			jwt.WithExpirationRequired(),
 			jwt.WithIssuer("lariv"),
 			jwt.WithNotBeforeRequired(),
