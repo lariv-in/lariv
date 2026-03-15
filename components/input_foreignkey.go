@@ -14,7 +14,7 @@ type InputForeignKey struct {
 	Label       string
 	Name        string
 	Getter      getters.Getter
-	DisplayAttr string
+	Display     getters.Getter
 	Placeholder string
 	Url         getters.Getter
 	Required    bool
@@ -35,10 +35,8 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 			} else if idVal, exists := valueMap["id"]; exists {
 				valuePk = fmt.Sprintf("%v", idVal)
 			}
-			if e.DisplayAttr != "" {
-				if disp, exists := valueMap[e.DisplayAttr]; exists {
-					displayValue = fmt.Sprintf("%v", disp)
-				}
+			if e.Display != nil {
+				displayValue = fmt.Sprintf("%v", e.Display(context.WithValue(ctx, "$in", valueMap)))
 			}
 		}
 	}

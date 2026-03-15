@@ -28,8 +28,8 @@ func registerMenus() {
 			Url:   getters.GetterStatic("/apps/"),
 		},
 		Children: []components.PageInterface{
-			components.SidebarMenuItem{Title: getters.GetterStatic("All Proposals"), Url: lago.RoutePathGetter("proposals.ListRoute")},
-			components.SidebarMenuItem{Title: getters.GetterStatic("Create Proposal"), Url: lago.RoutePathGetter("proposals.CreateRoute")},
+			components.SidebarMenuItem{Title: getters.GetterStatic("All Proposals"), Url: lago.GetterRoutePath("proposals.ListRoute", nil)},
+			components.SidebarMenuItem{Title: getters.GetterStatic("Create Proposal"), Url: lago.GetterRoutePath("proposals.CreateRoute", nil)},
 		},
 	})
 
@@ -37,7 +37,7 @@ func registerMenus() {
 		Title: getters.GetterFormat("Proposal: %s", getters.GetterKey("proposal.Title")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to all Proposals"),
-			Url:   lago.RoutePathGetter("proposals.ListRoute"),
+			Url:   lago.GetterRoutePath("proposals.ListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{Title: getters.GetterStatic("Proposal Detail"), Url: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("proposal.ID"))},
@@ -125,7 +125,7 @@ func registerTable() {
 				Data:      getters.GetterKey("proposals"),
 				Title:     "Proposals",
 				Subtitle:  "List of financial proposals",
-				CreateUrl: lago.RoutePathGetter("proposals.CreateRoute"),
+				CreateUrl: lago.GetterRoutePath("proposals.CreateRoute", nil),
 				OnClick:   getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
 				FilterComponent: lago.DynamicPage{Name: "proposals.ProposalFilter"},
 				Columns: []components.TableColumn{

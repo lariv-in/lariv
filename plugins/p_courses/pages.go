@@ -29,7 +29,7 @@ func registerMenuPages() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.GetterStatic("All Courses"),
-				Url:   lago.RoutePathGetter("courses.DefaultRoute"),
+				Url:   lago.GetterRoutePath("courses.DefaultRoute", nil),
 			},
 		},
 	})
@@ -38,7 +38,7 @@ func registerMenuPages() {
 		Title: getters.GetterFormat("Course: %s", getters.GetterKey("course.Name")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to All Courses"),
-			Url:   lago.RoutePathGetter("courses.DefaultRoute"),
+			Url:   lago.GetterRoutePath("courses.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
@@ -61,7 +61,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("courses.CourseFilter", components.FormComponent{
-		Url:    lago.RoutePathGetter("courses.DefaultRoute"),
+		Url:    lago.GetterRoutePath("courses.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
@@ -86,7 +86,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseSelectionFilter", components.FormComponent{
-		Url:    lago.RoutePathGetter("courses.SelectRoute"),
+		Url:    lago.GetterRoutePath("courses.SelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
@@ -101,7 +101,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseMultiSelectionFilter", components.FormComponent{
-		Url:    lago.RoutePathGetter("courses.MultiSelectRoute"),
+		Url:    lago.GetterRoutePath("courses.MultiSelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey("$get.Name")},
@@ -163,7 +163,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Url:      lago.RoutePathGetter("courses.CreateRoute"),
+				Url:      lago.GetterRoutePath("courses.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Course",
 				Subtitle: "Create a new course",
@@ -207,7 +207,7 @@ func registerTablePages() {
 				UID:             "course-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey("courses"),
-				CreateUrl:       lago.RoutePathGetter("courses.CreateRoute"),
+				CreateUrl:       lago.GetterRoutePath("courses.CreateRoute", nil),
 				OnClick:         getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseFilter"},
 				Columns: []components.TableColumn{

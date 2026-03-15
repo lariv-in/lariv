@@ -29,9 +29,9 @@ func registerMenus() {
 			Url:   getters.GetterStatic("/apps/"),
 		},
 		Children: []components.PageInterface{
-			components.SidebarMenuItem{Title: getters.GetterStatic("All Appointments"), Url: lago.RoutePathGetter("appointments.ListRoute")},
-			components.SidebarMenuItem{Title: getters.GetterStatic("Appointments Timeline"), Url: lago.RoutePathGetter("appointments.CardTimelineRoute")},
-			components.SidebarMenuItem{Title: getters.GetterStatic("Create Appointment"), Url: lago.RoutePathGetter("appointments.CreateRoute")},
+			components.SidebarMenuItem{Title: getters.GetterStatic("All Appointments"), Url: lago.GetterRoutePath("appointments.ListRoute", nil)},
+			components.SidebarMenuItem{Title: getters.GetterStatic("Appointments Timeline"), Url: lago.GetterRoutePath("appointments.CardTimelineRoute", nil)},
+			components.SidebarMenuItem{Title: getters.GetterStatic("Create Appointment"), Url: lago.GetterRoutePath("appointments.CreateRoute", nil)},
 		},
 	})
 
@@ -39,7 +39,7 @@ func registerMenus() {
 		Title: getters.GetterFormat("Appointment: %s", getters.GetterKey("appointment.Name")),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to all Appointments"),
-			Url:   lago.RoutePathGetter("appointments.ListRoute"),
+			Url:   lago.GetterRoutePath("appointments.ListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{Title: getters.GetterStatic("Appointment Detail"), Url: getters.GetterFormat(AppUrl+"%v/", getters.GetterKey("appointment.ID"))},
@@ -129,7 +129,7 @@ func registerTable() {
 				Data:            getters.GetterKey("appointments"),
 				Title:           "Appointments",
 				Subtitle:        "List of appointments",
-				CreateUrl:       lago.RoutePathGetter("appointments.CreateRoute"),
+				CreateUrl:       lago.GetterRoutePath("appointments.CreateRoute", nil),
 				OnClick:         getters.GetterNavigate(AppUrl+"%v/", getters.GetterKey("$row.ID")),
 				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentFilter"},
 				Columns: []components.TableColumn{
@@ -307,7 +307,7 @@ func registerSelectionPages() {
 	})
 
 	lago.RegistryPage.Register("appointments.AppointmentCardTimelineFilter", components.FormComponent{
-		Url:    lago.RoutePathGetter("appointments.CardTimelineRoute"),
+		Url:    lago.GetterRoutePath("appointments.CardTimelineRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey("$get.Date")},

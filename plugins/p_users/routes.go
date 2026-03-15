@@ -21,6 +21,7 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("users.ListView"),
 	})
 
+
 	_ = lago.RegistryRoute.Register("users.CreateRoute", lago.Route{
 		Path:    AppUrl + "create/",
 		Handler: lago.NewDynamicView("users.CreateView"),

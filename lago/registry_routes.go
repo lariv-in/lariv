@@ -2,7 +2,9 @@ package lago
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/registry"
@@ -24,10 +26,14 @@ func GetRouter() *http.ServeMux {
 	return baseRouter
 }
 
-// RoutePathGetter returns a Getter that resolves to the route's Path string.
-func RoutePathGetter(name string) getters.Getter {
+// GetterRoutePath returns a Getter that resolves to the route's Path string.
+func GetterRoutePath(name string, args map[string]getters.Getter) getters.Getter {
 	return func(ctx context.Context) any {
 		if route, ok := RegistryRoute.Get(name); ok {
+			r := route.Path
+			for k, g := range args {
+				r = strings.ReplaceAll(r, fmt.Sprintf("{%s}", k), fmt.Sprintf("%s", g(ctx)))
+			}
 			return route.Path
 		}
 		return nil
