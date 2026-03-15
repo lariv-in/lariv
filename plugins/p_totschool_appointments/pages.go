@@ -189,7 +189,7 @@ func registerDetail() {
 									Classes: "flex flex-col gap-2 pl-4",
 									Children: []components.PageInterface{
 										components.ContainerRow{Classes: "items-center gap-2", Children: []components.PageInterface{
-											components.ButtonLink{LabelGetter: getters.GetterKey("$row.Name"), Link: lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$row.ID")})},
+											components.ButtonLink{GetterLabel: getters.GetterKey("$row.Name"), Link: lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$row.ID")})},
 											components.FieldText{Getter: getters.GetterStatic(" — ")},
 											components.FieldText{Getter: getters.GetterKey("$row.Date")},
 										}},

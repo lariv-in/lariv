@@ -12,7 +12,7 @@ import (
 type ButtonLink struct {
 	Page
 	Label       string
-	LabelGetter getters.Getter
+	GetterLabel getters.Getter
 	Link        getters.Getter
 	Classes     string
 }
@@ -25,8 +25,8 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 		}
 	}
 	label := e.Label
-	if e.LabelGetter != nil {
-		label = fmt.Sprintf("%v", e.LabelGetter(ctx))
+	if e.GetterLabel != nil {
+		label = fmt.Sprintf("%v", e.GetterLabel(ctx))
 	}
 	return html.A(html.Href(link), html.Class(fmt.Sprintf("btn btn-primary w-full %s", e.Classes)), gomponents.Text(label))
 }
