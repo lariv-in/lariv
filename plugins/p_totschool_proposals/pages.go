@@ -173,12 +173,15 @@ func registerDetail() {
 					components.ContainerColumn{Children: []components.PageInterface{
 						components.FieldTitle{Getter: getters.GetterKey("$in.Title")},
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$in.CreatedAt")}}},
-						components.Accordion{Classes: "mt-6", Items: []components.AccordionItem{
-							{Title: "Questionnaire Answers", Children: []components.PageInterface{
-								components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers"), KeyField: "Question", ValueField: "Answer"},
-							}},
+						components.Accordion{Classes: "mt-4", Items: []components.AccordionItem{
+							{
+								Title: components.FieldTitle{Getter: getters.GetterStatic("Questionnaire Answers")},
+								Children: []components.PageInterface{
+									components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers"), KeyField: "Question", ValueField: "Answer"},
+								},
+							},
 						}},
-						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
+						components.ContainerColumn{Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedContent"), Children: generatedSection},
 
 							components.ShowIf{Getter: getters.GetterKey("GenerationPending"), Children: pendingSection},

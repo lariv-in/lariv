@@ -2,13 +2,14 @@ package components
 
 import (
 	"context"
+
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 type AccordionItem struct {
 	Page
-	Title    string
+	Title    PageInterface
 	Open     bool
 	Children []PageInterface
 }
@@ -29,7 +30,7 @@ func (e Accordion) Build(ctx context.Context) Node {
 		nodes = append(nodes,
 			Div(Class("collapse collapse-arrow bg-base-100 border border-base-300"),
 				El("input", Type("checkbox"), If(item.Open, Attr("checked", "checked"))),
-				Div(Class("collapse-title font-medium"), Text(item.Title)),
+				Div(Class("collapse-title"), Render(item.Title, ctx)),
 				Div(Class("collapse-content"), Group(childNodes)),
 			),
 		)
