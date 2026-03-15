@@ -24,5 +24,5 @@ func (e FieldDatetime) Build(ctx context.Context) Node {
 	if timezone == nil {
 		timezone = DefaultTimeZone
 	}
-	return Div(Class(e.Classes), Text(v.In(timezone).Format(time.ANSIC)))
+	return Div(Class(e.Classes), Text(v.In(timezone).Format("Mon, 02 Jan 2006 15:04:05")))
 }

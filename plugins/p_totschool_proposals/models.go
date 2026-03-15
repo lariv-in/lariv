@@ -41,7 +41,7 @@ type Proposal struct {
 	CreatedByID      uint           `gorm:"notnull"`
 	CreatedBy        p_users.User   `gorm:"foreignKey:CreatedByID"`
 	Title            string         `gorm:"size:250;notnull"`
-	Answers          datatypes.JSON `gorm:"type:text"` // [{"question":"...","answer":"..."}, ...]
+	Answers          datatypes.JSON // [{"question":"...","answer":"..."}, ...]
 	GeneratedContent string         `gorm:"type:text"`
 	GenerationID     *int           // non-nil while AI generation is in progress
 }
@@ -88,7 +88,6 @@ func (p *Proposal) FormatAnswersForAI() (string, error) {
 	}
 	return strings.Join(lines, "\n"), nil
 }
-
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {

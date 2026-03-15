@@ -90,11 +90,11 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Url:    lago.GetterRoutePath("proposals.CreateRoute", nil),
-				Method: http.MethodPost,
-				Title:  "Create Proposal",
-				Subtitle: "Fill in the questionnaire answers",
-				ChildrenInput: proposalFormFields(),
+				Url:            lago.GetterRoutePath("proposals.CreateRoute", nil),
+				Method:         http.MethodPost,
+				Title:          "Create Proposal",
+				Subtitle:       "Fill in the questionnaire answers",
+				ChildrenInput:  proposalFormFields(),
 				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
 			},
 		},
@@ -104,12 +104,12 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent{
-				Getter:   getters.GetterKey("proposal"),
-				Url:      lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}),
-				Method:   http.MethodPost,
-				Title:    "Edit Proposal",
-				Subtitle: "Update questionnaire answers",
-				ChildrenInput: proposalFormFields(),
+				Getter:         getters.GetterKey("proposal"),
+				Url:            lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}),
+				Method:         http.MethodPost,
+				Title:          "Edit Proposal",
+				Subtitle:       "Update questionnaire answers",
+				ChildrenInput:  proposalFormFields(),
 				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
 			},
 		},
@@ -121,17 +121,17 @@ func registerTable() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalMenu"}},
 		Children: []components.PageInterface{
 			components.DataTable{
-				UID:       "proposal-table",
-				Data:      getters.GetterKey("proposals"),
-				Title:     "Proposals",
-				Subtitle:  "List of financial proposals",
-				CreateUrl: lago.GetterRoutePath("proposals.CreateRoute", nil),
-				OnClick:   getters.GetterNavigateGetter(lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$row.ID")})),
+				UID:             "proposal-table",
+				Data:            getters.GetterKey("proposals"),
+				Title:           "Proposals",
+				Subtitle:        "List of financial proposals",
+				CreateUrl:       lago.GetterRoutePath("proposals.CreateRoute", nil),
+				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$row.ID")})),
 				FilterComponent: lago.DynamicPage{Name: "proposals.ProposalFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Title", Key: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Title")}}},
-					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.CreatedAt")}}},
-					{Label: "Updated At", Key: "UpdatedAt", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.UpdatedAt")}}},
+					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$row.CreatedAt")}}},
+					{Label: "Updated At", Key: "UpdatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$row.UpdatedAt")}}},
 				},
 			},
 		},
@@ -149,7 +149,7 @@ func registerDetail() {
 					components.ButtonPost{Label: "Regenerate Proposal", URL: lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
-			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedContent"), Classes: "bg-base-100 p-8 rounded-lg shadow border"},
+			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedContent")},
 		}},
 	}
 
@@ -172,7 +172,7 @@ func registerDetail() {
 				Children: []components.PageInterface{
 					components.ContainerColumn{Children: []components.PageInterface{
 						components.FieldTitle{Getter: getters.GetterKey("$in.Title")},
-						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.CreatedAt")}}},
+						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$in.CreatedAt")}}},
 						components.Accordion{Classes: "mt-6", Items: []components.AccordionItem{
 							{Title: "Questionnaire Answers", Children: []components.PageInterface{
 								components.FieldKeyValue{Getter: getters.GetterKey("$in.Answers"), KeyField: "Question", ValueField: "Answer"},
@@ -180,7 +180,7 @@ func registerDetail() {
 						}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedContent"), Children: generatedSection},
-	
+
 							components.ShowIf{Getter: getters.GetterKey("GenerationPending"), Children: pendingSection},
 							components.ShowIf{Getter: getterIdleGeneration(), Children: idleSection},
 						}},
@@ -202,7 +202,6 @@ func getterIdleGeneration() getters.Getter {
 		return true
 	}
 }
-
 
 func registerModal() {
 	lago.RegistryPage.Register("proposals.AiEditModal", components.Modal{

@@ -2,98 +2,69 @@ package p_totschool_proposals
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/alnah/go-md2pdf"
-	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
-func proposalScope(db *gorm.DB, user p_users.User) *gorm.DB {
-	if user.IsSuperuser {
-		return db
-	}
-	var roleName string
-	db.Model(&p_users.Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
-	if roleName == "totschool_admin" {
-		return db
-	}
-	return db.Where("created_by_id = ?", user.ID)
-}
+// ProposalFormPatcher enriches form data for CRUD handlers:
+// - sets CreatedByID from the authenticated user
+// - flattens questionnaire answers into the Answers JSON field
+func ProposalFormPatcher(v views.View, r *http.Request, formData map[string]any) map[string]any {
+	user := r.Context().Value("$user").(p_users.User)
+	formData["CreatedByID"] = user.ID
 
-func getProposalOr404(w http.ResponseWriter, r *http.Request, db *gorm.DB, idStr string, user p_users.User) *Proposal {
+	var items []QAItem
+	for i := 0; i < len(QUESTIONS); i++ {
+		key := fmt.Sprintf("answers[%d]", i)
+		raw := formData[key]
+		answer, _ := raw.(string)
+		items = append(items, QAItem{
+			Question: QUESTIONS[i],
+			Answer:   answer,
+		})
+		delete(formData, key)
+	}
+
 	var p Proposal
-	err := proposalScope(db, user).Where("id = ?", idStr).First(&p).Error
-	if err != nil {
-		http.NotFound(w, r)
-		return nil
-	}
-	return &p
+	_ = p.SetAnswers(items)
+	formData["Answers"] = p.Answers
+
+	return formData
 }
 
-func listHandler(v views.View) http.Handler {
+// updateFormGetHandler enriches the proposal loaded by DetailView with parsed answer_N fields
+// so the form inputs are pre-populated on GET.
+func updateFormGetHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
+		proposalMap, _ := r.Context().Value("proposal").(map[string]any)
 
-		query := proposalScope(db, user).Model(&Proposal{})
-
-		pageStr := r.URL.Query().Get("page")
-		pageNum := 1
-		if pageStr != "" {
-			if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-				pageNum = p
+		var p Proposal
+		if raw, ok := proposalMap["Answers"]; ok {
+			if b, err := json.Marshal(raw); err == nil {
+				p.Answers = datatypes.JSON(b)
 			}
 		}
-		pageSize := 12
-
-		if title := r.URL.Query().Get("title"); title != "" {
-			query = query.Where("title LIKE ?", "%"+title+"%")
-		}
-		if sort := r.URL.Query().Get("sort"); sort != "" {
-			switch sort {
-			case "title", "created_at", "updated_at",
-				"title desc", "created_at desc", "updated_at desc":
-				query = query.Order(sort)
+		items, _ := p.ParseAnswers()
+		for i := 0; i < len(QUESTIONS); i++ {
+			val := ""
+			if i < len(items) {
+				val = items[i].Answer
 			}
+			proposalMap[fmt.Sprintf("answer_%d", i)] = val
 		}
 
-		var total int64
-		if err := query.Count(&total).Error; err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		var results []Proposal
-		err := query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Order("created_at DESC").Find(&results).Error
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		numPages := int((total + int64(pageSize) - 1) / int64(pageSize))
-		objectList := components.ObjectList[Proposal]{
-			Items:    results,
-			Number:   pageNum,
-			NumPages: numPages,
-			Total:    total,
-		}
-
-		ctx := context.WithValue(r.Context(), "proposals", objectList)
-		queryMap := map[string]any{}
-		for param, values := range r.URL.Query() {
-			if len(values) > 0 && values[0] != "" {
-				queryMap[param] = values[0]
-			}
-		}
-		ctx = context.WithValue(ctx, "$get", queryMap)
+		ctx := context.WithValue(r.Context(), "$in", proposalMap)
+		ctx = context.WithValue(ctx, "proposal", proposalMap)
 		v.RenderPage(w, r.WithContext(ctx))
 	})
 }
@@ -102,10 +73,10 @@ func detailHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
 
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
+		var proposal Proposal
+		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			http.NotFound(w, r)
 			return
 		}
 
@@ -116,128 +87,11 @@ func detailHandler(v views.View) http.Handler {
 			ctx = context.WithValue(ctx, "GenerationPending", true)
 		}
 
-		proposalMap := getters.MapFromStruct(proposal)
+		proposalMap := getters.MapFromStruct(&proposal)
 		items, _ := proposal.ParseAnswers()
 		proposalMap["Answers"] = items
 		ctx = context.WithValue(ctx, "proposal", proposalMap)
 		v.RenderPage(w, r.WithContext(ctx))
-	})
-}
-
-func createHandler(v views.View) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
-
-		if r.Method == http.MethodGet {
-			inMap := map[string]any{"Title": ""}
-			for i := 0; i < len(QUESTIONS); i++ {
-				inMap[fmt.Sprintf("answer_%d", i)] = ""
-			}
-			ctx := context.WithValue(r.Context(), "$in", inMap)
-			v.RenderPage(w, r.WithContext(ctx))
-			return
-		}
-
-		title := r.FormValue("title")
-		var answers []QAItem
-		for i := 0; i < len(QUESTIONS); i++ {
-			key := fmt.Sprintf("answers[%d]", i)
-			answers = append(answers, QAItem{Question: QUESTIONS[i], Answer: r.FormValue(key)})
-		}
-
-		proposal := Proposal{
-			Title:       title,
-			CreatedByID: user.ID,
-		}
-		if err := proposal.SetAnswers(answers); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if err := db.Create(&proposal).Error; err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
-		}).ServeHTTP(w, r)
-	})
-}
-
-func updateHandler(v views.View) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
-
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
-			return
-		}
-
-		if r.Method == http.MethodGet {
-			proposalMap := getters.MapFromStruct(proposal)
-			items, _ := proposal.ParseAnswers()
-			for i := 0; i < len(QUESTIONS); i++ {
-				val := ""
-				if i < len(items) {
-					val = items[i].Answer
-				}
-				proposalMap[fmt.Sprintf("answer_%d", i)] = val
-			}
-			ctx := context.WithValue(r.Context(), "$in", proposalMap)
-			ctx = context.WithValue(ctx, "proposal", proposalMap)
-			v.RenderPage(w, r.WithContext(ctx))
-			return
-		}
-
-		proposal.Title = r.FormValue("title")
-		var answers []QAItem
-		for i := 0; i < len(QUESTIONS); i++ {
-			key := fmt.Sprintf("answers[%d]", i)
-			answers = append(answers, QAItem{Question: QUESTIONS[i], Answer: r.FormValue(key)})
-		}
-		if err := proposal.SetAnswers(answers); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if err := db.Save(proposal).Error; err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
-		}).ServeHTTP(w, r)
-	})
-}
-
-func deleteHandler(v views.View) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
-
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
-			return
-		}
-
-		if r.Method == http.MethodGet {
-			ctx := context.WithValue(r.Context(), "proposal", getters.MapFromStruct(proposal))
-			v.RenderPage(w, r.WithContext(ctx))
-			return
-		}
-
-		if err := db.Delete(proposal).Error; err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		lago.NewRedirectView("proposals.ListRoute").ServeHTTP(w, r)
 	})
 }
 
@@ -251,8 +105,9 @@ func generateHandler(v views.View) http.Handler {
 		db := r.Context().Value("$db").(*gorm.DB)
 		user := r.Context().Value("$user").(p_users.User)
 
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
+		var proposal Proposal
+		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			http.NotFound(w, r)
 			return
 		}
 
@@ -382,10 +237,10 @@ func cancelHandler(v views.View) http.Handler {
 		}
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
 
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
+		var proposal Proposal
+		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			http.NotFound(w, r)
 			return
 		}
 
@@ -394,7 +249,7 @@ func cancelHandler(v views.View) http.Handler {
 		}
 
 		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
+			"id": getters.GetterStatic(idStr),
 		}).ServeHTTP(w, r)
 	})
 }
@@ -403,14 +258,14 @@ func aiEditFormHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
 
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
+		var proposal Proposal
+		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			http.NotFound(w, r)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "proposal", getters.MapFromStruct(proposal))
+		ctx := context.WithValue(r.Context(), "proposal", getters.MapFromStruct(&proposal))
 		v.RenderPage(w, r.WithContext(ctx))
 	})
 }
@@ -423,10 +278,10 @@ func aiEditHandler(v views.View) http.Handler {
 		}
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
 
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
+		var proposal Proposal
+		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			http.NotFound(w, r)
 			return
 		}
 
@@ -462,10 +317,10 @@ func exportPdfHandler(v views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
 
-		proposal := getProposalOr404(w, r, db, idStr, user)
-		if proposal == nil {
+		var proposal Proposal
+		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			http.NotFound(w, r)
 			return
 		}
 
@@ -497,19 +352,25 @@ func exportPdfHandler(v views.View) http.Handler {
 
 func init() {
 	lago.RegistryView.Register("proposals.ListView", p_users.AuthMiddleware(
-		lago.GetPageView("proposals.ProposalTable").WithMethod(http.MethodGet, listHandler)))
+		views.ListView[Proposal]("proposals")(lago.GetPageView("proposals.ProposalTable"))))
 
 	lago.RegistryView.Register("proposals.DetailView", p_users.AuthMiddleware(
-		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodGet, detailHandler)))
+		views.DetailView[Proposal]("proposal")(
+			lago.GetPageView("proposals.ProposalDetail").
+				WithMethod(http.MethodGet, detailHandler))))
 
 	lago.RegistryView.Register("proposals.CreateView", p_users.AuthMiddleware(
-		lago.GetPageView("proposals.ProposalCreateForm").WithMethod(http.MethodGet, createHandler).WithMethod(http.MethodPost, createHandler)))
+		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalCreateForm")).WithFormPatcher(ProposalFormPatcher)))
 
 	lago.RegistryView.Register("proposals.UpdateView", p_users.AuthMiddleware(
-		lago.GetPageView("proposals.ProposalUpdateForm").WithMethod(http.MethodGet, updateHandler).WithMethod(http.MethodPost, updateHandler)))
+		views.DetailView[Proposal]("proposal")(
+			views.UpdateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalUpdateForm").
+				WithMethod(http.MethodGet, updateFormGetHandler)).WithFormPatcher(ProposalFormPatcher))))
 
 	lago.RegistryView.Register("proposals.DeleteView", p_users.AuthMiddleware(
-		lago.GetPageView("proposals.ProposalDeleteForm").WithMethod(http.MethodGet, deleteHandler).WithMethod(http.MethodPost, deleteHandler)))
+		views.DetailView[Proposal]("proposal")(
+			views.DeleteView[Proposal](lago.GetterRoutePath("proposals.ListRoute", nil))(
+				lago.GetPageView("proposals.ProposalDeleteForm")))))
 
 	lago.RegistryView.Register("proposals.GenerateView", p_users.AuthMiddleware(
 		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodPost, generateHandler)))
