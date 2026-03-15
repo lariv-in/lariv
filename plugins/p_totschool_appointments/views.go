@@ -67,8 +67,8 @@ func generateHandler(v views.View) http.Handler {
 			return
 		}
 
-		content := buildLetterContent(db, &appointment, user.Name)
-		Generate(db, appointment.ID, content, letterWriterSystemPrompt)
+		content, systemPrompt := buildLetterContent(db, &appointment, user.Name)
+		Generate(db, appointment.ID, content, systemPrompt)
 
 		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter{
 			"id": getters.GetterStatic(idStr),
@@ -184,9 +184,6 @@ func init() {
 
 	lago.RegistryView.Register("appointments.SelectView", p_users.AuthMiddleware(
 		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentSelectionTable"))))
-
-	lago.RegistryView.Register("appointments.TemplateSelectView", p_users.AuthMiddleware(
-		views.ListView[LetterTemplate]("templates")(lago.GetPageView("appointments.TemplateSelectionTable"))))
 
 	lago.RegistryView.Register("appointments.CardTimelineView", p_users.AuthMiddleware(
 		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentCardTimeline"))))

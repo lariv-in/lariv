@@ -41,31 +41,8 @@ var Locations = []string{
 	"Branch Office (East)",
 }
 
-var Templates = []LetterTemplate{
-	{
-		Name:    "Standard Appointment Confirmation",
-		Content: "Dear {Client Name},\n\nWe are writing to confirm your appointment for '{Appointment Name}' scheduled on {Appointment Date} at {Appointment Time}.\n\nThe meeting will take place at: {Location}.\n\nIf you have any questions or need to reschedule, please contact us at {Phone Number}.\n\nAdditional details:\n{Remarks}\n\nWe look forward to seeing you.\n\nBest regards,\n{Your Name}",
-	},
-	{
-		Name:    "Virtual Meeting Details",
-		Content: "Hello {Client Name},\n\n This is a reminder for our upcoming virtual meeting: '{Appointment Name}'.\n\nDate: {Appointment Date}\nTime: {Appointment Time}\nLocation/Link: {Location}\n\nPlease ensure you have a stable internet connection. If you encounter any technical issues joining, you can reach us at {Phone Number}.\n\nMeeting agenda/notes:\n{Remarks}\n\nBest,\n{Your Name}",
-	},
-	{
-		Name:    "Follow-up Consultation",
-		Content: "Dear {Client Name},\n\nThank you for scheduling your follow-up consultation.\n\nYour appointment, '{Appointment Name}', is confirmed for {Appointment Date} at {Appointment Time}. We will meet at {Location}.\n\nPlease review any materials discussed in our previous session before this meeting.\n\nQuestions? Call us at {Phone Number}.\n\nNotes for this session:\n{Remarks}\n\nSincerely,\n{Your Name}",
-	},
-}
-
 func GenerateAppointmentsForUser(db *gorm.DB, user p_users.User, count int) {
 	now := time.Now()
-	// Create templates if they don't exist
-	for _, tmpl := range Templates {
-		var existing LetterTemplate
-		if err := db.Where("name = ?", tmpl.Name).First(&existing).Error; err != nil {
-			db.Create(&tmpl)
-		}
-	}
-
 	for range count {
 		// Calculate a random datetime within the next 30 days, between 9 AM and 5 PM
 		daysOffset := rand.Intn(30) + 1 // 1 to 30 days from now
@@ -135,13 +112,7 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
-			if err := db.Unscoped().Where("1=1").Delete(&Appointment{}).Error; err != nil {
-				return err
-			}
-			if err := db.Unscoped().Where("1=1").Delete(&LetterTemplate{}).Error; err != nil {
-				return err
-			}
-			return nil
+			return db.Unscoped().Where("1=1").Delete(&Appointment{}).Error
 		},
 	})
 }
