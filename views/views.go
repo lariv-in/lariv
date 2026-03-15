@@ -9,15 +9,20 @@ import (
 
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
+	"gorm.io/gorm"
 )
 
-type FormPatcher = func(view View, r *http.Request, formData map[string]any) map[string]any
+type (
+	FormPatcher  = func(view View, r *http.Request, formData map[string]any) map[string]any
+	QueryPatcher = func(view View, r *http.Request, db *gorm.DB) *gorm.DB
+)
 
 type View struct {
-	PageName    string
-	Registry    map[string]components.PageInterface
-	Handlers    map[string]func(View) http.Handler
-	FormPatcher FormPatcher
+	PageName     string
+	Registry     map[string]components.PageInterface
+	Handlers     map[string]func(View) http.Handler
+	FormPatcher  FormPatcher
+	QueryPatcher QueryPatcher
 }
 
 func (v View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -110,5 +115,10 @@ func HasErrors(errs map[string]error) bool {
 
 func (v View) WithFormPatcher(formPatcher FormPatcher) View {
 	v.FormPatcher = formPatcher
+	return v
+}
+
+func (v View) WithQueryPatcher(queryPatcher QueryPatcher) View {
+	v.QueryPatcher = queryPatcher
 	return v
 }

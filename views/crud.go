@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 // --- List View ---
 
 // ListView loads all records for model T into context under the given key.
@@ -58,9 +57,14 @@ func ListView[T any](key string) func(View) View {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					}
+					query = query.Limit(pageSize).Offset((pageNum - 1) * pageSize)
+
+					if v.QueryPatcher != nil {
+						query = v.QueryPatcher(v, r, query)
+					}
 
 					var results []T
-					err := query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&results).Error
+					err := query.Find(&results).Error
 					if err != nil {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
@@ -114,9 +118,12 @@ func DetailView[T any](key string) func(View) View {
 						return
 					}
 
-					db := r.Context().Value("$db").(*gorm.DB)
+					query := r.Context().Value("$db").(*gorm.DB)
 					instance := new(T)
-					err = db.First(instance, id).Error
+					if v.QueryPatcher != nil {
+						query = v.QueryPatcher(v, r, query)
+					}
+					err = query.First(instance, id).Error
 					if err != nil {
 						http.NotFound(w, r)
 						return
@@ -210,10 +217,13 @@ func UpdateView[T any](successURL getters.Getter) func(View) View {
 					return
 				}
 
-				db := r.Context().Value("$db").(*gorm.DB)
+				query := r.Context().Value("$db").(*gorm.DB).Model(new(T)).Where("id = ?", id)
+				if v.QueryPatcher != nil {
+					query = v.QueryPatcher(v, r, query)
+				}
 
 				// Update using the map directly, ID already known from path
-				err = db.Model(new(T)).Where("id = ?", id).Updates(values).Error
+				err = query.Updates(values).Error
 				if err != nil {
 					fieldErrors["_form"] = err
 					innerView.RenderWithErrors(w, r, fieldErrors, values)
@@ -291,8 +301,11 @@ func DeleteView[T any](successUrl getters.Getter) func(View) View {
 					return
 				}
 
-				db := r.Context().Value("$db").(*gorm.DB)
-				err = db.Delete(new(T), id).Error
+				query := r.Context().Value("$db").(*gorm.DB)
+				if v.QueryPatcher != nil {
+					query = v.QueryPatcher(v, r, query)
+				}
+				err = query.Delete(new(T), id).Error
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return

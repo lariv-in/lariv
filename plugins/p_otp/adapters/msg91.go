@@ -25,7 +25,7 @@ func NewMsg91Client(authKey string) *Msg91Client {
 
 // SendSMSFlow sends an SMS using the MSG91 Flow API.
 func (c *Msg91Client) SendSMSFlow(templateID string, recipients []FlowRecipient, realTimeResponse bool) (map[string]any, error) {
-	url := fmt.Sprintf("%s/flow", Msg91BaseUrl)
+	url := Msg91BaseUrl + "/flow"
 
 	payload := map[string]any{
 		"template_id": templateID,
