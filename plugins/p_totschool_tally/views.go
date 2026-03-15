@@ -54,11 +54,18 @@ func TallyDashboardHandler(v views.View) http.Handler {
 
 		dashboard := GetDashboardStats(db, userID, &session)
 
-		ctx := context.WithValue(r.Context(), "$in", map[string]any{
+		data := map[string]any{
 			"Dashboard":    dashboard,
 			"Session":      session,
 			"SessionNames": getAllSessionNames(db),
-		})
+		}
+
+		// For non-admin users, provide WhatsApp report data for the dashboard.
+		if !user.IsSuperuser && roleName != "totschool_admin" {
+			data["WhatsappReport"] = GetWhatsappReportData(db, user.ID)
+		}
+
+		ctx := context.WithValue(r.Context(), "$in", data)
 
 		v.RenderPage(w, r.WithContext(ctx))
 	})
