@@ -3,7 +3,6 @@ package lago
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -33,11 +32,10 @@ func GetterRoutePath(name string, args map[string]getters.Getter) getters.Getter
 		if route, ok := RegistryRoute.Get(name); ok {
 			r := route.Path
 			for k, g := range args {
-				r = strings.ReplaceAll(r, fmt.Sprintf("{%s}", k), fmt.Sprintf("%s", g(ctx)))
+				r = strings.ReplaceAll(r, fmt.Sprintf("{%s}", k), fmt.Sprintf("%v", g(ctx)))
 			}
 			return r
 		}
-		log.Printf("[lago] GetterRoutePath: route %q not found", name)
 		return nil
 	}
 }

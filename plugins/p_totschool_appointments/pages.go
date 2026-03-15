@@ -152,8 +152,8 @@ func registerDetail() {
 				components.FieldTitle{Getter: getters.GetterStatic("Generated Letter")},
 				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
 					components.ButtonLink{Label: "Send via WhatsApp", Link: getters.GetterFormat("https://wa.me/%v?text=%v", getters.GetterKey("$in.Phone"), getters.GetterQueryEscape(getters.GetterKey("$in.GeneratedLetter"))), Classes: "btn-outline btn-success btn-sm"},
-					components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("appointments.AiEditFormRoute", map[string]getters.Getter{"id": getters.GetterFormat("%v", getters.GetterKey("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-					components.ButtonPost{Label: "Regenerate Letter", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter{"id": getters.GetterFormat("%v", getters.GetterKey("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
+					components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("appointments.AiEditFormRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}), Classes: "btn-outline btn-secondary btn-sm"},
+					components.ButtonPost{Label: "Regenerate Letter", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
 			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedLetter"), Classes: "bg-base-100 p-8 rounded-lg shadow border whitespace-pre-wrap"},
@@ -163,12 +163,12 @@ func registerDetail() {
 	pendingSection := []components.PageInterface{
 		components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
 			components.FieldText{Getter: getters.GetterStatic("Generating..."), Classes: "btn-primary"},
-			components.ButtonPost{Label: "Cancel Generation", URL: lago.GetterRoutePath("appointments.CancelRoute", map[string]getters.Getter{"id": getters.GetterFormat("%v", getters.GetterKey("$in.ID"))}), Classes: "btn-outline btn-error btn-sm"},
+			components.ButtonPost{Label: "Cancel Generation", URL: lago.GetterRoutePath("appointments.CancelRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}), Classes: "btn-outline btn-error btn-sm"},
 		}},
 	}
 
 	idleSection := []components.PageInterface{
-		components.ButtonPost{Label: "Generate Letter with AI", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter{"id": getters.GetterFormat("%v", getters.GetterKey("$in.ID"))}), Classes: "btn-primary"},
+		components.ButtonPost{Label: "Generate Letter with AI", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}), Classes: "btn-primary"},
 	}
 
 	lago.RegistryPage.Register("appointments.AppointmentDetail", components.ShellScaffold{
