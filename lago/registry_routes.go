@@ -3,6 +3,7 @@ package lago
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -36,6 +37,7 @@ func GetterRoutePath(name string, args map[string]getters.Getter) getters.Getter
 			}
 			return r
 		}
+		log.Printf("[lago] GetterRoutePath: route %q not found", name)
 		return nil
 	}
 }
