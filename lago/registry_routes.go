@@ -34,7 +34,7 @@ func GetterRoutePath(name string, args map[string]getters.Getter) getters.Getter
 			for k, g := range args {
 				r = strings.ReplaceAll(r, fmt.Sprintf("{%s}", k), fmt.Sprintf("%s", g(ctx)))
 			}
-			return route.Path
+			return r
 		}
 		return nil
 	}
