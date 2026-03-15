@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/lariv-in/getters"
@@ -25,5 +24,5 @@ func (e FieldDatetime) Build(ctx context.Context) Node {
 	if timezone == nil {
 		timezone = DefaultTimeZone
 	}
-	return Div(Class(fmt.Sprintf("text-xl font-semibold text-primary %s", e.Classes)), Text(v.In(timezone).Format(time.ANSIC)))
+	return Div(Class(e.Classes), Text(v.In(timezone).Format(time.ANSIC)))
 }

@@ -138,7 +138,7 @@ func registerTable() {
 					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.Phone")}}},
 					{Label: "Date & Time", Key: "Datetime", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$row.Datetime")}}},
 					{Label: "Created By", Key: "CreatedBy", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterForeignKey[p_users.User](getters.GetterKey("$row.CreatedByID"), "Name")}}},
-					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$row.CreatedAt")}}},
+					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$row.CreatedAt")}}},
 				},
 			},
 		},
@@ -156,7 +156,7 @@ func registerDetail() {
 					components.ButtonPost{Label: "Regenerate Letter", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter{"id": getters.GetterKey("$in.ID")}), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
-			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedLetter"), Classes: "bg-base-100 p-8 rounded-lg shadow border whitespace-pre-wrap"},
+			components.FieldMarkdown{Getter: getters.GetterKey("$in.GeneratedLetter")},
 		}},
 	}
 
@@ -204,11 +204,11 @@ func registerDetail() {
 							}},
 						}},
 						components.LabelInline{Title: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Phone")}}},
-						components.LabelInline{Title: "Date & Time", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Datetime")}}},
+						components.LabelInline{Title: "Date & Time", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$in.Datetime")}}},
 						components.LabelInline{Title: "Remarks", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.Remarks")}}},
 						components.LabelInline{Title: "Extra Info", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.ExtraInfo")}}},
 						components.LabelInline{Title: "Created By", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterForeignKey[p_users.User](getters.GetterKey("$in.CreatedByID"), "Name")}}},
-						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey("$in.CreatedAt")}}},
+						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey("$in.CreatedAt")}}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterKey("$in.GeneratedLetter"), Children: generatedSection},
 							components.ShowIf{Getter: getters.GetterKey("GenerationPending"), Children: pendingSection},
