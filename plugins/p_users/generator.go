@@ -73,7 +73,7 @@ func GenerateUser(db *gorm.DB, roleName string) (*User, error) {
 		Email:    fmt.Sprintf("%s@school1.com", username),
 		Phone:    GenerateRandomPhone(),
 		Password: []byte(defaultPassword),
-		RoleID:   int(role.ID),
+		RoleID:   role.ID,
 	}
 	if err := db.Create(&user).Error; err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func GenerateUserWithoutPassword(db *gorm.DB, roleName string) (*User, error) {
 		Name:   name,
 		Email:  fmt.Sprintf("%s@school1.com", username),
 		Phone:  GenerateRandomPhone(),
-		RoleID: int(role.ID),
+		RoleID: role.ID,
 	}
 	if err := db.Create(&user).Error; err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package p_users
 
 import (
 	"crypto/rand"
+	"log"
 
 	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
@@ -14,11 +15,11 @@ type User struct {
 	Email        string `gorm:"uniqueIndex"`
 	Phone        string `gorm:"uniqueIndex"`
 	IsSuperuser  bool   `gorm:"notnull"`
-	RoleID       int    `gorm:"notnull"`
+	RoleID       uint    `gorm:"notnull"`
 	Role         Role   `gorm:"notnull"`
 	Password     []byte `gorm:"notnull"`
 	PasswordSalt []byte `gorm:"notnull"`
-	Timezone string 	`gorm:"default:Asia/Kolkata"`
+	Timezone     string `gorm:"default:Asia/Kolkata"`
 }
 
 type Role struct {
@@ -34,18 +35,26 @@ func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
 	if tx.Statement.Changed("Password") {
 		return u.hashPassword()
 	}
-	return nil
+	return
 }
 
-func (u *User) hashPassword() error {
+func (u *User) hashPassword() (err error) {
 	if len(u.Password) == 0 {
-		return nil
+		return
 	}
 	u.PasswordSalt = make([]byte, 256)
 	// Never actually errors out and always fills the buffer
-	_, _ = rand.Read(u.PasswordSalt)
+	n, err := rand.Read(u.PasswordSalt)
+	if err != nil {
+		log.Panicf("This should never happen, crypto read err while hashing user password: %e", err)
+	}
+
+	if n != 256 {
+		log.Panicf("This should never happen, password salt n = %d", n)
+	}
+
 	u.Password = HashPassword(u.Password, u.PasswordSalt)
-	return nil
+	return
 }
 
 func init() {
@@ -55,7 +64,8 @@ func init() {
 		return d
 	})
 	lago.RegistryAdmin.Register("p_users", lago.AdminPanel[User]{
-		SearchField: "Name", 
-		ListFields: []string{"Name", "Email", "IsSuperuser", "Role.Name"}, 
-		Preload: []string{"Role"}})
+		SearchField: "Name",
+		ListFields:  []string{"Name", "Email", "IsSuperuser", "Role.Name"},
+		Preload:     []string{"Role"},
+	})
 }

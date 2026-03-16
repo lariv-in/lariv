@@ -23,6 +23,7 @@ func HashPassword(password []byte, passwordSalt []byte) []byte {
 	if err != nil {
 		panic("According to the docs for scrypt, this should be impossible")
 	}
+	fmt.Println("Key", key)
 	return key
 }
 
