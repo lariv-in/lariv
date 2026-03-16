@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"log/slog"
 
 	"reflect"
 
@@ -12,7 +13,7 @@ import (
 
 type FieldList struct {
 	Page
-	Getter   getters.Getter  // resolves to a slice
+	Getter   getters.Getter[any] // resolves to a slice
 	Classes  string
 	Children []PageInterface // template for each item
 }
@@ -21,7 +22,12 @@ func (e FieldList) Build(ctx context.Context) Node {
 	var listNodes Group
 
 	if e.Getter != nil {
-		if rawData := getters.IfOrGetter(e.Getter, ctx, nil); rawData != nil {
+		rawData, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("FieldList getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		if rawData != nil {
 			value := reflect.ValueOf(rawData)
 			if value.Type().CanSeq2() {
 				for _, item := range value.Seq2() {

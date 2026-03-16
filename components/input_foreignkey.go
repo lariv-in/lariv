@@ -3,48 +3,57 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
-type InputForeignKey struct {
+type InputForeignKey[T any] struct {
 	Page
 	Label       string
 	Name        string
-	Getter      getters.Getter
-	Display     getters.Getter
+	Getter      getters.Getter[T]
+	Display     getters.Getter[string]
 	Placeholder string
-	Url         getters.Getter
+	Url         getters.Getter[string]
 	Required    bool
 	Classes     string
 }
 
-func (e InputForeignKey) GetKey() string {
+func (e InputForeignKey[T]) GetKey() string {
 	return e.Key
 }
 
-func (e InputForeignKey) GetRoles() []string {
+func (e InputForeignKey[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e InputForeignKey) Build(ctx context.Context) Node {
-	value := getters.IfOrGetter(e.Getter, ctx, nil)
-
+func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 	valuePk := ""
 	displayValue := ""
 
-	if value != nil {
-		valueMap, ok := value.(map[string]any)
-		if ok {
+	if e.Getter != nil {
+		value, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("InputForeignKey getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		valueMap := getters.MapFromStruct(value)
+		if len(valueMap) > 0 {
 			if idVal, exists := valueMap["ID"]; exists {
 				valuePk = fmt.Sprintf("%v", idVal)
 			} else if idVal, exists := valueMap["id"]; exists {
 				valuePk = fmt.Sprintf("%v", idVal)
 			}
 			if e.Display != nil {
-				displayValue = fmt.Sprintf("%v", e.Display(context.WithValue(ctx, "$in", valueMap)))
+				displayStr, err := e.Display(context.WithValue(ctx, "$in", valueMap))
+				if err != nil {
+					slog.Error("InputForeignKey display getter failed", "error", err, "key", e.Key)
+					return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+				}
+				displayValue = displayStr
 			}
 		}
 	}
@@ -52,6 +61,16 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 	placeholder := e.Placeholder
 	if placeholder == "" {
 		placeholder = "Select..."
+	}
+
+	urlStr := ""
+	if e.Url != nil {
+		var err error
+		urlStr, err = e.Url(ctx)
+		if err != nil {
+			slog.Error("InputForeignKey url getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
 	}
 
 	alpineData := fmt.Sprintf("{ value: '%s', display: '%s', placeholder: '%s' }", valuePk, displayValue, placeholder)
@@ -66,7 +85,7 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 			If(e.Required, Required())),
 		Div(Class("input input-bordered w-full flex items-center cursor-pointer"),
 			Attr(":class", "display ? '' : 'opacity-50'"),
-			Attr("hx-get", fmt.Sprintf("%v", getters.IfOrGetter(e.Url, ctx, ""))),
+			Attr("hx-get", urlStr),
 			Attr("hx-target", "next .fk-modal-container"),
 			Attr("hx-swap", "innerHTML"),
 			Attr("hx-push-url", "false"),
@@ -76,7 +95,7 @@ func (e InputForeignKey) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputForeignKey) Parse(v any, _ context.Context) (any, error) {
+func (e InputForeignKey[T]) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
 		return "", nil
@@ -84,6 +103,6 @@ func (e InputForeignKey) Parse(v any, _ context.Context) (any, error) {
 	return vals[0], nil
 }
 
-func (e InputForeignKey) GetName() string {
+func (e InputForeignKey[T]) GetName() string {
 	return e.Name
 }

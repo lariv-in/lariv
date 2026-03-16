@@ -3,7 +3,9 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/lariv-in/getters"
@@ -11,9 +13,9 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-type FormComponent struct {
+type FormComponent[T any] struct {
 	Page
-	Getter         getters.Getter
+	Getter         getters.Getter[T]
 	Url            getters.Getter[string]
 	Method         string
 	ChildrenInput  []PageInterface
@@ -23,12 +25,21 @@ type FormComponent struct {
 	Subtitle       string
 }
 
-func (e FormComponent) Build(ctx context.Context) Node {
+type FormInterface interface {
+	PageInterface
+	ParseForm(r *http.Request) (map[string]any, map[string]error, error)
+}
+
+func (e FormComponent[T]) Build(ctx context.Context) Node {
 	// If a Getter is set, resolve the object and pass it to children via $in
 	childCtx := ctx
 	if e.Getter != nil {
-		value := e.Getter(ctx)
-		if value != nil {
+		value, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("FormComponent getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		if v := reflect.ValueOf(value); v.IsValid() && !v.IsZero() {
 			objMap := getters.MapFromStruct(value)
 			childCtx = context.WithValue(ctx, getters.ContextKeyIn, objMap)
 		}
@@ -42,7 +53,15 @@ func (e FormComponent) Build(ctx context.Context) Node {
 	for _, child := range e.ChildrenAction {
 		submitGroup = append(submitGroup, Render(child, childCtx))
 	}
-	urlString := fmt.Sprintf("%s", getters.IfOrGetter(e.Url, childCtx, ""))
+	urlString := ""
+	if e.Url != nil {
+		u, err := e.Url(childCtx)
+		if err != nil {
+			slog.Error("FormComponent Url getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		urlString = u
+	}
 
 	var headerNodes []Node
 	if e.Title != "" {
@@ -71,19 +90,19 @@ func (e FormComponent) Build(ctx context.Context) Node {
 		submitGroup)
 }
 
-func (e FormComponent) GetKey() string {
+func (e FormComponent[T]) GetKey() string {
 	return e.Key
 }
 
-func (e FormComponent) GetRoles() []string {
+func (e FormComponent[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e FormComponent) GetChildren() []PageInterface {
+func (e FormComponent[T]) GetChildren() []PageInterface {
 	return append(e.ChildrenInput, e.ChildrenAction...)
 }
 
-func (e *FormComponent) SetChildren(children []PageInterface) {
+func (e *FormComponent[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	nInput := len(e.ChildrenInput)
 	end := offset + nInput
@@ -108,7 +127,7 @@ func (e *FormComponent) SetChildren(children []PageInterface) {
 }
 
 // Calls ParseMultipartForm or ParseForm based on Content-Type and for each Child under it that implements InputIterface, calls its clean method and stores that value in the map, and stores the error in the error map
-func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]error, error) {
+func (e FormComponent[T]) ParseForm(r *http.Request) (map[string]any, map[string]error, error) {
 	var err error
 	isMultipart := false
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
@@ -132,7 +151,6 @@ func (e FormComponent) ParseForm(r *http.Request) (map[string]any, map[string]er
 			inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name], r.Context())
 		} else {
 			inputValues[name], inputErrors[name] = input.Parse(r.Form[name], r.Context())
-			fmt.Println(inputValues)
 		}
 	}
 

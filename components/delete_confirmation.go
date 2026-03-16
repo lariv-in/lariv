@@ -2,7 +2,7 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -13,7 +13,7 @@ type DeleteConfirmation struct {
 	Page
 	Title     string
 	Message   string
-	CancelUrl getters.Getter
+	CancelUrl getters.Getter[string]
 	Classes   string
 }
 
@@ -26,8 +26,15 @@ func (e DeleteConfirmation) GetRoles() []string {
 }
 
 func (e DeleteConfirmation) Build(ctx context.Context) Node {
-	cancelUrl := fmt.Sprintf("%s", getters.IfOrGetter(e.CancelUrl, ctx, "#"))
-
+	cancelUrl := "#"
+	if e.CancelUrl != nil {
+		url, err := e.CancelUrl(ctx)
+		if err != nil {
+			slog.Error("DeleteConfirmation CancelUrl getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		cancelUrl = url
+	}
 	return Div(Class("container mx-auto "+e.Classes),
 		H2(Class("text-xl font-bold text-error"), Text(e.Title)),
 		P(Class("my-2"), Text(e.Message)),

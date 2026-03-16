@@ -15,7 +15,7 @@ import (
 )
 
 // PhoneOtpRequestHandler handles SMS OTP Generation.
-func PhoneOtpRequestHandler(v views.View) http.Handler {
+func PhoneOtpRequestHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// If authenticated, redirect
 		if r.Context().Value("user") != nil {
@@ -42,7 +42,7 @@ func PhoneOtpRequestHandler(v views.View) http.Handler {
 
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		if !views.HasErrors(fieldErrors) {
+		if !v.HasErrors(fieldErrors) {
 			var count int64
 			db.Model(&p_users.User{}).Where("phone = ?", identifier).Count(&count)
 			if count == 0 {
@@ -50,7 +50,7 @@ func PhoneOtpRequestHandler(v views.View) http.Handler {
 			} else {
 				sent := SendSmsOtp(db, identifier)
 				if sent {
-					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "").(string)
+					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
 					lago.Redirect(w, r, successUrl)
 					return
@@ -65,7 +65,7 @@ func PhoneOtpRequestHandler(v views.View) http.Handler {
 }
 
 // EmailOtpRequestHandler handles Email OTP Generation.
-func EmailOtpRequestHandler(v views.View) http.Handler {
+func EmailOtpRequestHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Context().Value("user") != nil {
 			lago.NewRedirectView("users.ListRoute").ServeHTTP(w, r)
@@ -91,7 +91,7 @@ func EmailOtpRequestHandler(v views.View) http.Handler {
 
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		if !views.HasErrors(fieldErrors) {
+		if !v.HasErrors(fieldErrors) {
 			var count int64
 			db.Model(&p_users.User{}).Where("email = ?", identifier).Count(&count)
 			if count == 0 {
@@ -99,7 +99,7 @@ func EmailOtpRequestHandler(v views.View) http.Handler {
 			} else {
 				sent := SendEmailOtp(db, identifier)
 				if sent {
-					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "").(string)
+					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
 					lago.Redirect(w, r, successUrl)
 					return
@@ -114,7 +114,7 @@ func EmailOtpRequestHandler(v views.View) http.Handler {
 }
 
 // OtpVerifyHandler verifies the code and logs the user in.
-func OtpVerifyHandler(v views.View) http.Handler {
+func OtpVerifyHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		identifier := r.URL.Query().Get("identifier")
 		if identifier == "" {
@@ -149,7 +149,7 @@ func OtpVerifyHandler(v views.View) http.Handler {
 
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		if !views.HasErrors(fieldErrors) {
+		if !v.HasErrors(fieldErrors) {
 			var user p_users.User
 			err := db.Where("phone = ? OR email = ?", identifier, identifier).First(&user).Error
 			if err == nil {
@@ -186,8 +186,8 @@ func init() {
 
 	// OTP Preferences
 	lago.RegistryView.Register("otp.OTPPreferencesView",
-		p_users.AuthenticationMiddleware(
-			p_users.RoleAuthorizationMiddleware([]string{"superuser"})(
-				views.SingletonView[OTPPreferences](lago.GetterRoutePath("otp.OTPPreferencesRoute", nil))(
-					lago.GetPageView("otp.OTPPreferencesForm")))))
+		views.SingletonView[OTPPreferences](lago.GetterRoutePath("otp.OTPPreferencesRoute", nil))(
+			lago.GetPageView("otp.OTPPreferencesForm")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("users.role", p_users.RoleAuthorizationMiddleware([]string{"superuser"})))
 }

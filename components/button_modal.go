@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -12,7 +11,7 @@ import (
 type ButtonModal struct {
 	Page
 	Label   string
-	Url     getters.Getter
+	Url     getters.Getter[string]
 	Classes string
 }
 
@@ -27,14 +26,14 @@ func (e ButtonModal) GetRoles() []string {
 func (e ButtonModal) Build(ctx context.Context) Node {
 	url := ""
 	if e.Url != nil {
-		if val := e.Url(ctx); val != nil {
-			url = fmt.Sprintf("%s", val)
+		if v, err := e.Url(ctx); err == nil {
+			url = v
 		}
 	}
 	return Div(Class("w-full"),
 		Button(
 			Type("button"),
-			Class(fmt.Sprintf("btn w-full %s", e.Classes)),
+			Class("btn w-full "+e.Classes),
 			Attr("hx-get", url),
 			Attr("hx-target", "next .modal-container"),
 			Attr("hx-swap", "innerHTML"),

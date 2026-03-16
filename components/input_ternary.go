@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/lariv-in/getters"
@@ -30,7 +31,17 @@ func (e InputTernary) GetRoles() []string {
 }
 
 func (e InputTernary) Build(ctx context.Context) Node {
-	value, err := getters.IfOrGetter(e.Getter, ctx, false)
+	value := false
+	hasValue := false
+	if e.Getter != nil {
+		v, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("InputTernary getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		value = v
+		hasValue = true
+	}
 
 	trueLabel := e.TrueLabel
 	if trueLabel == "" {
@@ -48,7 +59,7 @@ func (e InputTernary) Build(ctx context.Context) Node {
 	noneSelected := ""
 	trueSelected := ""
 	falseSelected := ""
-	if err != nil {
+	if !hasValue {
 		noneSelected = "selected"
 	} else if value {
 		trueSelected = "selected"

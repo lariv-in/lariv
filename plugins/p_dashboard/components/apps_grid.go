@@ -15,7 +15,7 @@ import (
 
 type AppsGrid struct {
 	components.Page
-	Apps getters.Getter
+	Apps getters.Getter[[]lago.Plugin]
 }
 
 func (e AppsGrid) GetKey() string {
@@ -29,8 +29,8 @@ func (e AppsGrid) GetRoles() []string {
 func (e AppsGrid) Build(ctx context.Context) Node {
 	var apps []lago.Plugin
 	if e.Apps != nil {
-		if val, ok := e.Apps(ctx).([]lago.Plugin); ok {
-			apps = val
+		if appsVal, err := e.Apps(ctx); err == nil {
+			apps = appsVal
 		}
 	}
 

@@ -2,6 +2,8 @@ package components
 
 import (
 	"context"
+	"log/slog"
+	"reflect"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -10,19 +12,24 @@ import (
 
 // Detail binds an object from context to its descendants under "$in".
 // Child fields can then resolve their values via GetterKey("$in.FieldName").
-type Detail struct {
+type Detail[T any] struct {
 	Page
-	Getter   getters.Getter
+	Getter   getters.Getter[T]
 	Children []PageInterface
 }
 
-func (e Detail) Build(ctx context.Context) Node {
-	value := getters.IfOrGetter(e.Getter, ctx, nil)
-
+func (e Detail[T]) Build(ctx context.Context) Node {
 	childCtx := ctx
-	if value != nil {
-		objMap := getters.MapFromStruct(value)
-		childCtx = context.WithValue(ctx, "$in", objMap)
+	if e.Getter != nil {
+		value, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("Detail getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		if v := reflect.ValueOf(value); v.IsValid() && !v.IsZero() {
+			objMap := getters.MapFromStruct(value)
+			childCtx = context.WithValue(ctx, "$in", objMap)
+		}
 	}
 
 	var childNodes []Node
@@ -32,18 +39,18 @@ func (e Detail) Build(ctx context.Context) Node {
 	return Div(Group(childNodes))
 }
 
-func (e Detail) GetKey() string {
+func (e Detail[T]) GetKey() string {
 	return e.Key
 }
 
-func (e Detail) GetRoles() []string {
+func (e Detail[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e Detail) GetChildren() []PageInterface {
+func (e Detail[T]) GetChildren() []PageInterface {
 	return e.Children
 }
 
-func (e *Detail) SetChildren(children []PageInterface) {
+func (e *Detail[T]) SetChildren(children []PageInterface) {
 	e.Children = children
 }

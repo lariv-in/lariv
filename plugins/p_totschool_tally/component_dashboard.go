@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/lariv-in/components"
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -57,8 +58,7 @@ func (d TallyDashboardComponent) Build(ctx context.Context) Node {
 			)
 		} else {
 			// Daily report not submitted state
-			dailyAny := lago.GetterRoutePath("tally.TallyDailyFormRoute", nil)(ctx)
-			dailyURL, _ := dailyAny.(string)
+			dailyURL, _ := getters.IfOrGetter(lago.GetterRoutePath("tally.TallyDailyFormRoute", nil), ctx, "")
 
 			whatsappSection = Div(Class("bg-base-200 rounded-box border border-base-300 p-4 mb-4"),
 				Div(Class("flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"),

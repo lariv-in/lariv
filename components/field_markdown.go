@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"github.com/gomarkdown/markdown"
@@ -16,7 +17,7 @@ var mdExtensions = parser.CommonExtensions | parser.AutoHeadingIDs
 
 type FieldMarkdown struct {
 	Page
-	Getter  getters.Getter
+	Getter  getters.Getter[string]
 	Classes string
 }
 
@@ -49,7 +50,14 @@ func (e FieldMarkdown) GetRoles() []string {
 }
 
 func (e FieldMarkdown) Build(ctx context.Context) Node {
-	s, _ := getters.IfOrGetter(e.Getter, ctx, "").(string)
+	if e.Getter == nil {
+		return ghtml.Div()
+	}
+	s, err := e.Getter(ctx)
+	if err != nil {
+		slog.Error("FieldMarkdown getter failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+	}
 	if s == "" {
 		return ghtml.Div()
 	}

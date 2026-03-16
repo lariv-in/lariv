@@ -3,7 +3,7 @@ package components
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/registry"
@@ -14,8 +14,8 @@ import (
 
 type FieldKeyValue struct {
 	Page
-	Getter     getters.Getter
-	Classes    string
+	Getter  getters.Getter[datatypes.JSON]
+	Classes string
 }
 
 func (e FieldKeyValue) GetKey() string {
@@ -27,30 +27,25 @@ func (e FieldKeyValue) GetRoles() []string {
 }
 
 func (e FieldKeyValue) Build(ctx context.Context) Node {
-	raw := getters.IfOrGetter(e.Getter, ctx, nil)
-	if raw == nil {
+	if e.Getter == nil {
 		return Div()
 	}
 
-	jsonData, isJson := raw.(datatypes.JSON)
-	if !isJson {
-		return Div()
-	}
-
-	value, err := jsonData.Value()
+	jsonData, err := e.Getter(ctx)
 	if err != nil {
-		fmt.Println(err)
+		slog.Error("FieldKeyValue getter failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+	}
+	if len(jsonData) == 0 {
 		return Div()
 	}
 
 	var val []registry.Pair[string, string]
-
-	err = json.Unmarshal([]byte(value.(string)), &val)
+	err = json.Unmarshal(jsonData, &val)
 	if err != nil {
-		fmt.Println(err)
-		return Div()
+		slog.Error("FieldKeyValue unmarshal failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
 	}
-	fmt.Println(value.(string))
 
 	var nodes []Node
 	for _, r := range val {

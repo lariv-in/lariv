@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/lariv-in/getters"
@@ -11,7 +12,7 @@ import (
 
 type FieldDate struct {
 	Page
-	Getter  getters.Getter
+	Getter  getters.Getter[time.Time]
 	Classes string
 }
 
@@ -24,11 +25,15 @@ func (e FieldDate) GetRoles() []string {
 }
 
 func (e FieldDate) Build(ctx context.Context) Node {
-	v, ok := e.Getter(ctx).(time.Time)
-	if !ok {
+	if e.Getter == nil {
 		return Group{}
 	}
-	timezone := ctx.Value("$tz").(*time.Location)
+	v, err := e.Getter(ctx)
+	if err != nil {
+		slog.Error("FieldDate getter failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+	}
+	timezone, _ := ctx.Value("$tz").(*time.Location)
 	if timezone == nil {
 		timezone = DefaultTimeZone
 	}

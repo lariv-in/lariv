@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -12,7 +11,7 @@ import (
 type ButtonDownload struct {
 	Page
 	Label   string
-	Link    getters.Getter
+	Link    getters.Getter[string]
 	Classes string
 }
 
@@ -27,13 +26,13 @@ func (e ButtonDownload) GetRoles() []string {
 func (e ButtonDownload) Build(ctx context.Context) Node {
 	link := ""
 	if e.Link != nil {
-		if val := e.Link(ctx); val != nil {
-			link = fmt.Sprintf("%s", val)
+		if v, err := e.Link(ctx); err == nil {
+			link = v
 		}
 	}
 	return A(
 		Href(link),
-		Class(fmt.Sprintf("btn %s", e.Classes)),
+		Class("btn "+e.Classes),
 		Attr("data-hx-boost", "false"),
 		Attr("download"),
 		Text(e.Label),

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/registry"
@@ -14,57 +15,56 @@ import (
 
 type InputKeyValue struct {
 	Page
-	Getter  getters.Getter
-	Keys    getters.Getter
+	Getter  getters.Getter[datatypes.JSON]
+	Keys    getters.Getter[[]string]
 	Classes string
 	Name    string
 }
 
+func (e InputKeyValue) GetKey() string {
+	return e.Key
+}
+
+func (e InputKeyValue) GetRoles() []string {
+	return e.Roles
+}
+
 func (e InputKeyValue) Build(ctx context.Context) Node {
-	raw := getters.IfOrGetter(e.Getter, ctx, nil)
 	var val []registry.Pair[string, string]
-	if raw != nil {
-	value, _ := raw.(string)
+	if e.Getter != nil {
+		jsonData, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("InputKeyValue getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		if len(jsonData) > 0 {
+			if err := json.Unmarshal(jsonData, &val); err != nil {
+				slog.Error("InputKeyValue unmarshal failed", "error", err, "key", e.Key)
+				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			}
+		}
+	}
 
-	jsonData, isJson := raw.(datatypes.JSON)
-	if isJson {
-		jsonValue, err := jsonData.Value()
+	if e.Keys == nil {
+		slog.Error("InputKeyValue Keys is nil", "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(fmt.Errorf("InputKeyValue: Keys getter is required"))}.Build(ctx)
+	}
+	keys, err := e.Keys(ctx)
 	if err != nil {
-		fmt.Println(err)
-		return Div()
+		slog.Error("InputKeyValue Keys getter failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
 	}
-	value = jsonValue.(string)
-
-	}
-
-
-	err := json.Unmarshal([]byte(value), &val)
-	if err != nil {
-		fmt.Println(err)
-		return Div()
-	}
-	}
-
-
-	keys := e.Keys(ctx).([]string)
 
 	var nodes []Node
 	for i, k := range keys {
-		isCurrentValue := true
-		if i >= len(val) {
-			isCurrentValue = false
-		} else if val[i].Key != k {
-			isCurrentValue = false
+		displayVal := ""
+		if i < len(val) && val[i].Key == k {
+			displayVal = val[i].Value
 		}
-		nodes = append(nodes, 
-		InputText{Hidden: true, Name: e.Name + "Key", Getter: getters.GetterStatic(k)}.Build(ctx),
-		InputTextarea{Name: e.Name + "Value",Label: k, Getter: func (ctx context.Context) any {
-			if isCurrentValue {
-				return val[i].Value
-			}
-			return nil
-		}}.Build(ctx),
-	)
+		nodes = append(nodes,
+			InputText{Hidden: true, Name: e.Name + "Key", Getter: getters.GetterStatic(k)}.Build(ctx),
+			InputTextarea{Name: e.Name + "Value", Label: k, Getter: getters.GetterStatic(displayVal)}.Build(ctx),
+		)
 	}
 
 	finalInput := Input(

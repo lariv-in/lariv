@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lariv-in/getters"
 	"maragu.dev/gomponents"
@@ -12,8 +11,8 @@ import (
 type ButtonLink struct {
 	Page
 	Label       string
-	GetterLabel getters.Getter
-	Link        getters.Getter
+	GetterLabel getters.Getter[string]
+	Link        getters.Getter[string]
 	Classes     string
 }
 
@@ -28,13 +27,15 @@ func (e ButtonLink) GetRoles() []string {
 func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 	link := ""
 	if e.Link != nil {
-		if val := e.Link(ctx); val != nil {
-			link = fmt.Sprintf("%s", val)
+		if v, err := e.Link(ctx); err == nil {
+			link = v
 		}
 	}
 	label := e.Label
 	if e.GetterLabel != nil {
-		label = fmt.Sprintf("%v", e.GetterLabel(ctx))
+		if v, err := e.GetterLabel(ctx); err == nil {
+			label = v
+		}
 	}
-	return html.A(html.Href(link), html.Class(fmt.Sprintf("btn btn-primary w-full %s", e.Classes)), gomponents.Text(label))
+	return html.A(html.Href(link), html.Class("btn btn-primary w-full "+e.Classes), gomponents.Text(label))
 }

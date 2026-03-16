@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	"github.com/nyaruka/phonenumbers"
@@ -15,7 +16,7 @@ type InputPhone struct {
 	Page
 	Label    string
 	Name     string
-	Getter   getters.Getter
+	Getter   getters.Getter[string]
 	Required bool
 	Classes  string
 }
@@ -29,26 +30,25 @@ func (e InputPhone) GetRoles() []string {
 }
 
 func (e InputPhone) Build(ctx context.Context) Node {
-	value := e.Getter(ctx)
-	v, ok := value.(*phonenumbers.PhoneNumber)
-	if !ok {
-		vStr, ok := value.(string)
-		if ok {
-			val, err := phonenumbers.Parse(vStr, "IN")
+	displayValue := ""
+	if e.Getter != nil {
+		value, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("InputPhone getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		if value != "" {
+			parsed, err := phonenumbers.Parse(value, "IN")
 			if err == nil {
-				v = val
+				displayValue = phonenumbers.Format(parsed, phonenumbers.E164)
+			} else {
+				displayValue = value
 			}
 		}
 	}
-	var vStr string
-	if v != nil {
-		vStr = phonenumbers.Format(v, phonenumbers.E164)
-	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Input(Type("tel"), Name(e.Name), getters.GetterIf(e.Getter, ctx, func(ctx context.Context, value any) Node {
-			return Value(vStr)
-		}), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		Input(Type("tel"), Name(e.Name), Value(displayValue), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
 	)
 }
 

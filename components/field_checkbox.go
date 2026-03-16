@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -10,7 +11,7 @@ import (
 
 type FieldCheckbox struct {
 	Page
-	Getter getters.Getter
+	Getter getters.Getter[bool]
 }
 
 func (e FieldCheckbox) GetKey() string {
@@ -22,10 +23,14 @@ func (e FieldCheckbox) GetRoles() []string {
 }
 
 func (e FieldCheckbox) Build(ctx context.Context) Node {
-	value := getters.IfOrGetter(e.Getter, ctx, false)
 	truthy := false
-	if b, ok := value.(bool); ok {
-		truthy = b
+	if e.Getter != nil {
+		value, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("FieldCheckbox getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		truthy = value
 	}
 
 	if truthy {

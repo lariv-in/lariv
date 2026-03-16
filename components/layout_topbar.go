@@ -18,8 +18,8 @@ type TopbarButton struct {
 	Icon          string         // heroicon name
 	IconAlt       string         // alternate icon (for toggling, e.g. sun/moon)
 	IconCondition string         // Alpine.js condition for showing the primary icon vs alt
-	URL           getters.Getter // lazily resolved URL (e.g. from route registry)
-	Target        string         // Turbo frame target selector
+	URL           getters.Getter[string] // lazily resolved URL (e.g. from route registry)
+	Target        string                 // Turbo frame target selector
 	Method        string         // HTTP method: get (default), post, put, delete
 	OnClick       string         // JavaScript onclick handler
 	Classes       string         // CSS classes for the button
@@ -40,7 +40,8 @@ func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 		btn := btnItem.Value
 		url := ""
 		if btn.URL != nil {
-			if u, ok := btn.URL(ctx).(string); ok {
+			u, err := btn.URL(ctx)
+			if err == nil {
 				url = u
 			}
 		}

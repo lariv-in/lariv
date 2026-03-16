@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func detailHandler(v views.View) http.Handler {
+func detailHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -51,7 +51,7 @@ func detailHandler(v views.View) http.Handler {
 	})
 }
 
-func generateHandler(v views.View) http.Handler {
+func generateHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -70,13 +70,13 @@ func generateHandler(v views.View) http.Handler {
 		content, systemPrompt := buildLetterContent(db, &appointment, user.Name)
 		Generate(db, appointment.ID, content, systemPrompt)
 
-		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(idStr),
+		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.GetterAny(getters.GetterStatic(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
 
-func cancelHandler(v views.View) http.Handler {
+func cancelHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -95,13 +95,13 @@ func cancelHandler(v views.View) http.Handler {
 			CancelGeneration(db, appointment.ID)
 		}
 
-		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(idStr),
+		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.GetterAny(getters.GetterStatic(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
 
-func aiEditFormHandler(v views.View) http.Handler {
+func aiEditFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -117,7 +117,7 @@ func aiEditFormHandler(v views.View) http.Handler {
 	})
 }
 
-func aiEditHandler(v views.View) http.Handler {
+func aiEditHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -142,49 +142,62 @@ func aiEditHandler(v views.View) http.Handler {
 		userPrompt := "Here is the current letter content:\n\n" + content + "\n\nPlease edit this letter according to these instructions: " + instructions + "\n\nOutput only the edited text, nothing else."
 		Generate(db, appointment.ID, userPrompt, letterEditorSystemPrompt)
 
-		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(idStr),
+		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.GetterAny(getters.GetterStatic(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
 
-func FormCreatedByPatcher(v views.View, r *http.Request, formData map[string]any) map[string]any {
+func FormCreatedByPatcher(v *views.View, r *http.Request, formData map[string]any) map[string]any {
 	user := r.Context().Value("$user").(p_users.User)
 	formData["CreatedByID"] = user.ID
 	return formData
 }
 
 func init() {
-	lago.RegistryView.Register("appointments.ListView", p_users.AuthenticationMiddleware(
-		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentTable"))))
+	lago.RegistryView.Register("appointments.ListView",
+		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentTable")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.DetailView", p_users.AuthenticationMiddleware(
-		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodGet, detailHandler))))
+	lago.RegistryView.Register("appointments.DetailView",
+		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodGet, detailHandler)).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.CreateView", p_users.AuthenticationMiddleware(
-		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("appointments.AppointmentCreateForm")).WithFormPatcher(FormCreatedByPatcher)))
+	lago.RegistryView.Register("appointments.CreateView",
+		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
+			WithFormPatcher(FormCreatedByPatcher).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.UpdateView", p_users.AuthenticationMiddleware(
-		views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("appointments.AppointmentUpdateForm")).WithFormPatcher(FormCreatedByPatcher)))
+	lago.RegistryView.Register("appointments.UpdateView",
+		views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm")).
+			WithFormPatcher(FormCreatedByPatcher).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.DeleteView", p_users.AuthenticationMiddleware(
-		views.DeleteView[Appointment](lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm"))))
+	lago.RegistryView.Register("appointments.DeleteView",
+		views.DeleteView[Appointment](lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.GenerateView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, generateHandler)))
+	lago.RegistryView.Register("appointments.GenerateView",
+		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, generateHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.CancelView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, cancelHandler)))
+	lago.RegistryView.Register("appointments.CancelView",
+		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, cancelHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.AiEditFormView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("appointments.AiEditModal").WithMethod(http.MethodGet, aiEditFormHandler)))
+	lago.RegistryView.Register("appointments.AiEditFormView",
+		lago.GetPageView("appointments.AiEditModal").WithMethod(http.MethodGet, aiEditFormHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.AiEditView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("appointments.AiEditModal").WithMethod(http.MethodPost, aiEditHandler)))
+	lago.RegistryView.Register("appointments.AiEditView",
+		lago.GetPageView("appointments.AiEditModal").WithMethod(http.MethodPost, aiEditHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.SelectView", p_users.AuthenticationMiddleware(
-		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentSelectionTable"))))
+	lago.RegistryView.Register("appointments.SelectView",
+		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentSelectionTable")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("appointments.CardTimelineView", p_users.AuthenticationMiddleware(
-		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentCardTimeline"))))
+	lago.RegistryView.Register("appointments.CardTimelineView",
+		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentCardTimeline")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 }

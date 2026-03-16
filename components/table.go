@@ -16,30 +16,30 @@ type TableColumn struct {
 	Children  []PageInterface
 }
 
-type DataTable struct {
+type DataTable[T any] struct {
 	Page
 	UID      string
 	Columns  []TableColumn
-	Data     getters.Getter
+	Data     getters.Getter[ObjectList[T]]
 	Title    string
 	Subtitle string
 	Classes  string
 	// Displays is a map of view name to display component
 	// e.g. "List": TableListContent, "Grid": TableGridContent
-	Displays        map[string]func([]TableColumn, getters.Getter, getters.Getter) PageInterface
+	Displays        map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
 	FilterComponent PageInterface
-	CreateUrl       getters.Getter
-	OnClick         getters.Getter // Per-row Alpine @click expression (use GetterNavigate, GetterSelect, or GetterMultiSelect)
+	CreateUrl       getters.Getter[string]
+	OnClick         getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect, or GetterMultiSelect)
 }
 
-func (e DataTable) Build(ctx context.Context) Node {
+func (e DataTable[T]) Build(ctx context.Context) Node {
 	if e.Displays == nil {
-		e.Displays = map[string]func([]TableColumn, getters.Getter, getters.Getter) PageInterface{
-			"List": func(cols []TableColumn, data getters.Getter, onClick getters.Getter) PageInterface {
-				return TableListContent{Columns: cols, Data: data, OnClick: onClick}
+		e.Displays = map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface{
+			"List": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string]) PageInterface {
+				return TableListContent[T]{Columns: cols, Data: data, OnClick: onClick}
 			},
-			"Grid": func(cols []TableColumn, data getters.Getter, onClick getters.Getter) PageInterface {
-				return TableGridContent{Columns: cols, Data: data, OnClick: onClick}
+			"Grid": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string]) PageInterface {
+				return TableGridContent[T]{Columns: cols, Data: data, OnClick: onClick}
 			},
 		}
 	}
@@ -71,9 +71,9 @@ func (e DataTable) Build(ctx context.Context) Node {
 	// Create button
 	var createNode Node
 	if e.CreateUrl != nil {
-		createUrl := fmt.Sprintf("%s", getters.IfOrGetter(e.CreateUrl, ctx, ""))
-		if createUrl != "" {
-			createNode = A(Href(createUrl), Class("btn btn-square btn-outline btn-sm"), Render(Icon{Name: "plus"}, ctx))
+		createURL, err := e.CreateUrl(ctx)
+		if err == nil && createURL != "" {
+			createNode = A(Href(createURL), Class("btn btn-square btn-outline btn-sm"), Render(Icon{Name: "plus"}, ctx))
 		}
 	}
 
@@ -100,20 +100,20 @@ func (e DataTable) Build(ctx context.Context) Node {
 			),
 		),
 		Div(Class("relative my-2"),
-			displayNodes, Render(TablePagination{Data: e.Data}, ctx),
+			displayNodes, Render(TablePagination[T]{Data: e.Data}, ctx),
 		),
 	)
 }
 
-func (e DataTable) GetKey() string {
+func (e DataTable[T]) GetKey() string {
 	return e.Key
 }
 
-func (e DataTable) GetRoles() []string {
+func (e DataTable[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e DataTable) GetChildren() []PageInterface {
+func (e DataTable[T]) GetChildren() []PageInterface {
 	var children []PageInterface
 	if e.FilterComponent != nil {
 		children = append(children, e.FilterComponent)
@@ -124,7 +124,7 @@ func (e DataTable) GetChildren() []PageInterface {
 	return children
 }
 
-func (e *DataTable) SetChildren(children []PageInterface) {
+func (e *DataTable[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	if e.FilterComponent != nil && len(children) > 0 {
 		e.FilterComponent = children[0]

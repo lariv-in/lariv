@@ -2,7 +2,7 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	"github.com/nyaruka/phonenumbers"
@@ -12,7 +12,7 @@ import (
 
 type FieldPhone struct {
 	Page
-	Getter  getters.Getter
+	Getter  getters.Getter[string]
 	Classes string
 }
 
@@ -25,21 +25,20 @@ func (e FieldPhone) GetRoles() []string {
 }
 
 func (e FieldPhone) Build(ctx context.Context) Node {
-	value := e.Getter(ctx)
-	v, ok := value.(*phonenumbers.PhoneNumber)
-	if !ok {
-		vStr, ok := value.(string)
-		if !ok {
-			return ContainerError{Error: getters.GetterStatic(fmt.Errorf("Invalid value for a phone number: %s", value))}.Build(ctx)
-		}
-		val, err := phonenumbers.Parse(vStr, "IN")
-		if err != nil {
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
-		}
-		v = val
+	if e.Getter == nil {
+		return Group{}
 	}
-	if v == nil {
-		return ContainerError{Error: getters.GetterStatic(fmt.Errorf("Invalid value for a phone number"))}.Build(ctx)
+
+	value, err := e.Getter(ctx)
+	if err != nil {
+		slog.Error("FieldPhone getter failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
 	}
-	return Div(Class(fmt.Sprintf("text-xl font-semibold text-primary %s", e.Classes)), Text(phonenumbers.Format(v, phonenumbers.E164 )))
+
+	v, err := phonenumbers.Parse(value, "IN")
+	if err != nil {
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+	}
+
+	return Div(Class("text-xl font-semibold text-primary "+e.Classes), Text(phonenumbers.Format(v, phonenumbers.E164)))
 }

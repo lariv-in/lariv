@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"net/http"
-	"reflect"
 	"strconv"
 
 	"github.com/lariv-in/getters"
@@ -11,47 +10,29 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-type TablePagination struct {
+type TablePagination[T any] struct {
 	Page
-	Data getters.Getter
+	Data getters.Getter[ObjectList[T]]
 }
 
-func (e TablePagination) GetKey() string {
+func (e TablePagination[T]) GetKey() string {
 	return e.Key
 }
 
-func (e TablePagination) GetRoles() []string {
+func (e TablePagination[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e TablePagination) Build(ctx context.Context) Node {
-	data := getters.IfOrGetter(e.Data, ctx, nil)
-	if data == nil {
+func (e TablePagination[T]) Build(ctx context.Context) Node {
+	if e.Data == nil {
 		return nil
 	}
-
-	v := reflect.ValueOf(data)
-	if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
-		v = v.Elem()
-	}
-
-	if v.Kind() != reflect.Struct {
+	data, err := e.Data(ctx)
+	if err != nil {
 		return nil
 	}
-
-	// Extract Number and NumPages safely
-	var number, numPages int
-	numField := v.FieldByName("Number")
-	if numField.IsValid() && numField.CanInt() {
-		number = int(numField.Int())
-	} else {
-		return nil
-	}
-
-	numPagesField := v.FieldByName("NumPages")
-	if numPagesField.IsValid() && numPagesField.CanInt() {
-		numPages = int(numPagesField.Int())
-	}
+	number := data.Number
+	numPages := data.NumPages
 
 	if numPages <= 1 {
 		return nil
@@ -95,7 +76,7 @@ func (e TablePagination) Build(ctx context.Context) Node {
 	)
 }
 
-func (e TablePagination) pageButton(req *http.Request, p int, active bool) Node {
+func (e TablePagination[T]) pageButton(req *http.Request, p int, active bool) Node {
 	u := *req.URL
 	q := u.Query()
 	q.Set("page", strconv.Itoa(p))

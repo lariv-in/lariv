@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -12,12 +13,19 @@ import (
 // ShowIf renders Children only when Getter resolves to a truthy value.
 type ShowIf struct {
 	Page
-	Getter   getters.Getter
+	Getter   getters.Getter[any]
 	Children []PageInterface
 }
 
 func (e ShowIf) Build(ctx context.Context) Node {
-	v := getters.IfOrGetter(e.Getter, ctx, nil)
+	if e.Getter == nil {
+		return Group{}
+	}
+	v, err := e.Getter(ctx)
+	if err != nil {
+		slog.Error("ShowIf getter failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+	}
 	if !isTruthy(v) {
 		return Group{}
 	}

@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -12,9 +13,9 @@ import (
 type Environment struct {
 	Page
 	Label   string
-	Key     getters.Getter // key used in the environment cookie map
-	Options getters.Getter // should return []string of option values
-	Default getters.Getter
+	Key     getters.Getter[string]   // key used in the environment cookie map
+	Options getters.Getter[[]string] // option values
+	Default getters.Getter[string]
 	Classes string
 }
 
@@ -27,17 +28,37 @@ func (e Environment) GetRoles() []string {
 }
 
 func (e Environment) Build(ctx context.Context) Node {
-	key, _ := getters.IfOrGetter(e.Key, ctx, "").(string)
-	options, _ := getters.IfOrGetter(e.Options, ctx, []string{}).([]string)
+	key := ""
+	if e.Key != nil {
+		k, err := e.Key(ctx)
+		if err != nil {
+			slog.Error("Environment Key getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		key = k
+	}
+	options := []string{}
+	if e.Options != nil {
+		opts, err := e.Options(ctx)
+		if err != nil {
+			slog.Error("Environment Options getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		options = opts
+	}
 
 	// Read current value from $environment context
 	var current string
 	if envMap, ok := ctx.Value("$environment").(map[string]string); ok {
 		var isEnvironmentPresent bool
 		current, isEnvironmentPresent = envMap[key]
-		if !isEnvironmentPresent {
-			fmt.Println(e.Default(ctx))
-			current = e.Default(ctx).(string)
+		if !isEnvironmentPresent && e.Default != nil {
+			def, err := e.Default(ctx)
+			if err != nil {
+				slog.Error("Environment Default getter failed", "error", err, "key", e.Key)
+				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			}
+			current = def
 		}
 	}
 

@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -13,7 +14,7 @@ type InputPassword struct {
 	Page
 	Label    string
 	Name     string
-	Getter   getters.Getter
+	Getter   getters.Getter[string]
 	Required bool
 	Classes  string
 }
@@ -27,13 +28,18 @@ func (e InputPassword) GetRoles() []string {
 }
 
 func (e InputPassword) Build(ctx context.Context) Node {
+	var valueNode Node = Value("")
+	if e.Getter != nil {
+		value, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("InputPassword getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		valueNode = Value(value)
+	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Input(Type("password"), Name(e.Name),
-			getters.GetterIf(e.Getter, ctx, func(ctx context.Context, value any) Node {
-				return Value(fmt.Sprintf("%s", value))
-			}),
-			Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		Input(Type("password"), Name(e.Name), valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
 	)
 }
 

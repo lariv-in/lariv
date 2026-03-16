@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
@@ -35,7 +36,7 @@ func getAllSessionNames(db *gorm.DB) []string {
 }
 
 // TallyDashboardHandler displays user stats.
-func TallyDashboardHandler(v views.View) http.Handler {
+func TallyDashboardHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("$user").(p_users.User)
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -72,7 +73,7 @@ func TallyDashboardHandler(v views.View) http.Handler {
 }
 
 // TallyLeaderboardHandler displays top users per metric.
-func TallyLeaderboardHandler(v views.View) http.Handler {
+func TallyLeaderboardHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("$user").(p_users.User)
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -137,7 +138,7 @@ func RequireAdmin(next http.Handler) http.Handler {
 }
 
 // TallyListHandler lists all tallies
-func TallyListHandler(v views.View) http.Handler {
+func TallyListHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("$user").(p_users.User)
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -156,9 +157,15 @@ func TallyListHandler(v views.View) http.Handler {
 
 		var tallies []Tally
 		query.Order("date DESC").Find(&tallies)
+		total := int64(len(tallies))
 
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"Tallies":      tallies,
+			"Tallies": components.ObjectList[Tally]{
+				Items:    tallies,
+				Number:   1,
+				NumPages: 1,
+				Total:    total,
+			},
 			"SessionNames": getAllSessionNames(db),
 		})
 		v.RenderPage(w, r.WithContext(ctx))
@@ -166,7 +173,7 @@ func TallyListHandler(v views.View) http.Handler {
 }
 
 // TallyDailyFormHandler handles form submission for the logged-in user's daily tally.
-func TallyDailyFormHandler(v views.View) http.Handler {
+func TallyDailyFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("$user").(p_users.User)
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -189,7 +196,7 @@ func TallyDailyFormHandler(v views.View) http.Handler {
 			return
 		}
 
-		if views.HasErrors(fieldErrors) {
+		if v.HasErrors(fieldErrors) {
 			ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": tally})
 			v.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
 			return
@@ -218,29 +225,48 @@ func TallyDailyFormHandler(v views.View) http.Handler {
 }
 
 func init() {
-	lago.RegistryView.Register("tally.TallyDashboardView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyDashboard").WithMethod(http.MethodGet, TallyDashboardHandler)))
-	lago.RegistryView.Register("tally.TallyLeaderboardView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyLeaderboard").WithMethod(http.MethodGet, TallyLeaderboardHandler)))
-	lago.RegistryView.Register("tally.TallyListView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyTable").WithMethod(http.MethodGet, TallyListHandler)))
-	lago.RegistryView.Register("tally.TallyDailyFormView", p_users.AuthenticationMiddleware(lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler)))
+	lago.RegistryView.Register("tally.TallyDashboardView",
+		lago.GetPageView("tally.TallyDashboard").WithMethod(http.MethodGet, TallyDashboardHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+	lago.RegistryView.Register("tally.TallyLeaderboardView",
+		lago.GetPageView("tally.TallyLeaderboard").WithMethod(http.MethodGet, TallyLeaderboardHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+	lago.RegistryView.Register("tally.TallyListView",
+		lago.GetPageView("tally.TallyTable").WithMethod(http.MethodGet, TallyListHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+	lago.RegistryView.Register("tally.TallyDailyFormView",
+		lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	// Admin CRUD mappings using standard views
-	lago.RegistryView.Register("tally.TallyCreateView", p_users.AuthenticationMiddleware(RequireAdmin(views.CreateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyCreateForm")))))
-	lago.RegistryView.Register("tally.TallyUpdateView", p_users.AuthenticationMiddleware(RequireAdmin(views.UpdateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")))))
-	lago.RegistryView.Register("tally.TallyDeleteView", p_users.AuthenticationMiddleware(RequireAdmin(views.DeleteView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")))))
+	lago.RegistryView.Register("tally.TallyCreateView",
+		views.CreateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyCreateForm")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("tally.admin", RequireAdmin))
+	lago.RegistryView.Register("tally.TallyUpdateView",
+		views.UpdateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("tally.admin", RequireAdmin))
+	lago.RegistryView.Register("tally.TallyDeleteView",
+		views.DeleteView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("tally.admin", RequireAdmin))
 
 	// Detail View allows access if user owns it or is admin
-	lago.RegistryView.Register("tally.TallyDetailView", p_users.AuthenticationMiddleware(func(v views.View) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			idStr := r.PathValue("id")
-			db := r.Context().Value("$db").(*gorm.DB)
-			user := r.Context().Value("$user").(p_users.User)
+	lago.RegistryView.Register("tally.TallyDetailView",
+		lago.GetPageView("tally.TallyDetail").WithMethod(http.MethodGet, func(v *views.View) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				idStr := r.PathValue("id")
+				db := r.Context().Value("$db").(*gorm.DB)
+				user := r.Context().Value("$user").(p_users.User)
 
-			tally := getTallyOr404(w, r, db, idStr, user)
-			if tally == nil {
-				return
-			}
-			ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": getters.MapFromStruct(tally)})
-			v.RenderPage(w, r.WithContext(ctx))
-		})
-	}(lago.GetPageView("tally.TallyDetail")))) // Using new TallyDetail component
+				tally := getTallyOr404(w, r, db, idStr, user)
+				if tally == nil {
+					return
+				}
+				ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": getters.MapFromStruct(tally)})
+				v.RenderPage(w, r.WithContext(ctx))
+			})
+		}).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware)) // Using new TallyDetail component
 }

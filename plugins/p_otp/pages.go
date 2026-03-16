@@ -6,6 +6,7 @@ import (
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
+	"github.com/lariv-in/p_users"
 	"gorm.io/gorm"
 )
 
@@ -16,18 +17,18 @@ func init() {
 				Classes: "w-80",
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.GetterStatic("Login via SMS")},
-					components.FormComponent{
+					components.FormComponent[map[string]string]{
 						Url:    lago.GetterRoutePath("otp.PhoneOtpRequestRoute", nil),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
-								Error: getters.GetterKey("$error.Identifier"),
+								Error: getters.GetterKey[error]("$error.Identifier"),
 								Children: []components.PageInterface{
 									components.InputPhone{
 										Name:     "Identifier",
 										Label:    "Phone Number",
 										Required: true,
-										Getter:   getters.GetterKey("$in.Identifier"),
+										Getter:   getters.GetterKey[string]("$in.Identifier"),
 									},
 								},
 							},
@@ -59,18 +60,18 @@ func init() {
 				Classes: "w-80",
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.GetterStatic("Login via Email")},
-					components.FormComponent{
+					components.FormComponent[map[string]string]{
 						Url:    lago.GetterRoutePath("otp.EmailOtpRequestRoute", nil),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
-								Error: getters.GetterKey("$error.Identifier"),
+								Error: getters.GetterKey[error]("$error.Identifier"),
 								Children: []components.PageInterface{
 									components.InputEmail{
 										Name:     "Identifier",
 										Label:    "Email Address",
 										Required: true,
-										Getter:   getters.GetterKey("$in.Identifier"),
+										Getter:   getters.GetterKey[string]("$in.Identifier"),
 									},
 								},
 							},
@@ -102,18 +103,18 @@ func init() {
 				Classes: "w-80",
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.GetterStatic("Verify OTP")},
-					components.FormComponent{
-						Url:    getters.GetterFormat("%v?identifier=%v", lago.GetterRoutePath("otp.OtpVerifyRoute", nil), getters.GetterQueryEscape(getters.GetterKey("$in.Identifier"))),
+					components.FormComponent[map[string]string]{
+						Url:    getters.GetterFormat("%v?identifier=%v", getters.GetterAny(lago.GetterRoutePath("otp.OtpVerifyRoute", nil)), getters.GetterAny(getters.GetterQueryEscape(getters.GetterKey[string]("$in.Identifier")))),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
-								Error: getters.GetterKey("$error.Otp"),
+								Error: getters.GetterKey[error]("$error.Otp"),
 								Children: []components.PageInterface{
 									components.InputText{
 										Name:     "Otp",
 										Label:    "OTP",
 										Required: true,
-										Getter:   getters.GetterKey("$in.Otp"),
+										Getter:   getters.GetterKey[string]("$in.Otp"),
 									},
 								},
 							},
@@ -158,7 +159,7 @@ func init() {
 			lago.DynamicPage{Name: "otp.OTPPreferencesMenu"},
 		},
 		Children: []components.PageInterface{
-			components.FormComponent{
+			components.FormComponent[OTPPreferences]{
 				Url:      lago.GetterRoutePath("otp.OTPPreferencesRoute", nil),
 				Title:    "OTP Preferences",
 				Subtitle: "Configure OTP settings for SMS and Email",
@@ -168,12 +169,12 @@ func init() {
 						Getter: getters.GetterStatic("SMS OTP Settings"),
 					},
 					components.ContainerError{
-						Error: getters.GetterKey("$error.Msg91AuthKey"),
+						Error: getters.GetterKey[error]("$error.Msg91AuthKey"),
 						Children: []components.PageInterface{
 							components.InputText{
 								Name:   "Msg91AuthKey",
 								Label:  "MSG91 Auth Key",
-								Getter: getters.GetterKey("$in.Msg91AuthKey"),
+								Getter: getters.GetterKey[string]("$in.Msg91AuthKey"),
 							},
 						},
 					},
@@ -181,44 +182,44 @@ func init() {
 						Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 						Children: []components.PageInterface{
 							components.ContainerError{
-								Error: getters.GetterKey("$error.SmsOtpTemplateId"),
+								Error: getters.GetterKey[error]("$error.SmsOtpTemplateId"),
 								Children: []components.PageInterface{
 									components.InputText{
 										Name:   "SmsOtpTemplateId",
 										Label:  "SMS OTP Template ID",
-										Getter: getters.GetterKey("$in.SmsOtpTemplateId"),
+										Getter: getters.GetterKey[string]("$in.SmsOtpTemplateId"),
 									},
 								},
 							},
 							components.ContainerError{
-								Error: getters.GetterKey("$error.OtpTemplateId"),
+								Error: getters.GetterKey[error]("$error.OtpTemplateId"),
 								Children: []components.PageInterface{
 									components.InputText{
 										Name:   "OtpTemplateId",
 										Label:  "General OTP Template ID (Fallback)",
-										Getter: getters.GetterKey("$in.OtpTemplateId"),
+										Getter: getters.GetterKey[string]("$in.OtpTemplateId"),
 									},
 								},
 							},
 						},
 					},
 					components.ContainerError{
-						Error: getters.GetterKey("$error.SmsOtpFieldName"),
+						Error: getters.GetterKey[error]("$error.SmsOtpFieldName"),
 						Children: []components.PageInterface{
 							components.InputText{
 								Name:   "SmsOtpFieldName",
 								Label:  "SMS OTP Field Name",
-								Getter: getters.GetterKey("$in.SmsOtpFieldName"),
+								Getter: getters.GetterKey[string]("$in.SmsOtpFieldName"),
 							},
 						},
 					},
 					components.ContainerError{
-						Error: getters.GetterKey("$error.SmsOtpExtraFields"),
+						Error: getters.GetterKey[error]("$error.SmsOtpExtraFields"),
 						Children: []components.PageInterface{
 							components.InputText{
 								Name:   "SmsOtpExtraFields",
 								Label:  "SMS OTP Extra Fields (JSON)",
-								Getter: getters.GetterKey("$in.SmsOtpExtraFields"),
+								Getter: getters.GetterKey[string]("$in.SmsOtpExtraFields"),
 							},
 						},
 					},
@@ -226,12 +227,12 @@ func init() {
 						Getter: getters.GetterStatic("Email OTP Settings"),
 					},
 					components.ContainerError{
-						Error: getters.GetterKey("$error.EmailOtpTemplateString"),
+						Error: getters.GetterKey[error]("$error.EmailOtpTemplateString"),
 						Children: []components.PageInterface{
 							components.InputText{
 								Name:   "EmailOtpTemplateString",
 								Label:  "Email OTP Template String",
-								Getter: getters.GetterKey("$in.EmailOtpTemplateString"),
+								Getter: getters.GetterKey[string]("$in.EmailOtpTemplateString"),
 							},
 						},
 					},
@@ -239,22 +240,22 @@ func init() {
 						Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 						Children: []components.PageInterface{
 							components.ContainerError{
-								Error: getters.GetterKey("$error.SmtpHost"),
+								Error: getters.GetterKey[error]("$error.SmtpHost"),
 								Children: []components.PageInterface{
 									components.InputText{
 										Name:   "SmtpHost",
 										Label:  "SMTP Host",
-										Getter: getters.GetterKey("$in.SmtpHost"),
+										Getter: getters.GetterKey[string]("$in.SmtpHost"),
 									},
 								},
 							},
 							components.ContainerError{
-								Error: getters.GetterKey("$error.SmtpPort"),
+								Error: getters.GetterKey[error]("$error.SmtpPort"),
 								Children: []components.PageInterface{
 									components.InputText{
 										Name:   "SmtpPort",
 										Label:  "SMTP Port",
-										Getter: getters.GetterKey("$in.SmtpPort"),
+										Getter: getters.GetterKey[string]("$in.SmtpPort"),
 									},
 								},
 							},
@@ -264,34 +265,34 @@ func init() {
 						Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 						Children: []components.PageInterface{
 							components.ContainerError{
-								Error: getters.GetterKey("$error.SmtpUsername"),
+								Error: getters.GetterKey[error]("$error.SmtpUsername"),
 								Children: []components.PageInterface{
 									components.InputText{
 										Name:   "SmtpUsername",
 										Label:  "SMTP Username",
-										Getter: getters.GetterKey("$in.SmtpUsername"),
+										Getter: getters.GetterKey[string]("$in.SmtpUsername"),
 									},
 								},
 							},
 							components.ContainerError{
-								Error: getters.GetterKey("$error.SmtpPassword"),
+								Error: getters.GetterKey[error]("$error.SmtpPassword"),
 								Children: []components.PageInterface{
 									components.InputText{
 										Name:   "SmtpPassword",
 										Label:  "SMTP Password",
-										Getter: getters.GetterKey("$in.SmtpPassword"),
+										Getter: getters.GetterKey[string]("$in.SmtpPassword"),
 									},
 								},
 							},
 						},
 					},
 					components.ContainerError{
-						Error: getters.GetterKey("$error.SmtpFrom"),
+						Error: getters.GetterKey[error]("$error.SmtpFrom"),
 						Children: []components.PageInterface{
 							components.InputText{
 								Name:   "SmtpFrom",
 								Label:  "SMTP From Address",
-								Getter: getters.GetterKey("$in.SmtpFrom"),
+								Getter: getters.GetterKey[string]("$in.SmtpFrom"),
 							},
 						},
 					},
@@ -322,7 +323,7 @@ func init() {
 				if len(scaffold.Children) > 0 {
 					if col, ok := scaffold.Children[0].(components.ContainerColumn); ok {
 						if len(col.Children) > 1 {
-							if form, ok := col.Children[1].(components.FormComponent); ok {
+							if form, ok := col.Children[1].(components.FormComponent[p_users.User]); ok {
 								var buttons []components.PageInterface
 								if smsEnabled {
 									buttons = append(buttons, components.ButtonLink{

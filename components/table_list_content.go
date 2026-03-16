@@ -3,37 +3,25 @@ package components
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	g_html "maragu.dev/gomponents/html"
 )
 
-type TableListContent struct {
+type TableListContent[T any] struct {
 	Page
 	Columns []TableColumn
-	Data    getters.Getter
-	OnClick getters.Getter
+	Data    getters.Getter[ObjectList[T]]
+	OnClick getters.Getter[string]
 }
 
-func (e TableListContent) Build(ctx context.Context) Node {
-	var objects []any
-	data := getters.IfOrGetter(e.Data, ctx, nil)
-
-	if data != nil {
-		v := reflect.ValueOf(data)
-		if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
-			v = v.Elem()
-		}
-
-		if v.Kind() == reflect.Struct {
-			itemsField := v.FieldByName("Items")
-			if itemsField.IsValid() && (itemsField.Kind() == reflect.Slice || itemsField.Kind() == reflect.Array) {
-				for i := 0; i < itemsField.Len(); i++ {
-					objects = append(objects, itemsField.Index(i).Interface())
-				}
-			}
+func (e TableListContent[T]) Build(ctx context.Context) Node {
+	var data ObjectList[T]
+	if e.Data != nil {
+		resolved, err := e.Data(ctx)
+		if err == nil {
+			data = resolved
 		}
 	}
 
@@ -43,10 +31,10 @@ func (e TableListContent) Build(ctx context.Context) Node {
 	}
 
 	var trs []Node
-	if len(objects) == 0 {
+	if len(data.Items) == 0 {
 		trs = append(trs, g_html.Tr(g_html.Td(g_html.ColSpan(fmt.Sprintf("%d", len(e.Columns))), g_html.Class("text-center opacity-50 py-8"), Text("Table is empty"))))
 	} else {
-		for _, row := range objects {
+		for _, row := range data.Items {
 			rowMap := getters.MapFromStruct(row)
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
 
@@ -60,8 +48,8 @@ func (e TableListContent) Build(ctx context.Context) Node {
 			}
 
 			if e.OnClick != nil {
-				expr := fmt.Sprintf("%v", getters.IfOrGetter(e.OnClick, rowCtx, ""))
-				if expr != "" {
+				expr, err := e.OnClick(rowCtx)
+				if err == nil && expr != "" {
 					trs = append(trs, g_html.Tr(
 						g_html.Class("cursor-pointer hover:bg-base-200 transition-colors"),
 						Attr("@click", expr),
@@ -84,15 +72,15 @@ func (e TableListContent) Build(ctx context.Context) Node {
 	)
 }
 
-func (e TableListContent) GetKey() string {
+func (e TableListContent[T]) GetKey() string {
 	return e.Key
 }
 
-func (e TableListContent) GetRoles() []string {
+func (e TableListContent[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e TableListContent) GetChildren() []PageInterface {
+func (e TableListContent[T]) GetChildren() []PageInterface {
 	children := []PageInterface{}
 	for _, col := range e.Columns {
 		children = append(children, col.Children...)
@@ -100,7 +88,7 @@ func (e TableListContent) GetChildren() []PageInterface {
 	return children
 }
 
-func (e *TableListContent) SetChildren(children []PageInterface) {
+func (e *TableListContent[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	for i := range e.Columns {
 		n := len(e.Columns[i].Children)

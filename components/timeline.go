@@ -3,41 +3,33 @@ package components
 import (
 	"context"
 	"fmt"
-	"reflect"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
-type Timeline struct {
+type Timeline[T any] struct {
 	Page
 	UID             string
 	Title           string
 	Classes         string
-	Data            getters.Getter  // list of items
-	OnClick         getters.Getter  // per-item URL (GetterNavigate)
-	FilterComponent PageInterface   // optional filter form
-	Children        []PageInterface // card content template
+	Data            getters.Getter[ObjectList[T]] // list of items
+	OnClick         getters.Getter[string]        // per-item URL (GetterNavigate)
+	FilterComponent PageInterface                // optional filter form
+	Children        []PageInterface              // card content template
 }
 
-func (e Timeline) Build(ctx context.Context) Node {
-	var data []any
+func (e Timeline[T]) Build(ctx context.Context) Node {
+	var data []T
 	if e.Data != nil {
-		if rawData := getters.IfOrGetter(e.Data, ctx, nil); rawData != nil {
-			v := reflect.ValueOf(rawData)
-			if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
-				v = v.Elem()
-			}
-			if v.Kind() == reflect.Struct {
-				itemsField := v.FieldByName("Items")
-				if itemsField.IsValid() && (itemsField.Kind() == reflect.Slice || itemsField.Kind() == reflect.Array) {
-					for i := 0; i < itemsField.Len(); i++ {
-						data = append(data, itemsField.Index(i).Interface())
-					}
-				}
-			}
+		list, err := e.Data(ctx)
+		if err != nil {
+			slog.Error("Timeline Data getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
 		}
+		data = list.Items
 	}
 
 	uid := e.UID
@@ -73,7 +65,7 @@ func (e Timeline) Build(ctx context.Context) Node {
 		cardsGroup = append(cardsGroup, Div(Class("text-center opacity-60 py-8"), Text("No items found")))
 	} else {
 		for _, item := range data {
-			rowMap := getters.MapFromStruct(item)
+			rowMap := getters.MapFromStruct(any(item))
 			itemCtx := context.WithValue(ctx, "$row", rowMap)
 
 			var childrenNodes Group
@@ -93,7 +85,11 @@ func (e Timeline) Build(ctx context.Context) Node {
 				),
 			)
 			if e.OnClick != nil {
-				url := fmt.Sprintf("%v", getters.IfOrGetter(e.OnClick, itemCtx, ""))
+				url, err := e.OnClick(itemCtx)
+				if err != nil {
+					slog.Error("Timeline OnClick getter failed", "error", err, "key", e.Key)
+					return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+				}
 				if url != "" {
 					timelineContent = A(Href(url), timelineContent)
 				}
@@ -116,19 +112,19 @@ func (e Timeline) Build(ctx context.Context) Node {
 			verticalLine,
 			cardsGroup,
 		),
-		Render(TablePagination{Data: e.Data}, ctx),
+		Render(TablePagination[T]{Data: e.Data}, ctx),
 	)
 }
 
-func (e Timeline) GetKey() string {
+func (e Timeline[T]) GetKey() string {
 	return e.Key
 }
 
-func (e Timeline) GetRoles() []string {
+func (e Timeline[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e Timeline) GetChildren() []PageInterface {
+func (e Timeline[T]) GetChildren() []PageInterface {
 	var children []PageInterface
 	if e.FilterComponent != nil {
 		children = append(children, e.FilterComponent)
@@ -137,7 +133,7 @@ func (e Timeline) GetChildren() []PageInterface {
 	return children
 }
 
-func (e *Timeline) SetChildren(children []PageInterface) {
+func (e *Timeline[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	if e.FilterComponent != nil && len(children) > 0 {
 		e.FilterComponent = children[0]

@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -13,7 +14,7 @@ type InputTextarea struct {
 	Page
 	Label    string
 	Name     string
-	Getter   getters.Getter
+	Getter   getters.Getter[string]
 	Required bool
 	Rows     int
 	Classes  string
@@ -32,14 +33,20 @@ func (e InputTextarea) Build(ctx context.Context) Node {
 	if rows <= 0 {
 		rows = 3
 	}
-
+	var valueNode Node = Text("")
+	if e.Getter != nil {
+		value, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("InputTextarea getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		valueNode = Text(value)
+	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
 		Textarea(Name(e.Name),
 			Rows(fmt.Sprintf("%d", rows)),
-			getters.GetterIf(e.Getter, ctx, func(ctx context.Context, value any) Node {
-				return Text(fmt.Sprintf("%s", value))
-			}),
+			valueNode,
 			Class(fmt.Sprintf("textarea textarea-bordered w-full %s", e.Classes)),
 			If(e.Required, Required())),
 	)

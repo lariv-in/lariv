@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ProposalQueryPatcher(v views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+func ProposalQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	user := r.Context().Value("$user").(p_users.User)
 	if !(user.IsSuperuser || user.Role.Name == "totschool_admin") {
 		query = query.Where("CreatedByID = ?", user.ID)
@@ -25,7 +25,7 @@ func ProposalQueryPatcher(v views.View, r *http.Request, query *gorm.DB) *gorm.D
 // ProposalFormPatcher enriches form data for CRUD handlers:
 // - sets CreatedByID from the authenticated user
 // - flattens questionnaire answers into the Answers JSON field
-func ProposalFormPatcher(v views.View, r *http.Request, formData map[string]any) map[string]any {
+func ProposalFormPatcher(v *views.View, r *http.Request, formData map[string]any) map[string]any {
 	user := r.Context().Value("$user").(p_users.User)
 	formData["CreatedByID"] = user.ID
 
@@ -49,7 +49,7 @@ func ProposalFormPatcher(v views.View, r *http.Request, formData map[string]any)
 }
 
 
-func generateHandler(v views.View) http.Handler {
+func generateHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -177,13 +177,13 @@ Create a detailed, personalized financial proposal following the report structur
 
 		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
-		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(fmt.Sprintf("%d", proposal.ID)),
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.GetterAny(getters.GetterStatic(fmt.Sprintf("%d", proposal.ID))),
 		}).ServeHTTP(w, r)
 	})
 }
 
-func cancelHandler(v views.View) http.Handler {
+func cancelHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -202,13 +202,13 @@ func cancelHandler(v views.View) http.Handler {
 			CancelGeneration(db, proposal.ID)
 		}
 
-		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(idStr),
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.GetterAny(getters.GetterStatic(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
 
-func aiEditFormHandler(v views.View) http.Handler {
+func aiEditFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -224,7 +224,7 @@ func aiEditFormHandler(v views.View) http.Handler {
 	})
 }
 
-func aiEditHandler(v views.View) http.Handler {
+func aiEditHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -261,13 +261,13 @@ Rules:
 
 		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
-		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter{
-			"id": getters.GetterStatic(idStr),
+		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.GetterAny(getters.GetterStatic(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
 
-func exportPdfHandler(v views.View) http.Handler {
+func exportPdfHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -305,37 +305,50 @@ func exportPdfHandler(v views.View) http.Handler {
 }
 
 func init() {
-	lago.RegistryView.Register("proposals.ListView", p_users.AuthenticationMiddleware(
-		views.ListView[Proposal]("proposals")(lago.GetPageView("proposals.ProposalTable")).WithQueryPatcher(ProposalQueryPatcher)))
+	lago.RegistryView.Register("proposals.ListView",
+		views.ListView[Proposal]("proposals")(lago.GetPageView("proposals.ProposalTable")).
+			WithQueryPatcher(ProposalQueryPatcher).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.DetailView", p_users.AuthenticationMiddleware(
+	lago.RegistryView.Register("proposals.DetailView",
 		views.DetailView[Proposal]("proposal")(
-			lago.GetPageView("proposals.ProposalDetail"))))
+			lago.GetPageView("proposals.ProposalDetail")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.CreateView", p_users.AuthenticationMiddleware(
-		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalCreateForm")).WithFormPatcher(ProposalFormPatcher)))
+	lago.RegistryView.Register("proposals.CreateView",
+		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("proposals.ProposalCreateForm")).
+			WithFormPatcher(ProposalFormPatcher).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.UpdateView", p_users.AuthenticationMiddleware(
+	lago.RegistryView.Register("proposals.UpdateView",
 		views.DetailView[Proposal]("proposal")(
-			views.UpdateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter{"id": getters.GetterKey("$id")}))(lago.GetPageView("proposals.ProposalUpdateForm")).WithFormPatcher(ProposalFormPatcher))))
+			views.UpdateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("proposals.ProposalUpdateForm"))).
+			WithFormPatcher(ProposalFormPatcher).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.DeleteView", p_users.AuthenticationMiddleware(
+	lago.RegistryView.Register("proposals.DeleteView",
 		views.DetailView[Proposal]("proposal")(
 			views.DeleteView[Proposal](lago.GetterRoutePath("proposals.ListRoute", nil))(
-				lago.GetPageView("proposals.ProposalDeleteForm")))))
+				lago.GetPageView("proposals.ProposalDeleteForm"))).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.GenerateView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodPost, generateHandler)))
+	lago.RegistryView.Register("proposals.GenerateView",
+		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodPost, generateHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.CancelView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodPost, cancelHandler)))
+	lago.RegistryView.Register("proposals.CancelView",
+		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodPost, cancelHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.AiEditFormView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("proposals.AiEditModal").WithMethod(http.MethodGet, aiEditFormHandler)))
+	lago.RegistryView.Register("proposals.AiEditFormView",
+		lago.GetPageView("proposals.AiEditModal").WithMethod(http.MethodGet, aiEditFormHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.AiEditView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("proposals.AiEditModal").WithMethod(http.MethodPost, aiEditHandler)))
+	lago.RegistryView.Register("proposals.AiEditView",
+		lago.GetPageView("proposals.AiEditModal").WithMethod(http.MethodPost, aiEditHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
-	lago.RegistryView.Register("proposals.ExportPdfView", p_users.AuthenticationMiddleware(
-		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodGet, exportPdfHandler)))
+	lago.RegistryView.Register("proposals.ExportPdfView",
+		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodGet, exportPdfHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 }

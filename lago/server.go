@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/lariv-in/views"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -47,7 +48,7 @@ func StartServer(config LagoConfig) error {
 	return http.ListenAndServe(config.Address, router)
 }
 
-func MiddlewareDB(db *gorm.DB) Middleware {
+func MiddlewareDB(db *gorm.DB) views.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "$db", db)))

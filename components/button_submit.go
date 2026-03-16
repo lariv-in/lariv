@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -23,5 +22,5 @@ func (e ButtonSubmit) GetRoles() []string {
 }
 
 func (e ButtonSubmit) Build(ctx context.Context) Node {
-	return Button(Type("submit"), Class(fmt.Sprintf("btn btn-primary my-2 %s", e.Classes)), Text(e.Label))
+	return Button(Type("submit"), Class("btn btn-primary my-2 "+e.Classes), Text(e.Label))
 }

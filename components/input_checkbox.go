@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/lariv-in/getters"
@@ -14,12 +15,23 @@ type InputCheckbox struct {
 	Page
 	Label    string
 	Name     string
-	Getter   getters.Getter
+	Getter   getters.Getter[bool]
 	Required bool
 	Classes  string
 }
 
 func (e InputCheckbox) Build(ctx context.Context) Node {
+	var checkedNode Node = Raw("")
+	if e.Getter != nil {
+		checked, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("InputCheckbox getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		if checked {
+			checkedNode = Checked()
+		}
+	}
 	return Div(
 		Class(fmt.Sprintf("mt-3 %s", e.Classes)),
 		Label(
@@ -29,15 +41,7 @@ func (e InputCheckbox) Build(ctx context.Context) Node {
 				Name(e.Name),
 				Value("true"),
 				Class("checkbox"),
-				getters.GetterIf(e.Getter, ctx,
-					func(ctx context.Context, v any) Node {
-						isChecked, isBool := v.(bool)
-						if isChecked && isBool {
-							return Checked()
-						}
-						return Raw("")
-					},
-				),
+				checkedNode,
 			),
 			Span(Class("label-text"), Text(e.Label)),
 		),

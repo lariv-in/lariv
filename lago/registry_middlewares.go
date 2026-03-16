@@ -1,11 +1,8 @@
 package lago
 
 import (
-	"net/http"
-
 	"github.com/lariv-in/registry"
+	"github.com/lariv-in/views"
 )
 
-type Middleware = func (http.Handler) http.Handler
-
-var RegistryMiddleware registry.Registry[Middleware] = registry.NewRegistry[Middleware]()
+var RegistryMiddleware registry.Registry[views.Middleware] = registry.NewRegistry[views.Middleware]()

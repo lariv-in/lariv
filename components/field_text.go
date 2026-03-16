@@ -2,7 +2,7 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -11,7 +11,7 @@ import (
 
 type FieldText struct {
 	Page
-	Getter  getters.Getter
+	Getter  getters.Getter[string]
 	Classes string
 }
 
@@ -24,6 +24,14 @@ func (e FieldText) GetRoles() []string {
 }
 
 func (e FieldText) Build(ctx context.Context) Node {
-	value := fmt.Sprintf("%s", getters.IfOrGetter(e.Getter, ctx, ""))
+	value := ""
+	if e.Getter != nil {
+		v, err := e.Getter(ctx)
+		if err != nil {
+			slog.Error("FieldText getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		value = v
+	}
 	return Div(Class(e.Classes), Text(value))
 }

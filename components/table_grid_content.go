@@ -2,46 +2,33 @@ package components
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
 	g_html "maragu.dev/gomponents/html"
 )
 
-type TableGridContent struct {
+type TableGridContent[T any] struct {
 	Page
 	Columns []TableColumn
-	Data    getters.Getter
-	OnClick getters.Getter
+	Data    getters.Getter[ObjectList[T]]
+	OnClick getters.Getter[string]
 }
 
-func (e TableGridContent) Build(ctx context.Context) Node {
-	var objects []any
-	data := getters.IfOrGetter(e.Data, ctx, nil)
-
-	if data != nil {
-		v := reflect.ValueOf(data)
-		if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
-			v = v.Elem()
-		}
-
-		if v.Kind() == reflect.Struct {
-			itemsField := v.FieldByName("Items")
-			if itemsField.IsValid() && (itemsField.Kind() == reflect.Slice || itemsField.Kind() == reflect.Array) {
-				for i := 0; i < itemsField.Len(); i++ {
-					objects = append(objects, itemsField.Index(i).Interface())
-				}
-			}
+func (e TableGridContent[T]) Build(ctx context.Context) Node {
+	var data ObjectList[T]
+	if e.Data != nil {
+		resolved, err := e.Data(ctx)
+		if err == nil {
+			data = resolved
 		}
 	}
 
 	var cards []Node
-	if len(objects) == 0 {
+	if len(data.Items) == 0 {
 		cards = append(cards, g_html.Div(g_html.Class("col-span-full text-center opacity-50 py-8"), Text("Table is empty")))
 	} else {
-		for _, row := range objects {
+		for _, row := range data.Items {
 			rowMap := getters.MapFromStruct(row)
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
 
@@ -68,8 +55,8 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 			}
 
 			if e.OnClick != nil {
-				expr := fmt.Sprintf("%v", getters.IfOrGetter(e.OnClick, rowCtx, ""))
-				if expr != "" {
+				expr, err := e.OnClick(rowCtx)
+				if err == nil && expr != "" {
 					cards = append(cards, g_html.Div(
 						g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200"),
 						Attr("@click", expr),
@@ -94,15 +81,15 @@ func (e TableGridContent) Build(ctx context.Context) Node {
 	)
 }
 
-func (e TableGridContent) GetKey() string {
+func (e TableGridContent[T]) GetKey() string {
 	return e.Key
 }
 
-func (e TableGridContent) GetRoles() []string {
+func (e TableGridContent[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e TableGridContent) GetChildren() []PageInterface {
+func (e TableGridContent[T]) GetChildren() []PageInterface {
 	children := []PageInterface{}
 	for _, col := range e.Columns {
 		children = append(children, col.Children...)
@@ -110,7 +97,7 @@ func (e TableGridContent) GetChildren() []PageInterface {
 	return children
 }
 
-func (e *TableGridContent) SetChildren(children []PageInterface) {
+func (e *TableGridContent[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	for i := range e.Columns {
 		n := len(e.Columns[i].Children)

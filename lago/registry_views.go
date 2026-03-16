@@ -5,9 +5,10 @@ import (
 
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/registry"
+	"github.com/lariv-in/views"
 )
 
-var RegistryView registry.Registry[http.Handler] = registry.NewRegistry[http.Handler]()
+var RegistryView registry.Registry[*views.View] = registry.NewRegistry[*views.View]()
 
 type DynamicView struct {
 	Key string
@@ -36,30 +37,32 @@ func Redirect(w http.ResponseWriter, r *http.Request, url string) {
 	}
 }
 
-type RedirectView struct {
-	RouteKey string
-	Args     map[string]getters.Getter
-}
-
-func NewRedirectView(routeKey string, args ...map[string]getters.Getter) RedirectView {
-	var a map[string]getters.Getter
+func NewRedirectView(routeKey string, args ...map[string]getters.Getter[any]) *views.View {
+	var a map[string]getters.Getter[any]
 	if len(args) > 0 {
 		a = args[0]
 	}
-	return RedirectView{RouteKey: routeKey, Args: a}
-}
-
-func (v RedirectView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	getter := GetterRoutePath(v.RouteKey, v.Args)
-	url, _ := getters.IfOrGetter(getter, r.Context(), "").(string)
-	if url == "" {
-		http.NotFound(w, r)
-		return
+	redirectHandler := func(_ *views.View) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			getter := GetterRoutePath(routeKey, a)
+			url, err := getters.IfOrGetter(getter, r.Context(), "")
+			if err != nil || url == "" {
+				http.NotFound(w, r)
+				return
+			}
+			if r.Header.Get("HX-Request") == "true" {
+				w.Header().Set("HX-Redirect", url)
+				w.WriteHeader(http.StatusOK)
+			} else {
+				http.Redirect(w, r, url, http.StatusSeeOther)
+			}
+		})
 	}
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", url)
-		w.WriteHeader(http.StatusOK)
-	} else {
-		http.Redirect(w, r, url, http.StatusSeeOther)
+	return &views.View{
+		Handlers: map[string]func(*views.View) http.Handler{
+			http.MethodGet:  redirectHandler,
+			http.MethodPost: redirectHandler,
+		},
+		Middlewares: registry.NewRegistry[views.Middleware](),
 	}
 }

@@ -2,7 +2,7 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -11,8 +11,8 @@ import (
 
 type SidebarMenuItem struct {
 	Page
-	Title  getters.Getter
-	Url    getters.Getter
+	Title  getters.Getter[string]
+	Url    getters.Getter[string]
 	Icon   string
 	Active bool
 }
@@ -26,8 +26,24 @@ func (e SidebarMenuItem) GetRoles() []string {
 }
 
 func (e SidebarMenuItem) Build(ctx context.Context) Node {
-	title := fmt.Sprintf("%s", getters.IfOrGetter(e.Title, ctx, ""))
-	url := fmt.Sprintf("%s", getters.IfOrGetter(e.Url, ctx, "#"))
+	title := ""
+	if e.Title != nil {
+		t, err := e.Title(ctx)
+		if err != nil {
+			slog.Error("SidebarMenuItem Title getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		title = t
+	}
+	url := "#"
+	if e.Url != nil {
+		u, err := e.Url(ctx)
+		if err != nil {
+			slog.Error("SidebarMenuItem Url getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		url = u
+	}
 
 	var iconNode Node
 	if e.Icon != "" {
@@ -49,7 +65,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 
 type SidebarMenu struct {
 	Page
-	Title    getters.Getter
+	Title    getters.Getter[string]
 	Back     *SidebarMenuItem
 	Children []PageInterface
 }
@@ -59,8 +75,24 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 
 	// Back button
 	if e.Back != nil {
-		backTitle := fmt.Sprintf("%s", getters.IfOrGetter(e.Back.Title, ctx, ""))
-		backUrl := fmt.Sprintf("%s", getters.IfOrGetter(e.Back.Url, ctx, "#"))
+		backTitle := ""
+		if e.Back.Title != nil {
+			t, err := e.Back.Title(ctx)
+			if err != nil {
+				slog.Error("SidebarMenu Back Title getter failed", "error", err, "key", e.Key)
+				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			}
+			backTitle = t
+		}
+		backUrl := "#"
+		if e.Back.Url != nil {
+			u, err := e.Back.Url(ctx)
+			if err != nil {
+				slog.Error("SidebarMenu Back Url getter failed", "error", err, "key", e.Key)
+				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			}
+			backUrl = u
+		}
 		items = append(items, Li(
 			A(Href(backUrl), Class("btn btn-sm mb-2"), Render(Icon{Name: "arrow-left"}, ctx), Text(backTitle)),
 		))
@@ -68,7 +100,11 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 
 	// Title
 	if e.Title != nil {
-		title := fmt.Sprintf("%s", getters.IfOrGetter(e.Title, ctx, ""))
+		title, err := e.Title(ctx)
+		if err != nil {
+			slog.Error("SidebarMenu Title getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
 		if title != "" {
 			items = append(items, Li(Class("menu-title font-semibold opacity-70"), Text(title)))
 		}
