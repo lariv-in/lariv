@@ -30,8 +30,6 @@ func detailHandler(v *views.View) http.Handler {
 			ctx = context.WithValue(ctx, "GenerationPending", true)
 		}
 
-		appointmentMap := getters.MapFromStruct(&appointment)
-
 		overlapping := appointment.GetOverlappingAppointments(db)
 		if len(overlapping) > 0 {
 			overlapList := []map[string]any{}
@@ -46,7 +44,10 @@ func detailHandler(v *views.View) http.Handler {
 			ctx = context.WithValue(ctx, "OverlapWarning", true)
 		}
 
-		ctx = context.WithValue(ctx, "appointment", appointmentMap)
+		// Store the concrete Appointment in context; Detail[Appointment] and
+		// components.FormComponent[Appointment] use GetterKey[Appointment]("appointment")
+		// and will map it into $in themselves.
+		ctx = context.WithValue(ctx, "appointment", appointment)
 		v.RenderPage(w, r.WithContext(ctx))
 	})
 }
@@ -112,7 +113,7 @@ func aiEditFormHandler(v *views.View) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "appointment", getters.MapFromStruct(&appointment))
+		ctx := context.WithValue(r.Context(), "appointment", appointment)
 		v.RenderPage(w, r.WithContext(ctx))
 	})
 }
