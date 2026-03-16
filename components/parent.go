@@ -3,6 +3,10 @@ package components
 type ParentInterface interface {
 	PageInterface
 	GetChildren() []PageInterface
+}
+
+type MutableParentInterface interface {
+	ParentInterface
 	SetChildren([]PageInterface)
 }
 
@@ -19,19 +23,19 @@ func FindChildren[T PageInterface](p ParentInterface) []T {
 	return children
 }
 
-func ReplaceChild[T PageInterface](p ParentInterface, key string, replacement func(T) T) {
+func ReplaceChild[T PageInterface](p MutableParentInterface, key string, replacement func(T) T) {
 	children := p.GetChildren()
 	for i, child := range children {
 		if needle, isNeedle := child.(T); isNeedle && child.GetKey() == key {
 			children[i] = replacement(needle)
-		} else if parent, isParent := child.(ParentInterface); isParent {
-			ReplaceChild[T](parent, key, replacement)
+		} else if parent, isParent := child.(MutableParentInterface); isParent {
+			ReplaceChild(parent, key, replacement)
 		}
 	}
 	p.SetChildren(children)
 }
 
-func InsertChildBefore[T PageInterface](p ParentInterface, key string, replacement func(T) T) {
+func InsertChildBefore[T PageInterface](p MutableParentInterface, key string, replacement func(T) T) {
 	children := p.GetChildren()
 	result := make([]PageInterface, 0, len(children)+1)
 	for _, child := range children {
@@ -39,8 +43,8 @@ func InsertChildBefore[T PageInterface](p ParentInterface, key string, replaceme
 			result = append(result, replacement(needle))
 			result = append(result, child)
 		} else {
-			if parent, isParent := child.(ParentInterface); isParent {
-				InsertChildBefore[T](parent, key, replacement)
+			if parent, isParent := child.(MutableParentInterface); isParent {
+				InsertChildBefore(parent, key, replacement)
 			}
 			result = append(result, child)
 		}
@@ -48,7 +52,7 @@ func InsertChildBefore[T PageInterface](p ParentInterface, key string, replaceme
 	p.SetChildren(result)
 }
 
-func InsertChildAfter[T PageInterface](p ParentInterface, key string, replacement func(T) T) {
+func InsertChildAfter[T PageInterface](p MutableParentInterface, key string, replacement func(T) T) {
 	children := p.GetChildren()
 	result := make([]PageInterface, 0, len(children)+1)
 	for _, child := range children {
@@ -56,8 +60,8 @@ func InsertChildAfter[T PageInterface](p ParentInterface, key string, replacemen
 			result = append(result, child)
 			result = append(result, replacement(needle))
 		} else {
-			if parent, isParent := child.(ParentInterface); isParent {
-				InsertChildAfter[T](parent, key, replacement)
+			if parent, isParent := child.(MutableParentInterface); isParent {
+				InsertChildAfter(parent, key, replacement)
 			}
 			result = append(result, child)
 		}

@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
+	"github.com/lariv-in/p_users"
 )
 
 func tallyCommonFields() []components.PageInterface {
@@ -14,16 +15,16 @@ func tallyCommonFields() []components.PageInterface {
 		components.ContainerRow{
 			Classes: "grid grid-cols-1 md:grid-cols-2 gap-4",
 			Children: []components.PageInterface{
-				components.InputNumber{Name: "Visits", Label: "Visits", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Visits")},
-				components.InputNumber{Name: "Appointments", Label: "Appointments", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Appointments")},
-				components.InputNumber{Name: "Leads", Label: "Leads", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Leads")},
-				components.InputNumber{Name: "Presentations", Label: "Presentations", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Presentations")},
-				components.InputNumber{Name: "Demos", Label: "Demonstrations", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Demos")},
-				components.InputNumber{Name: "Letters", Label: "Follow Up Letters Sent", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Letters")},
-				components.InputNumber{Name: "FollowUps", Label: "Follow Ups", Required: true, Getter: getters.GetterKey[string]("$in.Tally.FollowUps")},
-				components.InputNumber{Name: "Proposals", Label: "Proposals Given", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Proposals")},
-				components.InputNumber{Name: "Policies", Label: "Policies Sold", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Policies")},
-				components.InputNumber{Name: "Premium", Label: "Premium", Required: true, Getter: getters.GetterKey[string]("$in.Tally.Premium")},
+				components.InputNumber{Name: "Visits", Label: "Visits", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Visits")},
+				components.InputNumber{Name: "Appointments", Label: "Appointments", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Appointments")},
+				components.InputNumber{Name: "Leads", Label: "Leads", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Leads")},
+				components.InputNumber{Name: "Presentations", Label: "Presentations", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Presentations")},
+				components.InputNumber{Name: "Demos", Label: "Demonstrations", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Demos")},
+				components.InputNumber{Name: "Letters", Label: "Follow Up Letters Sent", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Letters")},
+				components.InputNumber{Name: "FollowUps", Label: "Follow Ups", Required: true, Getter: getters.GetterKey[int]("$in.Tally.FollowUps")},
+				components.InputNumber{Name: "Proposals", Label: "Proposals Given", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Proposals")},
+				components.InputNumber{Name: "Policies", Label: "Policies Sold", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Policies")},
+				components.InputNumber{Name: "Premium", Label: "Premium", Required: true, Getter: getters.GetterKey[int]("$in.Tally.Premium")},
 			},
 		},
 	}
@@ -108,12 +109,15 @@ func init() {
 
 	// Create Form (Admin)
 	createAdminFields := append([]components.PageInterface{
-		components.InputNumber{
-			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},
-			Name:     "UserID",
-			Label:    "User ID",
-			Required: true,
-			Getter:   getters.GetterKey[string]("$in.Tally.UserID"),
+		components.InputForeignKey[p_users.User]{
+			Page:        components.Page{Roles: []string{"totschool_admin", "superuser"}},
+			Name:        "UserID",
+			Label:       "User",
+			Url:         lago.GetterRoutePath("users.SelectRoute", nil),
+			Display:     getters.GetterKey[string]("$in.Name"),
+			Placeholder: "Select a user...",
+			Required:    true,
+			Getter:      getters.GetterAssociation[p_users.User]("users", getters.GetterKey[uint]("$in.Tally.UserID")),
 		},
 		components.InputText{
 			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},

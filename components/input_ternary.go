@@ -37,10 +37,10 @@ func (e InputTernary) Build(ctx context.Context) Node {
 		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputTernary getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		} else {
+			value = v
+			hasValue = true
 		}
-		value = v
-		hasValue = true
 	}
 
 	trueLabel := e.TrueLabel

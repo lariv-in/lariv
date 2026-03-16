@@ -15,7 +15,7 @@ type InputNumber struct {
 	Page
 	Label    string
 	Name     string
-	Getter   getters.Getter[string]
+	Getter   getters.Getter[int]
 	Required bool
 	Classes  string
 }
@@ -31,12 +31,12 @@ func (e InputNumber) GetRoles() []string {
 func (e InputNumber) Build(ctx context.Context) Node {
 	var valueNode Node = Value("")
 	if e.Getter != nil {
-		value, err := e.Getter(ctx)
+		valueInt, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputNumber getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		} else {
+			valueNode = Value(fmt.Sprintf("%d", valueInt))
 		}
-		valueNode = Value(value)
 	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),

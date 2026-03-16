@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 
+	"golang.org/x/exp/constraints"
 	"gorm.io/gorm"
 )
 
@@ -55,10 +57,6 @@ func GetterKey[T any](key string) Getter[T] {
 
 			if v, exists := m[part]; exists {
 				value = v
-			} else {
-				if value == nil {
-					return zero, fmt.Errorf("Couldn't find %s in context", key)
-				}
 			}
 		}
 		v, ok := value.(T)
@@ -66,6 +64,21 @@ func GetterKey[T any](key string) Getter[T] {
 			return zero, fmt.Errorf("Value for key %s found, but the type of value in context was %v, expected %v", key, reflect.TypeOf(value), reflect.TypeOf(zero))
 		}
 		return v, nil
+	}
+}
+
+type Number interface {
+	constraints.Integer | constraints.Float
+}
+
+func GetterNumberCast[T Number, V Number](g Getter[V]) Getter[T] {
+	var zero T
+	return func(ctx context.Context) (T, error) {
+		value, err := g(ctx)
+		if err != nil {
+			return zero, err
+		}
+		return T(value), nil
 	}
 }
 
@@ -90,6 +103,30 @@ func GetterNil[T any]() Getter[T] {
 func GetterAny[T any](g Getter[T]) Getter[any] {
 	return func(ctx context.Context) (any, error) {
 		return g(ctx)
+	}
+}
+
+// GetterIntString converts a Getter[int] to Getter[string] by formatting the int.
+// Errors from the underlying getter (e.g. type mismatch) are propagated.
+func GetterIntString(g Getter[int]) Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		v, err := g(ctx)
+		if err != nil {
+			return "", err
+		}
+		return strconv.Itoa(v), nil
+	}
+}
+
+// GetterUintString converts a Getter[uint] to Getter[string] by formatting the uint.
+// Errors from the underlying getter are propagated.
+func GetterUintString(g Getter[uint]) Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		v, err := g(ctx)
+		if err != nil {
+			return "", err
+		}
+		return strconv.FormatUint(uint64(v), 10), nil
 	}
 }
 

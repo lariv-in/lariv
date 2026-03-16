@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
+	"reflect"
 
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
@@ -75,7 +76,33 @@ func (v *View) WithMethod(method string, viewHandler func(*View) http.Handler) *
 // and returns the values and field errors. Returns true if parsing failed (error already written to w).
 func (v *View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any, map[string]error, error) {
 	page, _ := v.GetPage()
-	forms := components.FindChildren[components.FormInterface](page.(components.ParentInterface))
+	var parent components.ParentInterface
+	// If the page already implements ParentInterface, use it directly.
+	if p, ok := page.(components.ParentInterface); ok {
+		parent = p
+	} else {
+		// Many scaffolds (ShellScaffold, ShellTopbarScaffold, etc.) implement
+		// ParentInterface only on the pointer type, but are stored as values.
+		// For traversal we can safely take the address of the value here.
+		val := reflect.ValueOf(page)
+		if val.Kind() != reflect.Pointer {
+			ptr := val.Addr()
+			if p, ok := ptr.Interface().(components.ParentInterface); ok {
+				parent = p
+			}
+		}
+	}
+
+	if parent == nil {
+		// Log the actual interface assertion issue so it is visible in logs.
+		slog.Error("view page does not implement components.ParentInterface",
+			"pageType", reflect.TypeOf(page),
+			"pageName", v.PageName)
+		http.Error(w, "Internal Server Error: No form container found", http.StatusInternalServerError)
+		return nil, nil, errors.New("Internal Server Error: No form container found")
+	}
+
+	forms := components.FindChildren[components.FormInterface](parent)
 	if len(forms) == 0 {
 		http.Error(w, "Internal Server Error: No form found", http.StatusInternalServerError)
 		return nil, nil, errors.New("Internal Server Error: No form found")

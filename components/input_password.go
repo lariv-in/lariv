@@ -33,9 +33,9 @@ func (e InputPassword) Build(ctx context.Context) Node {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputPassword getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		} else {
+			valueNode = Value(value)
 		}
-		valueNode = Value(value)
 	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),

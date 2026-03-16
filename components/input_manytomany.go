@@ -39,15 +39,15 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 		values, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputManyToMany getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
-		}
-		for _, item := range e.toItemMaps(values) {
-			pk, ok := itemID(item)
-			if !ok {
-				continue
+		} else {
+			for _, item := range e.toItemMaps(values) {
+				pk, ok := itemID(item)
+				if !ok {
+					continue
+				}
+				display := e.itemDisplay(item)
+				initialItems = append(initialItems, fmt.Sprintf("{value:%s,display:%s}", jsQuote(pk), jsQuote(display)))
 			}
-			display := e.itemDisplay(item)
-			initialItems = append(initialItems, fmt.Sprintf("{value:%s,display:%s}", jsQuote(pk), jsQuote(display)))
 		}
 	}
 
@@ -77,7 +77,7 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 		urlStr, err = e.Url(ctx)
 		if err != nil {
 			slog.Error("InputManyToMany url getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			urlStr = ""
 		}
 	}
 

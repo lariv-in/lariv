@@ -38,22 +38,22 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputForeignKey getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
-		}
-		valueMap := getters.MapFromStruct(value)
-		if len(valueMap) > 0 {
-			if idVal, exists := valueMap["ID"]; exists {
-				valuePk = fmt.Sprintf("%v", idVal)
-			} else if idVal, exists := valueMap["id"]; exists {
-				valuePk = fmt.Sprintf("%v", idVal)
-			}
-			if e.Display != nil {
-				displayStr, err := e.Display(context.WithValue(ctx, "$in", valueMap))
-				if err != nil {
-					slog.Error("InputForeignKey display getter failed", "error", err, "key", e.Key)
-					return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		} else {
+			valueMap := getters.MapFromStruct(value)
+			if len(valueMap) > 0 {
+				if idVal, exists := valueMap["ID"]; exists {
+					valuePk = fmt.Sprintf("%v", idVal)
+				} else if idVal, exists := valueMap["id"]; exists {
+					valuePk = fmt.Sprintf("%v", idVal)
 				}
-				displayValue = displayStr
+				if e.Display != nil {
+					displayStr, err := e.Display(context.WithValue(ctx, "$in", valueMap))
+					if err != nil {
+						slog.Error("InputForeignKey display getter failed", "error", err, "key", e.Key)
+					} else {
+						displayValue = displayStr
+					}
+				}
 			}
 		}
 	}
@@ -69,7 +69,7 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		urlStr, err = e.Url(ctx)
 		if err != nil {
 			slog.Error("InputForeignKey url getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			urlStr = ""
 		}
 	}
 

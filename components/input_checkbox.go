@@ -26,10 +26,10 @@ func (e InputCheckbox) Build(ctx context.Context) Node {
 		checked, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputCheckbox getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
-		}
-		if checked {
-			checkedNode = Checked()
+		} else {
+			if checked {
+				checkedNode = Checked()
+			}
 		}
 	}
 	return Div(

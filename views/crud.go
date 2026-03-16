@@ -3,14 +3,17 @@ package views
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 const (
@@ -30,6 +33,21 @@ func ListView[T any](key string) func(*View) *View {
 				db := r.Context().Value("$db").(*gorm.DB)
 				query := db.Model(new(T))
 
+				// Build a whitelist of allowed filter fields from the GORM schema.
+				// Keys are lowercased field / column names, values are the schema fields.
+				fieldByParam := map[string]*schema.Field{}
+				if stmt := (&gorm.Statement{DB: db}); stmt.Parse(new(T)) == nil && stmt.Schema != nil {
+					for _, f := range stmt.Schema.Fields {
+						if f.DBName == "" {
+							continue
+						}
+						keyName := strings.ToLower(f.Name)
+						keyDB := strings.ToLower(f.DBName)
+						fieldByParam[keyName] = f
+						fieldByParam[keyDB] = f
+					}
+				}
+
 				pageStr := r.URL.Query().Get("page")
 				pageNum := 1
 				if pageStr != "" {
@@ -39,7 +57,7 @@ func ListView[T any](key string) func(*View) *View {
 				}
 				pageSize := 12
 
-				// Apply query param filters (simple icontains for strings)
+				// Apply query param filters using a safe, whitelisted set of columns.
 				for param, values := range r.URL.Query() {
 					if len(values) == 0 || values[0] == "" {
 						continue
@@ -51,7 +69,20 @@ func ListView[T any](key string) func(*View) *View {
 					if param == "page" {
 						continue
 					}
-					query = query.Where(param, values[0])
+					// Look up the field in the allowed map (by struct field name or DB column name).
+					f, ok := fieldByParam[strings.ToLower(param)]
+					if !ok {
+						// Unknown field: ignore rather than constructing raw SQL.
+						continue
+					}
+					col := f.DBName
+					if f.FieldType.Kind() == reflect.String {
+						// Case-insensitive "contains" match for strings.
+						query = query.Where(col+" ILIKE ?", "%"+values[0]+"%")
+					} else {
+						// Equality match for non-string types.
+						query = query.Where(col+" = ?", values[0])
+					}
 				}
 
 				var total int64
@@ -84,13 +115,25 @@ func ListView[T any](key string) func(*View) *View {
 				ctx := context.WithValue(r.Context(), key, objectList)
 				ctx = context.WithValue(ctx, "$request", r)
 
-				// Preserve query params in context as $get map for filter re-population
+				// Preserve query params in context as $get map for filter re-population.
+				// Default: raw strings from URL query.
 				queryMap := map[string]any{}
 				for param, values := range r.URL.Query() {
 					if len(values) > 0 && values[0] != "" {
 						queryMap[param] = values[0]
 					}
 				}
+
+				if page, ok := v.GetPage(); ok {
+					if parent, ok := page.(components.ParentInterface); ok {
+						if forms := components.FindChildren[components.FormInterface](parent); len(forms) > 0 {
+							if values, _, err := forms[0].ParseForm(r); err == nil {
+								maps.Copy(queryMap, values)
+							}
+						}
+					}
+				}
+
 				ctx = context.WithValue(ctx, "$get", queryMap)
 
 				next.ServeHTTP(w, r.WithContext(ctx))

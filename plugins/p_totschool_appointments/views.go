@@ -28,6 +28,8 @@ func detailHandler(v *views.View) http.Handler {
 
 		if appointment.GenerationID != nil {
 			ctx = context.WithValue(ctx, "GenerationPending", true)
+		} else {
+			ctx = context.WithValue(ctx, "GenerationPending", false)
 		}
 
 		overlapping := appointment.GetOverlappingAppointments(db)
@@ -42,6 +44,9 @@ func detailHandler(v *views.View) http.Handler {
 			}
 			ctx = context.WithValue(ctx, "OverlapWarningList", overlapList)
 			ctx = context.WithValue(ctx, "OverlapWarning", true)
+		} else {
+			// Ensure the key exists with a concrete bool so getters don't see a nil value.
+			ctx = context.WithValue(ctx, "OverlapWarning", false)
 		}
 
 		// Store the concrete Appointment in context; Detail[Appointment] and

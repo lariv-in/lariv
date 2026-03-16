@@ -152,7 +152,7 @@ See you as per the decided schedule and thank you once again
 Family Wealth Educator
 `
 
-func buildLetterContent(db *gorm.DB, appointment *Appointment, userName string) (userContent, systemPrompt string) {
+func buildLetterContent(_ *gorm.DB, appointment *Appointment, userName string) (userContent, systemPrompt string) {
 	replacements := map[string]string{
 		"{{appointment_name}}":            appointment.Name,
 		"{{appointment_datetime}}":        appointment.Datetime.Format("January 02, 2006 03:04 PM"),

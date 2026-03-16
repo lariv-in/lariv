@@ -35,24 +35,23 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
 		jsonData, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputKeyValue getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
-		}
-		if len(jsonData) > 0 {
-			if err := json.Unmarshal(jsonData, &val); err != nil {
-				slog.Error("InputKeyValue unmarshal failed", "error", err, "key", e.Key)
-				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		} else {
+			if len(jsonData) > 0 {
+				if err := json.Unmarshal(jsonData, &val); err != nil {
+					slog.Error("InputKeyValue unmarshal failed", "error", err, "key", e.Key)
+				}
 			}
 		}
 	}
 
 	if e.Keys == nil {
 		slog.Error("InputKeyValue Keys is nil", "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(fmt.Errorf("InputKeyValue: Keys getter is required"))}.Build(ctx)
+		return Div(Class(e.Classes))
 	}
 	keys, err := e.Keys(ctx)
 	if err != nil {
 		slog.Error("InputKeyValue Keys getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return Div(Class(e.Classes))
 	}
 
 	var nodes []Node

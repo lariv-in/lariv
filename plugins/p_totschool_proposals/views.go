@@ -3,6 +3,7 @@ package p_totschool_proposals
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -15,7 +16,15 @@ import (
 )
 
 func ProposalQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-	user := r.Context().Value("$user").(p_users.User)
+	rawUser := r.Context().Value("$user")
+	user, ok := rawUser.(p_users.User)
+	if !ok {
+		// Log and leave query unmodified instead of panicking on bad context.
+		slog.Error("ProposalQueryPatcher: missing or invalid $user in context",
+			"pageName", v.PageName,
+			"userType", fmt.Sprintf("%T", rawUser))
+		return query
+	}
 	if !(user.IsSuperuser || user.Role.Name == "totschool_admin") {
 		query = query.Where("CreatedByID = ?", user.ID)
 	}
@@ -26,7 +35,14 @@ func ProposalQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.
 // - sets CreatedByID from the authenticated user
 // - flattens questionnaire answers into the Answers JSON field
 func ProposalFormPatcher(v *views.View, r *http.Request, formData map[string]any) map[string]any {
-	user := r.Context().Value("$user").(p_users.User)
+	rawUser := r.Context().Value("$user")
+	user, ok := rawUser.(p_users.User)
+	if !ok {
+		slog.Error("ProposalFormPatcher: missing or invalid $user in context",
+			"pageName", v.PageName,
+			"userType", fmt.Sprintf("%T", rawUser))
+		return formData
+	}
 	formData["CreatedByID"] = user.ID
 
 	var items []QAItem
@@ -57,7 +73,15 @@ func generateHandler(v *views.View) http.Handler {
 		}
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
+		rawUser := r.Context().Value("$user")
+		user, ok := rawUser.(p_users.User)
+		if !ok {
+			slog.Error("generateHandler: missing or invalid $user in context",
+				"pageName", v.PageName,
+				"userType", fmt.Sprintf("%T", rawUser))
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
 		var proposal Proposal
 		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {

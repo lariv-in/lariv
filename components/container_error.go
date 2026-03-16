@@ -24,7 +24,7 @@ func (e ContainerError) Build(ctx context.Context) Node {
 	if e.Error != nil {
 		err, _ := e.Error(ctx)
 		if err != nil {
-			errorNode = Span(Class("text-sm text-error"), Text(err.(error).Error()))
+			errorNode = Span(Class("text-sm text-error"), Text(err.Error()))
 		}
 	}
 

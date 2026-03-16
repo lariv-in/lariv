@@ -35,14 +35,14 @@ func (e InputPhone) Build(ctx context.Context) Node {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputPhone getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
-		}
-		if value != "" {
-			parsed, err := phonenumbers.Parse(value, "IN")
-			if err == nil {
-				displayValue = phonenumbers.Format(parsed, phonenumbers.E164)
-			} else {
-				displayValue = value
+		} else {
+			if value != "" {
+				parsed, err := phonenumbers.Parse(value, "IN")
+				if err == nil {
+					displayValue = phonenumbers.Format(parsed, phonenumbers.E164)
+				} else {
+					displayValue = value
+				}
 			}
 		}
 	}

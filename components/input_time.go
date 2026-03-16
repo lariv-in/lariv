@@ -30,9 +30,9 @@ func (e InputTime) Build(ctx context.Context) Node {
 		t, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputTime getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		} else {
+			valueNode = Value(t.In(timezone).Format("15:04"))
 		}
-		valueNode = Value(t.In(timezone).Format("15:04"))
 	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
