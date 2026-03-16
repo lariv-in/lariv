@@ -88,10 +88,15 @@ func (w *statusWriter) WriteHeader(code int) {
 func MiddlewareEnvironment(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		envMap := map[string]string{}
-		if cookie, err := r.Cookie("environment"); err == nil {
+		cookie, err := r.Cookie("environment")
+		if err != nil {
+			slog.Error("MiddlewareEnvironment: failed to get environment cookie", "error", err)
+		} else {
 			decoded, err := url.QueryUnescape(cookie.Value)
 			if err == nil {
-				json.Unmarshal([]byte(decoded), &envMap)
+				if err := json.Unmarshal([]byte(decoded), &envMap); err != nil {
+					slog.Error("MiddlewareEnvironment: failed to unmarshal environment cookie", "error", err, "cookie", cookie.Value)
+				}
 			}
 		}
 		ctx := context.WithValue(r.Context(), "$environment", envMap)

@@ -3,10 +3,12 @@ package p_totschool_tally
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
@@ -16,14 +18,22 @@ import (
 // getSessionFromEnvironment looks up the session selected in the $environment cookie,
 // falling back to the current quarter if none is selected.
 func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSession {
+	fmt.Println("getSessionFromEnvironment: $environment", ctx.Value("$environment"))
 	if envMap, ok := ctx.Value("$environment").(map[string]string); ok {
 		if name, exists := envMap["session"]; exists && name != "" {
 			var session TotSchoolSession
-			if err := db.Where("name = ?", name).First(&session).Error; err == nil {
+			if err := db.Where("name = ?", name).First(&session).Error; err != nil {
+				slog.Error("getSessionFromEnvironment: failed to load session by name from $environment",
+					"name", name,
+					"error", err,
+				)
+				return EnsureSessionForDate(db, time.Now())
+			} else {
 				return session
 			}
 		}
 	}
+	slog.Error("getSessionFromEnvironment: no session found in $environment", "environment", ctx.Value("$environment"))
 	return EnsureSessionForDate(db, time.Now())
 }
 
@@ -140,15 +150,27 @@ func RequireAdmin(next http.Handler) http.Handler {
 func TallyListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	ctx := r.Context()
 
-	user, ok := ctx.Value("$user").(p_users.User)
-	if !ok {
-		return query
+	rawUser := ctx.Value("$user")
+	if rawUser == nil {
+		slog.Error("TallyListQueryPatcher: missing $user in context – auth middleware not applied?")
+		panic("TallyListQueryPatcher: $user is nil in context")
 	}
-	db, ok := ctx.Value("$db").(*gorm.DB)
+	user, ok := rawUser.(p_users.User)
 	if !ok {
-		return query
+		slog.Error("TallyListQueryPatcher: $user has unexpected type",
+			"type", fmt.Sprintf("%T", rawUser),
+		)
+		panic("TallyListQueryPatcher: $user has wrong type in context")
 	}
 
+	dbVal := ctx.Value("$db")
+	db, ok := dbVal.(*gorm.DB)
+	if !ok || db == nil {
+		slog.Error("TallyListQueryPatcher: missing or invalid $db in context",
+			"type", fmt.Sprintf("%T", dbVal),
+		)
+		panic("TallyListQueryPatcher: $db is nil or wrong type in context")
+	}
 	// Always join the related user so table columns can access User.Name.
 	query = query.Joins("User")
 
@@ -249,7 +271,9 @@ func TallyDailyFormHandler(v *views.View) http.Handler {
 		}
 
 		if r.Method == http.MethodGet {
-			ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": tally})
+			// Pre-fill the form by projecting the loaded tally into $in so
+			// InputNumber fields using GetterKey("$in.*") can resolve values.
+			ctx := context.WithValue(r.Context(), getters.ContextKeyIn, tally)
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
@@ -296,9 +320,10 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 	lago.RegistryView.Register("tally.TallyListView",
 		views.ListView[Tally]("Tallies")(lago.GetPageView("tally.TallyTable")).
-			WithQueryPatcher("tally.list", TallyListQueryPatcher).
-			InsertMiddlewareBefore("views.crud.list", "tally.sessionNames", TallySessionNamesMiddleware).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("tally.sessionNames", TallySessionNamesMiddleware).
+			WithQueryPatcher("tally.list", TallyListQueryPatcher))
+
 	lago.RegistryView.Register("tally.TallyDailyFormView",
 		lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
@@ -323,6 +348,6 @@ func init() {
 	lago.RegistryView.Register("tally.TallyDetailView",
 		views.DetailView[Tally]("Tally")(
 			lago.GetPageView("tally.TallyDetail")).
-			WithQueryPatcher("tally.detail", TallyDetailQueryPatcher).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithQueryPatcher("tally.detail", TallyDetailQueryPatcher))
 }

@@ -41,7 +41,7 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h := handler(v)
 	// Apply middlewares in registration order, so that the earliest-registered
 	// middleware wraps the handler innermost and the latest wraps outermost.
-	for i := len(v.Middlewares) - 1; i >= 0; i-- {
+	for i := 0; i < len(v.Middlewares); i++ {
 		h = v.Middlewares[i].Value(h)
 	}
 	h.ServeHTTP(w, r)
