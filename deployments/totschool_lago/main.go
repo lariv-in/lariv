@@ -14,15 +14,11 @@ import (
 )
 
 func main() {
-	lago.ParseFlags()
-
 	config, err := lago.LoadConfigFromFile("totschool.toml")
 	if err != nil {
 		panic(err)
 	}
-	if *lago.GenerateFlag {
-		lago.RunGenerators(config)
-		return
+	if err := lago.Start(config); err != nil {
+		slog.Error(err.Error())
 	}
-	slog.Error(lago.Start(config).Error())
 }
