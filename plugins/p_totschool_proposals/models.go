@@ -7,6 +7,7 @@ import (
 
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/registry"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -46,45 +47,25 @@ type Proposal struct {
 	GenerationID     *int           // non-nil while AI generation is in progress
 }
 
-// QAItem is one question-answer pair for JSON (Answers).
-type QAItem struct {
-	Question string `json:"question"`
-	Answer   string `json:"answer"`
-}
-
-// ParseAnswers deserializes Answers JSON into []QAItem.
-func (p *Proposal) ParseAnswers() ([]QAItem, error) {
-	if len(p.Answers) == 0 {
-		return nil, nil
-	}
-	var out []QAItem
-	err := json.Unmarshal(p.Answers, &out)
-	return out, err
-}
-
-// SetAnswers serializes []QAItem into Answers.
-func (p *Proposal) SetAnswers(items []QAItem) error {
-	b, err := json.Marshal(items)
-	if err != nil {
-		return err
-	}
-	p.Answers = datatypes.JSON(b)
-	return nil
-}
-
 // FormatAnswersForAI returns a single string of Q&A for the AI prompt.
 func (p *Proposal) FormatAnswersForAI() (string, error) {
-	items, err := p.ParseAnswers()
-	if err != nil {
+	if len(p.Answers) == 0 {
+		return "", nil
+	}
+
+	// Answers are stored as []registry.Pair[string,string] via InputKeyValue.
+	var items []registry.Pair[string, string]
+	if err := json.Unmarshal(p.Answers, &items); err != nil {
 		return "", err
 	}
+
 	var lines []string
 	for i, item := range items {
-		q := item.Question
+		q := item.Key
 		if q == "" && i < len(QUESTIONS) {
 			q = QUESTIONS[i]
 		}
-		lines = append(lines, fmt.Sprintf("Q%d: %s\nA: %s\n", i+1, q, item.Answer))
+		lines = append(lines, fmt.Sprintf("Q%d: %s\nA: %s\n", i+1, q, item.Value))
 	}
 	return strings.Join(lines, "\n"), nil
 }

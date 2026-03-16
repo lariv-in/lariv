@@ -63,6 +63,5 @@ func NewRedirectView(routeKey string, args ...map[string]getters.Getter[any]) *v
 			http.MethodGet:  redirectHandler,
 			http.MethodPost: redirectHandler,
 		},
-		Middlewares: registry.NewRegistry[views.Middleware](),
 	}
 }

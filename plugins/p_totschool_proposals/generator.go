@@ -1,10 +1,13 @@
 package p_totschool_proposals
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 
 	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/registry"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -28,19 +31,26 @@ var proposalTitles = []string{
 func GenerateProposalsForUser(db *gorm.DB, user *p_users.User, count int) (int, error) {
 	created := 0
 	for created < count {
-		answers := make([]QAItem, len(QUESTIONS))
+		// Build answers as []registry.Pair[string,string] to match InputKeyValue
+		// and FieldKeyValue JSON schema.
+		answers := make([]registry.Pair[string, string], len(QUESTIONS))
 		for i, q := range QUESTIONS {
-			answers[i] = QAItem{Question: q, Answer: randomSentence(5, 15)}
+			answers[i] = registry.Pair[string, string]{
+				Key:   q,
+				Value: randomSentence(5, 15),
+			}
 		}
 		titleIdx := rand.Intn(len(proposalTitles))
 		title := fmt.Sprintf("%s - User %d", proposalTitles[titleIdx], user.ID)
 
+		b, err := json.Marshal(answers)
+		if err != nil {
+			return created, err
+		}
 		p := Proposal{
 			CreatedByID: user.ID,
 			Title:       title,
-		}
-		if err := p.SetAnswers(answers); err != nil {
-			return created, err
+			Answers:     datatypes.JSON(b),
 		}
 		if err := db.Create(&p).Error; err != nil {
 			return created, err

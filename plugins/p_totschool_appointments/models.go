@@ -36,6 +36,21 @@ func (a *Appointment) GetOverlappingAppointments(db *gorm.DB) []Appointment {
 	return results
 }
 
+// WithOverlappingFilter scopes an appointments query to only those rows that have
+// at least one overlapping appointment (same created_by_id within +/-30 minutes).
+func WithOverlappingFilter(db *gorm.DB) *gorm.DB {
+	return db.Where(`
+		EXISTS (
+			SELECT 1
+			FROM appointments a2
+			WHERE a2.created_by_id = appointments.created_by_id
+			  AND a2.id != appointments.id
+			  AND a2.datetime BETWEEN appointments.datetime - interval '30 minutes'
+			                      AND appointments.datetime + interval '30 minutes'
+		)
+	`)
+}
+
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
 		if err := d.AutoMigrate(&Appointment{}); err != nil {

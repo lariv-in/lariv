@@ -38,7 +38,7 @@ func (e InputDatetime) Build(ctx context.Context) Node {
 		t, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputDatetime getter failed", "error", err, "key", e.Key)
-		} else {
+		} else if !t.IsZero() {
 			valueNode = Value(t.In(timezone).Format("2006-01-02T15:04"))
 		}
 	}

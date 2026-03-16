@@ -55,9 +55,24 @@ func registerFilter() {
 		Url:    lago.GetterRoutePath("appointments.ListRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
-			components.InputText{Label: "Location", Name: "Location", Getter: getters.GetterKey[string]("$get.Location")},
-			components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey[string]("$get.Date")},
+			components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Name"),
+				Children: []components.PageInterface{
+					components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
+				},
+			},
+			components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Location"),
+				Children: []components.PageInterface{
+					components.InputText{Label: "Location", Name: "Location", Getter: getters.GetterKey[string]("$get.Location")},
+				},
+			},
+			components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Date"),
+				Children: []components.PageInterface{
+					components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey[string]("$get.Date")},
+				},
+			},
 			components.InputManyToMany[[]uint]{
 				Label:       "Created By",
 				Name:        "CreatedBy",
@@ -79,14 +94,44 @@ func registerFilter() {
 
 func appointmentFormFields() []components.PageInterface {
 	return []components.PageInterface{
-		components.InputText{Label: "Name", Name: "Name", Required: true, Getter: getters.GetterKey[string]("$in.Name")},
-		components.InputTextarea{Label: "Location", Name: "Location", Required: true, Getter: getters.GetterKey[string]("$in.Location"), Rows: 2},
+		components.ContainerError{
+			Error: getters.GetterKey[error]("$error.Name"),
+			Children: []components.PageInterface{
+				components.InputText{Label: "Name", Name: "Name", Required: true, Getter: getters.GetterKey[string]("$in.Name")},
+			},
+		},
+		components.ContainerError{
+			Error: getters.GetterKey[error]("$error.Location"),
+			Children: []components.PageInterface{
+				components.InputTextarea{Label: "Location", Name: "Location", Required: true, Getter: getters.GetterKey[string]("$in.Location"), Rows: 2},
+			},
+		},
 		components.ContainerRow{Classes: "grid grid-cols-1 gap-1 md:grid-cols-2", Children: []components.PageInterface{
-			components.InputPhone{Label: "Phone", Name: "Phone", Required: true, Getter: getters.GetterKey[string]("$in.Phone")},
-			components.InputDatetime{Label: "Date & Time", Name: "Datetime", Required: true, Getter: getters.GetterKey[time.Time]("$in.Datetime")},
+			components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Phone"),
+				Children: []components.PageInterface{
+					components.InputPhone{Label: "Phone", Name: "Phone", Required: true, Getter: getters.GetterKey[string]("$in.Phone")},
+				},
+			},
+			components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Datetime"),
+				Children: []components.PageInterface{
+					components.InputDatetime{Label: "Date & Time", Name: "Datetime", Required: true, Getter: getters.GetterKey[time.Time]("$in.Datetime")},
+				},
+			},
 		}},
-		components.InputTextarea{Label: "Remarks", Name: "Remarks", Getter: getters.GetterKey[string]("$in.Remarks"), Rows: 2},
-		components.InputTextarea{Label: "Extra Info (For AI)", Name: "ExtraInfo", Getter: getters.GetterKey[string]("$in.ExtraInfo"), Rows: 2},
+		components.ContainerError{
+			Error: getters.GetterKey[error]("$error.Remarks"),
+			Children: []components.PageInterface{
+				components.InputTextarea{Label: "Remarks", Name: "Remarks", Getter: getters.GetterKey[string]("$in.Remarks"), Rows: 2},
+			},
+		},
+		components.ContainerError{
+			Error: getters.GetterKey[error]("$error.ExtraInfo"),
+			Children: []components.PageInterface{
+				components.InputTextarea{Label: "Extra Info (For AI)", Name: "ExtraInfo", Getter: getters.GetterKey[string]("$in.ExtraInfo"), Rows: 2},
+			},
+		},
 	}
 }
 
@@ -163,8 +208,17 @@ func registerDetail() {
 
 	pendingSection := []components.PageInterface{
 		components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
-			components.FieldText{Getter: getters.GetterStatic("Generating..."), Classes: "btn-primary"},
-			components.ButtonPost{Label: "Cancel Generation", URL: lago.GetterRoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-error btn-sm"},
+			components.FieldText{Getter: getters.GetterStatic("Generating...")},
+			components.ButtonPost{
+				Label:   "Cancel Generation",
+				URL:     lago.GetterRoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Classes: "btn-outline btn-error btn-sm",
+			},
+			components.ButtonLink{
+				Label:   "Refresh status",
+				Link:    lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Classes: "btn btn-sm btn-outline border border-base-300 font-semibold",
+			},
 		}},
 	}
 
@@ -244,8 +298,18 @@ func registerModal() {
 				Url:    lago.GetterRoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("appointment.ID"))}),
 				Method: http.MethodPost,
 				ChildrenInput: []components.PageInterface{
-					components.InputTextarea{Name: "generated_letter", Label: "Current Letter Content", Getter: getters.GetterKey[string]("$in.GeneratedLetter"), Rows: 8},
-					components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Rows: 4, Required: true},
+					components.ContainerError{
+						Error: getters.GetterKey[error]("$error.generated_letter"),
+						Children: []components.PageInterface{
+							components.InputTextarea{Name: "generated_letter", Label: "Current Letter Content", Getter: getters.GetterKey[string]("$in.GeneratedLetter"), Rows: 8},
+						},
+					},
+					components.ContainerError{
+						Error: getters.GetterKey[error]("$error.instructions"),
+						Children: []components.PageInterface{
+							components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Rows: 4, Required: true},
+						},
+					},
 				},
 				ChildrenAction: []components.PageInterface{
 					components.ContainerRow{Classes: "flex justify-end gap-2", Children: []components.PageInterface{
@@ -296,7 +360,12 @@ func registerSelectionPages() {
 		Url:    lago.GetterRoutePath("appointments.CardTimelineRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey[string]("$get.Date")},
+			components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Date"),
+				Children: []components.PageInterface{
+					components.InputDate{Label: "Date", Name: "Date", Getter: getters.GetterKey[time.Time]("$get.Date")},
+				},
+			},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -319,7 +388,7 @@ func registerSelectionPages() {
 					components.ContainerColumn{Children: []components.PageInterface{
 						components.ContainerRow{Classes: "flex justify-between items-start mb-2", Children: []components.PageInterface{
 							components.FieldTitle{Getter: getters.GetterKey[string]("$row.Name")},
-							components.FieldText{Getter: getters.GetterKey[string]("$row.Datetime"), Classes: "text-sm text-gray-500 font-medium whitespace-nowrap"},
+							components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Datetime"), Classes: "text-sm text-gray-500 font-medium whitespace-nowrap"},
 						}},
 						components.ContainerRow{Classes: "flex items-center gap-1 text-sm text-gray-600 mb-1", Children: []components.PageInterface{
 							components.Icon{Name: "map-pin", Classes: "w-4 h-4"},

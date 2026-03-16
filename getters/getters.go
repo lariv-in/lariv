@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/exp/constraints"
 	"gorm.io/gorm"
@@ -58,6 +59,9 @@ func GetterKey[T any](key string) Getter[T] {
 			if v, exists := m[part]; exists {
 				value = v
 			}
+		}
+		if value == nil {
+			return zero, nil
 		}
 		v, ok := value.(T)
 		if !ok {
@@ -127,6 +131,22 @@ func GetterUintString(g Getter[uint]) Getter[string] {
 			return "", err
 		}
 		return strconv.FormatUint(uint64(v), 10), nil
+	}
+}
+
+// GetterTimeFormat converts a Getter[time.Time] to Getter[string] by formatting
+// the time using the provided layout. Errors from the underlying getter are
+// propagated.
+func GetterTimeFormat(layout string, g Getter[time.Time]) Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		t, err := g(ctx)
+		if err != nil {
+			return "", err
+		}
+		if t.IsZero() {
+			return "", nil
+		}
+		return t.Format(layout), nil
 	}
 }
 

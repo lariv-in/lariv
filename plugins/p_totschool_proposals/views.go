@@ -26,9 +26,37 @@ func ProposalQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.
 		return query
 	}
 	if !(user.IsSuperuser || user.Role.Name == "totschool_admin") {
-		query = query.Where("CreatedByID = ?", user.ID)
+		// Use the actual DB column name (snake_case) to avoid Postgres
+		// folding "CreatedByID" into the invalid identifier "createdbyid".
+		query = query.Where("created_by_id = ?", user.ID)
 	}
 	return query
+}
+
+// proposalDetailMiddleware enriches the detail view context for a proposal.
+// It expects DetailView to have already loaded the concrete Proposal into the
+// "proposal" context key and sets a GenerationPending flag based on GenerationID.
+func proposalDetailMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		raw := ctx.Value("proposal")
+		proposal, ok := raw.(Proposal)
+		if !ok {
+			slog.Error("proposalDetailMiddleware: missing or invalid proposal in context",
+				"proposalType", fmt.Sprintf("%T", raw))
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if proposal.GenerationID != nil {
+			ctx = context.WithValue(ctx, "GenerationPending", true)
+		} else {
+			ctx = context.WithValue(ctx, "GenerationPending", false)
+		}
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 // ProposalFormPatcher enriches form data for CRUD handlers:
@@ -44,26 +72,10 @@ func ProposalFormPatcher(v *views.View, r *http.Request, formData map[string]any
 		return formData
 	}
 	formData["CreatedByID"] = user.ID
-
-	var items []QAItem
-	for i := 0; i < len(QUESTIONS); i++ {
-		key := fmt.Sprintf("answers[%d]", i)
-		raw := formData[key]
-		answer, _ := raw.(string)
-		items = append(items, QAItem{
-			Question: QUESTIONS[i],
-			Answer:   answer,
-		})
-		delete(formData, key)
-	}
-
-	var p Proposal
-	_ = p.SetAnswers(items)
-	formData["Answers"] = p.Answers
-
+	// Answers are now posted as JSON via InputKeyValue directly into the
+	// Answers field; no additional transformation required here.
 	return formData
 }
-
 
 func generateHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -331,23 +343,24 @@ func exportPdfHandler(v *views.View) http.Handler {
 func init() {
 	lago.RegistryView.Register("proposals.ListView",
 		views.ListView[Proposal]("proposals")(lago.GetPageView("proposals.ProposalTable")).
-			WithQueryPatcher(ProposalQueryPatcher).
+			WithQueryPatcher("proposals.query", ProposalQueryPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.DetailView",
 		views.DetailView[Proposal]("proposal")(
 			lago.GetPageView("proposals.ProposalDetail")).
+			WithMiddleware("proposals.detail", proposalDetailMiddleware).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.CreateView",
 		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("proposals.ProposalCreateForm")).
-			WithFormPatcher(ProposalFormPatcher).
+			WithFormPatcher("proposals.form", ProposalFormPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.UpdateView",
 		views.DetailView[Proposal]("proposal")(
 			views.UpdateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("proposals.ProposalUpdateForm"))).
-			WithFormPatcher(ProposalFormPatcher).
+			WithFormPatcher("proposals.form", ProposalFormPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.DeleteView",

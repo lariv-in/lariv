@@ -57,6 +57,31 @@ func ListView[T any](key string) func(*View) *View {
 				}
 				pageSize := 12
 
+				// Preserve query params for filters as a $get map, starting with raw URL values.
+				queryMap := map[string]any{}
+				for param, values := range r.URL.Query() {
+					if len(values) > 0 && values[0] != "" {
+						queryMap[param] = values[0]
+					}
+				}
+
+				// If the page has a filter form, parse it to coerce types (e.g., checkboxes to bool)
+				// and merge into $get, overriding raw string values where present.
+				if page, ok := v.GetPage(); ok {
+					if parent, ok := page.(components.ParentInterface); ok {
+						if forms := components.FindChildren[components.FormInterface](parent); len(forms) > 0 {
+							if values, _, err := forms[0].ParseForm(r); err == nil {
+								maps.Copy(queryMap, values)
+							}
+						}
+					}
+				}
+
+				// Attach $request and $get to the context before any query patching.
+				ctx := context.WithValue(r.Context(), "$request", r)
+				ctx = context.WithValue(ctx, "$get", queryMap)
+				r = r.WithContext(ctx)
+
 				// Apply query param filters using a safe, whitelisted set of columns.
 				for param, values := range r.URL.Query() {
 					if len(values) == 0 || values[0] == "" {
@@ -92,8 +117,8 @@ func ListView[T any](key string) func(*View) *View {
 				}
 				query = query.Limit(pageSize).Offset((pageNum - 1) * pageSize)
 
-				if v.QueryPatcher != nil {
-					query = v.QueryPatcher(v, r, query)
+				for _, queryPatcher := range v.QueryPatchers {
+					query = queryPatcher.Value(v, r, query)
 				}
 
 				var results []T
@@ -112,30 +137,8 @@ func ListView[T any](key string) func(*View) *View {
 					Total:    total,
 				}
 
-				ctx := context.WithValue(r.Context(), key, objectList)
-				ctx = context.WithValue(ctx, "$request", r)
-
-				// Preserve query params in context as $get map for filter re-population.
-				// Default: raw strings from URL query.
-				queryMap := map[string]any{}
-				for param, values := range r.URL.Query() {
-					if len(values) > 0 && values[0] != "" {
-						queryMap[param] = values[0]
-					}
-				}
-
-				if page, ok := v.GetPage(); ok {
-					if parent, ok := page.(components.ParentInterface); ok {
-						if forms := components.FindChildren[components.FormInterface](parent); len(forms) > 0 {
-							if values, _, err := forms[0].ParseForm(r); err == nil {
-								maps.Copy(queryMap, values)
-							}
-						}
-					}
-				}
-
-				ctx = context.WithValue(ctx, "$get", queryMap)
-
+				// Add the object list to the enriched context and pass it downstream.
+				ctx = context.WithValue(r.Context(), key, objectList)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			})
 		})
@@ -158,8 +161,8 @@ func DetailView[T any](key string) func(*View) *View {
 
 				query := r.Context().Value("$db").(*gorm.DB)
 				instance := new(T)
-				if v.QueryPatcher != nil {
-					query = v.QueryPatcher(v, r, query)
+				for _, queryPatcher := range v.QueryPatchers {
+					query = queryPatcher.Value(v, r, query)
 				}
 				err = query.First(instance, id).Error
 				if err != nil {
@@ -167,7 +170,10 @@ func DetailView[T any](key string) func(*View) *View {
 					return
 				}
 
-				ctx := context.WithValue(r.Context(), key, getters.MapFromStruct(instance))
+				// Store the concrete instance under the key so typed GetterKey[T](key)
+				// can retrieve it without type errors. Components like Detail[T]
+				// will project this into $in as needed.
+				ctx := context.WithValue(r.Context(), key, *instance)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			})
 		})
@@ -253,8 +259,8 @@ func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
 				}
 
 				query := r.Context().Value("$db").(*gorm.DB).Model(new(T)).Where("id = ?", id)
-				if innerView.QueryPatcher != nil {
-					query = innerView.QueryPatcher(innerView, r, query)
+				for _, queryPatcher := range innerView.QueryPatchers {
+					query = queryPatcher.Value(innerView, r, query)
 				}
 
 				// Update using the map directly, ID already known from path
@@ -339,8 +345,8 @@ func DeleteView[T any](successUrl getters.Getter[string]) func(*View) *View {
 				}
 
 				query := r.Context().Value("$db").(*gorm.DB)
-				if innerView.QueryPatcher != nil {
-					query = innerView.QueryPatcher(innerView, r, query)
+				for _, queryPatcher := range innerView.QueryPatchers {
+					query = queryPatcher.Value(innerView, r, query)
 				}
 				err = query.Delete(new(T), id).Error
 				if err != nil {

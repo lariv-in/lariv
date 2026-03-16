@@ -23,6 +23,15 @@ func (d DynamicPage) GetRoles() []string {
 	return d.Roles
 }
 
+func (d DynamicPage) GetChildren() []components.PageInterface {
+	page, ok := RegistryPage.Get(d.Name)
+	if !ok {
+		slog.Warn("DynamicPage: page not found in registry", "name", d.Name)
+		return nil
+	}
+	return []components.PageInterface{page}
+}
+
 func (d DynamicPage) Build(ctx context.Context) gomponents.Node {
 	page, ok := RegistryPage.Get(d.Name)
 	if !ok {

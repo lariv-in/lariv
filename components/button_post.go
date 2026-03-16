@@ -33,6 +33,10 @@ func (e ButtonPost) Build(ctx context.Context) Node {
 	}
 	return Form(
 		Action(url), Method(http.MethodPost),
+		// Use htmx boost so the POST is handled via HTMX without a
+		// full-page navigation; the response (e.g. updated detail view
+		// showing "Generating..." state) will be swapped in-place.
+		Attr("hx-boost", "true"),
 		Button(Type("submit"), Class("btn w-full "+e.Classes), Text(e.Label)),
 	)
 }

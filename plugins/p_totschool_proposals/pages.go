@@ -89,11 +89,11 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
-				Getter:         getters.GetterKey[Proposal]("proposal"),
-				Url:            lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
-				Method:         http.MethodPost,
-				Title:          "Edit Proposal",
-				Subtitle:       "Update questionnaire answers",
+				Getter:   getters.GetterKey[Proposal]("proposal"),
+				Url:      lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Method:   http.MethodPost,
+				Title:    "Edit Proposal",
+				Subtitle: "Update questionnaire answers",
 				ChildrenInput: []components.PageInterface{
 					components.InputText{Label: "Title", Name: "Title", Getter: getters.GetterKey[string]("$in.Title")},
 					components.InputKeyValue{
@@ -147,13 +147,29 @@ func registerDetail() {
 
 	pendingSection := []components.PageInterface{
 		components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
-			components.FieldText{Getter: getters.GetterStatic("Generating..."), Classes: "btn-primary"},
-			components.ButtonPost{Label: "Cancel Generation", URL: lago.GetterRoutePath("proposals.CancelRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-error btn-sm"},
+			components.FieldText{Getter: getters.GetterStatic("Generating...")},
+			components.ButtonPost{
+				Label:   "Cancel Generation",
+				URL:     lago.GetterRoutePath("proposals.CancelRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Classes: "btn-outline btn-error btn-sm",
+			},
+			components.ButtonLink{
+				Label: "Refresh status",
+				Link:  lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				// Make refresh visually distinct with a border.
+				Classes: "btn btn-sm btn-outline border border-base-300 font-semibold",
+			},
 		}},
 	}
 
 	idleSection := []components.PageInterface{
-		components.ButtonPost{Label: "Generate Proposal with AI", URL: lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-primary"},
+		components.ButtonPost{
+			Page: components.Page{
+				Key: "proposals.GenerateProposalWithAi",
+			},
+			Label: "Generate Proposal with AI",
+			URL:   lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-primary",
+		},
 	}
 
 	lago.RegistryPage.Register("proposals.ProposalDetail", components.ShellScaffold{

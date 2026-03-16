@@ -3,6 +3,7 @@ package p_totschool_appointments
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
@@ -11,20 +12,26 @@ import (
 	"gorm.io/gorm"
 )
 
-func detailHandler(v *views.View) http.Handler {
+// AppointmentDetailMiddleware enriches the detail view context for an appointment.
+// It expects DetailView to have already loaded the concrete Appointment into the
+// "appointment" context key.
+func AppointmentDetailMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		ctx := r.Context()
 
-		var appointment Appointment
-		// Verify created_by manually if not superuser or admin
-		err := db.Where("id = ?", idStr).First(&appointment).Error
-		if err != nil {
-			http.NotFound(w, r)
+		rawAppt := ctx.Value("appointment")
+		appointment, ok := rawAppt.(Appointment)
+		if !ok {
+			// If the appointment isn't present or has wrong type, fall back to the next handler.
+			next.ServeHTTP(w, r)
 			return
 		}
 
-		ctx := r.Context()
+		db, ok := ctx.Value("$db").(*gorm.DB)
+		if !ok {
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		if appointment.GenerationID != nil {
 			ctx = context.WithValue(ctx, "GenerationPending", true)
@@ -49,11 +56,7 @@ func detailHandler(v *views.View) http.Handler {
 			ctx = context.WithValue(ctx, "OverlapWarning", false)
 		}
 
-		// Store the concrete Appointment in context; Detail[Appointment] and
-		// components.FormComponent[Appointment] use GetterKey[Appointment]("appointment")
-		// and will map it into $in themselves.
-		ctx = context.WithValue(ctx, "appointment", appointment)
-		v.RenderPage(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -160,23 +163,73 @@ func FormCreatedByPatcher(v *views.View, r *http.Request, formData map[string]an
 	return formData
 }
 
+// AppointmentListQueryPatcher applies additional filtering based on query params,
+// such as the "Overlapping" checkbox in the filter form.
+func AppointmentListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	ctx := r.Context()
+
+	// If Overlapping=true in the parsed filter values, restrict to appointments
+	// that have at least one overlapping neighbor (same CreatedByID and within the
+	// +/-30 minute window defined in GetOverlappingAppointments).
+	if overlapping, ok := ctx.Value("$get").(map[string]any); ok {
+		if val, exists := overlapping["Overlapping"]; exists {
+			if b, ok := val.(bool); ok && b {
+				query = WithOverlappingFilter(query)
+			}
+		}
+	}
+
+	return query
+}
+
+// AppointmentTimelineQueryPatcher filters appointments for the timeline view based on
+// the Date field from the timeline filter form ($get.Date).
+func AppointmentTimelineQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	ctx := r.Context()
+
+	if get, ok := ctx.Value("$get").(map[string]any); ok {
+		if raw, exists := get["Date"]; exists && raw != nil {
+			switch d := raw.(type) {
+			case time.Time:
+				// Filter by the same calendar day in the application's timezone.
+				start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
+				end := start.Add(24 * time.Hour)
+				query = query.Where("datetime >= ? AND datetime < ?", start, end)
+			case string:
+				if d != "" {
+					if parsed, err := time.Parse("2006-01-02", d); err == nil {
+						start := time.Date(parsed.Year(), parsed.Month(), parsed.Day(), 0, 0, 0, 0, parsed.Location())
+						end := start.Add(24 * time.Hour)
+						query = query.Where("datetime >= ? AND datetime < ?", start, end)
+					}
+				}
+			}
+		}
+	}
+
+	return query
+}
+
 func init() {
 	lago.RegistryView.Register("appointments.ListView",
 		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentTable")).
+			WithQueryPatcher("appointments.list", AppointmentListQueryPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.DetailView",
-		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodGet, detailHandler)).
+		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail")).
+			WithMiddleware("appointments.detail", AppointmentDetailMiddleware).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.CreateView",
 		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
-			WithFormPatcher(FormCreatedByPatcher).
+			WithFormPatcher("appointments.form", FormCreatedByPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.UpdateView",
-		views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm")).
-			WithFormPatcher(FormCreatedByPatcher).
+		views.DetailView[Appointment]("appointment")(
+			views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
+			WithFormPatcher("appointments.form", FormCreatedByPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.DeleteView",
@@ -205,5 +258,6 @@ func init() {
 
 	lago.RegistryView.Register("appointments.CardTimelineView",
 		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentCardTimeline")).
+			WithQueryPatcher("appointments.timeline", AppointmentTimelineQueryPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 }

@@ -22,12 +22,13 @@ type (
 type Middleware = func(http.Handler) http.Handler
 
 type View struct {
-	PageName     string
-	Registry     map[string]components.PageInterface
-	Handlers     map[string]func(*View) http.Handler
-	FormPatcher  FormPatcher
-	QueryPatcher QueryPatcher
-	Middlewares  registry.Registry[Middleware]
+	PageName      string
+	Registry      map[string]components.PageInterface
+	Handlers      map[string]func(*View) http.Handler
+	FormPatchers  []registry.Pair[string, FormPatcher]
+	QueryPatchers []registry.Pair[string, QueryPatcher]
+	// Middlewares are applied in slice order to preserve insertion order.
+	Middlewares []registry.Pair[string, Middleware]
 }
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +39,10 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h := handler(v)
-	for _, middleware := range *v.Middlewares.AllStable() {
-		h = middleware.Value(h)
+	// Apply middlewares in registration order, so that the earliest-registered
+	// middleware wraps the handler innermost and the latest wraps outermost.
+	for i := len(v.Middlewares) - 1; i >= 0; i-- {
+		h = v.Middlewares[i].Value(h)
 	}
 	h.ServeHTTP(w, r)
 }
@@ -112,8 +115,8 @@ func (v *View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return nil, nil, err
 	}
-	if v.FormPatcher != nil {
-		values = v.FormPatcher(v, r, values)
+	for _, formPatcher := range v.FormPatchers {
+		values = formPatcher.Value(v, r, values)
 	}
 	return values, fieldErrors, nil
 }
@@ -148,36 +151,81 @@ func (v *View) HasErrors(errs map[string]error) bool {
 	return false
 }
 
-func (v *View) WithFormPatcher(formPatcher FormPatcher) *View {
-	v.FormPatcher = formPatcher
+func (v *View) WithFormPatcher(name string, formPatcher FormPatcher) *View {
+	v.FormPatchers = append(v.FormPatchers, registry.Pair[string, FormPatcher]{Key: name, Value: formPatcher})
 	return v
 }
 
-func (v *View) WithQueryPatcher(queryPatcher QueryPatcher) *View {
-	v.QueryPatcher = queryPatcher
+func (v *View) WithQueryPatcher(name string, queryPatcher QueryPatcher) *View {
+	v.QueryPatchers = append(v.QueryPatchers, registry.Pair[string, QueryPatcher]{Key: name, Value: queryPatcher})
 	return v
 }
 
 func (v *View) WithMiddleware(name string, middleware Middleware) *View {
-	v.Middlewares.Register(name, middleware)
+	// Append middleware; keys are labels only and are not required to be unique.
+	v.Middlewares = append(v.Middlewares, registry.Pair[string, Middleware]{Key: name, Value: middleware})
 	return v
+}
+
+// InsertMiddlewareBefore inserts a middleware with the given name immediately
+// before the first middleware whose Key matches beforeName. If no such
+// middleware exists, it appends it to the end.
+func (v *View) InsertMiddlewareBefore(beforeName, name string, middleware Middleware) *View {
+	p := registry.Pair[string, Middleware]{Key: name, Value: middleware}
+	for i, mw := range v.Middlewares {
+		if mw.Key == beforeName {
+			v.Middlewares = append(v.Middlewares[:i], append([]registry.Pair[string, Middleware]{p}, v.Middlewares[i:]...)...)
+			return v
+		}
+	}
+	// Fallback: behave like WithMiddleware when beforeName is not found.
+	return v.WithMiddleware(name, middleware)
+}
+
+// InsertMiddlewareAfter inserts a middleware with the given name immediately
+// after the first middleware whose Key matches afterName. If no such
+// middleware exists, it appends it to the end.
+func (v *View) InsertMiddlewareAfter(afterName, name string, middleware Middleware) *View {
+	p := registry.Pair[string, Middleware]{Key: name, Value: middleware}
+	for i, mw := range v.Middlewares {
+		if mw.Key == afterName {
+			// Insert after index i.
+			pos := i + 1
+			if pos >= len(v.Middlewares) {
+				v.Middlewares = append(v.Middlewares, p)
+			} else {
+				v.Middlewares = append(v.Middlewares[:pos], append([]registry.Pair[string, Middleware]{p}, v.Middlewares[pos:]...)...)
+			}
+			return v
+		}
+	}
+	// Fallback: behave like WithMiddleware when afterName is not found.
+	return v.WithMiddleware(name, middleware)
 }
 
 func (v *View) WithMiddlewares(middlewares ...registry.Pair[string, Middleware]) *View {
 	for _, middleware := range middlewares {
-		v.Middlewares.Register(middleware.Key, middleware.Value)
+		v.WithMiddleware(middleware.Key, middleware.Value)
 	}
 	return v
 }
 
 func (v *View) PatchMiddlewares(middlewares ...registry.Pair[string, func(Middleware) Middleware]) *View {
 	for _, middleware := range middlewares {
-		v.Middlewares.Patch(middleware.Key, middleware.Value)
+		for i, mw := range v.Middlewares {
+			if mw.Key == middleware.Key {
+				v.Middlewares[i].Value = middleware.Value(mw.Value)
+			}
+		}
 	}
 	return v
 }
 
 func (v *View) PatchMiddleware(name string, patcher func(Middleware) Middleware) *View {
-	v.Middlewares.Patch(name, patcher)
+	for i, mw := range v.Middlewares {
+		if mw.Key == name {
+			v.Middlewares[i].Value = patcher(mw.Value)
+		}
+	}
 	return v
 }

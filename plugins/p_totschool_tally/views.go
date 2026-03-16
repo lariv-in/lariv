@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
@@ -92,8 +91,15 @@ func TallyLeaderboardHandler(v *views.View) http.Handler {
 	})
 }
 
-// Ensure the user owns or is admin for the queried tally
-func getTallyOr404(w http.ResponseWriter, _ *http.Request, db *gorm.DB, tallyID string, user p_users.User) *Tally {
+// TallyDetailQueryPatcher scopes the detail query so that non-admin users
+// can only see their own tallies, while admins/superusers can see all.
+func TallyDetailQueryPatcher(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	user, ok := r.Context().Value("$user").(p_users.User)
+	if !ok {
+		return query
+	}
+
+	db := r.Context().Value("$db").(*gorm.DB)
 	var roleName string
 	if !user.IsSuperuser {
 		db.Model(&p_users.Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
@@ -101,17 +107,10 @@ func getTallyOr404(w http.ResponseWriter, _ *http.Request, db *gorm.DB, tallyID 
 		roleName = "superuser"
 	}
 
-	var tally Tally
-	query := db.Where("id = ?", tallyID)
 	if !user.IsSuperuser && roleName != "totschool_admin" {
 		query = query.Where("user_id = ?", user.ID)
 	}
-
-	if err := query.First(&tally).Error; err != nil {
-		http.Error(w, "Tally not found", http.StatusNotFound)
-		return nil
-	}
-	return &tally
+	return query
 }
 
 // RequireAdmin middleware to restrict access to admins only.
@@ -137,38 +136,102 @@ func RequireAdmin(next http.Handler) http.Handler {
 	})
 }
 
-// TallyListHandler lists all tallies
-func TallyListHandler(v *views.View) http.Handler {
+// TallyListQueryPatcher scopes and filters the tallies list for the generic ListView.
+func TallyListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	ctx := r.Context()
+
+	user, ok := ctx.Value("$user").(p_users.User)
+	if !ok {
+		return query
+	}
+	db, ok := ctx.Value("$db").(*gorm.DB)
+	if !ok {
+		return query
+	}
+
+	// Always join the related user so table columns can access User.Name.
+	query = query.Joins("User")
+
+	// Restrict to the current session.
+	session := getSessionFromEnvironment(db, ctx)
+	query = query.Where("date >= ? AND date <= ?", session.Start, session.End)
+
+	// Role-based scoping: non-admin users can only see their own tallies.
+	var roleName string
+	if !user.IsSuperuser {
+		db.Model(&p_users.Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
+	}
+	isAdmin := user.IsSuperuser || roleName == "totschool_admin"
+	if !isAdmin {
+		query = query.Where("user_id = ?", user.ID)
+	}
+
+	// Apply filters from $get (populated by the generic ListView from query params + filter form).
+	if getMap, ok := ctx.Value("$get").(map[string]any); ok {
+		// User filter: only effective for admins/superusers.
+		if isAdmin {
+			if val, ok := getMap["UserID"]; ok && val != nil {
+				switch v := val.(type) {
+				case uint:
+					if v != 0 {
+						query = query.Where("user_id = ?", v)
+					}
+				case string:
+					if v != "" {
+						if parsed, err := strconv.ParseUint(v, 10, 64); err == nil && parsed != 0 {
+							query = query.Where("user_id = ?", uint(parsed))
+						}
+					}
+				}
+			}
+		}
+
+		// Date filter: when provided, narrow to that specific calendar day.
+		if raw, ok := getMap["Date"]; ok && raw != nil {
+			switch d := raw.(type) {
+			case time.Time:
+				if !d.IsZero() {
+					start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
+					end := start.Add(24 * time.Hour)
+					query = query.Where("date >= ? AND date < ?", start, end)
+				}
+			case string:
+				if d != "" {
+					if parsed, err := time.Parse("2006-01-02", d); err == nil {
+						start := time.Date(parsed.Year(), parsed.Month(), parsed.Day(), 0, 0, 0, 0, parsed.Location())
+						end := start.Add(24 * time.Hour)
+						query = query.Where("date >= ? AND date < ?", start, end)
+					}
+				}
+			}
+		}
+	}
+
+	return query
+}
+
+// TallySessionNamesMiddleware injects SessionNames into $in so the shared
+// session environment selector can render options on the tally list page.
+func TallySessionNamesMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value("$user").(p_users.User)
-		db := r.Context().Value("$db").(*gorm.DB)
-
-		session := getSessionFromEnvironment(db, r.Context())
-
-		var roleName string
-		if !user.IsSuperuser {
-			db.Model(&p_users.Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
+		ctx := r.Context()
+		db, ok := ctx.Value("$db").(*gorm.DB)
+		if !ok {
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		query := db.Model(&Tally{}).Joins("User").Where("date >= ? AND date <= ?", session.Start, session.End)
-		if !user.IsSuperuser && roleName != "totschool_admin" {
-			query = query.Where("user_id = ?", user.ID)
+		sessionNames := getAllSessionNames(db)
+
+		// Merge into existing $in map if present, otherwise create a new one.
+		inMap, _ := ctx.Value("$in").(map[string]any)
+		if inMap == nil {
+			inMap = map[string]any{}
 		}
+		inMap["SessionNames"] = sessionNames
 
-		var tallies []Tally
-		query.Order("date DESC").Find(&tallies)
-		total := int64(len(tallies))
-
-		ctx := context.WithValue(r.Context(), "$in", map[string]any{
-			"Tallies": components.ObjectList[Tally]{
-				Items:    tallies,
-				Number:   1,
-				NumPages: 1,
-				Total:    total,
-			},
-			"SessionNames": getAllSessionNames(db),
-		})
-		v.RenderPage(w, r.WithContext(ctx))
+		ctx = context.WithValue(ctx, "$in", inMap)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -232,7 +295,9 @@ func init() {
 		lago.GetPageView("tally.TallyLeaderboard").WithMethod(http.MethodGet, TallyLeaderboardHandler).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 	lago.RegistryView.Register("tally.TallyListView",
-		lago.GetPageView("tally.TallyTable").WithMethod(http.MethodGet, TallyListHandler).
+		views.ListView[Tally]("Tallies")(lago.GetPageView("tally.TallyTable")).
+			WithQueryPatcher("tally.list", TallyListQueryPatcher).
+			InsertMiddlewareBefore("views.crud.list", "tally.sessionNames", TallySessionNamesMiddleware).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 	lago.RegistryView.Register("tally.TallyDailyFormView",
 		lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler).
@@ -252,21 +317,12 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("tally.admin", RequireAdmin))
 
-	// Detail View allows access if user owns it or is admin
+	// Detail View allows access if user owns it or is admin. We reuse the
+	// generic DetailView[Tally] and apply TallyDetailQueryPatcher to enforce
+	// per-user access.
 	lago.RegistryView.Register("tally.TallyDetailView",
-		lago.GetPageView("tally.TallyDetail").WithMethod(http.MethodGet, func(v *views.View) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				idStr := r.PathValue("id")
-				db := r.Context().Value("$db").(*gorm.DB)
-				user := r.Context().Value("$user").(p_users.User)
-
-				tally := getTallyOr404(w, r, db, idStr, user)
-				if tally == nil {
-					return
-				}
-				ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": getters.MapFromStruct(tally)})
-				v.RenderPage(w, r.WithContext(ctx))
-			})
-		}).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware)) // Using new TallyDetail component
+		views.DetailView[Tally]("Tally")(
+			lago.GetPageView("tally.TallyDetail")).
+			WithQueryPatcher("tally.detail", TallyDetailQueryPatcher).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 }

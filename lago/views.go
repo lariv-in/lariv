@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/lariv-in/registry"
 	"github.com/lariv-in/views"
 )
 
@@ -23,6 +22,5 @@ func GetPageView(pageName string) *views.View {
 				})
 			},
 		},
-		Middlewares: registry.NewRegistry[views.Middleware](),
 	}
 }
