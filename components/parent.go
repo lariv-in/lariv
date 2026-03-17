@@ -1,6 +1,8 @@
 package components
 
-import "fmt"
+import (
+	"log/slog"
+)
 
 type ParentInterface interface {
 	PageInterface
@@ -63,12 +65,11 @@ func InsertChildAfter[T, V PageInterface](p MutableParentInterface, key string, 
 			result = append(result, child)
 			result = append(result, replacement(needle))
 			targetFound = true
-			break
 		} else {
 			if parent, isParent := child.(MutableParentInterface); isParent {
-				targetFound = InsertChildAfter(parent, key, replacement)
-				if targetFound {
-					return targetFound
+				childTargetFound := InsertChildAfter(parent, key, replacement)
+				if childTargetFound {
+					targetFound = childTargetFound
 				}
 			}
 			result = append(result, child)
@@ -76,7 +77,7 @@ func InsertChildAfter[T, V PageInterface](p MutableParentInterface, key string, 
 	}
 
 	if !targetFound {
-		fmt.Println("Target not found")
+		slog.Error("Target not found", "parent", p, "key", key)
 	}
 
 	p.SetChildren(result)

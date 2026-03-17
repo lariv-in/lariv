@@ -319,19 +319,19 @@ func init() {
 		}
 
 		lago.RegistryPage.Patch("users.LoginPage", func(page components.PageInterface) components.PageInterface {
-			if scaffold, ok := page.(components.ShellAuthScaffold); ok {
-				components.InsertChildAfter(&scaffold,
+			if scaffold, ok := page.(*components.ShellAuthScaffold); ok {
+				components.InsertChildAfter(scaffold,
 					"users.AuthForm",
-					func(components.FormComponent[p_users.User]) components.ButtonLink {
-						return components.ButtonLink{
+					func(*components.FormComponent[p_users.User]) *components.ButtonLink {
+						return &components.ButtonLink{
 							Label: "Login with SMS OTP",
 							Link:  lago.GetterRoutePath("otp.PhoneOtpRequestRoute", nil),
 						}
 					})
-				components.InsertChildAfter(&scaffold,
+				components.InsertChildAfter(scaffold,
 					"users.AuthForm",
-					func(components.FormComponent[p_users.User]) components.ButtonLink {
-						return components.ButtonLink{
+					func(*components.FormComponent[p_users.User]) *components.ButtonLink {
+						return &components.ButtonLink{
 							Label: "Login with Email OTP",
 							Link:  lago.GetterRoutePath("otp.EmailOtpRequestRoute", nil),
 						}

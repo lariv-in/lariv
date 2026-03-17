@@ -3,6 +3,7 @@ package p_otp
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,6 +31,11 @@ func PhoneOtpRequestHandler(v *views.View) http.Handler {
 
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			slog.Error("PhoneOtpRequestHandler: failed to parse form",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"error", err,
+			)
 			return
 		}
 
@@ -37,16 +43,32 @@ func PhoneOtpRequestHandler(v *views.View) http.Handler {
 		identifier = strings.TrimSpace(identifier)
 
 		if identifier == "" {
-			fieldErrors["identifier"] = fmt.Errorf("Phone number is required.")
+			fieldErrors["Identifier"] = fmt.Errorf("Phone number is required.")
 		}
 
-		db := r.Context().Value("$db").(*gorm.DB)
+		dbValue := r.Context().Value("$db")
+		db, ok := dbValue.(*gorm.DB)
+		if !ok || db == nil {
+			slog.Error("PhoneOtpRequestHandler: missing or invalid *gorm.DB in context",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"identifier", identifier,
+			)
+			fieldErrors["Identifier"] = fmt.Errorf("Internal error. Please try again later.")
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
 
 		if !v.HasErrors(fieldErrors) {
 			var count int64
-			db.Model(&p_users.User{}).Where("phone = ?", identifier).Count(&count)
-			if count == 0 {
-				fieldErrors["identifier"] = fmt.Errorf("No user found with this phone number.")
+			if err := db.Model(&p_users.User{}).Where("phone = ?", identifier).Count(&count).Error; err != nil {
+				slog.Error("PhoneOtpRequestHandler: failed to count users by phone",
+					"identifier", identifier,
+					"error", err,
+				)
+				fieldErrors["Identifier"] = fmt.Errorf("Internal error. Please try again later.")
+			} else if count == 0 {
+				fieldErrors["Identifier"] = fmt.Errorf("No user found with this phone number.")
 			} else {
 				sent := SendSmsOtp(db, identifier)
 				if sent {
@@ -55,7 +77,10 @@ func PhoneOtpRequestHandler(v *views.View) http.Handler {
 					lago.Redirect(w, r, successUrl)
 					return
 				} else {
-					fieldErrors["identifier"] = fmt.Errorf("Failed to send OTP. Please check configuration.")
+					slog.Error("PhoneOtpRequestHandler: failed to send SMS OTP",
+						"identifier", identifier,
+					)
+					fieldErrors["Identifier"] = fmt.Errorf("Failed to send OTP. Please check configuration.")
 				}
 			}
 		}
@@ -79,6 +104,11 @@ func EmailOtpRequestHandler(v *views.View) http.Handler {
 
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			slog.Error("EmailOtpRequestHandler: failed to parse form",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"error", err,
+			)
 			return
 		}
 
@@ -86,16 +116,32 @@ func EmailOtpRequestHandler(v *views.View) http.Handler {
 		identifier = strings.TrimSpace(identifier)
 
 		if identifier == "" {
-			fieldErrors["identifier"] = fmt.Errorf("Email address is required.")
+			fieldErrors["Identifier"] = fmt.Errorf("Email address is required.")
 		}
 
-		db := r.Context().Value("$db").(*gorm.DB)
+		dbValue := r.Context().Value("$db")
+		db, ok := dbValue.(*gorm.DB)
+		if !ok || db == nil {
+			slog.Error("EmailOtpRequestHandler: missing or invalid *gorm.DB in context",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"identifier", identifier,
+			)
+			fieldErrors["Identifier"] = fmt.Errorf("Internal error. Please try again later.")
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
 
 		if !v.HasErrors(fieldErrors) {
 			var count int64
-			db.Model(&p_users.User{}).Where("email = ?", identifier).Count(&count)
-			if count == 0 {
-				fieldErrors["identifier"] = fmt.Errorf("No user found with this email.")
+			if err := db.Model(&p_users.User{}).Where("email = ?", identifier).Count(&count).Error; err != nil {
+				slog.Error("EmailOtpRequestHandler: failed to count users by email",
+					"identifier", identifier,
+					"error", err,
+				)
+				fieldErrors["Identifier"] = fmt.Errorf("Internal error. Please try again later.")
+			} else if count == 0 {
+				fieldErrors["Identifier"] = fmt.Errorf("No user found with this email.")
 			} else {
 				sent := SendEmailOtp(db, identifier)
 				if sent {
@@ -104,7 +150,10 @@ func EmailOtpRequestHandler(v *views.View) http.Handler {
 					lago.Redirect(w, r, successUrl)
 					return
 				} else {
-					fieldErrors["identifier"] = fmt.Errorf("Failed to send OTP. Please check configuration.")
+					slog.Error("EmailOtpRequestHandler: failed to send email OTP",
+						"identifier", identifier,
+					)
+					fieldErrors["Identifier"] = fmt.Errorf("Failed to send OTP. Please check configuration.")
 				}
 			}
 		}
@@ -118,13 +167,17 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		identifier := r.URL.Query().Get("identifier")
 		if identifier == "" {
+			slog.Warn("OtpVerifyHandler: missing identifier in query",
+				"method", r.Method,
+				"path", r.URL.Path,
+			)
 			lago.NewRedirectView("users.LoginRoute").ServeHTTP(w, r)
 			return
 		}
 
 		if r.Method == http.MethodGet {
 			ctx := context.WithValue(r.Context(), "$in", map[string]any{
-				"identifier": identifier,
+				"Identifier": identifier,
 			})
 			r = r.WithContext(ctx)
 			v.RenderPage(w, r)
@@ -133,6 +186,12 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			slog.Error("OtpVerifyHandler: failed to parse form",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"identifier", identifier,
+				"error", err,
+			)
 			return
 		}
 
@@ -147,7 +206,20 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 			fieldErrors["otp"] = fmt.Errorf("Invalid OTP.")
 		}
 
-		db := r.Context().Value("$db").(*gorm.DB)
+		dbValue := r.Context().Value("$db")
+		db, ok := dbValue.(*gorm.DB)
+		if !ok || db == nil {
+			slog.Error("OtpVerifyHandler: missing or invalid *gorm.DB in context",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"identifier", identifier,
+			)
+			fieldErrors["otp"] = fmt.Errorf("Internal error. Please try again later.")
+			// Keep identifier around so form URL resolves correctly on re-render
+			values["Identifier"] = identifier
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
 
 		if !v.HasErrors(fieldErrors) {
 			var user p_users.User
@@ -156,8 +228,17 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 				user.Login(w)
 				lago.NewRedirectView("users.LoginSuccessRoute").ServeHTTP(w, r)
 				return
-			} else {
+			} else if err == gorm.ErrRecordNotFound {
+				slog.Warn("OtpVerifyHandler: user not found for identifier",
+					"identifier", identifier,
+				)
 				fieldErrors["otp"] = fmt.Errorf("User not found.")
+			} else {
+				slog.Error("OtpVerifyHandler: database error while loading user",
+					"identifier", identifier,
+					"error", err,
+				)
+				fieldErrors["otp"] = fmt.Errorf("Internal error. Please try again later.")
 			}
 		}
 

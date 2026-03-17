@@ -40,3 +40,17 @@ func (d DynamicPage) Build(ctx context.Context) gomponents.Node {
 	}
 	return components.Render(page, ctx)
 }
+
+func (d DynamicPage) SetChildren(children []components.PageInterface) {
+	page, ok := RegistryPage.Get(d.Name)
+	if !ok {
+		slog.Warn("DynamicPage: page not found in registry", "name", d.Name)
+		return
+	}
+	if parent, isParent := page.(components.MutableParentInterface); isParent {
+		parent.SetChildren(children)
+	} else {
+		slog.Warn("DynamicPage: page is not a mutable parent", "name", d.Name)
+		return
+	}
+}
