@@ -59,12 +59,12 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	itemsJson := "[" + strings.Join(initialItems, ",") + "]"
 
 	alpineData := fmt.Sprintf("{ items: %s, placeholder: '%s' }", itemsJson, placeholder)
+	modalContainerId := fmt.Sprintf("fk-modal-%s", e.Name)
 	eventHandler := fmt.Sprintf(
 		"if ($event.detail.name === '%s') { "+
-			"if (!items.some(i => i.value === String($event.detail.value))) { "+
-			"items.push({value: String($event.detail.value), display: String($event.detail.display)}); "+
-			"} "+
-			"$el.querySelector('.fk-modal-container').innerHTML = ''; "+
+			"let idx = items.findIndex(i => i.value === String($event.detail.value)); "+
+			"if (idx >= 0) { items.splice(idx, 1) } "+
+			"else { items.push({value: String($event.detail.value), display: String($event.detail.display)}) } "+
 			"}",
 		e.Name,
 	)
@@ -98,7 +98,7 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 		Div(
 			Class("flex flex-wrap gap-2 min-h-[2.5rem] p-2 rounded-lg border border-base-300 cursor-pointer"),
 			Attr("hx-get", urlStr),
-			Attr("hx-target", "next .fk-modal-container"),
+			Attr("hx-target", fmt.Sprintf("#%s", modalContainerId)),
 			Attr("hx-swap", "innerHTML"),
 			Attr("hx-push-url", "false"),
 
@@ -128,14 +128,22 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 		),
 
 		// Modal container for the selection table
-		Div(Class("fk-modal-container")),
+		Div(Attr("id", modalContainerId), Class("fk-modal-container"),
+			Attr("x-init", "document.body.appendChild($el)")),
 	)
 }
 
 func (e InputManyToMany[T]) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
-	// Return the full slice of selected IDs
-	return vals, nil
+	ids := make([]uint, 0, len(vals))
+	for _, s := range vals {
+		i, err := strconv.Atoi(s)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, uint(i))
+	}
+	return ids, nil
 }
 
 func (e InputManyToMany[T]) GetName() string {

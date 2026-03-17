@@ -71,7 +71,7 @@ func registerFilter() {
 			components.ContainerError{
 				Error: getters.GetterKey[error]("$error.Date"),
 				Children: []components.PageInterface{
-					components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey[string]("$get.Date")},
+					components.InputDate{Label: "Date", Name: "Date", Getter: getters.GetterKey[time.Time]("$get.Date")},
 				},
 			},
 			components.InputManyToMany[[]string]{
