@@ -86,6 +86,7 @@ func RoleAuthorizationMiddleware(roles []string) func(http.Handler) http.Handler
 			userObj := r.Context().Value("$user")
 			user, ok := userObj.(User)
 			if !ok {
+				slog.Error("RoleAuthorizationMiddleware: missing $user in context")
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -93,6 +94,7 @@ func RoleAuthorizationMiddleware(roles []string) func(http.Handler) http.Handler
 			var roleName string
 			db, ok := r.Context().Value("$db").(*gorm.DB)
 			if !ok {
+				slog.Error("RoleAuthorizationMiddleware: missing $db in context")
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
@@ -104,6 +106,7 @@ func RoleAuthorizationMiddleware(roles []string) func(http.Handler) http.Handler
 			}
 
 			if !authorized {
+				slog.Error("RoleAuthorizationMiddleware: user is not authorized", "role", roleName, "roles", roles)
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

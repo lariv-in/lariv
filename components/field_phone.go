@@ -40,5 +40,5 @@ func (e FieldPhone) Build(ctx context.Context) Node {
 		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
 	}
 
-	return Div(Class("text-xl font-semibold text-primary "+e.Classes), Text(phonenumbers.Format(v, phonenumbers.E164)))
+	return Div(Class(e.Classes), Text(phonenumbers.Format(v, phonenumbers.E164)))
 }
