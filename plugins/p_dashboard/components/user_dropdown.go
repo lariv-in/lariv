@@ -42,9 +42,9 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		html.Class("dropdown dropdown-end"),
 		gomponents.Attr("@click.outside", "$el.removeAttribute('open')"),
 		gomponents.El("summary",
-			html.Class("btn btn-ghost btn-sm btn-circle avatar placeholder"),
+			html.Class("btn btn-sm btn-circle avatar placeholder"),
 			html.Div(
-				html.Class("bg-neutral text-neutral-content rounded-full w-10"),
+				html.Class("rounded-full w-10"),
 				html.Span(html.Class("text-xl"), gomponents.Text(avatarText)),
 			),
 		),
