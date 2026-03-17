@@ -100,16 +100,16 @@ func ListView[T any](key string) func(*View) *View {
 					}
 				}
 
+				for _, queryPatcher := range v.QueryPatchers {
+					query = queryPatcher.Value(v, r, query)
+				}
+
 				var total int64
 				if err := query.Count(&total).Error; err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
 				query = query.Limit(pageSize).Offset((pageNum - 1) * pageSize)
-
-				for _, queryPatcher := range v.QueryPatchers {
-					query = queryPatcher.Value(v, r, query)
-				}
 
 				var results []T
 				err := query.Find(&results).Error
