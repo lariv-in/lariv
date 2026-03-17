@@ -3,8 +3,6 @@ package p_totschool_tally
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/lariv-in/components"
@@ -12,9 +10,6 @@ import (
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
 	"gorm.io/gorm"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 func CurrentSessionGetter(ctx context.Context) any {
@@ -22,6 +17,26 @@ func CurrentSessionGetter(ctx context.Context) any {
 	date := time.Now()
 	session := EnsureSessionForDate(db, date)
 	return session.Name
+}
+
+// SessionsListGetter returns the list of all session names for use in
+// the session environment selector.
+func SessionsListGetter(ctx context.Context) ([]string, error) {
+	db := ctx.Value("$db").(*gorm.DB)
+	names := getAllSessionNames(db)
+	return names, nil
+}
+
+// CurrentEnvironmentSessionGetter resolves the active TotSchoolSession from
+// the $environment cookie (or falls back to the current quarter), matching
+// the behaviour used on tally dashboard/list pages.
+func CurrentEnvironmentSessionGetter(ctx context.Context) (TotSchoolSession, error) {
+	db, ok := ctx.Value("$db").(*gorm.DB)
+	if !ok || db == nil {
+		return TotSchoolSession{}, fmt.Errorf("TallySessionEntries: missing $db in context")
+	}
+	session := getSessionFromEnvironment(db, ctx)
+	return session, nil
 }
 
 func tallyCommonFields() []components.PageInterface {
@@ -346,7 +361,7 @@ func init() {
 	sessionEnvironment := components.Environment{
 		Label:   "Session",
 		Key:     getters.GetterStatic("session"),
-		Options: getters.GetterKey[[]string]("$in.SessionNames"),
+		Options: SessionsListGetter,
 		Default: func(ctx context.Context) (string, error) {
 			v := CurrentSessionGetter(ctx)
 			if s, ok := v.(string); ok {
@@ -448,294 +463,75 @@ func init() {
 	})
 }
 
-// FormatCurrencyIndian formats an integer amount using the Indian numbering system,
-// e.g. 1234567 -> "₹12,34,567".
-func FormatCurrencyIndian(amount int) string {
-	if amount == 0 {
-		return "₹0"
-	}
-
-	s := fmt.Sprintf("%d", amount)
-	if len(s) <= 3 {
-		return "₹" + s
-	}
-
-	result := s[len(s)-3:]
-	s = s[:len(s)-3]
-
-	for len(s) > 0 {
-		if len(s) <= 2 {
-			result = s + "," + result
-			break
-		}
-		result = s[len(s)-2:] + "," + result
-		s = s[:len(s)-2]
-	}
-
-	return "₹" + result
-}
-
-// BuildWhatsappMessage constructs the WhatsApp report message text
-// mirroring the original Django implementation.
-func BuildWhatsappMessage(data WhatsappReportData) string {
-	if !data.Submitted {
-		return ""
-	}
-
-	dateStr := data.Date.Format("02 Jan, 2006")
-
-	message := "TOT School Report\n"
-	message += fmt.Sprintf("Date: %s\n", dateStr)
-	message += fmt.Sprintf("Name: %s\n\n", data.UserName)
-
-	// Today / QTD / Last quarter metrics
-	message += fmt.Sprintf("- Visits: %d/%d/%d\n", data.Today.TotalVisits, data.QTD.TotalVisits, data.LastQuarter.TotalVisits)
-	message += fmt.Sprintf("- Appointments: %d/%d/%d\n", data.Today.TotalAppointments, data.QTD.TotalAppointments, data.LastQuarter.TotalAppointments)
-	message += fmt.Sprintf("- Leads: %d/%d/%d\n", data.Today.TotalLeads, data.QTD.TotalLeads, data.LastQuarter.TotalLeads)
-	message += fmt.Sprintf("- Presentations: %d/%d/%d\n", data.Today.TotalPresentations, data.QTD.TotalPresentations, data.LastQuarter.TotalPresentations)
-	message += fmt.Sprintf("- Demonstrations: %d/%d/%d\n", data.Today.TotalDemos, data.QTD.TotalDemos, data.LastQuarter.TotalDemos)
-	message += fmt.Sprintf("- Follow Up Letters: %d/%d/%d\n", data.Today.TotalLetters, data.QTD.TotalLetters, data.LastQuarter.TotalLetters)
-	message += fmt.Sprintf("- Follow Ups: %d/%d/%d\n", data.Today.TotalFollowUps, data.QTD.TotalFollowUps, data.LastQuarter.TotalFollowUps)
-	message += fmt.Sprintf("- Proposals Given: %d/%d/%d\n", data.Today.TotalProposals, data.QTD.TotalProposals, data.LastQuarter.TotalProposals)
-
-	// Premium uses Indian currency formatting
-	message += fmt.Sprintf(
-		"- Premium: %s/%s/%s\n",
-		FormatCurrencyIndian(data.Today.TotalPremium),
-		FormatCurrencyIndian(data.QTD.TotalPremium),
-		FormatCurrencyIndian(data.LastQuarter.TotalPremium),
-	)
-
-	return message
-}
-
-type DashboardStats struct {
-	TotalPresentations int
-	TotalLeads         int
-	TotalVisits        int
-	TotalAppointments  int
-	TotalDemos         int
-	TotalLetters       int
-	TotalFollowUps     int
-	TotalProposals     int
-	TotalPolicies      int
-	TotalPremium       int
-	FormsFilled        int
-	ApptVisitRatio     float64
-	DemoApptRatio      float64
-	PolicyDemoRatio    float64
-}
-
-type WhatsappReportData struct {
-	Submitted   bool
-	Today       DashboardStats
-	QTD         DashboardStats
-	LastQuarter DashboardStats
-	UserName    string
-	Date        time.Time
-}
-
-func createStatCard(_ context.Context, title string, value string, classes string) Node {
-	return Div(Class("stat rounded-box border border-base-300"),
-		Div(Class("stat-title"), Text(title)),
-		Div(Class(fmt.Sprintf("stat-value text-lg font-bold %s", classes)), Text(value)),
-	)
-}
-
-func TallyDashboardHTML(ctx context.Context, _ Node) Node {
-	inMap, ok := ctx.Value("$in").(map[string]any)
-	if !ok {
-		return Div(Text("Error loading dashboard data"))
-	}
-
-	dashboard, ok := inMap["Dashboard"].(DashboardStats)
-	if !ok {
-		return Div(Text("Error parsing dashboard stats"))
-	}
-
-	// Optional WhatsApp report data (only for non-admin users).
-	var whatsappSection Node
-	if report, ok := inMap["WhatsappReport"].(WhatsappReportData); ok {
-		if report.Submitted {
-			message := BuildWhatsappMessage(report)
-			encoded := url.QueryEscape(message)
-			whatsappURL := fmt.Sprintf("https://wa.me/?text=%s", encoded)
-
-			whatsappSection = Div(Class("bg-base-200 rounded-box border border-base-300 p-4 my-4"),
-				H3(Class("font-bold text-lg text-base-content mb-2"), Text("Today's Report Submitted!")),
-				Textarea(
-					Class("textarea textarea-bordered w-full h-[15rem] font-mono text-sm shadow-inner whitespace-pre overflow-y-auto mb-2"),
-					Attr("readonly", "true"),
-					Text(message),
-				),
-				A(
-					Class("btn btn-sm btn-success text-white"),
-					Attr("href", whatsappURL),
-					Attr("target", "_blank"),
-					Text("Share on WhatsApp"),
-				),
-			)
-		} else {
-			// Daily report not submitted state
-			dailyURL, _ := getters.IfOrGetter(lago.GetterRoutePath("tally.TallyDailyFormRoute", nil), ctx, "")
-
-			whatsappSection = Div(Class("bg-base-200 rounded-box border border-base-300 p-4 mb-4"),
-				Div(Class("flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"),
-					Div(
-						H3(Class("font-bold text-lg"), Text("Daily Report Not Submitted")),
-						P(Class("text-base-content/70"), Text("You haven't submitted your daily report for today.")),
-					),
-					A(
-						Class("btn btn-primary"),
-						Attr("href", dailyURL),
-						Text("Fill Daily Report"),
-					),
-				),
-			)
-		}
-	}
-
-	statsHTML := Div(Class("grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2"),
-		createStatCard(ctx, "Total Visits", fmt.Sprintf("%d", dashboard.TotalVisits), ""),
-		createStatCard(ctx, "Total Appts", fmt.Sprintf("%d", dashboard.TotalAppointments), ""),
-		createStatCard(ctx, "Total Leads", fmt.Sprintf("%d", dashboard.TotalLeads), ""),
-		createStatCard(ctx, "Total Presentations", fmt.Sprintf("%d", dashboard.TotalPresentations), ""),
-		createStatCard(ctx, "Total Demos", fmt.Sprintf("%d", dashboard.TotalDemos), ""),
-		createStatCard(ctx, "Total Letters", fmt.Sprintf("%d", dashboard.TotalLetters), ""),
-		createStatCard(ctx, "Total Follow Ups", fmt.Sprintf("%d", dashboard.TotalFollowUps), ""),
-		createStatCard(ctx, "Total Proposals", fmt.Sprintf("%d", dashboard.TotalProposals), ""),
-		createStatCard(ctx, "Total Policies", fmt.Sprintf("%d", dashboard.TotalPolicies), ""),
-		createStatCard(ctx, "Total Premium", FormatCurrencyIndian(dashboard.TotalPremium), "text-success"),
-	)
-
-	ratiosHTML := Div(Class("grid grid-cols-2 md:grid-cols-4 gap-2 mt-2"),
-		createStatCard(ctx, "Appt / Visit", fmt.Sprintf("%.1f%%", dashboard.ApptVisitRatio), ""),
-		createStatCard(ctx, "Demo / Appt", fmt.Sprintf("%.1f%%", dashboard.DemoApptRatio), ""),
-		createStatCard(ctx, "Policy / Demo", fmt.Sprintf("%.1f%%", dashboard.PolicyDemoRatio), ""),
-		createStatCard(ctx, "Forms Filled", fmt.Sprintf("%d", dashboard.FormsFilled), ""),
-	)
-
-	return Div(
-		If(whatsappSection != nil, whatsappSection),
-		Div(Class("text-xl font-bold mt-4"), Text("Analysis")),
-		ratiosHTML,
-		Div(Class("text-xl font-bold mt-4"), Text("Tally Dashboard")),
-		statsHTML,
-	)
-}
-
-type LeaderboardEntry struct {
-	Rank     string
-	UserID   uint
-	UserName string
-	Value    int
-}
-
-type LeaderboardResult struct {
-	Top5        []LeaderboardEntry
-	CurrentUser *LeaderboardEntry
-}
-
-func TallyLeaderboardHTML(ctx context.Context, _ Node) Node {
-	inMap, ok := ctx.Value("$in").(map[string]any)
-	if !ok {
-		return Div(Text("Error loading leaderboard data"))
-	}
-
-	leaderboards, ok := inMap["Leaderboards"].(map[string]LeaderboardResult)
-	if !ok {
-		return Div(Text("Error parsing leaderboard stats"))
-	}
-
-	title, _ := inMap["Title"].(string)
-
-	metrics := []string{"visits", "demos", "policies", "premium"}
-	metricTitles := map[string]string{
-		"visits":   "Top Visits",
-		"demos":    "Top Demonstrations",
-		"policies": "Top Policies",
-		"premium":  "Top Premium",
-	}
-
-	boardsHTML := Group{}
-	for _, metric := range metrics {
-		board, exists := leaderboards[metric]
-		if !exists {
-			continue
-		}
-
-		rowsNodes := Group{}
-		for _, entry := range board.Top5 {
-			rowsNodes = append(rowsNodes, Tr(
-				Td(Text(entry.Rank)),
-				Td(Text(entry.UserName)),
-				Td(Text(fmt.Sprintf("%d", entry.Value))),
-			))
-		}
-
-		// Add current user summary row if present
-		if board.CurrentUser != nil {
-			rowsNodes = append(rowsNodes, Tr(Class("bg-base-200 font-bold"),
-				Td(Text(board.CurrentUser.Rank)),
-				Td(Text(board.CurrentUser.UserName+" (You)")),
-				Td(Text(fmt.Sprintf("%d", board.CurrentUser.Value))),
-			))
-		}
-
-		tableNode := Table(Class("table w-full"),
-			THead(
-				Tr(
-					Th(Text("Rank")),
-					Th(Text("Name")),
-					Th(Text(strings.Title(metric))),
-				),
-			),
-			TBody(rowsNodes),
-		)
-
-		boardsHTML = append(boardsHTML, Div(Class("card bg-base-100 border border-base-300 rounded-box"),
-			Div(Class("card-body"),
-				H2(Class("card-title"), Text(metricTitles[metric])),
-				tableNode,
-			),
-		))
-	}
-
-	return Div(
-		If(title != "", Div(Class("text-xl font-bold mt-4"), Text(title))),
-		Div(Class("grid grid-cols-1 md:grid-cols-2 gap-2 mt-2"), boardsHTML),
-	)
-}
-
 func init() {
-	// Patch the users.UserDetail page using InsertChildBefore and InsertChildAfter,
-	// similar to how the OTP plugin patches the login form.
+	// Patch the users.UserDetail page using InsertChildAfter to append
+	// a session environment input that allows changing the active session.
 	lago.RegistryPage.Patch("users.UserDetail", func(page components.PageInterface) components.PageInterface {
 		if scaffold, ok := page.(*components.ShellScaffold); ok {
-			// Insert a "patched" label before the main user detail content.
-			components.InsertChildBefore[*components.Detail[p_users.User]](scaffold,
-				"users.UserDetailContent",
-				func(*components.Detail[p_users.User]) components.ContainerColumn {
-					return components.ContainerColumn{
-						Children: []components.PageInterface{
-							components.FieldText{
-								Getter:  getters.GetterStatic("patched (before)"),
-								Classes: "text-xs text-success mb-1",
-							},
-						},
-					}
-				},
-			)
+			// Ensure ApexCharts is loaded in the page head for StatLineChart.
+			// NOTE: We originally attempted to inject ApexCharts into ExtraHead here,
+			// but ContainerHTML requires a gomponents.Node signature and there is
+			// currently no HTML wrapper in this package. To keep linting clean, we
+			// skip injecting ExtraHead for now; StatLineChart assumes ApexCharts is
+			// available globally (e.g. via the base layout).
 
-			// Insert another "patched" label after the main user detail content.
-			components.InsertChildAfter[*components.Detail[p_users.User]](scaffold,
+			// Insert an environment input after the main user detail content
+			// so that the session variable can be changed from this page.
+			components.InsertChildAfter(scaffold,
 				"users.UserDetailContent",
 				func(*components.Detail[p_users.User]) components.ContainerColumn {
 					return components.ContainerColumn{
 						Children: []components.PageInterface{
-							components.FieldText{
-								Getter:  getters.GetterStatic("patched (after)"),
-								Classes: "text-xs text-success mt-1",
+							components.Environment{
+								Label:   "Session",
+								Key:     getters.GetterStatic("session"),
+								Options: SessionsListGetter,
+							},
+							TallySessionEntries{
+								Page: components.Page{
+									Key: "tally.UserSessionTallies",
+								},
+								UserGetter:    getters.GetterKey[p_users.User]("user"),
+								SessionGetter: CurrentEnvironmentSessionGetter,
+							},
+							StatLineChart{
+								Page: components.Page{
+									Key: "tally.UserSessionTalliesChart",
+								},
+								TalliesGetter: func(ctx context.Context) ([]Tally, error) {
+									db, ok := ctx.Value("$db").(*gorm.DB)
+									if !ok || db == nil {
+										return nil, fmt.Errorf("StatLineChart: missing $db in context")
+									}
+									user, ok := ctx.Value("user").(p_users.User)
+									if !ok {
+										return nil, fmt.Errorf("StatLineChart: missing user in context")
+									}
+									session, err := CurrentEnvironmentSessionGetter(ctx)
+									if err != nil {
+										return nil, err
+									}
+									var tallies []Tally
+									if err := db.
+										Where("user_id = ? AND date >= ? AND date <= ?", user.ID, session.Start, session.End).
+										Order("date ASC").
+										Find(&tallies).Error; err != nil {
+										return nil, err
+									}
+									return tallies, nil
+								},
+								Keys: []string{
+									"Visits",
+									"Appointments",
+									"Leads",
+									"Presentations",
+									"Demos",
+									"Letters",
+									"FollowUps",
+									"Proposals",
+									"Policies",
+									"Premium",
+								},
 							},
 						},
 					}
