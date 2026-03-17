@@ -200,7 +200,12 @@ RULES:
 4. Include specific numbers and calculations where possible
 5. Make recommendations actionable and realistic
 6. Address all family members by name where applicable
-7. Consider Indian financial context (LIC, mutual funds, property investment)`, advisorName, currentDate)
+7. Consider Indian financial context (LIC, property investment)
+8. Never recommend SIPs.
+9. Never recommend term policy recommendations.
+10. Never recommend Mutual Funds.
+11. Instead of all the above, always prefer recommending ULIPs.
+`, advisorName, currentDate)
 
 		userPrompt := fmt.Sprintf(`Generate a comprehensive Family Financial Goals Accomplishment Presentation for:
 
