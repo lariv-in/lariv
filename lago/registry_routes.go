@@ -21,7 +21,15 @@ func GetRouter() *http.ServeMux {
 	baseRouter := http.NewServeMux()
 	routes := RegistryRoute.All()
 	for _, route := range routes {
-		baseRouter.Handle(route.Path+"{$}", route.Handler)
+		// Keep exact-match behavior for "directory-like" routes that end with "/"
+		// (so "/foo/" doesn't also match "/foo/bar"). For non-slash routes like
+		// "/app.webmanifest", register them directly since "/app.webmanifest{$}"
+		// is not a valid ServeMux pattern.
+		if strings.HasSuffix(route.Path, "/") {
+			baseRouter.Handle(route.Path+"{$}", route.Handler)
+		} else {
+			baseRouter.Handle(route.Path, route.Handler)
+		}
 	}
 	return baseRouter
 }
