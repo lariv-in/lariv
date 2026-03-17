@@ -2,14 +2,18 @@ package p_users
 
 import (
 	"fmt"
+	"log/slog"
+	"net/mail"
 
 	"github.com/lariv-in/lago"
+	"github.com/nyaruka/phonenumbers"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	lago.RegistryCommand.Register("p_users.createsuperuser", createSuperuserCommand)
 	lago.RegistryCommand.Register("p_users.changepassword", changePasswordCommand)
+	lago.RegistryCommand.Register("p_users.revalidate_users", revalidateUsersCommand)
 }
 
 func createSuperuserCommand(config lago.LagoConfig) *cobra.Command {
@@ -94,6 +98,84 @@ func changePasswordCommand(config lago.LagoConfig) *cobra.Command {
 	cmd.Flags().String("password", "", "New password")
 	cmd.MarkFlagRequired("email")
 	cmd.MarkFlagRequired("password")
+
+	return cmd
+}
+
+func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "revalidate-users",
+		Short: "Re-parse and normalize all user email and phone fields",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			db, err := lago.InitDB(config)
+			if err != nil {
+				return err
+			}
+
+			var users []User
+			if err := db.Find(&users).Error; err != nil {
+				return fmt.Errorf("failed to fetch users for revalidation: %w", err)
+			}
+
+			var (
+				total   = len(users)
+				updated int
+				skipped int
+			)
+
+			for _, user := range users {
+				originalEmail := user.Email
+				originalPhone := user.Phone
+
+				// Parse and normalize email
+				if originalEmail != "" {
+					addr, err := mail.ParseAddress(originalEmail)
+					if err != nil {
+						slog.Warn("Failed to parse user email during revalidation",
+							"user_id", user.ID,
+							"email", originalEmail,
+							"name", user.Name,
+							"err", err,
+						)
+						skipped++
+						continue
+					}
+					user.Email = addr.Address
+				}
+
+				// Parse and normalize phone
+				if originalPhone != "" {
+					num, err := phonenumbers.Parse(originalPhone, "IN")
+					if err != nil {
+						slog.Warn("Failed to parse user phone during revalidation",
+							"user_id", user.ID,
+							"phone", originalPhone,
+							"name", user.Name,
+							"err", err,
+						)
+						skipped++
+						continue
+					}
+					user.Phone = phonenumbers.Format(num, phonenumbers.E164)
+				}
+
+				if err := db.Save(&user).Error; err != nil {
+					slog.Warn("Failed to save user during revalidation",
+						"user_id", user.ID,
+						"name", user.Name,
+						"err", err,
+					)
+					skipped++
+					continue
+				}
+
+				updated++
+			}
+
+			fmt.Printf("Revalidation complete. Total users: %d, updated: %d, skipped: %d\n", total, updated, skipped)
+			return nil
+		},
+	}
 
 	return cmd
 }
