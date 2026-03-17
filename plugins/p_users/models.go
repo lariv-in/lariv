@@ -15,9 +15,10 @@ type User struct {
 	Email        string `gorm:"uniqueIndex"`
 	Phone        string `gorm:"uniqueIndex"`
 	IsSuperuser  bool   `gorm:"notnull"`
-	RoleID       uint    `gorm:"notnull"`
+	RoleID       uint   `gorm:"notnull"`
 	Role         Role   `gorm:"notnull"`
-	Password     []byte `gorm:"notnull"`
+	Password     []byte `gorm:"-"`
+	PasswordHash []byte `gorm:"notnull;column:password"`
 	PasswordSalt []byte `gorm:"notnull"`
 	Timezone     string `gorm:"default:Asia/Kolkata"`
 }
@@ -27,21 +28,14 @@ type Role struct {
 	Name string `gorm:"unique"`
 }
 
-func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	return u.hashPassword()
-}
-
-func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
-	if tx.Statement.Changed("Password") {
+func (u *User) BeforeSave(tx *gorm.DB) (err error) {
+	if len(u.Password) > 0 {
 		return u.hashPassword()
 	}
-	return
+	return nil
 }
 
 func (u *User) hashPassword() (err error) {
-	if len(u.Password) == 0 {
-		return
-	}
 	u.PasswordSalt = make([]byte, 256)
 	// Never actually errors out and always fills the buffer
 	n, err := rand.Read(u.PasswordSalt)
@@ -53,7 +47,8 @@ func (u *User) hashPassword() (err error) {
 		log.Panicf("This should never happen, password salt n = %d", n)
 	}
 
-	u.Password = HashPassword(u.Password, u.PasswordSalt)
+	u.PasswordHash = HashPassword(u.Password, u.PasswordSalt)
+	u.Password = nil
 	return
 }
 

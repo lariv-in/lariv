@@ -34,7 +34,7 @@ func Authenticate(db *gorm.DB, email string, password string) (*User, error) {
 	}
 
 	passwordKey := HashPassword([]byte(password), user.PasswordSalt)
-	if !bytes.Equal(passwordKey, user.Password) {
+	if !bytes.Equal(passwordKey, user.PasswordHash) {
 		return nil, errors.New("Could not authenticate user")
 	}
 

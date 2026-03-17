@@ -80,6 +80,7 @@ func changePasswordCommand(config lago.LagoConfig) *cobra.Command {
 			}
 
 			user.Password = []byte(password)
+
 			if err := db.Save(&user).Error; err != nil {
 				return fmt.Errorf("failed to update password: %w", err)
 			}
