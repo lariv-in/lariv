@@ -26,7 +26,7 @@ func (e Icon) GetRoles() []string {
 func (e Icon) Build(ctx context.Context) gomponents.Node {
 	nodes := []gomponents.Node{
 		html.Class(fmt.Sprintf("heroicon %s", e.Classes)),
-		html.Style(fmt.Sprintf("--heroicon-url: url('https://api.iconify.design/heroicons/%s-solid.svg')", e.Name)),
+		html.Style(fmt.Sprintf("--heroicon-url: url('https://api.iconify.design/heroicons/%s.svg')", e.Name)),
 	}
 	nodes = append(nodes, e.Attrs...)
 	return html.Span(nodes...)
