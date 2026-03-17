@@ -65,13 +65,23 @@ func MiddlewareLogging(next http.Handler) http.Handler {
 
 		next.ServeHTTP(wrapped, r)
 
-		slog.Info("http_request",
-			slog.String("method", r.Method),
-			slog.String("path", r.URL.Path),
-			slog.Int("status", wrapped.status),
-			slog.Duration("latency", time.Since(start)),
-			slog.String("ip", r.RemoteAddr),
-		)
+		if r.Response.StatusCode < 400 {
+			slog.Info("http_request",
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
+				slog.Int("status", wrapped.status),
+				slog.Duration("latency", time.Since(start)),
+				slog.String("ip", r.RemoteAddr),
+			)
+		} else {
+			slog.Error("http_request",
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
+				slog.Int("status", wrapped.status),
+				slog.Duration("latency", time.Since(start)),
+				slog.String("ip", r.RemoteAddr),
+			)
+		}
 	})
 }
 
