@@ -12,7 +12,11 @@ import (
 
 type TotSchoolSession struct {
 	gorm.Model
-	Name  string    `gorm:"uniqueIndex;size:250"`
+	// Use `unique` (not `uniqueIndex`): with uniqueIndex, PostgreSQL reports the
+	// column as unique but GORM's field.Unique stays false, so AutoMigrate tries
+	// ALTER TABLE ... DROP CONSTRAINT uni_* — which fails because uniqueness is
+	// enforced by an index, not that constraint name.
+	Name  string    `gorm:"unique;size:250"`
 	Start time.Time `gorm:"type:date"`
 	End   time.Time `gorm:"type:date"`
 }

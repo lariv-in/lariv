@@ -11,9 +11,11 @@ import (
 type User struct {
 	gorm.Model
 
-	Name         string `gorm:"notnull"`
-	Email        string `gorm:"uniqueIndex"`
-	Phone        string `gorm:"uniqueIndex"`
+	Name string `gorm:"notnull"`
+	// Use `unique` not `uniqueIndex`: otherwise PostgreSQL + GORM AutoMigrate
+	// tries DROP CONSTRAINT uni_* on an index-backed uniqueness (42704).
+	Email        string `gorm:"unique"`
+	Phone        string `gorm:"unique"`
 	IsSuperuser  bool   `gorm:"notnull"`
 	RoleID       uint   `gorm:"notnull"`
 	Role         Role   `gorm:"notnull"`
