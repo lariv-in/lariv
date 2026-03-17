@@ -104,7 +104,7 @@ func changePasswordCommand(config lago.LagoConfig) *cobra.Command {
 
 func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revalidate-users",
+		Use:   "revalidate_users",
 		Short: "Re-parse and normalize all user email and phone fields",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			db, err := lago.InitDB(config)
