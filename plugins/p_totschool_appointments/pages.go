@@ -74,13 +74,13 @@ func registerFilter() {
 					components.InputText{Label: "Date", Name: "Date", Getter: getters.GetterKey[string]("$get.Date")},
 				},
 			},
-			components.InputManyToMany[[]uint]{
+			components.InputManyToMany[[]string]{
 				Label:       "Created By",
 				Name:        "CreatedBy",
 				Url:         lago.GetterRoutePath("users.MultiSelectRoute", nil),
 				DisplayAttr: "Name",
 				Placeholder: "Select users...",
-				Getter:      getters.GetterKey[[]uint]("$get.CreatedBy"),
+				Getter:      getters.GetterKey[[]string]("$get.CreatedBy"),
 			},
 			components.InputCheckbox{Label: "Overlaps Only", Name: "Overlapping", Getter: getters.GetterKey[bool]("$get.Overlapping")},
 		},
@@ -198,7 +198,7 @@ func registerDetail() {
 			components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
 				components.FieldTitle{Getter: getters.GetterStatic("Generated Letter")},
 				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
-					components.ButtonLink{Label: "Send via WhatsApp", Link: getters.GetterFormat("https://wa.me/%v?text=%v", getters.GetterAny(getters.GetterKey[string]("$in.Phone")), getters.GetterAny(getters.GetterQueryEscape(getters.GetterKey[string]("$in.GeneratedLetter")))), Classes: "btn-outline btn-success btn-sm"},
+					components.ButtonLink{Classes: "btn-outline btn-success btn-sm", Label: "Send via WhatsApp", Link: getters.GetterFormat("https://wa.me/%v?text=%v", getters.GetterAny(getters.GetterKey[string]("$in.Phone")), getters.GetterAny(getters.GetterQueryEscape(getters.GetterKey[string]("$in.GeneratedLetter"))))},
 					components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("appointments.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
 					components.ButtonPost{Label: "Regenerate Letter", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
 				}},
@@ -219,7 +219,8 @@ func registerDetail() {
 						Classes: "btn-outline btn-error btn-sm",
 					},
 				}},
-			}},
+			},
+		},
 	}
 
 	idleSection := []components.PageInterface{
