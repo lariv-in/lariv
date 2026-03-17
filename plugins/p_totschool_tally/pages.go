@@ -140,12 +140,12 @@ func init() {
 			// context consistently from the Tally struct.
 			Getter: getters.GetterAssociation[p_users.User]("users", getters.GetterKey[uint]("$in.UserID")),
 		},
-		components.InputText{
+		components.InputDate{
 			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},
 			Name:     "Date",
 			Label:    "Date (YYYY-MM-DD)",
 			Required: true,
-			Getter:   getters.GetterKey[string]("$in.Date"),
+			Getter:   getters.GetterKey[time.Time]("$in.Date"),
 		},
 	}, tallyCommonFields()...)
 
