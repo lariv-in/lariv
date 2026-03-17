@@ -30,6 +30,7 @@ func (p *OTPPreferences) GetExtraFields() map[string]any {
 	var fields map[string]any
 	if p.SmsOtpExtraFields != "" {
 		if err := json.Unmarshal([]byte(p.SmsOtpExtraFields), &fields); err != nil {
+			slog.Error("failed to unmarshal SmsOtpExtraFields JSON", "err", err, "value", p.SmsOtpExtraFields)
 			return map[string]any{}
 		}
 	} else {
