@@ -16,7 +16,7 @@ type OTPPreferences struct {
 	OtpTemplateId          string
 	Msg91AuthKey           string
 	SmsOtpFieldName        string
-	SmsOtpExtraFields      string // Stored as JSON string
+	SmsOtpExtraFields      string
 	EmailOtpTemplateString string
 	SmtpHost               string
 	SmtpPort               string
