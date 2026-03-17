@@ -5,8 +5,12 @@ import (
 )
 
 func init() {
-	_ = lago.RegistryRoute.Register("appointments.ListRoute", lago.Route{
+	_ = lago.RegistryRoute.Register("appointments.CardTimelineRoute", lago.Route{
 		Path:    AppUrl,
+		Handler: lago.NewDynamicView("appointments.CardTimelineView"),
+	})
+	_ = lago.RegistryRoute.Register("appointments.ListRoute", lago.Route{
+		Path:    AppUrl + "list/",
 		Handler: lago.NewDynamicView("appointments.ListView"),
 	})
 	_ = lago.RegistryRoute.Register("appointments.CreateRoute", lago.Route{
@@ -44,9 +48,5 @@ func init() {
 	_ = lago.RegistryRoute.Register("appointments.SelectRoute", lago.Route{
 		Path:    AppUrl + "select/",
 		Handler: lago.NewDynamicView("appointments.SelectView"),
-	})
-	_ = lago.RegistryRoute.Register("appointments.CardTimelineRoute", lago.Route{
-		Path:    AppUrl + "cards/",
-		Handler: lago.NewDynamicView("appointments.CardTimelineView"),
 	})
 }

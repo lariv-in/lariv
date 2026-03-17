@@ -187,17 +187,26 @@ func AppointmentListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB)
 
 
 // AppointmentTimelineQueryPatcher filters appointments for the timeline view based on
-// the Date field from the timeline filter form ($get.Date).
+// the Date field from the timeline filter form ($get.Date). When no date is specified,
+// it filters to the current calendar day (same as time.Now()).
 func AppointmentTimelineQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	ctx := r.Context()
 
 	if get, ok := ctx.Value("$get").(map[string]any); ok {
 		if raw, exists := get["Date"]; exists && raw != nil {
-			query = applyDateFilter(raw, query)
+			switch d := raw.(type) {
+			case time.Time:
+				if !d.IsZero() {
+					return applyDateFilter(raw, query)
+				}
+			case string:
+				if d != "" {
+					return applyDateFilter(raw, query)
+				}
+			}
 		}
 	}
-
-	return query
+	return applyDateFilter(time.Now(), query)
 }
 
 func applyDateFilter(raw any, query *gorm.DB) *gorm.DB {

@@ -401,7 +401,9 @@ func registerSelectionPages() {
 			components.ContainerError{
 				Error: getters.GetterKey[error]("$error.Date"),
 				Children: []components.PageInterface{
-					components.InputDate{Label: "Date", Name: "Date", Getter: getters.GetterKey[time.Time]("$get.Date")},
+					components.InputDate{Label: "Date", Name: "Date", Getter: getters.IfOrElseGetter(getters.GetterKey[time.Time]("$get.Date"), func(ctx context.Context) (time.Time, error) {
+						return time.Now(), nil
+					})},
 				},
 			},
 		},
@@ -416,6 +418,7 @@ func registerSelectionPages() {
 	lago.RegistryPage.Register("appointments.AppointmentCardTimeline", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
 		Children: []components.PageInterface{
+			components.ButtonLink{Label: "Create New Appointment", Classes: "btn mb-4", Link: lago.GetterRoutePath("appointments.CreateRoute", nil)},
 			components.Timeline[Appointment]{
 				UID:             "appointment-timeline",
 				Title:           "Appointments Timeline",

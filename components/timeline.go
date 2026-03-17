@@ -18,6 +18,7 @@ type Timeline[T any] struct {
 	Data            getters.Getter[ObjectList[T]] // list of items
 	OnClick         getters.Getter[string]        // per-item URL (GetterNavigate)
 	FilterComponent PageInterface                 // optional filter form
+	CreateUrl       getters.Getter[string]
 	Children        []PageInterface               // card content template
 }
 
@@ -37,13 +38,20 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 		uid = "timeline-container"
 	}
 
-	var headerNode Node
-	if e.Title != "" || e.FilterComponent != nil {
-		var titleNode Node
-		if e.Title != "" {
-			titleNode = Div(Class("text-xl font-semibold"), Text(e.Title))
+	var createNode Node
+	if e.CreateUrl != nil {
+		createURL, err := e.CreateUrl(ctx)
+		if err == nil && createURL != "" {
+			createNode = Render(ButtonLink{
+				Link:    getters.GetterStatic(createURL),
+				Icon:    "plus",
+				Classes: "btn-square btn-outline btn-sm",
+			}, ctx)
 		}
+	}
 
+	var headerNode Node
+	if e.Title != "" || e.FilterComponent != nil || createNode != nil {
 		var filterNode Node
 		if e.FilterComponent != nil {
 			filterNode = El("details",
@@ -54,9 +62,21 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 			)
 		}
 
+		var actions Group
+		if filterNode != nil {
+			actions = append(actions, filterNode)
+		}
+		if createNode != nil {
+			actions = append(actions, createNode)
+		}
+		var actionsRow Node
+		if len(actions) > 0 {
+			actionsRow = Div(Class("flex items-center gap-2"), actions)
+		}
+
 		headerNode = Div(Class("flex justify-between items-center mb-4"),
-			titleNode,
-			filterNode,
+			If(e.Title != "", Div(Class("text-xl font-semibold"), Text(e.Title))),
+			actionsRow,
 		)
 	}
 

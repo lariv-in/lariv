@@ -180,6 +180,24 @@ func IfOrGetter[T comparable](g Getter[T], ctx context.Context, defaultValue T) 
 	return value, nil
 }
 
+// IfOrElseGetter returns a Getter that invokes g when g is non-nil and returns a non-zero value without error;
+// otherwise it invokes elseGetter. If elseGetter is nil in those fallback cases, returns the zero value of T.
+func IfOrElseGetter[T comparable](g Getter[T], elseGetter Getter[T]) Getter[T] {
+	var zero T
+	return func(ctx context.Context) (T, error) {
+		if g != nil {
+			value, err := g(ctx)
+			if err == nil && value != zero {
+				return value, nil
+			}
+		}
+		if elseGetter != nil {
+			return elseGetter(ctx)
+		}
+		return zero, nil
+	}
+}
+
 // Invokes the getter, if it is not nil and returns a non-nil value and does not error out, calls the builder. Otherwise returns the zero value of T.
 func GetterIf[T any, V comparable](g Getter[V], ctx context.Context, builder func(context.Context, V) (T, error)) (T, error) {
 	var zero T
