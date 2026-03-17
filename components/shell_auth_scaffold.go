@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"fmt"
 
 	. "maragu.dev/gomponents"
 )
@@ -40,4 +41,6 @@ func (e ShellAuthScaffold) GetChildren() []PageInterface {
 
 func (e *ShellAuthScaffold) SetChildren(children []PageInterface) {
 	e.Children = children
+	fmt.Printf("%#v\n\n", children)
+	fmt.Printf("%#v\n\n", e.Children)
 }

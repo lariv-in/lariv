@@ -80,7 +80,7 @@ func registerFilter() {
 				Url:         lago.GetterRoutePath("users.MultiSelectRoute", nil),
 				DisplayAttr: "Name",
 				Placeholder: "Select users...",
-				Getter:      getters.GetterKey[[]string]("$get.CreatedBy"),
+				Getter:      getters.GetterKey[[]uint]("$get.CreatedBy"),
 			},
 			components.InputCheckbox{Label: "Overlaps Only", Name: "Overlapping", Getter: getters.GetterKey[bool]("$get.Overlapping")},
 		},

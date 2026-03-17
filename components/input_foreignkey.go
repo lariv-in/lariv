@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/lariv-in/getters"
+	"gorm.io/gorm"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -98,7 +99,7 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputForeignKey[T]) Parse(v any, _ context.Context) (any, error) {
+func (e InputForeignKey[T]) Parse(v any, ctx context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
 		return "", nil
@@ -107,6 +108,15 @@ func (e InputForeignKey[T]) Parse(v any, _ context.Context) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	modelValue := new(T)
+
+	db := ctx.Value("$db").(*gorm.DB)
+
+	if err := db.Model(modelValue).Where("ID = ?", i).First(modelValue).Error; err != nil {
+		slog.Error("Error while fetching data for the specified foreign key", "error", err)
+		return nil, err
+	}
+
 	return uint(i), nil
 }
 

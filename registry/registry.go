@@ -2,6 +2,7 @@ package registry
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -23,9 +24,18 @@ func NewRegistry[T any]() Registry[T] {
 	}
 }
 
-type Pair[K any, V any] struct {
+type Pair[K comparable, V any] struct {
 	Key   K
 	Value V
+}
+
+func (p Pair[K, V]) ToKVJson() string {
+	b, err := json.Marshal(map[K]V{p.Key: p.Value})
+	if err != nil {
+		slog.Error("Could not marshal Pair to JSON", "error", err)
+		return ""
+	}
+	return string(b)
 }
 
 type Registry[T any] struct {

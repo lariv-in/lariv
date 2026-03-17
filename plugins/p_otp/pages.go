@@ -318,39 +318,27 @@ func init() {
 			return d
 		}
 
-		lago.RegistryPage.Patch("users.LoginPage", func(oldPage components.PageInterface) components.PageInterface {
-			basePage := oldPage
-			if scaffold, ok := basePage.(components.ShellAuthScaffold); ok {
-				if len(scaffold.Children) > 0 {
-					if col, ok := scaffold.Children[0].(components.ContainerColumn); ok {
-						if len(col.Children) > 1 {
-							if form, ok := col.Children[1].(components.FormComponent[p_users.User]); ok {
-								var buttons []components.PageInterface
-								if smsEnabled {
-									buttons = append(buttons, components.ButtonLink{
-										Label: "Login with SMS OTP",
-										Link:  lago.GetterRoutePath("otp.PhoneOtpRequestRoute", nil),
-									})
-								}
-								if emailEnabled {
-									buttons = append(buttons, components.ButtonLink{
-										Label: "Login with Email OTP",
-										Link:  lago.GetterRoutePath("otp.EmailOtpRequestRoute", nil),
-									})
-								}
-								form.ChildrenAction = append(form.ChildrenAction, components.ContainerColumn{
-									Classes:  "flex flex-col gap-2 mt-4 items-center border-t border-base-300 pt-4 w-full",
-									Children: buttons,
-								})
-								col.Children[1] = form
-								scaffold.Children[0] = col
-							}
+		lago.RegistryPage.Patch("users.LoginPage", func(page components.PageInterface) components.PageInterface {
+			if scaffold, ok := page.(components.ShellAuthScaffold); ok {
+				components.InsertChildAfter(&scaffold,
+					"users.AuthForm",
+					func(components.FormComponent[p_users.User]) components.ButtonLink {
+						return components.ButtonLink{
+							Label: "Login with SMS OTP",
+							Link:  lago.GetterRoutePath("otp.PhoneOtpRequestRoute", nil),
 						}
-					}
-				}
+					})
+				components.InsertChildAfter(&scaffold,
+					"users.AuthForm",
+					func(components.FormComponent[p_users.User]) components.ButtonLink {
+						return components.ButtonLink{
+							Label: "Login with Email OTP",
+							Link:  lago.GetterRoutePath("otp.EmailOtpRequestRoute", nil),
+						}
+					})
 				return scaffold
 			}
-			return basePage
+			panic("Base page for login page was not ShellAuthScaffold")
 		})
 		return d
 	})

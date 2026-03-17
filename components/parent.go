@@ -1,5 +1,7 @@
 package components
 
+import "fmt"
+
 type ParentInterface interface {
 	PageInterface
 	GetChildren() []PageInterface
@@ -35,7 +37,7 @@ func ReplaceChild[T PageInterface](p MutableParentInterface, key string, replace
 	p.SetChildren(children)
 }
 
-func InsertChildBefore[T PageInterface](p MutableParentInterface, key string, replacement func(T) T) {
+func InsertChildBefore[T, V PageInterface](p MutableParentInterface, key string, replacement func(T) V) {
 	children := p.GetChildren()
 	result := make([]PageInterface, 0, len(children)+1)
 	for _, child := range children {
@@ -52,19 +54,31 @@ func InsertChildBefore[T PageInterface](p MutableParentInterface, key string, re
 	p.SetChildren(result)
 }
 
-func InsertChildAfter[T PageInterface](p MutableParentInterface, key string, replacement func(T) T) {
+func InsertChildAfter[T, V PageInterface](p MutableParentInterface, key string, replacement func(T) V) bool {
 	children := p.GetChildren()
 	result := make([]PageInterface, 0, len(children)+1)
+	targetFound := false
 	for _, child := range children {
 		if needle, isNeedle := child.(T); isNeedle && child.GetKey() == key {
 			result = append(result, child)
 			result = append(result, replacement(needle))
+			targetFound = true
+			break
 		} else {
 			if parent, isParent := child.(MutableParentInterface); isParent {
-				InsertChildAfter(parent, key, replacement)
+				targetFound = InsertChildAfter(parent, key, replacement)
+				if targetFound {
+					return targetFound
+				}
 			}
 			result = append(result, child)
 		}
 	}
+
+	if !targetFound {
+		fmt.Println("Target not found")
+	}
+
 	p.SetChildren(result)
+	return targetFound
 }
