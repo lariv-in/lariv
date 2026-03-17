@@ -307,28 +307,3 @@ func GetterSelect[T, D comparable](name string, valueGetter Getter[T], displayGe
 		return fmt.Sprintf("$dispatch('fk-select',{name:'%s',value:'%v',display:'%v'})", name, value, display), nil
 	}
 }
-
-// GetterMultiSelect returns an Alpine @click expression that dispatches an 'fk-multi-select'
-// event and toggles row highlighting via inline style (overrides hover).
-// name is the input field name. valueGetter and displayGetter resolve per-row.
-func GetterMultiSelect[T, D comparable](name string, valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
-	var zeroT T
-	var zeroD D
-	return func(ctx context.Context) (string, error) {
-		value, err := IfOrGetter(valueGetter, ctx, zeroT)
-		if err != nil {
-			return "", err
-		}
-		display, err := IfOrGetter(displayGetter, ctx, zeroD)
-		if err != nil {
-			return "", err
-		}
-		expr := fmt.Sprintf(
-			"$dispatch('fk-multi-select',{name:'%s',value:'%v',display:'%v'});"+
-				"if($el.hasAttribute('data-selected')){$el.removeAttribute('data-selected');$el.style.background=''}"+
-				"else{$el.setAttribute('data-selected','1');$el.style.background='oklch(var(--p)/0.15)'}",
-			name, value, display,
-		)
-		return expr, nil
-	}
-}

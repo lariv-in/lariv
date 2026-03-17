@@ -50,20 +50,12 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("users.SelectView"),
 	})
 
-	_ = lago.RegistryRoute.Register("users.MultiSelectRoute", lago.Route{
-		Path:    AppUrl + "multi-select/",
-		Handler: lago.NewDynamicView("users.MultiSelectView"),
-	})
 
 	_ = lago.RegistryRoute.Register("users.RoleSelectRoute", lago.Route{
 		Path:    RoleUrl + "select/",
 		Handler: lago.NewDynamicView("users.RoleSelectView"),
 	})
 
-	_ = lago.RegistryRoute.Register("users.RoleMultiSelectRoute", lago.Route{
-		Path:    RoleUrl + "multi-select/",
-		Handler: lago.NewDynamicView("users.RoleMultiSelectView"),
-	})
 
 	_ = lago.RegistryRoute.Register("users.RoleListRoute", lago.Route{
 		Path:    RoleUrl,

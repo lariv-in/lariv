@@ -246,21 +246,10 @@ func init() {
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
 
-	lago.RegistryView.Register("users.MultiSelectView",
-		views.ListView[User]("users")(
-			lago.GetPageView("users.UserMultiSelectionTable")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
 
 	lago.RegistryView.Register("users.RoleSelectView",
 		views.ListView[Role]("roles")(
 			lago.GetPageView("users.RoleSelectionTable")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
-
-	lago.RegistryView.Register("users.RoleMultiSelectView",
-		views.ListView[Role]("roles")(
-			lago.GetPageView("users.RoleMultiSelectionTable")).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
 

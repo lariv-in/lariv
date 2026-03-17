@@ -29,7 +29,7 @@ type DataTable[T any] struct {
 	Displays        map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
 	FilterComponent PageInterface
 	CreateUrl       getters.Getter[string]
-	OnClick         getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect, or GetterMultiSelect)
+	OnClick         getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
 }
 
 func (e DataTable[T]) Build(ctx context.Context) Node {

@@ -10,8 +10,4 @@ func init() {
 		return plugin
 	})
 
-	lago.RegistryPlugin.Patch("p_otp", func(plugin lago.Plugin) lago.Plugin {
-		plugin.Roles = []string{"superuser", "totschool_admin"}
-		return plugin
-	})
 }

@@ -109,21 +109,6 @@ func registerFilterPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("users.UserMultiSelectionFilter", &components.FormComponent[User]{
-		Url:    lago.GetterRoutePath("users.MultiSelectRoute", nil),
-		Method: http.MethodGet,
-		ChildrenInput: []components.PageInterface{
-			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
-			&components.InputText{Label: "Email", Name: "Email", Getter: getters.GetterKey[string]("$get.Email")},
-		},
-		ChildrenAction: []components.PageInterface{
-			&components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
-				&components.ButtonSubmit{Label: "Apply"},
-				&components.ButtonClear{Label: "Clear"},
-			}},
-		},
-	})
-
 	lago.RegistryPage.Register("users.RoleSelectionFilter", &components.FormComponent[Role]{
 		Url:    lago.GetterRoutePath("users.SelectRoute", nil),
 		Method: http.MethodGet,
@@ -513,45 +498,6 @@ func registerSelectionPages() {
 					}},
 					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Phone")},
-					}},
-				},
-			},
-		},
-	})
-
-	lago.RegistryPage.Register("users.UserMultiSelectionTable", &components.Modal{
-		UID:   "user-multi-selection-modal",
-		Title: "Select Users",
-		Children: []components.PageInterface{
-			&components.DataTable[User]{
-				UID:             "user-multi-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[User]]("users"),
-				OnClick:         getters.GetterMultiSelect("role", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "users.UserMultiSelectionFilter"},
-				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
-					}},
-					{Label: "Email", Key: "Email", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Email")},
-					}},
-				},
-			},
-		},
-	})
-
-	lago.RegistryPage.Register("users.RoleMultiSelectionTable", &components.Modal{
-		UID:   "role-multi-selection-modal",
-		Title: "Select Roles",
-		Children: []components.PageInterface{
-			&components.DataTable[Role]{
-				UID:             "role-multi-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[Role]]("roles"),
-				OnClick:         getters.GetterMultiSelect("role", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "users.RoleSelectionFilter"},
-				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
 				},
 			},
