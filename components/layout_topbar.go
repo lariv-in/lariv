@@ -2,30 +2,13 @@ package components
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
-	"github.com/lariv-in/getters"
 	"github.com/lariv-in/registry"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
 
-// TopbarButton defines a button rendered in the top navigation bar.
-// These are registered globally via a registry in lago, and plugins can add their own.
-type TopbarButton struct {
-	UID           string         // unique HTML ID for the button element
-	Icon          string         // heroicon name
-	IconAlt       string         // alternate icon (for toggling, e.g. sun/moon)
-	IconCondition string         // Alpine.js condition for showing the primary icon vs alt
-	URL           getters.Getter[string] // lazily resolved URL (e.g. from route registry)
-	Target        string                 // Turbo frame target selector
-	Method        string         // HTTP method: get (default), post, put, delete
-	OnClick       string         // JavaScript onclick handler
-	Classes       string         // CSS classes for the button
-}
-
-var RegistryTopbarButtons = registry.NewRegistry[TopbarButton]()
+var RegistryTopbar = registry.NewRegistry[PageInterface]()
 
 type LayoutTopbar struct {
 	Page
@@ -33,63 +16,11 @@ type LayoutTopbar struct {
 }
 
 func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
-	buttonNodes := gomponents.Group{}
+	topbarItems := gomponents.Group{}
 
-	for _, btnItem := range (*RegistryTopbarButtons.AllStable()) {
-		// Resolve URL from getter
-		btn := btnItem.Value
-		url := ""
-		if btn.URL != nil {
-			u, err := btn.URL(ctx)
-			if err == nil {
-				url = u
-			}
-		}
-
-		// Build icon node(s)
-		var iconNode gomponents.Node
-		if btn.IconAlt != "" && btn.IconCondition != "" {
-			iconNode = gomponents.Group{
-				Render(Icon{
-					Name:  btn.Icon,
-					Attrs: []gomponents.Node{gomponents.Attr("x-show", btn.IconCondition)},
-				}, ctx), Render(Icon{
-					Name:  btn.IconAlt,
-					Attrs: []gomponents.Node{gomponents.Attr("x-show", fmt.Sprintf("!(%s)", btn.IconCondition))},
-				}, ctx),
-			}
-		} else {
-			iconNode = Render(Icon{Name: btn.Icon}, ctx)
-		}
-
-		// Collect button attributes
-		attrs := []gomponents.Node{
-			html.Class(fmt.Sprintf("btn %s", btn.Classes)),
-			iconNode,
-		}
-		if btn.UID != "" {
-			attrs = append(attrs, html.ID(btn.UID))
-		}
-		if btn.OnClick != "" {
-			attrs = append(attrs, gomponents.Attr("onclick", btn.OnClick))
-		}
-		if url != "" {
-			method := strings.ToLower(btn.Method)
-			if method != "" && method != "get" {
-				attrs = append(attrs, gomponents.Attr("hx-"+method, url))
-			} else {
-				attrs = append(attrs, html.Href(url))
-			}
-		}
-		if btn.Target != "" {
-			attrs = append(attrs, gomponents.Attr("hx-target", btn.Target))
-		}
-
-		if url != "" {
-			buttonNodes = append(buttonNodes, html.A(attrs...))
-		} else {
-			buttonNodes = append(buttonNodes, html.Button(attrs...))
-		}
+	for _, comp := range *RegistryTopbar.AllStable() {
+		item := comp.Value
+		topbarItems = append(topbarItems, Render(item, ctx))
 	}
 
 	childGroup := gomponents.Group{}
@@ -103,7 +34,7 @@ func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 				html.A(html.Href("/"), html.Class("text-xl font-bold"), gomponents.Text("Lago")),
 			),
 			html.Div(html.Class("flex-none flex items-center gap-2"),
-				buttonNodes,
+				topbarItems,
 			),
 		),
 		html.Div(html.Class("flex-1 overflow-hidden"),

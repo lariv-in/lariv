@@ -10,9 +10,11 @@ import (
 
 type ButtonDownload struct {
 	Page
-	Label   string
-	Link    getters.Getter[string]
-	Classes string
+	Label       string
+	Link        getters.Getter[string]
+	Icon        string
+	IconClasses string
+	Classes     string
 }
 
 func (e ButtonDownload) GetKey() string {
@@ -30,11 +32,24 @@ func (e ButtonDownload) Build(ctx context.Context) Node {
 			link = v
 		}
 	}
+	content := Group{}
+	if e.Icon != "" {
+		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
+	}
+	if e.Label != "" {
+		content = append(content, Text(e.Label))
+	}
+
+	classes := "btn " + e.Classes
+	if e.Icon != "" && e.Label != "" {
+		classes += " inline-flex items-center gap-2"
+	}
+
 	return A(
 		Href(link),
-		Class("btn "+e.Classes),
+		Class(classes),
 		Attr("data-hx-boost", "false"),
 		Attr("download"),
-		Text(e.Label),
+		content,
 	)
 }

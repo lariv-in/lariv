@@ -13,6 +13,8 @@ type ButtonLink struct {
 	Label       string
 	GetterLabel getters.Getter[string]
 	Link        getters.Getter[string]
+	Icon        string
+	IconClasses string
 	Classes     string
 }
 
@@ -37,5 +39,18 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 			label = v
 		}
 	}
-	return html.A(html.Href(link), html.Class("btn "+e.Classes), gomponents.Text(label))
+
+	content := gomponents.Group{}
+	if e.Icon != "" {
+		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
+	}
+	if label != "" {
+		content = append(content, gomponents.Text(label))
+	}
+
+	classes := "btn " + e.Classes
+	if e.Icon != "" && label != "" {
+		classes += " inline-flex items-center gap-2"
+	}
+	return html.A(html.Href(link), html.Class(classes), content)
 }

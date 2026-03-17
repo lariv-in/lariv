@@ -9,8 +9,10 @@ import (
 
 type ButtonClear struct {
 	Page
-	Label   string
-	Classes string
+	Label       string
+	Icon        string
+	IconClasses string
+	Classes     string
 }
 
 func (e ButtonClear) GetKey() string {
@@ -26,7 +28,20 @@ func (e ButtonClear) Build(ctx context.Context) Node {
 	if label == "" {
 		label = "Clear"
 	}
-	return Button(Type("button"), Class("btn btn-ghost my-2 "+e.Classes), Text(label),
+	content := Group{}
+	if e.Icon != "" {
+		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
+	}
+	if label != "" {
+		content = append(content, Text(label))
+	}
+
+	classes := "btn btn-ghost my-2 " + e.Classes
+	if e.Icon != "" && label != "" {
+		classes += " inline-flex items-center gap-2"
+	}
+
+	return Button(Type("button"), Class(classes), content,
 		Attr("onclick", "this.closest('form').querySelectorAll('input,select,textarea').forEach(el => { el.value = ''; });"),
 	)
 }

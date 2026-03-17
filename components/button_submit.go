@@ -9,8 +9,10 @@ import (
 
 type ButtonSubmit struct {
 	Page
-	Label   string
-	Classes string
+	Label       string
+	Icon        string
+	IconClasses string
+	Classes     string
 }
 
 func (e ButtonSubmit) GetKey() string {
@@ -22,5 +24,18 @@ func (e ButtonSubmit) GetRoles() []string {
 }
 
 func (e ButtonSubmit) Build(ctx context.Context) Node {
-	return Button(Type("submit"), Class("btn btn-primary my-2 "+e.Classes), Text(e.Label))
+	content := Group{}
+	if e.Icon != "" {
+		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
+	}
+	if e.Label != "" {
+		content = append(content, Text(e.Label))
+	}
+
+	classes := "btn btn-primary my-2 " + e.Classes
+	if e.Icon != "" && e.Label != "" {
+		classes += " inline-flex items-center gap-2"
+	}
+
+	return Button(Type("submit"), Class(classes), content)
 }

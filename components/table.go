@@ -73,7 +73,11 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 	if e.CreateUrl != nil {
 		createURL, err := e.CreateUrl(ctx)
 		if err == nil && createURL != "" {
-			createNode = A(Href(createURL), Class("btn btn-square btn-outline btn-sm"), Render(Icon{Name: "plus"}, ctx))
+			createNode = Render(ButtonLink{
+				Link:    getters.GetterStatic(createURL),
+				Icon:    "plus",
+				Classes: "btn-square btn-outline btn-sm",
+			}, ctx)
 		}
 	}
 
