@@ -25,12 +25,14 @@ func ProposalQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.
 			"userType", fmt.Sprintf("%T", rawUser))
 		return query
 	}
-	if !(user.IsSuperuser || user.Role.Name == "totschool_admin") {
-		// Use the actual DB column name (snake_case) to avoid Postgres
-		// folding "CreatedByID" into the invalid identifier "createdbyid".
-		query = query.Where("created_by_id = ?", user.ID)
+	// Use $role from auth middleware; User.Role is not preloaded on login.
+	role, _ := r.Context().Value("$role").(string)
+	if user.IsSuperuser || role == "totschool_admin" {
+		return query
 	}
-	return query
+	// Use the actual DB column name (snake_case) to avoid Postgres
+	// folding "CreatedByID" into the invalid identifier "createdbyid".
+	return query.Where("created_by_id = ?", user.ID)
 }
 
 // proposalDetailMiddleware enriches the detail view context for a proposal.

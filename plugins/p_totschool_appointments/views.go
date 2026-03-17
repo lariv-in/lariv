@@ -163,10 +163,22 @@ func FormCreatedByPatcher(v *views.View, r *http.Request, formData map[string]an
 	return formData
 }
 
+// scopeAppointmentsQueryToCurrentUser restricts the query to appointments created by
+// the logged-in user unless they are a superuser or have the totschool_admin role.
+func scopeAppointmentsQueryToCurrentUser(r *http.Request, query *gorm.DB) *gorm.DB {
+	user := r.Context().Value("$user").(p_users.User)
+	role, _ := r.Context().Value("$role").(string)
+	if user.IsSuperuser || role == "totschool_admin" {
+		return query
+	}
+	return query.Where("created_by_id = ?", user.ID)
+}
+
 // AppointmentListQueryPatcher applies additional filtering based on query params,
 // such as the "Overlapping" checkbox in the filter form.
 func AppointmentListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	ctx := r.Context()
+	query = scopeAppointmentsQueryToCurrentUser(r, query)
 
 	// If Overlapping=true in the parsed filter values, restrict to appointments
 	// that have at least one get neighbor (same CreatedByID and within the
@@ -191,6 +203,7 @@ func AppointmentListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB)
 // it filters to the current calendar day (same as time.Now()).
 func AppointmentTimelineQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	ctx := r.Context()
+	query = scopeAppointmentsQueryToCurrentUser(r, query)
 
 	if get, ok := ctx.Value("$get").(map[string]any); ok {
 		if raw, exists := get["Date"]; exists && raw != nil {
