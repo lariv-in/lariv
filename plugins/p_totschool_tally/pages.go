@@ -706,3 +706,44 @@ func TallyLeaderboardHTML(ctx context.Context, _ Node) Node {
 		Div(Class("grid grid-cols-1 md:grid-cols-2 gap-2 mt-2"), boardsHTML),
 	)
 }
+
+func init() {
+	// Patch the users.UserDetail page using InsertChildBefore and InsertChildAfter,
+	// similar to how the OTP plugin patches the login form.
+	lago.RegistryPage.Patch("users.UserDetail", func(page components.PageInterface) components.PageInterface {
+		if scaffold, ok := page.(*components.ShellScaffold); ok {
+			// Insert a "patched" label before the main user detail content.
+			components.InsertChildBefore[*components.Detail[p_users.User]](scaffold,
+				"users.UserDetailContent",
+				func(*components.Detail[p_users.User]) components.ContainerColumn {
+					return components.ContainerColumn{
+						Children: []components.PageInterface{
+							components.FieldText{
+								Getter:  getters.GetterStatic("patched (before)"),
+								Classes: "text-xs text-success mb-1",
+							},
+						},
+					}
+				},
+			)
+
+			// Insert another "patched" label after the main user detail content.
+			components.InsertChildAfter[*components.Detail[p_users.User]](scaffold,
+				"users.UserDetailContent",
+				func(*components.Detail[p_users.User]) components.ContainerColumn {
+					return components.ContainerColumn{
+						Children: []components.PageInterface{
+							components.FieldText{
+								Getter:  getters.GetterStatic("patched (after)"),
+								Classes: "text-xs text-success mt-1",
+							},
+						},
+					}
+				},
+			)
+
+			return scaffold
+		}
+		panic("Base page for users.UserDetail was not ShellScaffold")
+	})
+}

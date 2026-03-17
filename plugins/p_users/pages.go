@@ -309,6 +309,9 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[User]{
+				Page: components.Page{
+					Key: "users.UserDetailContent",
+				},
 				Getter: getters.GetterKey[User]("user"),
 				Children: []components.PageInterface{
 					&components.ContainerColumn{
