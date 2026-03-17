@@ -37,5 +37,5 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 			label = v
 		}
 	}
-	return html.A(html.Href(link), html.Class("link "+e.Classes), gomponents.Text(label))
+	return html.A(html.Href(link), html.Class("btn "+e.Classes), gomponents.Text(label))
 }
