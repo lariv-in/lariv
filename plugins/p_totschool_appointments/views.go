@@ -243,8 +243,9 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.DeleteView",
+		views.DetailView[Appointment]("appointment")(
 		views.DeleteView[Appointment](lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware)))
 
 	lago.RegistryView.Register("appointments.GenerateView",
 		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, generateHandler).
