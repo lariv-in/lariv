@@ -20,7 +20,7 @@ func init() {
 		Icon:        "key",
 		URL:         u,
 		VerboseName: "OTP Preferences",
-		Roles:       []string{"superuser"},
+		Roles:       []string{""},
 	})
 	if err != nil {
 		log.Panic(err)

@@ -11,7 +11,6 @@ use (
 	./plugins/p_dashboard
 	./plugins/p_filesystem
 	./plugins/p_otp
-	./plugins/p_totschool_otp
 	./plugins/p_pwa
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals
