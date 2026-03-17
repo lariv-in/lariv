@@ -3,6 +3,7 @@ package components
 import (
 	"context"
 
+	"github.com/lariv-in/registry"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -12,6 +13,10 @@ type ShellBase struct {
 	Children  []PageInterface
 	ExtraHead []PageInterface
 }
+
+// RegistryShellHeadNodes allows plugins to contribute additional tags to <head>.
+// Items are rendered in sorted registry key order.
+var RegistryShellHeadNodes = registry.NewRegistry[Node]()
 
 func (e ShellBase) Body(ctx context.Context) Node {
 	group := Group{}
@@ -34,6 +39,11 @@ func (e ShellBase) Body(ctx context.Context) Node {
 }
 
 func (e ShellBase) Build(ctx context.Context) Node {
+	registryHeadGroup := Group{}
+	for _, item := range *RegistryShellHeadNodes.AllStable() {
+		registryHeadGroup = append(registryHeadGroup, item.Value)
+	}
+
 	extraHeadGroup := Group{}
 	for _, child := range e.ExtraHead {
 		extraHeadGroup = append(extraHeadGroup, Render(child, ctx))
@@ -95,6 +105,7 @@ func (e ShellBase) Build(ctx context.Context) Node {
 					`opacity: 1;`+
 					`}`,
 			)),
+			registryHeadGroup,
 			extraHeadGroup,
 		),
 		e.Body(ctx),
