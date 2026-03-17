@@ -55,17 +55,17 @@ func MiddlewareEnvironment(next http.Handler) http.Handler {
 		cookie, err := r.Cookie("environment")
 		if err != nil {
 			slog.Error("MiddlewareEnvironment: failed to get environment cookie", "error", err)
-			setEmptyCookie(w, "environment")
+			setEmptyEnvironmentCookie(w, "environment")
 		} else {
 			decoded, err := url.QueryUnescape(cookie.Value)
 			if err == nil {
 				if err := json.Unmarshal([]byte(decoded), &envMap); err != nil {
 					slog.Error("MiddlewareEnvironment: failed to unmarshal environment cookie", "error", err, "cookie", cookie.Value)
-					setEmptyCookie(w, "environment")
+					setEmptyEnvironmentCookie(w, "environment")
 				}
 			} else {
 				slog.Error("Error while decoding cookie value", "error", err)
-				setEmptyCookie(w, "environment")
+				setEmptyEnvironmentCookie(w, "environment")
 			}
 		}
 		ctx := context.WithValue(r.Context(), "$environment", envMap)
@@ -73,10 +73,10 @@ func MiddlewareEnvironment(next http.Handler) http.Handler {
 	})
 }
 
-func setEmptyCookie(w http.ResponseWriter, cookieName string) {
+func setEmptyEnvironmentCookie(w http.ResponseWriter, cookieName string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:  "environment",
-		Value: "",
+		Value: url.QueryEscape("{}"),
 		Path:  "/",
 	})
 }

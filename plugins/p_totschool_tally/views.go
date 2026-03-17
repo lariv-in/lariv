@@ -18,7 +18,6 @@ import (
 // getSessionFromEnvironment looks up the session selected in the $environment cookie,
 // falling back to the current quarter if none is selected.
 func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSession {
-	fmt.Println("getSessionFromEnvironment: $environment", ctx.Value("$environment"))
 	if envMap, ok := ctx.Value("$environment").(map[string]string); ok {
 		if name, exists := envMap["session"]; exists && name != "" {
 			var session TotSchoolSession
