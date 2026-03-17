@@ -207,19 +207,18 @@ func registerDetail() {
 	}
 
 	pendingSection := []components.PageInterface{
-		components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
-			components.FieldText{Getter: getters.GetterStatic("Generating...")},
-			components.ButtonPost{
-				Label:   "Cancel Generation",
-				URL:     lago.GetterRoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
-				Classes: "btn-outline btn-error btn-sm",
-			},
-			components.ButtonLink{
-				Label:   "Refresh status",
-				Link:    lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
-				Classes: "btn btn-sm btn-outline border border-base-300 font-semibold",
-			},
-		}},
+		components.HTMXPolling{
+			URL: lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+			Children: []components.PageInterface{
+				components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
+					components.FieldText{Getter: getters.GetterStatic("Generating...")},
+					components.ButtonPost{
+						Label:   "Cancel Generation",
+						URL:     lago.GetterRoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+						Classes: "btn-outline btn-error btn-sm",
+					},
+				}},
+			}},
 	}
 
 	idleSection := []components.PageInterface{

@@ -5,16 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/registry"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
 type proposalRow struct {
-	ID      uint           `gorm:"column:id"`
-	Answers datatypes.JSON `gorm:"column:answers"`
+	ID      uint   `gorm:"column:id"`
+	Answers string `gorm:"column:answers"`
 }
 
 type legacyQA struct {
@@ -22,12 +22,15 @@ type legacyQA struct {
 	Answer   string `json:"answer"`
 }
 
-func isAlreadyPairShape(raw datatypes.JSON) bool {
+func isAlreadyPairShape(raw string) bool {
 	if len(raw) == 0 {
-		return true
+		return false
 	}
 	var pairs []registry.Pair[string, string]
-	if err := json.Unmarshal(raw, &pairs); err != nil {
+	decoder := json.NewDecoder(strings.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&pairs); err != nil {
+		fmt.Println("error", err)
 		return false
 	}
 	// If at least one item has a non-empty Key or Value, we consider it migrated.
@@ -36,26 +39,41 @@ func isAlreadyPairShape(raw datatypes.JSON) bool {
 			return true
 		}
 	}
+
+	fmt.Println("pairs", pairs)
+
 	// Could be [] or [{"Key":"","Value":""}] etc; treat as migrated to avoid rewriting noise.
-	return true
+	return false
 }
 
-func convertLegacyToPairs(raw datatypes.JSON) (datatypes.JSON, bool, error) {
+func isLegacyQAShape(raw string) bool {
 	if len(raw) == 0 {
-		return raw, false, nil
+		return false
 	}
+	var legacy []legacyQA
+	if err := json.Unmarshal([]byte(raw), &legacy); err != nil {
+		return false
+	}
+	if len(legacy) == 0 {
+		return false
+	}
+	// Consider it legacy if at least one object contains either field.
+	for _, item := range legacy {
+		if item.Question != "" || item.Answer != "" {
+			return true
+		}
+	}
+	return false
+}
 
-	// If it already parses as Pair shape, do nothing.
-	if isAlreadyPairShape(raw) {
-		return raw, false, nil
+func convertLegacyToPairs(raw string) (string, bool, error) {
+	if len(raw) == 0 {
+		return "", false, nil
 	}
 
 	var legacy []legacyQA
-	if err := json.Unmarshal(raw, &legacy); err != nil {
-		return nil, false, err
-	}
-	if len(legacy) == 0 {
-		return raw, false, nil
+	if err := json.Unmarshal([]byte(raw), &legacy); err != nil {
+		return "", false, err
 	}
 
 	out := make([]registry.Pair[string, string], 0, len(legacy))
@@ -64,12 +82,26 @@ func convertLegacyToPairs(raw datatypes.JSON) (datatypes.JSON, bool, error) {
 	}
 	b, err := json.Marshal(out)
 	if err != nil {
-		return nil, false, err
+		return "", false, err
 	}
-	return datatypes.JSON(b), true, nil
+	return string(b), true, nil
 }
 
-func process(db *gorm.DB, dryRun bool, limit int) error {
+func previewJSON(raw string, max int) string {
+	if raw == "" {
+		return "<nil>"
+	}
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return "<empty>"
+	}
+	if max > 0 && len(s) > max {
+		return s[:max] + "...(truncated)"
+	}
+	return s
+}
+
+func process(db *gorm.DB, dryRun bool, limit int, sampleUnknown int) error {
 	var rows []proposalRow
 	q := db.Table("proposals").Select("id, answers").Order("id asc")
 	if limit > 0 {
@@ -80,8 +112,28 @@ func process(db *gorm.DB, dryRun bool, limit int) error {
 	}
 
 	var scanned, updated, skipped, failed int
+	var alreadyPairs, legacyConverted, unknown int
+	unknownSamples := 0
+
 	for _, row := range rows {
 		scanned++
+
+		// Classification for reporting.
+		switch {
+		case len(row.Answers) == 0:
+			// Treat empty as skipped.
+		case isAlreadyPairShape(row.Answers):
+			alreadyPairs++
+		case isLegacyQAShape(row.Answers):
+			legacyConverted++
+		default:
+			unknown++
+			if unknownSamples < sampleUnknown {
+				unknownSamples++
+				log.Printf("UNKNOWN answers shape id=%d answers=%s", row.ID, previewJSON(row.Answers, 500))
+			}
+		}
+
 		newJSON, changed, err := convertLegacyToPairs(row.Answers)
 		if err != nil {
 			failed++
@@ -108,7 +160,8 @@ func process(db *gorm.DB, dryRun bool, limit int) error {
 		updated++
 	}
 
-	fmt.Printf("scanned=%d updated=%d skipped=%d failed=%d dryRun=%v\n", scanned, updated, skipped, failed, dryRun)
+	fmt.Printf("scanned=%d updated=%d skipped=%d failed=%d dryRun=%v alreadyPairs=%d legacy=%d unknown=%d unknownSamples=%d\n",
+		scanned, updated, skipped, failed, dryRun, alreadyPairs, legacyConverted, unknown, unknownSamples)
 	if failed > 0 {
 		return fmt.Errorf("%d rows failed", failed)
 	}
@@ -117,9 +170,10 @@ func process(db *gorm.DB, dryRun bool, limit int) error {
 
 func main() {
 	var (
-		configPath = flag.String("config", "totschool.toml", "Path to lago config TOML")
-		dryRun     = flag.Bool("dry-run", true, "If true, do not write updates")
-		limit      = flag.Int("limit", 0, "Max rows to scan (0 = no limit)")
+		configPath    = flag.String("config", "totschool.toml", "Path to lago config TOML")
+		dryRun        = flag.Bool("dry-run", true, "If true, do not write updates")
+		limit         = flag.Int("limit", 0, "Max rows to scan (0 = no limit)")
+		sampleUnknown = flag.Int("sample-unknown", 5, "Print up to N unknown-shaped rows")
 	)
 	flag.Parse()
 
@@ -132,8 +186,7 @@ func main() {
 		log.Fatalf("init db: %v", err)
 	}
 
-	if err := process(db, *dryRun, *limit); err != nil {
+	if err := process(db, *dryRun, *limit, *sampleUnknown); err != nil {
 		log.Fatalf("migration failed: %v", err)
 	}
 }
-
