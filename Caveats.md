@@ -55,3 +55,8 @@ Whenever a recoverable error occurs, then it should be logged, no matter how unl
 All edge cases need to be logged, no edge case should ever be ignored.
 
 Use "log/slog" for recoverable errors and log.Panicf() for non recoverable errors
+
+
+# Component Patching
+
+use components.InsertChildBefore, components.InserChildAfter and components.ReplaceChild
