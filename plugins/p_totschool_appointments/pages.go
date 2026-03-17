@@ -174,7 +174,7 @@ func registerTable() {
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
 					{Label: "Location", Key: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Location")}}},
-					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Phone")}}},
+					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{components.FieldPhone{Getter: getters.GetterKey[string]("$row.Phone")}}},
 					{Label: "Date & Time", Key: "Datetime", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Datetime")}}},
 					{Label: "Created By", Key: "CreatedBy", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterForeignKey[p_users.User, uint, string](getters.GetterKey[uint]("$row.CreatedByID"), "Name")}}},
 					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.CreatedAt")}}},
@@ -251,7 +251,7 @@ func registerDetail() {
 								components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Location")},
 							}},
 						}},
-						components.LabelInline{Title: "Phone", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$in.Phone")}}},
+						components.LabelInline{Title: "Phone", Children: []components.PageInterface{components.FieldPhone{Getter: getters.GetterKey[string]("$in.Phone")}}},
 						components.LabelInline{Title: "Date & Time", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.Datetime")}}},
 						components.LabelInline{Title: "Remarks", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$in.Remarks")}}},
 						components.LabelInline{Title: "Extra Info", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$in.ExtraInfo")}}},
@@ -423,23 +423,17 @@ func registerSelectionPages() {
 				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentCardTimelineFilter"},
 				OnClick:         lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))}),
 				Children: []components.PageInterface{
-					components.ContainerColumn{Children: []components.PageInterface{
-						components.ContainerRow{Classes: "flex justify-between items-start mb-2", Children: []components.PageInterface{
-							components.FieldTitle{Getter: getters.GetterKey[string]("$row.Name")},
-							components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Datetime"), Classes: "text-sm text-gray-500 font-medium whitespace-nowrap"},
-						}},
-						components.ContainerRow{Classes: "flex items-center gap-1 text-sm text-gray-600 mb-1", Children: []components.PageInterface{
-							components.Icon{Name: "map-pin", Classes: "w-4 h-4"},
-							components.FieldText{Getter: getters.GetterKey[string]("$row.Location")},
-						}},
-						components.ContainerRow{Classes: "flex items-center gap-1 text-sm text-gray-600 mb-2", Children: []components.PageInterface{
-							components.Icon{Name: "phone", Classes: "w-4 h-4"},
-							components.FieldText{Getter: getters.GetterKey[string]("$row.Phone")},
-						}},
-						components.ShowIf{Getter: getters.GetterAny(getters.GetterKey[string]("$row.Remarks")), Children: []components.PageInterface{
-							components.FieldText{Getter: getters.GetterKey[string]("$row.Remarks"), Classes: "text-sm italic border-t pt-2 mt-2"},
-						}},
-					}},
+					components.ContainerColumn{
+						Children: []components.PageInterface{
+							components.FieldText{Classes: "font-bold", Getter: getters.GetterKey[string]("$row.Name")},
+							components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Datetime"), Classes: "text-sm font-medium whitespace-nowrap"},
+							components.FieldText{Classes: "text-sm", Getter: getters.GetterKey[string]("$row.Location")},
+							components.FieldPhone{Classes: "text-sm", Getter: getters.GetterKey[string]("$row.Phone")},
+							components.ShowIf{Getter: getters.GetterAny(getters.GetterKey[string]("$row.Remarks")), Children: []components.PageInterface{
+								components.FieldText{Getter: getters.GetterKey[string]("$row.Remarks"), Classes: "text-sm italic"},
+							}},
+						},
+					},
 				},
 			},
 		},
