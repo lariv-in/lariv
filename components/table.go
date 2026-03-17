@@ -62,7 +62,7 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 	if e.FilterComponent != nil {
 		filterNode = El("details",
 			Class("dropdown dropdown-end"),
-			Attr("@click.outside", "$el.removeAttribute('open')"),
+			Attr("@click.outside", "if(!$event.target.closest('.fk-modal-container')){$el.removeAttribute('open')}"),
 			El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"), Render(Icon{Name: "funnel"}, ctx)),
 			Div(Class("card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-2 bg-base-100"), Render(e.FilterComponent, ctx)),
 		)

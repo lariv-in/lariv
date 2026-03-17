@@ -169,18 +169,22 @@ func AppointmentListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB)
 	ctx := r.Context()
 
 	// If Overlapping=true in the parsed filter values, restrict to appointments
-	// that have at least one overlapping neighbor (same CreatedByID and within the
+	// that have at least one get neighbor (same CreatedByID and within the
 	// +/-30 minute window defined in GetOverlappingAppointments).
-	if overlapping, ok := ctx.Value("$get").(map[string]any); ok {
-		if val, exists := overlapping["Overlapping"]; exists {
+	if get, ok := ctx.Value("$get").(map[string]any); ok {
+		if val, exists := get["Overlapping"]; exists {
 			if b, ok := val.(bool); ok && b {
 				query = WithOverlappingFilter(query)
 			}
+		}
+		if raw, exists := get["Date"]; exists && raw != nil {
+			query = applyDateFilter(raw, query)
 		}
 	}
 
 	return query
 }
+
 
 // AppointmentTimelineQueryPatcher filters appointments for the timeline view based on
 // the Date field from the timeline filter form ($get.Date).
@@ -189,24 +193,29 @@ func AppointmentTimelineQueryPatcher(v *views.View, r *http.Request, query *gorm
 
 	if get, ok := ctx.Value("$get").(map[string]any); ok {
 		if raw, exists := get["Date"]; exists && raw != nil {
-			switch d := raw.(type) {
-			case time.Time:
-				// Filter by the same calendar day in the application's timezone.
-				start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
-				end := start.Add(24 * time.Hour)
-				query = query.Where("datetime >= ? AND datetime < ?", start, end)
-			case string:
-				if d != "" {
-					if parsed, err := time.Parse("2006-01-02", d); err == nil {
-						start := time.Date(parsed.Year(), parsed.Month(), parsed.Day(), 0, 0, 0, 0, parsed.Location())
-						end := start.Add(24 * time.Hour)
-						query = query.Where("datetime >= ? AND datetime < ?", start, end)
-					}
-				}
-			}
+			query = applyDateFilter(raw, query)
 		}
 	}
 
+	return query
+}
+
+func applyDateFilter(raw any, query *gorm.DB) *gorm.DB {
+	switch d := raw.(type) {
+	case time.Time:
+		// Filter by the same calendar day in the application's timezone.
+		start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
+		end := start.Add(24 * time.Hour)
+		query = query.Where("datetime >= ? AND datetime < ?", start, end)
+	case string:
+		if d != "" {
+			if parsed, err := time.Parse("2006-01-02", d); err == nil {
+				start := time.Date(parsed.Year(), parsed.Month(), parsed.Day(), 0, 0, 0, 0, parsed.Location())
+				end := start.Add(24 * time.Hour)
+				query = query.Where("datetime >= ? AND datetime < ?", start, end)
+			}
+		}
+	}
 	return query
 }
 
