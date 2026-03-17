@@ -538,7 +538,7 @@ type WhatsappReportData struct {
 func createStatCard(_ context.Context, title string, value string, classes string) Node {
 	return Div(Class("stat rounded-box border border-base-300"),
 		Div(Class("stat-title"), Text(title)),
-		Div(Class(fmt.Sprintf("stat-value %s", classes)), Text(value)),
+		Div(Class(fmt.Sprintf("stat-value text-lg font-bold %s", classes)), Text(value)),
 	)
 }
 
@@ -595,7 +595,7 @@ func TallyDashboardHTML(ctx context.Context, _ Node) Node {
 		}
 	}
 
-	statsHTML := Div(Class("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mt-2"),
+	statsHTML := Div(Class("grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2"),
 		createStatCard(ctx, "Total Visits", fmt.Sprintf("%d", dashboard.TotalVisits), ""),
 		createStatCard(ctx, "Total Appts", fmt.Sprintf("%d", dashboard.TotalAppointments), ""),
 		createStatCard(ctx, "Total Leads", fmt.Sprintf("%d", dashboard.TotalLeads), ""),
@@ -608,7 +608,7 @@ func TallyDashboardHTML(ctx context.Context, _ Node) Node {
 		createStatCard(ctx, "Total Premium", FormatCurrencyIndian(dashboard.TotalPremium), "text-success"),
 	)
 
-	ratiosHTML := Div(Class("grid grid-cols-1 md:grid-cols-4 gap-2 mt-2"),
+	ratiosHTML := Div(Class("grid grid-cols-2 md:grid-cols-4 gap-2 mt-2"),
 		createStatCard(ctx, "Appt / Visit", fmt.Sprintf("%.1f%%", dashboard.ApptVisitRatio), ""),
 		createStatCard(ctx, "Demo / Appt", fmt.Sprintf("%.1f%%", dashboard.DemoApptRatio), ""),
 		createStatCard(ctx, "Policy / Demo", fmt.Sprintf("%.1f%%", dashboard.PolicyDemoRatio), ""),
@@ -617,10 +617,10 @@ func TallyDashboardHTML(ctx context.Context, _ Node) Node {
 
 	return Div(
 		If(whatsappSection != nil, whatsappSection),
+		Div(Class("text-xl font-bold mt-4"), Text("Analysis")),
+		ratiosHTML,
 		Div(Class("text-xl font-bold mt-4"), Text("Tally Dashboard")),
 		statsHTML,
-		Div(Class("text-xl font-bold mt-4"), Text("Conversion Rates")),
-		ratiosHTML,
 	)
 }
 

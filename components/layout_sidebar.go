@@ -33,18 +33,19 @@ func (e LayoutSidebar) Build(ctx context.Context) Node {
 		Div(Class("grid h-full transition-[grid-template-columns] duration-[400ms] ease-in"),
 			Attr(":class", "isMobile ? 'grid-cols-1' : (showLeft ? 'grid-cols-[250px_1fr]' : 'grid-cols-[0px_1fr]')"),
 
-			// Mobile Overlay
+			// Mobile Overlay (below topbar)
 			Div(
 				Attr("x-show", "isMobile && showLeft"),
 				Attr("x-transition.opacity", ""),
 				Attr("@click", "showLeft = false"),
-				Class("absolute inset-0 bg-black/50 z-20"),
+				// top-16 matches the navbar height in LayoutTopbar
+				Class("absolute inset-x-0 bottom-0 top-16 bg-black/50 z-20"),
 			),
 
 			// Sidebar
 			Aside(
 				Class("bg-base-100 border-r border-base-300 overflow-hidden"),
-				Attr(":class", "isMobile ? 'absolute inset-y-0 left-0 z-50 shadow-xl transition-transform duration-300' : ''"),
+				Attr(":class", "isMobile ? 'absolute left-0 top-16 h-[calc(100vh-4rem)] z-50 shadow-xl transition-transform duration-300' : ''"),
 				Attr(":style", "isMobile ? (showLeft ? 'transform: translateX(0)' : 'transform: translateX(-100%)') : ''"),
 				Div(Class("h-full overflow-y-auto w-[250px] bg-base-100 p-2"),
 					sidebarGroup,

@@ -17,9 +17,9 @@ func init() {
 
 	err = lago.RegistryPlugin.Register("p_totschool_tally", lago.Plugin{
 		Type:        lago.PluginTypeApp,
-		Icon:        "table-cells",
+		Icon:        "chart-bar",
 		URL:         u,
-		VerboseName: "Totschool Tally",
+		VerboseName: "Progress Tracker",
 	})
 	if err != nil {
 		log.Panic(err)
