@@ -77,6 +77,14 @@ func (e ShellBase) Build(ctx context.Context) Node {
 					`mask-repeat: no-repeat;`+
 					`-webkit-mask-size: 100% 100%;`+
 					`mask-size: 100% 100%;`+
+					`}`+
+					`.heroicon-sm {`+
+					`width: 16px;`+
+					`height: 16px;`+
+					`}`+
+					`.heroicon-lg {`+
+					`width: 32px;`+
+					`height: 32px;`+
 					`}`,
 			)),
 			Script(Raw(`function toggleTheme() { const d = Alpine.$data(document.body); d.theme = d.theme === 'light' ? 'dark' : 'light'; localStorage.setItem('theme', d.theme); }`)),

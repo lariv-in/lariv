@@ -76,7 +76,7 @@ func init() {
 				Page:  components.Page{Roles: []string{"totschool_admin", "superuser"}},
 				Title: getters.GetterStatic("Create Tally (Admin)"),
 				Url:   lago.GetterRoutePath("tally.TallyCreateRoute", nil),
-				Icon:  "plus-circle",
+				Icon:  "plus",
 			},
 		},
 	})

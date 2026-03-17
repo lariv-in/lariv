@@ -47,7 +47,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 
 	var iconNode Node
 	if e.Icon != "" {
-		iconNode = Render(Icon{Name: e.Icon}, ctx)
+		iconNode = Render(Icon{Name: e.Icon, Classes: "heroicon-sm"}, ctx)
 	}
 
 	activeClass := ""
