@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	"github.com/lariv-in/getters"
 	. "maragu.dev/gomponents"
@@ -102,7 +103,11 @@ func (e InputForeignKey[T]) Parse(v any, _ context.Context) (any, error) {
 	if len(vals) == 0 {
 		return "", nil
 	}
-	return vals[0], nil
+	i, err := strconv.Atoi(vals[0])
+	if err != nil {
+		return nil, err
+	}
+	return uint(i), nil
 }
 
 func (e InputForeignKey[T]) GetName() string {
