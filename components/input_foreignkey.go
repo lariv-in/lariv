@@ -73,8 +73,9 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		}
 	}
 
+	modalContainerId := fmt.Sprintf("fk-modal-%s", e.Name)
 	alpineData := fmt.Sprintf("{ value: '%s', display: '%s', placeholder: '%s' }", valuePk, displayValue, placeholder)
-	eventHandler := fmt.Sprintf("if ($event.detail.name === '%s') { value = $event.detail.value; display = $event.detail.display; $el.querySelector('.fk-modal-container').innerHTML = ''; }", e.Name)
+	eventHandler := fmt.Sprintf("if ($event.detail.name === '%s') { value = $event.detail.value; display = $event.detail.display; document.getElementById('%s').innerHTML = ''; }", e.Name, modalContainerId)
 
 	return Div(
 		Class(fmt.Sprintf("my-1 relative %s", e.Classes)),
@@ -86,12 +87,13 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		Div(Class("input input-bordered w-full flex items-center cursor-pointer"),
 			Attr(":class", "display ? '' : 'opacity-50'"),
 			Attr("hx-get", urlStr),
-			Attr("hx-target", "next .fk-modal-container"),
+			Attr("hx-target", fmt.Sprintf("#%s", modalContainerId)),
 			Attr("hx-swap", "innerHTML"),
 			Attr("hx-push-url", "false"),
 			El("span", Attr("x-text", "display || placeholder")),
 		),
-		Div(Class("fk-modal-container")),
+		Div(Attr("id", modalContainerId), Class("fk-modal-container"),
+			Attr("x-init", fmt.Sprintf("document.body.appendChild($el)"))),
 	)
 }
 

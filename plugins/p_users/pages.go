@@ -499,7 +499,7 @@ func registerSelectionPages() {
 			components.DataTable[User]{
 				UID:             "user-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[User]]("users"),
-				OnClick:         getters.GetterSelect("user", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				OnClick:         getters.GetterSelect("UserID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{
