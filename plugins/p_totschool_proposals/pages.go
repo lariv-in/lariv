@@ -191,7 +191,7 @@ func registerDetail() {
 						}},
 						components.ContainerColumn{Children: []components.PageInterface{
 							components.ShowIf{Getter: getters.GetterAny(getters.GetterKey[string]("$in.GeneratedContent")), Children: generatedSection},
-							components.ShowIf{Getter: getters.GetterAny(getters.GetterKey[bool]("GenerationPending")), Children: pendingSection},
+							components.ShowIf{Getter: getters.GetterAny(getterGenerationPending()), Children: pendingSection},
 							components.ShowIf{Getter: getters.GetterAny(getterIdleGeneration()), Children: idleSection},
 						}},
 					}},
@@ -201,12 +201,22 @@ func registerDetail() {
 	})
 }
 
+func getterGenerationPending() getters.Getter[bool] {
+	return func(ctx context.Context) (bool, error) {
+		genID, err := getters.GetterKey[*int]("$in.GenerationID")(ctx)
+		if err != nil {
+			return false, nil
+		}
+		return genID != nil, nil
+	}
+}
+
 func getterIdleGeneration() getters.Getter[bool] {
 	return func(ctx context.Context) (bool, error) {
 		if content, _ := getters.IfOrGetter(getters.GetterKey[string]("$in.GeneratedContent"), ctx, ""); content != "" {
 			return false, nil
 		}
-		if pending, _ := getters.IfOrGetter(getters.GetterKey[bool]("GenerationPending"), ctx, false); pending {
+		if pending, _ := getters.IfOrGetter(getterGenerationPending(), ctx, false); pending {
 			return false, nil
 		}
 		return true, nil

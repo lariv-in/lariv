@@ -16,19 +16,9 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-const (
-	listViewMiddlewareName      = "views.crud.list"
-	detailViewMiddlewareName    = "views.crud.detail"
-	singletonViewMiddlewareName = "views.crud.singleton"
-)
-
-// --- List View ---
-
-// ListView loads all records for model T into context under the given key.
-// Supports query param filtering and sorting.
 func ListView[T any](key string) func(*View) *View {
 	return func(v *View) *View {
-		return v.WithMiddleware(listViewMiddlewareName, func(next http.Handler) http.Handler {
+		return v.WithMethod(http.MethodGet, func(innerView *View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				db := r.Context().Value("$db").(*gorm.DB)
 				query := db.Model(new(T))
@@ -137,20 +127,17 @@ func ListView[T any](key string) func(*View) *View {
 					Total:    total,
 				}
 
-				// Add the object list to the enriched context and pass it downstream.
+				// Add the object list to the enriched context and render the page.
 				ctx = context.WithValue(r.Context(), key, objectList)
-				next.ServeHTTP(w, r.WithContext(ctx))
+				innerView.RenderPage(w, r.WithContext(ctx))
 			})
 		})
 	}
 }
 
-// --- Detail Middleware ---
-
-// DetailView loads a single record by {id} path param into context under the given key.
 func DetailView[T any](key string) func(*View) *View {
 	return func(v *View) *View {
-		return v.WithMiddleware(detailViewMiddlewareName, func(next http.Handler) http.Handler {
+		return v.WithMethod(http.MethodGet, func(innerView *View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				idStr := r.PathValue("id")
 				id, err := strconv.Atoi(idStr)
@@ -159,7 +146,8 @@ func DetailView[T any](key string) func(*View) *View {
 					return
 				}
 
-				query := r.Context().Value("$db").(*gorm.DB)
+				db := r.Context().Value("$db").(*gorm.DB)
+				query := db.Model(new(T))
 				instance := new(T)
 				for _, queryPatcher := range v.QueryPatchers {
 					query = queryPatcher.Value(v, r, query)
@@ -174,7 +162,7 @@ func DetailView[T any](key string) func(*View) *View {
 				// can retrieve it without type errors. Components like Detail[T]
 				// will project this into $in as needed.
 				ctx := context.WithValue(r.Context(), key, *instance)
-				next.ServeHTTP(w, r.WithContext(ctx))
+				innerView.RenderPage(w, r.WithContext(ctx))
 			})
 		})
 	}
@@ -285,18 +273,13 @@ func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
 // and parses the form + updates the record on POST, then redirects to the URL resolved by successUrl.
 func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
 	return func(v *View) *View {
-		v.WithMiddleware(singletonViewMiddlewareName, func(next http.Handler) http.Handler {
+		v.WithMethod(http.MethodGet, func(innerView *View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodGet {
-					next.ServeHTTP(w, r)
-					return
-				}
-
 				db := r.Context().Value("$db").(*gorm.DB)
 				instance := new(T)
 				db.FirstOrCreate(instance)
 				ctx := context.WithValue(r.Context(), getters.ContextKeyIn, getters.MapFromStruct(instance))
-				next.ServeHTTP(w, r.WithContext(ctx))
+				innerView.RenderPage(w, r.WithContext(ctx))
 			})
 		})
 

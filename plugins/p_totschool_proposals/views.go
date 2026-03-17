@@ -349,7 +349,6 @@ func init() {
 	lago.RegistryView.Register("proposals.DetailView",
 		views.DetailView[Proposal]("proposal")(
 			lago.GetPageView("proposals.ProposalDetail")).
-			WithMiddleware("proposals.detail", proposalDetailMiddleware).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.CreateView",
