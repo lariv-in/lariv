@@ -14,7 +14,6 @@ func init() {
 	lago.RegistryPage.Register("otp.PhoneOtpRequestForm", components.ShellAuthScaffold{
 		Children: []components.PageInterface{
 			components.ContainerColumn{
-				Classes: "w-80",
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.GetterStatic("Login via SMS")},
 					components.FormComponent[map[string]string]{
@@ -165,8 +164,9 @@ func init() {
 				Subtitle: "Configure OTP settings for SMS and Email",
 				Method:   http.MethodPost,
 				ChildrenInput: []components.PageInterface{
-					components.FieldTitle{
-						Getter: getters.GetterStatic("SMS OTP Settings"),
+					components.FieldText{
+						Classes: "text-lg font-semibold mt-4",
+						Getter:  getters.GetterStatic("SMS OTP Settings"),
 					},
 					components.ContainerError{
 						Error: getters.GetterKey[error]("$error.Msg91AuthKey"),
@@ -223,8 +223,9 @@ func init() {
 							},
 						},
 					},
-					components.FieldTitle{
-						Getter: getters.GetterStatic("Email OTP Settings"),
+					components.FieldText{
+						Classes: "text-lg font-semibold mt-4",
+						Getter:  getters.GetterStatic("Email OTP Settings"),
 					},
 					components.ContainerError{
 						Error: getters.GetterKey[error]("$error.EmailOtpTemplateString"),
@@ -338,7 +339,7 @@ func init() {
 									})
 								}
 								form.ChildrenAction = append(form.ChildrenAction, components.ContainerColumn{
-									Classes: "flex flex-col gap-2 mt-4 items-center border-t border-base-300 pt-4 w-full",
+									Classes:  "flex flex-col gap-2 mt-4 items-center border-t border-base-300 pt-4 w-full",
 									Children: buttons,
 								})
 								col.Children[1] = form
