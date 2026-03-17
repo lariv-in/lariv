@@ -17,8 +17,8 @@ type Timeline[T any] struct {
 	Classes         string
 	Data            getters.Getter[ObjectList[T]] // list of items
 	OnClick         getters.Getter[string]        // per-item URL (GetterNavigate)
-	FilterComponent PageInterface                // optional filter form
-	Children        []PageInterface              // card content template
+	FilterComponent PageInterface                 // optional filter form
+	Children        []PageInterface               // card content template
 }
 
 func (e Timeline[T]) Build(ctx context.Context) Node {
@@ -75,12 +75,11 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 
 			var clickableClasses string
 
-			timelineContent := Div(Class("timeline-item relative flex items-center gap-4 pb-6 last:pb-0"),
+			timelineContent := Div(Class("timeline-item relative flex items-center gap-4"),
 				Div(Class("timeline-indicator relative z-10 flex items-center"),
 					Div(Class("w-3 h-3 rounded-full bg-primary")),
-					Div(Class("h-0.5 w-4 bg-primary")),
 				),
-				Div(Class(fmt.Sprintf("timeline-card flex-1 p-4 rounded-box border border-base-300 bg-base-100 shadow-sm %s", clickableClasses)),
+				Div(Class(fmt.Sprintf("timeline-card flex-1 p-2 m-1 rounded-box border border-base-300 %s", clickableClasses)),
 					childrenNodes,
 				),
 			)
