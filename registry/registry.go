@@ -42,6 +42,7 @@ type Registry[T any] struct {
 	items          map[string]T
 	itemsList      []Pair[string, T]
 	isBuilt        bool
+	isBuilding     bool
 }
 
 func (r *Registry[T]) Register(name string, unpatchedItem T) error {
@@ -64,6 +65,12 @@ func (r *Registry[T]) Patch(name string, patcher func(T) T) {
 }
 
 func (r *Registry[T]) Build() {
+	if r.isBuilding {
+		return
+	}
+	r.isBuilding = true
+	defer func() { r.isBuilding = false }()
+
 	items := maps.Clone(r.unpatchedItems)
 	patches := maps.Clone(r.patches)
 
@@ -77,12 +84,17 @@ func (r *Registry[T]) Build() {
 		for _, patcher := range p {
 			items[k] = patcher(items[k])
 		}
+		// Fold applied patches into the base so a later Build still sees the
+		// transformed value; drop them from the pending patch list.
+		r.unpatchedItems[k] = items[k]
 	}
+
+	r.patches = patches
 
 	maps.Copy(r.items, items)
 
-	if len(patches) > 0 {
-		slog.Warn("The following patches were not applied since no corresponding keys were found in the registry", "registry", *r, "patches", patches)
+	if len(r.patches) > 0 {
+		slog.Warn("The following patches were not applied since no corresponding keys were found in the registry", "registry", *r, "patches", r.patches)
 	}
 
 	r.itemsList = []Pair[string, T]{}
@@ -101,7 +113,14 @@ func (r *Registry[T]) Build() {
 }
 
 func (r *Registry[T]) Get(name string) (T, bool) {
+	var zero T
+
 	if !r.isBuilt {
+		// Avoid infinite recursion when patches or getters try to resolve
+		// registry entries while a build is already in progress.
+		if r.isBuilding {
+			return zero, false
+		}
 		r.Build()
 	}
 	v, isPresent := r.items[name]
