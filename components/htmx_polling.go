@@ -27,6 +27,7 @@ func (e HTMXPolling) Build(ctx context.Context) Node {
 		Attr("hx-get", url),
 		Attr("hx-target", "body"),
 		Attr("hx-swap", "outerHTML"),
+		Attr("hx-trigger", "every 2s"),
 		children,
 	)
 }

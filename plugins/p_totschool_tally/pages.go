@@ -136,9 +136,7 @@ func init() {
 			Display:     getters.GetterKey[string]("$in.Name"),
 			Placeholder: "Select a user...",
 			Required:    true,
-			// Use flat $in.UserID so Detail[Tally] and CRUD views can populate
-			// context consistently from the Tally struct.
-			Getter: getters.GetterAssociation[p_users.User]("users", getters.GetterKey[uint]("$in.UserID")),
+			Getter:      getters.GetterAssociation[p_users.User]("users", getters.GetterKey[uint]("$in.UserID")),
 		},
 		components.InputDate{
 			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},

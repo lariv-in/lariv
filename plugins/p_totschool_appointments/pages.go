@@ -2,6 +2,7 @@ package p_totschool_appointments
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -264,8 +265,8 @@ func registerDetail() {
 						components.LabelInline{Title: "Created By", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterForeignKey[p_users.User, uint, string](getters.GetterKey[uint]("$in.CreatedByID"), "Name")}}},
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.CreatedAt")}}},
 						components.ContainerColumn{Classes: "mt-6", Children: []components.PageInterface{
-							components.ShowIf{Getter: getters.GetterAny(getters.GetterKey[string]("$in.GeneratedLetter")), Children: generatedSection},
-							components.ShowIf{Getter: getters.GetterAny(getters.GetterKey[bool]("GenerationPending")), Children: pendingSection},
+							components.ShowIf{Getter: getters.GetterAny(getterGenerated()), Children: generatedSection},
+							components.ShowIf{Getter: getters.GetterAny(getterGenerationPending()), Children: pendingSection},
 							components.ShowIf{Getter: getters.GetterAny(getterIdleGeneration()), Children: idleSection},
 						}},
 					}},
@@ -275,15 +276,60 @@ func registerDetail() {
 	})
 }
 
+func getterGenerated() getters.Getter[bool] {
+	return func(ctx context.Context) (bool, error) {
+		id, err := getters.GetterKey[*int]("$in.GenerationID")(ctx)
+		if err != nil {
+			slog.Error("Error while getting id for checking if appointment is idle", "error", err)
+			return false, err
+		}
+		content, err := getters.GetterKey[string]("$in.GeneratedLetter")(ctx)
+		if err != nil {
+			slog.Error("Error while getting content for checking if appointment is idle", "error", err)
+			return false, err
+		}
+		if id == nil && content != "" {
+			return true, nil
+		}
+		return false, nil
+	}
+}
+
+func getterGenerationPending() getters.Getter[bool] {
+	return func(ctx context.Context) (bool, error) {
+		id, err := getters.GetterKey[*int]("$in.GenerationID")(ctx)
+		if err != nil {
+			slog.Error("Error while getting id for checking if appointment is idle", "error", err)
+			return false, err
+		}
+		content, err := getters.GetterKey[string]("$in.GeneratedLetter")(ctx)
+		if err != nil {
+			slog.Error("Error while getting content for checking if appointment is idle", "error", err)
+			return false, err
+		}
+		if id != nil && content == "" {
+			return true, nil
+		}
+		return false, nil
+	}
+}
+
 func getterIdleGeneration() getters.Getter[bool] {
 	return func(ctx context.Context) (bool, error) {
-		if content, _ := getters.IfOrGetter(getters.GetterKey[string]("$in.GeneratedLetter"), ctx, ""); content != "" {
-			return false, nil
+		id, err := getters.GetterKey[*int]("$in.GenerationID")(ctx)
+		if err != nil {
+			slog.Error("Error while getting id for checking if appointment is idle", "error", err)
+			return false, err
 		}
-		if pending, _ := getters.IfOrGetter(getters.GetterKey[bool]("GenerationPending"), ctx, false); pending {
-			return false, nil
+		content, err := getters.GetterKey[string]("$in.GeneratedLetter")(ctx)
+		if err != nil {
+			slog.Error("Error while getting content for checking if appointment is idle", "error", err)
+			return false, err
 		}
-		return true, nil
+		if id == nil && content == "" {
+			return true, nil
+		}
+		return false, nil
 	}
 }
 

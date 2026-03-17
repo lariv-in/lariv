@@ -219,7 +219,8 @@ func init() {
 	lago.RegistryView.Register("appointments.DetailView",
 		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("appointments.detail", AppointmentDetailMiddleware))
+			WithMiddleware("appointments.detail", AppointmentDetailMiddleware),
+	)
 
 	lago.RegistryView.Register("appointments.CreateView",
 		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
