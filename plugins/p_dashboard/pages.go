@@ -15,6 +15,7 @@ func init() {
 		Link:    lago.GetterRoutePath("dashboard.AppsPage", nil),
 		Classes: "btn-sm btn-square btn-neutral",
 	})
+	components.RegistryTopbar.Register("dashboard.userDropdown", pcomps.UserDropdown{})
 	components.RegistryTopbar.Register("dashboard.logoutButton", components.ButtonPost{
 		Icon:    "arrow-right-start-on-rectangle",
 		URL:     lago.GetterRoutePath("users.LogoutRoute", nil),
