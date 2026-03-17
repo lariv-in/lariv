@@ -9,7 +9,7 @@ import (
 type ContainerHTML struct {
 	Page
 	Children []PageInterface
-	HTML     func(gomponents.Node) gomponents.Node
+	HTML     func(context.Context, gomponents.Node) gomponents.Node
 }
 
 func (e ContainerHTML) Build(ctx context.Context) gomponents.Node {
@@ -18,7 +18,7 @@ func (e ContainerHTML) Build(ctx context.Context) gomponents.Node {
 		group = append(group, Render(child, ctx))
 	}
 	if e.HTML != nil {
-		return e.HTML(group)
+		return e.HTML(ctx, group)
 	}
 	return group
 }

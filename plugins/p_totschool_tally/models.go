@@ -1,6 +1,8 @@
 package p_totschool_tally
 
 import (
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/lariv-in/lago"
@@ -35,6 +37,229 @@ type Tally struct {
 	Proposals     int          `gorm:"default:0"`
 	Policies      int          `json:"policies"`
 	Premium       int          `json:"premium"`
+}
+
+func (t *Tally) BeforeSave(tx *gorm.DB) (err error) {
+	EnsureSessionForDate(tx, t.Date)
+	return nil
+}
+
+// EnsureSessionForDate ensures a TotSchoolSession exists for the given date's quarter.
+func EnsureSessionForDate(db *gorm.DB, date time.Time) TotSchoolSession {
+	year := date.Year()
+	quarter := (int(date.Month())-1)/3 + 1
+
+	startDate := time.Date(year, time.Month((quarter-1)*3+1), 1, 0, 0, 0, 0, date.Location())
+
+	var endDate time.Time
+	if quarter == 4 {
+		endDate = time.Date(year+1, 1, 1, 0, 0, 0, 0, date.Location()).Add(-24 * time.Hour)
+	} else {
+		endDate = time.Date(year, time.Month(quarter*3+1), 1, 0, 0, 0, 0, date.Location()).Add(-24 * time.Hour)
+	}
+
+	name := fmt.Sprintf("%d Quarter %d", year, quarter)
+
+	var session TotSchoolSession
+	err := db.Where("name = ?", name).First(&session).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			session = TotSchoolSession{
+				Name:  name,
+				Start: startDate,
+				End:   endDate,
+			}
+			db.Create(&session)
+		}
+	}
+	return session
+}
+
+func GetDashboardStats(db *gorm.DB, userID *uint, session *TotSchoolSession) DashboardStats {
+	query := db.Model(&Tally{})
+	if userID != nil {
+		query = query.Where("user_id = ?", *userID)
+	}
+	if session != nil {
+		query = query.Where("date >= ? AND date <= ?", session.Start, session.End)
+	}
+
+	type Result struct {
+		TotalPresentations int
+		TotalLeads         int
+		TotalVisits        int
+		TotalAppointments  int
+		TotalDemos         int
+		TotalLetters       int
+		TotalFollowUps     int
+		TotalProposals     int
+		TotalPolicies      int
+		TotalPremium       int
+		FormsFilled        int
+	}
+	var res Result
+	query.Select(`
+		COALESCE(SUM(presentations), 0) as total_presentations,
+		COALESCE(SUM(leads), 0) as total_leads,
+		COALESCE(SUM(visits), 0) as total_visits,
+		COALESCE(SUM(appointments), 0) as total_appointments,
+		COALESCE(SUM(demos), 0) as total_demos,
+		COALESCE(SUM(letters), 0) as total_letters,
+		COALESCE(SUM(follow_ups), 0) as total_follow_ups,
+		COALESCE(SUM(proposals), 0) as total_proposals,
+		COALESCE(SUM(policies), 0) as total_policies,
+		COALESCE(SUM(premium), 0) as total_premium,
+		COUNT(id) as forms_filled
+	`).Scan(&res)
+
+	stats := DashboardStats{
+		TotalPresentations: res.TotalPresentations,
+		TotalLeads:         res.TotalLeads,
+		TotalVisits:        res.TotalVisits,
+		TotalAppointments:  res.TotalAppointments,
+		TotalDemos:         res.TotalDemos,
+		TotalLetters:       res.TotalLetters,
+		TotalFollowUps:     res.TotalFollowUps,
+		TotalProposals:     res.TotalProposals,
+		TotalPolicies:      res.TotalPolicies,
+		TotalPremium:       res.TotalPremium,
+		FormsFilled:        res.FormsFilled,
+	}
+
+	if res.TotalVisits > 0 {
+		stats.ApptVisitRatio = float64(res.TotalAppointments) / float64(res.TotalVisits) * 100
+	}
+	if res.TotalAppointments > 0 {
+		stats.DemoApptRatio = float64(res.TotalDemos) / float64(res.TotalAppointments) * 100
+	}
+	if res.TotalDemos > 0 {
+		stats.PolicyDemoRatio = float64(res.TotalPolicies) / float64(res.TotalDemos) * 100
+	}
+
+	return stats
+}
+
+func GetWhatsappReportData(db *gorm.DB, userID uint) WhatsappReportData {
+	today := time.Now().Truncate(24 * time.Hour)
+	var count int64
+	db.Model(&Tally{}).Where("user_id = ? AND date = ?", userID, today).Count(&count)
+	if count == 0 {
+		return WhatsappReportData{Submitted: false}
+	}
+
+	todaySession := TotSchoolSession{Start: today, End: today}
+	todayTotals := GetDashboardStats(db, &userID, &todaySession)
+
+	currentQuarter := EnsureSessionForDate(db, today)
+	qtdSession := TotSchoolSession{Start: currentQuarter.Start, End: today}
+	qtdTotals := GetDashboardStats(db, &userID, &qtdSession)
+
+	lastQuarterDate := currentQuarter.Start.Add(-24 * time.Hour)
+	lastQuarterSession := EnsureSessionForDate(db, lastQuarterDate)
+	lastQuarterTotals := GetDashboardStats(db, &userID, &lastQuarterSession)
+
+	var user p_users.User
+	db.First(&user, userID)
+
+	return WhatsappReportData{
+		Submitted:   true,
+		Today:       todayTotals,
+		QTD:         qtdTotals,
+		LastQuarter: lastQuarterTotals,
+		UserName:    user.Name,
+		Date:        today,
+	}
+}
+
+func GetLeaderboards(db *gorm.DB, userID *uint, session *TotSchoolSession) map[string]LeaderboardResult {
+	query := db.Model(&Tally{}).
+		Joins("JOIN users ON users.id = tallies.user_id").
+		Select(`
+			tallies.user_id,
+			users.name as user_name,
+			COALESCE(SUM(visits), 0) as total_visits,
+			COALESCE(SUM(demos), 0) as total_demos,
+			COALESCE(SUM(policies), 0) as total_policies,
+			COALESCE(SUM(premium), 0) as total_premium
+		`).
+		Group("tallies.user_id, users.name")
+
+	if session != nil {
+		query = query.Where("tallies.date >= ? AND tallies.date <= ?", session.Start, session.End)
+	}
+
+	type UserTotal struct {
+		UserID        uint
+		UserName      string
+		TotalVisits   int
+		TotalDemos    int
+		TotalPolicies int
+		TotalPremium  int
+	}
+
+	var userTotals []UserTotal
+	query.Find(&userTotals)
+
+	metrics := []struct {
+		Name  string
+		Value func(UserTotal) int
+	}{
+		{"visits", func(u UserTotal) int { return u.TotalVisits }},
+		{"demos", func(u UserTotal) int { return u.TotalDemos }},
+		{"policies", func(u UserTotal) int { return u.TotalPolicies }},
+		{"premium", func(u UserTotal) int { return u.TotalPremium }},
+	}
+
+	leaderboards := make(map[string]LeaderboardResult)
+
+	for _, metric := range metrics {
+		sortedTotals := make([]UserTotal, len(userTotals))
+		copy(sortedTotals, userTotals)
+
+		sort.SliceStable(sortedTotals, func(i, j int) bool {
+			return metric.Value(sortedTotals[i]) > metric.Value(sortedTotals[j])
+		})
+
+		var top5 []LeaderboardEntry
+		var userEntry *LeaderboardEntry
+
+		for index, row := range sortedTotals {
+			rank := index + 1
+			entry := LeaderboardEntry{
+				Rank:     fmt.Sprintf("%d", rank),
+				UserID:   row.UserID,
+				UserName: row.UserName,
+				Value:    metric.Value(row),
+			}
+
+			if rank <= 5 {
+				top5 = append(top5, entry)
+			}
+
+			if userID != nil && row.UserID == *userID {
+				userEntry = &entry
+			}
+		}
+
+		if userID != nil && userEntry == nil {
+			var user p_users.User
+			if err := db.First(&user, *userID).Error; err == nil {
+				userEntry = &LeaderboardEntry{
+					Rank:     "-",
+					UserID:   user.ID,
+					UserName: user.Name,
+					Value:    0,
+				}
+			}
+		}
+
+		leaderboards[metric.Name] = LeaderboardResult{
+			Top5:        top5,
+			CurrentUser: userEntry,
+		}
+	}
+
+	return leaderboards
 }
 
 func init() {

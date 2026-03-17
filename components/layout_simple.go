@@ -15,7 +15,7 @@ type LayoutSimple struct {
 func (e LayoutSimple) Build(ctx context.Context) Node {
 	return Render(ContainerHTML{
 		Children: e.Children,
-		HTML: func(children Node) Node {
+		HTML: func(ctx context.Context, children Node) Node {
 			return Div(Class("size-full overflow-y-auto p-4"),
 				children,
 			)
