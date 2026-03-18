@@ -325,7 +325,8 @@ func aiEditFormHandler(v *views.View) http.Handler {
 			http.NotFound(w, r)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "proposal", getters.MapFromStruct(&proposal))
+		// Keep concrete type in context; components expect Proposal, not map[string]any.
+		ctx := context.WithValue(r.Context(), "proposal", proposal)
 		v.RenderPage(w, r.WithContext(ctx))
 	})
 }
@@ -357,7 +358,11 @@ func aiEditHandler(v *views.View) http.Handler {
 			return
 		}
 
-		content := r.FormValue("generated_content")
+		// Support both field naming styles (component Name vs snake_case).
+		content := r.FormValue("GeneratedContent")
+		if content == "" {
+			content = r.FormValue("generated_content")
+		}
 		instructions := r.FormValue("instructions")
 		if content == "" || instructions == "" {
 			slog.Warn("aiEditHandler: missing form fields",
