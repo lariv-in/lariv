@@ -133,17 +133,26 @@ func registerTable() {
 
 func registerDetail() {
 	generatedSection := []components.PageInterface{
-		components.ContainerColumn{Classes: "mt-2 p-4 card card-body border rounded-box border-base-300", Children: []components.PageInterface{
-			components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
-				components.FieldTitle{Getter: getters.GetterStatic("Generated Proposal")},
-				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
-					components.ButtonDownload{Label: "Export to PDF", Link: lago.GetterRoutePath("proposals.ExportPdfRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-					components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("proposals.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-					components.ButtonPost{Label: "Regenerate Proposal", URL: lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
-				}},
-			}},
-			components.FieldMarkdown{Getter: getters.GetterKey[string]("$in.GeneratedContent")},
-		}},
+		components.Accordion{
+			Classes: "mt-4",
+			Items: []components.AccordionItem{
+				{
+					Title: components.FieldText{Classes: "font-semibold", Getter: getters.GetterStatic("Generated Proposal")},
+					Children: []components.PageInterface{
+						components.ContainerColumn{Classes: "my-2", Children: []components.PageInterface{
+							components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
+								components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
+									components.ButtonDownload{Label: "Export to PDF", Link: lago.GetterRoutePath("proposals.ExportPdfRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
+									components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("proposals.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
+									components.ButtonPost{Label: "Regenerate Proposal", URL: lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
+								}},
+							}},
+							components.FieldMarkdown{Classes: "ml-2", Getter: getters.GetterKey[string]("$in.GeneratedContent")},
+						}},
+					},
+				},
+			},
+		},
 	}
 
 	pendingSection := []components.PageInterface{
@@ -185,7 +194,7 @@ func registerDetail() {
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.CreatedAt")}}},
 						components.Accordion{Classes: "mt-4", Items: []components.AccordionItem{
 							{
-								Title: components.FieldTitle{Getter: getters.GetterStatic("Questionnaire Answers")},
+								Title: components.FieldText{Classes: "font-semibold", Getter: getters.GetterStatic("Questionnaire Answers")},
 								Children: []components.PageInterface{
 									components.FieldKeyValue{Getter: getters.GetterKey[datatypes.JSON]("$in.Answers")},
 								},
