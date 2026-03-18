@@ -17,5 +17,17 @@ func init() {
 		Path:    "/offline",
 		Handler: lago.NewDynamicView(offlineViewKey),
 	})
+
+	// Serve a filesystem directory under /static/pwa/.
+	// Note: lago's router treats paths ending in "/" as exact matches, so we use
+	// a wildcard pattern for nested file paths.
+	_ = lago.RegistryRoute.Register("pwa.StaticPwaBaseRoute", lago.Route{
+		Path:    "/static/pwa/",
+		Handler: lago.NewDynamicView(staticPwaViewKey),
+	})
+	_ = lago.RegistryRoute.Register("pwa.StaticPwaFilesRoute", lago.Route{
+		Path:    "/static/pwa/{path...}",
+		Handler: lago.NewDynamicView(staticPwaViewKey),
+	})
 }
 

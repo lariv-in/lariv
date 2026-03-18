@@ -15,6 +15,7 @@ const (
 	manifestViewKey      = "pwa.ManifestView"
 	serviceWorkerViewKey = "pwa.ServiceWorkerView"
 	offlineViewKey       = "pwa.OfflineView"
+	staticPwaViewKey     = "pwa.StaticPwaView"
 )
 
 func manifestHandler(_ *views.View) http.Handler {
@@ -119,6 +120,24 @@ func offlineHandler(_ *views.View) http.Handler {
 	})
 }
 
+func staticPwaHandler(_ *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if Config.StaticDir == "" {
+			http.NotFound(w, r)
+			return
+		}
+
+		st, err := os.Stat(Config.StaticDir)
+		if err != nil || !st.IsDir() {
+			http.NotFound(w, r)
+			return
+		}
+
+		fs := http.FileServer(http.Dir(Config.StaticDir))
+		http.StripPrefix("/static/pwa/", fs).ServeHTTP(w, r)
+	})
+}
+
 func init() {
 	_ = components.RegistryShellHeadNodes.Register("pwa.manifestLink", Link(Rel("manifest"), Href("/app.webmanifest")))
 
@@ -137,6 +156,12 @@ func init() {
 	lago.RegistryView.Register(offlineViewKey, &views.View{
 		Handlers: map[string]func(*views.View) http.Handler{
 			http.MethodGet: offlineHandler,
+		},
+	})
+
+	lago.RegistryView.Register(staticPwaViewKey, &views.View{
+		Handlers: map[string]func(*views.View) http.Handler{
+			http.MethodGet: staticPwaHandler,
 		},
 	})
 }

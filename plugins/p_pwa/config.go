@@ -37,6 +37,7 @@ type PwaScreenshotConfig struct {
 // - /app.webmanifest
 // - /serviceworker.js
 // - /offline
+// - /static/pwa/
 type PwaConfig struct {
 	// Optional filesystem path to a service worker JS file. If empty, a minimal
 	// default service worker is served.
@@ -44,6 +45,10 @@ type PwaConfig struct {
 
 	// Optional view key to serve for /offline. If empty, a minimal HTML page is served.
 	OfflineViewName string `toml:"offlineViewName"`
+
+	// Optional filesystem directory to serve under /static/pwa/.
+	// If empty, the route responds with 404.
+	StaticDir string `toml:"staticDir"`
 
 	// Manifest keys
 	AppName            string `toml:"PWA_APP_NAME"`
