@@ -47,6 +47,7 @@ type PwaConfig struct {
 	OfflineViewName string `toml:"offlineViewName"`
 
 	// Optional filesystem directory to serve under /static/pwa/.
+	// If relative, it's resolved relative to the running binary's directory.
 	// If empty, the route responds with 404.
 	StaticDir string `toml:"staticDir"`
 
