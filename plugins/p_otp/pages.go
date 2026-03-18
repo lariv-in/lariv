@@ -102,6 +102,10 @@ func init() {
 				Classes: "w-80",
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.GetterStatic("Verify OTP")},
+					components.FieldText{
+						Classes: "text-sm text-gray-600 mb-2",
+						Getter:  getters.GetterStatic("Enter the code we sent and choose a new password."),
+					},
 					components.FormComponent[map[string]string]{
 						Url:    getters.GetterFormat("%v?identifier=%v", getters.GetterAny(lago.GetterRoutePath("otp.OtpVerifyRoute", nil)), getters.GetterAny(getters.GetterQueryEscape(getters.GetterKey[string]("$in.Identifier")))),
 						Method: http.MethodPost,
@@ -114,6 +118,28 @@ func init() {
 										Label:    "OTP",
 										Required: true,
 										Getter:   getters.GetterKey[string]("$in.Otp"),
+									},
+								},
+							},
+							components.ContainerError{
+								Error: getters.GetterKey[error]("$error.NewPassword"),
+								Children: []components.PageInterface{
+									components.InputPassword{
+										Name:     "NewPassword",
+										Label:    "New password",
+										Required: true,
+										Getter:   getters.GetterKey[string]("$in.NewPassword"),
+									},
+								},
+							},
+							components.ContainerError{
+								Error: getters.GetterKey[error]("$error.NewPassword2"),
+								Children: []components.PageInterface{
+									components.InputPassword{
+										Name:     "NewPassword2",
+										Label:    "Confirm new password",
+										Required: true,
+										Getter:   getters.GetterKey[string]("$in.NewPassword2"),
 									},
 								},
 							},

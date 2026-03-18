@@ -195,15 +195,28 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 			return
 		}
 
+		newPassword, _ := values["NewPassword"].(string)
+		newPassword2, _ := values["NewPassword2"].(string)
+		newPassword = strings.TrimSpace(newPassword)
+		newPassword2 = strings.TrimSpace(newPassword2)
+
+		if newPassword == "" {
+			fieldErrors["NewPassword"] = fmt.Errorf("New password is required.")
+		}
+		if newPassword2 == "" {
+			fieldErrors["NewPassword2"] = fmt.Errorf("Please confirm your new password.")
+		}
+		if newPassword != "" && newPassword2 != "" && newPassword != newPassword2 {
+			fieldErrors["NewPassword2"] = fmt.Errorf("Passwords do not match.")
+		}
+
 		otp, _ := values["Otp"].(string)
 		otp = strings.TrimSpace(otp)
 
 		if otp == "" {
-			fieldErrors["otp"] = fmt.Errorf("OTP is required.")
+			fieldErrors["Otp"] = fmt.Errorf("OTP is required.")
 		} else if len(otp) != 6 {
-			fieldErrors["otp"] = fmt.Errorf("OTP must be 6 digits.")
-		} else if !VerifyOTP(identifier, otp) {
-			fieldErrors["otp"] = fmt.Errorf("Invalid OTP.")
+			fieldErrors["Otp"] = fmt.Errorf("OTP must be 6 digits.")
 		}
 
 		dbValue := r.Context().Value("$db")
@@ -214,32 +227,54 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 				"path", r.URL.Path,
 				"identifier", identifier,
 			)
-			fieldErrors["otp"] = fmt.Errorf("Internal error. Please try again later.")
-			// Keep identifier around so form URL resolves correctly on re-render
+			fieldErrors["Otp"] = fmt.Errorf("Internal error. Please try again later.")
 			values["Identifier"] = identifier
 			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
-		if !v.HasErrors(fieldErrors) {
-			var user p_users.User
-			err := db.Where("phone = ? OR email = ?", identifier, identifier).First(&user).Error
-			if err == nil {
-				user.Login(w)
-				lago.NewRedirectView("users.LoginSuccessRoute").ServeHTTP(w, r)
-				return
-			} else if err == gorm.ErrRecordNotFound {
-				slog.Warn("OtpVerifyHandler: user not found for identifier",
-					"identifier", identifier,
-				)
-				fieldErrors["otp"] = fmt.Errorf("User not found.")
-			} else {
-				slog.Error("OtpVerifyHandler: database error while loading user",
+		if v.HasErrors(fieldErrors) {
+			values["Identifier"] = identifier
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		if !VerifyOTP(identifier, otp) {
+			fieldErrors["Otp"] = fmt.Errorf("Invalid OTP.")
+			values["Identifier"] = identifier
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		var user p_users.User
+		err = db.Where("phone = ? OR email = ?", identifier, identifier).First(&user).Error
+		if err == nil {
+			user.Password = []byte(newPassword)
+			if err := db.Save(&user).Error; err != nil {
+				slog.Error("OtpVerifyHandler: failed to update password",
 					"identifier", identifier,
 					"error", err,
 				)
-				fieldErrors["otp"] = fmt.Errorf("Internal error. Please try again later.")
+				fieldErrors["NewPassword"] = fmt.Errorf("Could not update password. Please try again.")
+				values["Identifier"] = identifier
+				v.RenderWithErrors(w, r, fieldErrors, values)
+				return
 			}
+			user.Login(w)
+			lago.NewRedirectView("users.LoginSuccessRoute").ServeHTTP(w, r)
+			return
+		}
+		if err == gorm.ErrRecordNotFound {
+			slog.Warn("OtpVerifyHandler: user not found for identifier",
+				"identifier", identifier,
+			)
+			fieldErrors["Otp"] = fmt.Errorf("User not found.")
+		} else {
+			slog.Error("OtpVerifyHandler: database error while loading user",
+				"identifier", identifier,
+				"error", err,
+			)
+			fieldErrors["Otp"] = fmt.Errorf("Internal error. Please try again later.")
 		}
 
 		// Keep identifier around so form URL resolves correctly on re-render
