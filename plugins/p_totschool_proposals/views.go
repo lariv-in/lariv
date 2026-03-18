@@ -15,6 +15,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// proposalDB returns $db from context; logs and returns nil if missing or wrong type.
+func proposalDB(r *http.Request, op string) *gorm.DB {
+	raw := r.Context().Value("$db")
+	db, ok := raw.(*gorm.DB)
+	if !ok || db == nil {
+		slog.Error(op+": missing or invalid $db in context",
+			"dbType", fmt.Sprintf("%T", raw))
+		return nil
+	}
+	return db
+}
+
 func ProposalQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	rawUser := r.Context().Value("$user")
 	user, ok := rawUser.(p_users.User)
@@ -82,11 +94,19 @@ func ProposalFormPatcher(v *views.View, r *http.Request, formData map[string]any
 func generateHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			slog.Warn("generateHandler: method not allowed",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"pageName", v.PageName)
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db := proposalDB(r, "generateHandler")
+		if db == nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		rawUser := r.Context().Value("$user")
 		user, ok := rawUser.(p_users.User)
 		if !ok {
@@ -99,12 +119,28 @@ func generateHandler(v *views.View) http.Handler {
 
 		var proposal Proposal
 		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			slog.Error("generateHandler: proposal not found or DB error",
+				"error", err,
+				"id", idStr,
+				"pageName", v.PageName)
 			http.NotFound(w, r)
 			return
 		}
 
 		answersText, err := proposal.FormatAnswersForAI()
+		if err != nil {
+			slog.Error("generateHandler: FormatAnswersForAI failed",
+				"error", err,
+				"proposalID", proposal.ID,
+				"pageName", v.PageName)
+		}
 		if err != nil || answersText == "" || len(answersText) < 10 {
+			if err == nil {
+				slog.Warn("generateHandler: insufficient questionnaire answers for generation",
+					"proposalID", proposal.ID,
+					"answersLen", len(answersText),
+					"pageName", v.PageName)
+			}
 			if r.Header.Get("HX-Request") == "true" {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.Write([]byte(`<div class="alert alert-error">No answers provided. Please fill in the questionnaire first.</div>`))
@@ -229,14 +265,26 @@ Create a detailed, personalized financial proposal following the report structur
 func cancelHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			slog.Warn("cancelHandler: method not allowed",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"pageName", v.PageName)
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db := proposalDB(r, "cancelHandler")
+		if db == nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		var proposal Proposal
 		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			slog.Error("cancelHandler: proposal not found or DB error",
+				"error", err,
+				"id", idStr,
+				"pageName", v.PageName)
 			http.NotFound(w, r)
 			return
 		}
@@ -254,14 +302,29 @@ func cancelHandler(v *views.View) http.Handler {
 func aiEditFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db := proposalDB(r, "aiEditFormHandler")
+		if db == nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		var proposal Proposal
 		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			slog.Error("aiEditFormHandler: proposal not found or DB error",
+				"error", err,
+				"id", idStr,
+				"pageName", v.PageName)
 			http.NotFound(w, r)
 			return
 		}
 
+		if _, ok := v.GetPage(); !ok {
+			slog.Error("aiEditFormHandler: page not registered",
+				"pageName", v.PageName,
+				"proposalID", proposal.ID)
+			http.NotFound(w, r)
+			return
+		}
 		ctx := context.WithValue(r.Context(), "proposal", getters.MapFromStruct(&proposal))
 		v.RenderPage(w, r.WithContext(ctx))
 	})
@@ -270,14 +333,26 @@ func aiEditFormHandler(v *views.View) http.Handler {
 func aiEditHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			slog.Warn("aiEditHandler: method not allowed",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"pageName", v.PageName)
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db := proposalDB(r, "aiEditHandler")
+		if db == nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		var proposal Proposal
 		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			slog.Error("aiEditHandler: proposal not found or DB error",
+				"error", err,
+				"id", idStr,
+				"pageName", v.PageName)
 			http.NotFound(w, r)
 			return
 		}
@@ -285,6 +360,11 @@ func aiEditHandler(v *views.View) http.Handler {
 		content := r.FormValue("generated_content")
 		instructions := r.FormValue("instructions")
 		if content == "" || instructions == "" {
+			slog.Warn("aiEditHandler: missing form fields",
+				"proposalID", proposal.ID,
+				"hasContent", content != "",
+				"hasInstructions", instructions != "",
+				"pageName", v.PageName)
 			http.Error(w, "Missing content or instructions", http.StatusBadRequest)
 			return
 		}
@@ -313,21 +393,36 @@ Rules:
 func exportPdfHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db := proposalDB(r, "exportPdfHandler")
+		if db == nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		var proposal Proposal
 		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			slog.Error("exportPdfHandler: proposal not found or DB error",
+				"error", err,
+				"id", idStr,
+				"pageName", v.PageName)
 			http.NotFound(w, r)
 			return
 		}
 
 		if proposal.GeneratedContent == "" {
+			slog.Warn("exportPdfHandler: export attempted with empty generated content",
+				"proposalID", proposal.ID,
+				"pageName", v.PageName)
 			http.Error(w, "No proposal content to export. Please generate the proposal first.", http.StatusUnprocessableEntity)
 			return
 		}
 
 		conv, err := md2pdf.NewConverter()
 		if err != nil {
+			slog.Error("exportPdfHandler: PDF converter unavailable",
+				"error", err,
+				"proposalID", proposal.ID,
+				"pageName", v.PageName)
 			http.Error(w, "PDF converter unavailable", http.StatusInternalServerError)
 			return
 		}
@@ -337,13 +432,24 @@ func exportPdfHandler(v *views.View) http.Handler {
 			Markdown: proposal.GeneratedContent,
 		})
 		if err != nil {
+			slog.Error("exportPdfHandler: PDF conversion failed",
+				"error", err,
+				"proposalID", proposal.ID,
+				"contentLen", len(proposal.GeneratedContent),
+				"pageName", v.PageName)
 			http.Error(w, "PDF generation failed", http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/pdf")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, proposal.Title))
-		w.Write(result.PDF)
+		if _, err := w.Write(result.PDF); err != nil {
+			slog.Error("exportPdfHandler: failed to write PDF response",
+				"error", err,
+				"proposalID", proposal.ID,
+				"pdfBytes", len(result.PDF),
+				"pageName", v.PageName)
+		}
 	})
 }
 
