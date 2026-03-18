@@ -30,9 +30,7 @@ func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 
 	return html.Div(html.Class("h-screen flex flex-col overflow-hidden"),
 		html.Div(html.Class("navbar bg-base-100 border-b border-base-300 px-4 flex justify-between items-center flex-none"),
-			html.Div(html.Class("flex-1"),
-				html.A(html.Href("/"), html.Class("text-xl font-bold"), gomponents.Text("Lago")),
-			),
+			html.Div(html.Class("flex-1")),
 			html.Div(html.Class("flex-none flex items-center gap-2"),
 				topbarItems,
 			),
