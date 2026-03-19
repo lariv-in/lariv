@@ -155,6 +155,9 @@ func registerFilterPages() {
 
 func teacherFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
+		Page: components.Page{
+			Key: "teachers.TeacherFormFieldsBody",
+		},
 		Children: []components.PageInterface{
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
@@ -324,6 +327,9 @@ func registerDetailPages() {
 				Getter: getters.GetterKey[Teacher]("teacher"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
+						Page: components.Page{
+							Key: "teachers.TeacherDetailContent",
+						},
 						Children: []components.PageInterface{
 							&components.FieldTitle{
 								Getter: getters.GetterKey[string]("$in.User.Name"),

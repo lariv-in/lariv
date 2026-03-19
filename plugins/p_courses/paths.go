@@ -35,9 +35,13 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("courses.SelectView"),
 	})
 
+	_ = lago.RegistryRoute.Register("courses.MultiSelectRoute", lago.Route{
+		Path:    AppUrl + "multi-select/",
+		Handler: lago.NewDynamicView("courses.MultiSelectView"),
+	})
+
 }
 
 func init() {
 	registerRoutes()
 }
-

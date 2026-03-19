@@ -17,6 +17,7 @@ import (
 // Context key constants for shared use across packages.
 const (
 	ContextKeyError = "$error"
+	ContextKeyGet   = "$get"
 	ContextKeyIn    = "$in"
 )
 
@@ -164,6 +165,92 @@ func GetterFormat(format string, g ...Getter[any]) Getter[string] {
 	}
 }
 
+func associationIDsFromValue(raw any) []uint {
+	if raw == nil {
+		return nil
+	}
+
+	switch typed := raw.(type) {
+	case []uint:
+		return typed
+	case []int:
+		ids := make([]uint, 0, len(typed))
+		for _, id := range typed {
+			if id > 0 {
+				ids = append(ids, uint(id))
+			}
+		}
+		return ids
+	}
+
+	value := reflect.ValueOf(raw)
+	for value.IsValid() && (value.Kind() == reflect.Pointer || value.Kind() == reflect.Interface) {
+		if value.IsNil() {
+			return nil
+		}
+		value = value.Elem()
+	}
+
+	if !value.IsValid() {
+		return nil
+	}
+
+	if value.Kind() == reflect.Struct {
+		idsField := value.FieldByName("IDs")
+		if idsField.IsValid() {
+			value = idsField
+		}
+	}
+
+	if value.Kind() != reflect.Slice {
+		return nil
+	}
+
+	ids := make([]uint, 0, value.Len())
+	for i := range value.Len() {
+		item := value.Index(i)
+		for item.IsValid() && (item.Kind() == reflect.Pointer || item.Kind() == reflect.Interface) {
+			if item.IsNil() {
+				item = reflect.Value{}
+				break
+			}
+			item = item.Elem()
+		}
+		if !item.IsValid() {
+			continue
+		}
+		switch item.Kind() {
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			ids = append(ids, uint(item.Uint()))
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			if item.Int() > 0 {
+				ids = append(ids, uint(item.Int()))
+			}
+		}
+	}
+	return ids
+}
+
+// GetterContextAssociationIDs reads an association-ID style value from a context map
+// such as $get and normalizes it into []uint.
+func GetterContextAssociationIDs(contextKey, field string) Getter[[]uint] {
+	return func(ctx context.Context) ([]uint, error) {
+		value := ctx.Value(contextKey)
+		if value == nil {
+			return nil, nil
+		}
+		getMap, ok := value.(map[string]any)
+		if !ok {
+			return nil, nil
+		}
+		raw, ok := getMap[field]
+		if !ok {
+			return nil, nil
+		}
+		return associationIDsFromValue(raw), nil
+	}
+}
+
 // Invokes the getter, if it is not nil and returns a non-nil value, and does not error out, returns that value. Otherwise returns the defaultValue.
 func IfOrGetter[T comparable](g Getter[T], ctx context.Context, defaultValue T) (T, error) {
 	var zero T
@@ -278,6 +365,156 @@ func GetterForeignKey[T any, K comparable, V any](foreignKeyGetter Getter[K], fi
 			return zeroV, fmt.Errorf("Value for key %s found, but the type of value in context was %v, expected %v", fieldPath, reflect.TypeOf(value), reflect.TypeOf(zeroV))
 		}
 		return v, nil
+	}
+}
+
+func schemaFieldDBName[T any](db *gorm.DB, fieldName string) (string, error) {
+	stmt := &gorm.Statement{DB: db}
+	if err := stmt.Parse(new(T)); err != nil {
+		return "", err
+	}
+	if stmt.Schema == nil {
+		return "", fmt.Errorf("schema not found for %T", new(T))
+	}
+	field := stmt.Schema.LookUpField(fieldName)
+	if field == nil {
+		return "", fmt.Errorf("field %q not found for %T", fieldName, new(T))
+	}
+	return field.DBName, nil
+}
+
+func idMapForSlice[T any](items []T) map[uint]T {
+	byID := make(map[uint]T, len(items))
+	for _, item := range items {
+		valueMap := MapFromStruct(item)
+		rawID, ok := valueMap["ID"]
+		if !ok {
+			continue
+		}
+		switch typed := rawID.(type) {
+		case uint:
+			byID[typed] = item
+		case uint8:
+			byID[uint(typed)] = item
+		case uint16:
+			byID[uint(typed)] = item
+		case uint32:
+			byID[uint(typed)] = item
+		case uint64:
+			byID[uint(typed)] = item
+		case int:
+			if typed > 0 {
+				byID[uint(typed)] = item
+			}
+		case int8:
+			if typed > 0 {
+				byID[uint(typed)] = item
+			}
+		case int16:
+			if typed > 0 {
+				byID[uint(typed)] = item
+			}
+		case int32:
+			if typed > 0 {
+				byID[uint(typed)] = item
+			}
+		case int64:
+			if typed > 0 {
+				byID[uint(typed)] = item
+			}
+		}
+	}
+	return byID
+}
+
+func orderedAssociationSlice[T any](items []T, ids []uint, order string) []T {
+	if order != "" {
+		return items
+	}
+	byID := idMapForSlice(items)
+	ordered := make([]T, 0, len(ids))
+	for _, id := range ids {
+		if item, ok := byID[id]; ok {
+			ordered = append(ordered, item)
+		}
+	}
+	return ordered
+}
+
+// GetterAssociationList fetches multiple records by ID and returns them as a slice.
+// When order is empty, the returned slice preserves the order of idsGetter.
+func GetterAssociationList[T any](idsGetter Getter[[]uint], order string, preloads ...string) Getter[[]T] {
+	return func(ctx context.Context) ([]T, error) {
+		ids, err := idsGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if len(ids) == 0 {
+			return nil, nil
+		}
+
+		db, ok := ctx.Value("$db").(*gorm.DB)
+		if !ok {
+			return nil, errors.New("Couldn't load db connection from context")
+		}
+
+		query := db.Model(new(T))
+		for _, preload := range preloads {
+			query = query.Preload(preload)
+		}
+		if order != "" {
+			query = query.Order(order)
+		}
+
+		var results []T
+		if err := query.Where("id IN ?", ids).Find(&results).Error; err != nil {
+			return nil, err
+		}
+		return orderedAssociationSlice(results, ids, order), nil
+	}
+}
+
+// GetterJoinAssociationList fetches related records through a join model.
+// ownerField and targetField are struct field names on the join model (for example,
+// "CourseID" and "TeacherID"). When order is empty, join-row order is preserved.
+func GetterJoinAssociationList[TJoin any, TTarget any](ownerIDGetter Getter[uint], ownerField, targetField, order string, preloads ...string) Getter[[]TTarget] {
+	return func(ctx context.Context) ([]TTarget, error) {
+		ownerID, err := ownerIDGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if ownerID == 0 {
+			return nil, nil
+		}
+
+		db, ok := ctx.Value("$db").(*gorm.DB)
+		if !ok {
+			return nil, errors.New("Couldn't load db connection from context")
+		}
+
+		ownerDBName, err := schemaFieldDBName[TJoin](db, ownerField)
+		if err != nil {
+			return nil, err
+		}
+		targetDBName, err := schemaFieldDBName[TJoin](db, targetField)
+		if err != nil {
+			return nil, err
+		}
+
+		joinQuery := db.Model(new(TJoin)).Where(ownerDBName+" = ?", ownerID)
+		if order == "" {
+			joinQuery = joinQuery.Order(ownerDBName + " ASC")
+		}
+
+		var targetIDs []uint
+		if err := joinQuery.Pluck(targetDBName, &targetIDs).Error; err != nil {
+			return nil, err
+		}
+		if len(targetIDs) == 0 {
+			return nil, nil
+		}
+
+		return GetterAssociationList[TTarget](GetterStatic(targetIDs), order, preloads...)(ctx)
 	}
 }
 

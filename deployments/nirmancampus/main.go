@@ -4,13 +4,14 @@ import (
 	"log/slog"
 
 	"github.com/lariv-in/lago"
+	_ "github.com/lariv-in/p_courses"
+	_ "github.com/lariv-in/p_courses_teachers"
 	_ "github.com/lariv-in/p_dashboard"
 	_ "github.com/lariv-in/p_filesystem"
 	_ "github.com/lariv-in/p_otp"
 	_ "github.com/lariv-in/p_pwa"
 	_ "github.com/lariv-in/p_students"
 	_ "github.com/lariv-in/p_teachers"
-	_ "github.com/lariv-in/p_courses"
 	_ "github.com/lariv-in/p_users"
 )
 

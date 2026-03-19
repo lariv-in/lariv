@@ -14,12 +14,23 @@
    - Use `getters.GetterDeref(getters.GetterKey[*T]("$in.Field"))` for nullable pointer fields instead of writing custom wrapper functions.
    - Use `getters.GetterFormat("format", getters.GetterAny(getter1), ...)` to combine multiple getters into a formatted string instead of custom inline functions.
    - For route params like `id`, prefer `getters.GetterAny(getters.GetterKey[uint]("$id"))` instead of writing custom `uint -> string` wrapper getters.
+   - For many-to-many filter state stored in `$get`, prefer `getters.GetterContextAssociationIDs(getters.ContextKeyGet, "Field")` instead of manually unpacking `AssociationIDs`.
 
 - When defining getter arguments, use the most restrictive type possible. `any` is almost always a bad idea.
 
 - For foreign key selectors, the `InputForeignKey.Name`, the selector route/page it opens, and the `GetterSelect(...)` event name all need to match. If a `ParentID` input opens a selector table built for `DestinationID`, the selection event will be dispatched with the wrong name and the input will not update or close its modal.
 
+- The same name-matching rule applies to `InputManyToMany` and `GetterMultiSelect(...)`. Many-to-many selectors also need to preserve `target_input` across the initial modal open and any filter/browse requests inside the modal. If `target_input` is dropped, the selector will dispatch the wrong field name and the chips will not update.
+
 - For `InputForeignKey.Getter`, use `getters.GetterAssociation[T](getters.GetterKey[uint]("$in.FieldID"))`. It infers the table name from the type `T` via GORM's `db.Model()`.
+
+- For `InputManyToMany.Getter`, prefer preloaded associations plus `getters.GetterKey[[]T]("$in.Field")` instead of custom lookup getters. `InputManyToMany` re-renders from submitted `AssociationIDs`, but update/detail views should still preload the association so initial render and detail pages have the full related objects available.
+
+- If the relation is intentionally not declared on the base GORM model and is instead represented by a separate join model, prefer shared getters such as `getters.GetterJoinAssociationList[...]` / `getters.GetterAssociationList[...]` plus shared query patchers instead of ad-hoc plugin-local lookup code.
+
+- The filesystem selector routes have two different behaviors:
+   - `filesystem.SelectRoute` and `filesystem.MoveSelectRoute` are directory pickers; directories are selectable.
+   - `filesystem.MultiSelectRoute` is a file picker for asset-style many-to-many fields; files are selectable, but clicking a directory should browse into it instead of selecting it.
 
 # Registry
 
@@ -62,6 +73,9 @@ Currently, the following view factories exist in `views/crud.go`:
 - For common query patching behavior, prefer shared helpers in `views/query_patcher.go` over custom per-plugin functions:
    - Use `views.QueryPatcherPreload("AssociationName")` for preloads.
    - Use `views.QueryPatcherOrderBy("field ASC|DESC")` for ordering.
+   - Use `views.QueryPatcherJoinFilter[...]` when filtering a base list view through a separate join model.
+
+- Generic CRUD many-to-many support now exists in `views/crud.go`. `InputManyToMany.Parse` returns a typed `AssociationIDs` payload, and `CreateView` / `UpdateView` / `SingletonView` persist it through GORM associations after the base row save. Do not try to make many-to-many form inputs look like ordinary scalar columns.
 
 # Error handling
 
@@ -76,3 +90,7 @@ Use `log/slog` for recoverable errors and `log.Panicf()` for non-recoverable err
 # Component Patching
 
 Use `components.InsertChildBefore`, `components.InsertChildAfter`, and `components.ReplaceChild`.
+
+- If a page or form is intended to be extended by another plugin, add stable `Page.Key` values in the base plugin first, then patch against those keys. Do not rely on brittle structural matching when a reusable extension point can be made explicit.
+
+- If a selector route/page is generally useful beyond one addon, add it to the base plugin instead of creating a one-off copy in the addon plugin.

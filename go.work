@@ -9,6 +9,7 @@ use (
 	./getters
 	./lago
 	./plugins/p_courses
+	./plugins/p_courses_teachers
 	./plugins/p_dashboard
 	./plugins/p_filesystem
 	./plugins/p_otp

@@ -48,4 +48,9 @@ func init() {
 			lago.GetPageView("courses.CourseSelectionTable")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
+	lago.RegistryView.Register("courses.MultiSelectView",
+		views.ListView[Course]("courses")(
+			lago.GetPageView("courses.CourseMultiSelectionTable")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+
 }
