@@ -151,6 +151,9 @@ func registerFilterPages() {
 
 func studentFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
+		Page: components.Page{
+			Key: "students.StudentFormFieldsBody",
+		},
 		Children: []components.PageInterface{
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
@@ -265,6 +268,7 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Student]{
+				Page:            components.Page{Key: "students.StudentTableBody"},
 				UID:             "student-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[Student]]("students"),
@@ -323,6 +327,7 @@ func registerDetailPages() {
 				Getter: getters.GetterKey[Student]("student"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
+						Page: components.Page{Key: "students.StudentDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{
 								Getter: getters.GetterKey[string]("$in.User.Name"),
@@ -385,6 +390,7 @@ func registerSelectionPages() {
 		Title: "Select Student",
 		Children: []components.PageInterface{
 			&components.DataTable[Student]{
+				Page:            components.Page{Key: "students.StudentSelectionTableBody"},
 				UID:             "student-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Student]]("students"),
 				OnClick:         getters.GetterSelect("StudentID", getters.GetterKey[uint]("$row.ID"), getters.GetterForeignKey[Student, uint, string](getters.GetterKey[uint]("$row.ID"), "StudentNo")),
