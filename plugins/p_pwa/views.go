@@ -2,8 +2,10 @@ package p_pwa
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/lago"
@@ -123,17 +125,35 @@ func offlineHandler(_ *views.View) http.Handler {
 func staticPwaHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if Config.StaticDir == "" {
+			slog.Warn("p_pwa: staticDir not configured; returning 404", "path", r.URL.Path)
 			http.NotFound(w, r)
 			return
 		}
 
-		st, err := os.Stat(Config.StaticDir)
-		if err != nil || !st.IsDir() {
+		dir := Config.StaticDir
+		if !filepath.IsAbs(dir) {
+			exe, err := os.Executable()
+			if err != nil {
+				slog.Error("p_pwa: failed resolving executable path for staticDir", "err", err, "staticDir", dir, "path", r.URL.Path)
+				http.NotFound(w, r)
+				return
+			}
+			dir = filepath.Join(filepath.Dir(exe), dir)
+		}
+
+		st, err := os.Stat(dir)
+		if err != nil {
+			slog.Error("p_pwa: staticDir does not exist or is not accessible", "err", err, "resolvedDir", dir, "path", r.URL.Path)
+			http.NotFound(w, r)
+			return
+		}
+		if !st.IsDir() {
+			slog.Error("p_pwa: staticDir is not a directory", "resolvedDir", dir, "path", r.URL.Path)
 			http.NotFound(w, r)
 			return
 		}
 
-		fs := http.FileServer(http.Dir(Config.StaticDir))
+		fs := http.FileServer(http.Dir(dir))
 		http.StripPrefix("/static/pwa/", fs).ServeHTTP(w, r)
 	})
 }

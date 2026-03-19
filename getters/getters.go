@@ -325,3 +325,14 @@ func GetterSelect[T, D comparable](name string, valueGetter Getter[T], displayGe
 		return fmt.Sprintf("$dispatch('fk-select',{name:'%s',value:'%v',display:'%v'})", name, value, display), nil
 	}
 }
+
+func GetterDeref[T any](g Getter[*T]) Getter[T] {
+	var zero T
+	return func(ctx context.Context) (T, error) {
+		value, err := g(ctx)
+		if err != nil {
+			return zero, err
+		}
+		return *value, nil
+	}
+}

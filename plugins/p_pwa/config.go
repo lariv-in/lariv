@@ -47,6 +47,7 @@ type PwaConfig struct {
 	OfflineViewName string `toml:"offlineViewName"`
 
 	// Optional filesystem directory to serve under /static/pwa/.
+	// If relative, it's resolved relative to the running binary's directory.
 	// If empty, the route responds with 404.
 	StaticDir string `toml:"staticDir"`
 
@@ -60,16 +61,15 @@ type PwaConfig struct {
 	AppOrientation     string `toml:"PWA_APP_ORIENTATION"`
 	AppStartURL        string `toml:"PWA_APP_START_URL"`
 
-	// Non-standard manifest extension; commonly used for iOS meta tags rather than webmanifest.
 	AppStatusBarColor string `toml:"PWA_APP_STATUS_BAR_COLOR"`
 
-	AppIcons        []PwaIconConfig       `toml:"PWA_APP_ICONS"`
-	AppIconsApple   []PwaAppleIconConfig  `toml:"PWA_APP_ICONS_APPLE"`
+	AppIcons        []PwaIconConfig         `toml:"PWA_APP_ICONS"`
+	AppIconsApple   []PwaAppleIconConfig    `toml:"PWA_APP_ICONS_APPLE"`
 	AppSplashScreen []PwaSplashScreenConfig `toml:"PWA_APP_SPLASH_SCREEN"`
-	AppDir          string               `toml:"PWA_APP_DIR"`
-	AppLang         string               `toml:"PWA_APP_LANG"`
-	AppShortcuts    []PwaShortcutConfig  `toml:"PWA_APP_SHORTCUTS"`
-	AppScreenshots  []PwaScreenshotConfig `toml:"PWA_APP_SCREENSHOTS"`
+	AppDir          string                  `toml:"PWA_APP_DIR"`
+	AppLang         string                  `toml:"PWA_APP_LANG"`
+	AppShortcuts    []PwaShortcutConfig     `toml:"PWA_APP_SHORTCUTS"`
+	AppScreenshots  []PwaScreenshotConfig   `toml:"PWA_APP_SCREENSHOTS"`
 }
 
 var Config = &PwaConfig{}
@@ -79,4 +79,3 @@ func (c *PwaConfig) PostConfig() {}
 func init() {
 	lago.RegistryConfig.Register("p_pwa", Config)
 }
-

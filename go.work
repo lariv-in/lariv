@@ -5,6 +5,7 @@ toolchain go1.26.1
 use (
 	./components
 	./deployments/totschool_lago
+	./deployments/nirmancampus
 	./getters
 	./lago
 	./plugins/p_courses
@@ -12,6 +13,7 @@ use (
 	./plugins/p_filesystem
 	./plugins/p_otp
 	./plugins/p_pwa
+	./plugins/p_students
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally

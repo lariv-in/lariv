@@ -1,9 +1,13 @@
 package lago
 
 import (
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
+	"log/slog"
+	"os"
+	"path/filepath"
 )
 
 type LagoConfig struct {
@@ -26,8 +30,23 @@ const (
 
 func LoadConfigFromFile(path string) (LagoConfig, error) {
 	var config LagoConfig
-	md, err := toml.DecodeFile(path, &config)
+	if path == "" {
+		return config, fmt.Errorf("config path is empty")
+	}
+
+	resolvedPath := path
+	if !filepath.IsAbs(resolvedPath) {
+		exe, err := os.Executable()
+		if err != nil {
+			slog.Error("failed resolving executable path for config file", "err", err, "configPath", path)
+			return config, err
+		}
+		resolvedPath = filepath.Join(filepath.Dir(exe), resolvedPath)
+	}
+
+	md, err := toml.DecodeFile(resolvedPath, &config)
 	if err != nil {
+		slog.Error("failed decoding config file", "err", err, "configPath", path, "resolvedPath", resolvedPath)
 		return config, err
 	}
 
@@ -35,6 +54,7 @@ func LoadConfigFromFile(path string) (LagoConfig, error) {
 		if prim, ok := config.Plugins[key]; ok {
 			err = md.PrimitiveDecode(prim, cfgPointer)
 			if err != nil {
+				slog.Error("failed decoding plugin config", "err", err, "plugin", key)
 				return config, err
 			}
 			cfgPointer.PostConfig()

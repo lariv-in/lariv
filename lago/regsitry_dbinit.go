@@ -31,6 +31,12 @@ func InitDB(config LagoConfig) (*gorm.DB, error) {
 		return nil, err
 	}
 
+	// Configure hard delete - skip soft delete and actually remove rows
+	db.Callback().Delete().Before("gorm:delete").Register("lago:hard_delete", func(db *gorm.DB) {
+		// Set Unscoped to true to force hard delete instead of soft delete
+		db.Statement.Unscoped = true
+	})
+
 	for _, f := range dbInitRegistry {
 		db = f(db)
 	}
