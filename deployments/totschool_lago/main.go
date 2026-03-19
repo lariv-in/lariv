@@ -8,7 +8,6 @@ import (
 	_ "github.com/lariv-in/p_filesystem"
 	_ "github.com/lariv-in/p_otp"
 	_ "github.com/lariv-in/p_pwa"
-	_ "github.com/lariv-in/p_students"
 	_ "github.com/lariv-in/p_totschool_appointments"
 	_ "github.com/lariv-in/p_totschool_proposals"
 	_ "github.com/lariv-in/p_totschool_tally"

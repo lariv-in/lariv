@@ -216,7 +216,7 @@ func GetterIf[T any, V comparable](g Getter[V], ctx context.Context, builder fun
 }
 
 // GetterAssociation fetches a single record based on a foreign key dynamically at render time.
-func GetterAssociation[T any, V any](table string, foreignKeyGetter Getter[V]) Getter[T] {
+func GetterAssociation[T any, V any](foreignKeyGetter Getter[V]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		fkValue, err := foreignKeyGetter(ctx)
@@ -230,7 +230,7 @@ func GetterAssociation[T any, V any](table string, foreignKeyGetter Getter[V]) G
 		}
 
 		var result T
-		if err := db.Table(table).Where("id = ?", fkValue).Take(&result).Error; err != nil {
+		if err := db.Model(new(T)).Where("id = ?", fkValue).Take(&result).Error; err != nil {
 			return zero, err
 		}
 		return result, nil

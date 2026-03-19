@@ -165,7 +165,7 @@ func userFormFields() components.ContainerColumn {
 								Display:     getters.GetterKey[string]("$in.Name"),
 								Placeholder: "Select a role...",
 								Required:    true,
-								Getter:      getters.GetterAssociation[Role]("roles", getters.GetterKey[uint]("$in.RoleID")),
+								Getter:      getters.GetterAssociation[Role](getters.GetterKey[uint]("$in.RoleID")),
 							},
 						},
 					},

@@ -10,6 +10,8 @@
 
 - Whenever anything requires a value that can depend on the request, it should use a Getter from @getters/getter.go.
 
+- Before writing a custom getter, always check if an existing getter can't cover the use case.
+
 - When defining getter arguments, the type should be the most restrictive type possible, 'any' type is almost always a bad idea.
 
 - For foreign key selectors, the `InputForeignKey.Name`, the selector route/page it opens, and the `GetterSelect(...)` event name all need to match. If a `ParentID` input opens a selector table built for `DestinationID`, the selection event will be dispatched with the wrong name and the input will not update or close its modal.
@@ -57,7 +59,6 @@ Whenever a recoverable error occurs, then it should be logged, no matter how unl
 All edge cases need to be logged, no edge case should ever be ignored.
 
 Use "log/slog" for recoverable errors and log.Panicf() for non recoverable errors
-
 
 # Component Patching
 

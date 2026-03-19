@@ -161,7 +161,7 @@ func studentFormFields() components.ContainerColumn {
 								Label:       "User Account",
 								Name:        "UserID",
 								Required:    true,
-								Getter:      getters.GetterAssociation[p_users.User]("User", getters.GetterKey[uint]("$in.UserID")),
+								Getter:      getters.GetterAssociation[p_users.User](getters.GetterKey[uint]("$in.UserID")),
 								Url:         lago.GetterRoutePath("users.SelectRoute", nil),
 								Display:     getters.GetterKey[string]("$in.Name"),
 								Placeholder: "Select a user...",

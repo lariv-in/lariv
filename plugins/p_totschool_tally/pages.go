@@ -151,7 +151,7 @@ func init() {
 			Display:     getters.GetterKey[string]("$in.Name"),
 			Placeholder: "Select a user...",
 			Required:    true,
-			Getter:      getters.GetterAssociation[p_users.User]("users", getters.GetterKey[uint]("$in.UserID")),
+			Getter:      getters.GetterAssociation[p_users.User](getters.GetterKey[uint]("$in.UserID")),
 		},
 		components.InputDate{
 			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},
