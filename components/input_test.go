@@ -3,12 +3,17 @@ package components
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/lariv-in/getters"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"maragu.dev/gomponents"
 )
 
@@ -18,9 +23,15 @@ func TestInputImplementations(t *testing.T) {
 	var _ InputInterface = InputEmail{}
 	var _ InputInterface = InputFile{}
 	var _ MultipartInputInterface = InputFile{}
+	var _ InputInterface = InputManyToMany[testAssociationModel]{}
 	var _ InputInterface = InputPassword{}
 	var _ InputInterface = InputPhone{}
 	var _ InputInterface = InputText{}
+}
+
+type testAssociationModel struct {
+	ID   uint
+	Name string
 }
 
 func TestInputFileParseSingle(t *testing.T) {
@@ -142,6 +153,117 @@ func TestFormComponentBuildAddsMultipartEnctype(t *testing.T) {
 	if !strings.Contains(html, `enctype="multipart/form-data"`) {
 		t.Fatalf("expected multipart enctype in rendered form, got %s", html)
 	}
+}
+
+func TestInputManyToManyParse(t *testing.T) {
+	db := openTestDB(t)
+	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {
+		t.Fatalf("AutoMigrate failed: %v", err)
+	}
+	if err := db.Create([]testAssociationModel{
+		{ID: 1, Name: "Alpha"},
+		{ID: 2, Name: "Beta"},
+	}).Error; err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	input := InputManyToMany[testAssociationModel]{Name: "Teachers"}
+	value, err := input.Parse([]string{"1", "2", "2"}, context.WithValue(context.Background(), "$db", db))
+	if err != nil {
+		t.Fatalf("Parse returned error: %v", err)
+	}
+
+	got, ok := value.(AssociationIDs)
+	if !ok {
+		t.Fatalf("expected AssociationIDs, got %T", value)
+	}
+	if got.Field != "Teachers" {
+		t.Fatalf("expected field Teachers, got %q", got.Field)
+	}
+	if len(got.IDs) != 2 || got.IDs[0] != 1 || got.IDs[1] != 2 {
+		t.Fatalf("unexpected ids: %#v", got.IDs)
+	}
+}
+
+func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
+	db := openTestDB(t)
+	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {
+		t.Fatalf("AutoMigrate failed: %v", err)
+	}
+	if err := db.Create([]testAssociationModel{
+		{ID: 1, Name: "Alpha"},
+		{ID: 2, Name: "Beta"},
+	}).Error; err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	input := InputManyToMany[testAssociationModel]{
+		Label:   "Teachers",
+		Name:    "Teachers",
+		Display: getters.GetterKey[string]("$in.Name"),
+	}
+	ctx := context.WithValue(context.Background(), "$db", db)
+	ctx = context.WithValue(ctx, getters.ContextKeyIn, map[string]any{
+		"Teachers": AssociationIDs{Field: "Teachers", IDs: []uint{2, 1}},
+	})
+
+	html := renderNode(t, input.Build(ctx))
+	if !strings.Contains(html, "Alpha") || !strings.Contains(html, "Beta") {
+		t.Fatalf("expected selected names in rendered html, got %s", html)
+	}
+	if !strings.Contains(html, `@fk-multi-select.window`) {
+		t.Fatalf("expected multi-select event handler, got %s", html)
+	}
+}
+
+func TestFormComponentParseFormUsesRepeatedValuesForManyToMany(t *testing.T) {
+	db := openTestDB(t)
+	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {
+		t.Fatalf("AutoMigrate failed: %v", err)
+	}
+	if err := db.Create([]testAssociationModel{
+		{ID: 1, Name: "Alpha"},
+		{ID: 2, Name: "Beta"},
+	}).Error; err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	form := FormComponent[struct{}]{
+		ChildrenInput: []PageInterface{
+			InputManyToMany[testAssociationModel]{Name: "Teachers"},
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/?ignored=1", strings.NewReader(url.Values{
+		"Teachers": {"1", "2"},
+	}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req = req.WithContext(context.WithValue(req.Context(), "$db", db))
+
+	values, errs, err := form.ParseForm(req)
+	if err != nil {
+		t.Fatalf("ParseForm returned error: %v", err)
+	}
+	if errs["Teachers"] != nil {
+		t.Fatalf("unexpected field error: %v", errs["Teachers"])
+	}
+	got, ok := values["Teachers"].(AssociationIDs)
+	if !ok {
+		t.Fatalf("expected AssociationIDs, got %#v", values["Teachers"])
+	}
+	if len(got.IDs) != 2 || got.IDs[0] != 1 || got.IDs[1] != 2 {
+		t.Fatalf("unexpected ids: %#v", got.IDs)
+	}
+}
+
+func openTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
+	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("file:%s?mode=memory&cache=shared", t.Name())), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("gorm.Open failed: %v", err)
+	}
+	return db
 }
 
 func renderNode(t *testing.T, node gomponents.Node) string {

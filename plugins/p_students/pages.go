@@ -8,6 +8,7 @@ import (
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
+	"github.com/lariv-in/p_filesystem"
 	"github.com/lariv-in/p_users"
 )
 
@@ -191,6 +192,19 @@ func studentFormFields() components.ContainerColumn {
 					},
 				},
 			},
+			&components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Assets"),
+				Children: []components.PageInterface{
+					&components.InputManyToMany[p_filesystem.VNode]{
+						Label:       "Assets",
+						Name:        "Assets",
+						Getter:      getters.GetterKey[[]p_filesystem.VNode]("$in.Assets"),
+						Url:         lago.GetterRoutePath("filesystem.MultiSelectRoute", nil),
+						Display:     getters.GetterKey[string]("$in.Name"),
+						Placeholder: "Select assets...",
+					},
+				},
+			},
 		},
 	}
 }
@@ -322,6 +336,23 @@ func registerDetailPages() {
 								Children: []components.PageInterface{
 									&components.FieldDate{
 										Getter: dobDetailGetter(),
+									},
+								},
+							},
+							&components.LabelInline{
+								Title: "Assets",
+								Children: []components.PageInterface{
+									components.FieldList{
+										Getter: getters.GetterAny(getters.GetterKey[[]p_filesystem.VNode]("$in.Assets")),
+										Children: []components.PageInterface{
+											components.ButtonLink{
+												GetterLabel: getters.GetterKey[string]("$row.Name"),
+												Link: lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+													"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+												}),
+												Classes: "btn-link btn-sm justify-start px-0",
+											},
+										},
 									},
 								},
 							},

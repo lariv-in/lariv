@@ -177,6 +177,138 @@ func PopulateFromMap[T any](v *T, values map[string]any) error {
 	return decoder.Decode(values)
 }
 
+func splitAssociationValues(values map[string]any) (map[string]any, map[string]components.AssociationIDs) {
+	regularValues := make(map[string]any, len(values))
+	associationValues := map[string]components.AssociationIDs{}
+	for key, value := range values {
+		switch typed := value.(type) {
+		case components.AssociationIDs:
+			if typed.Field == "" {
+				typed.Field = key
+			}
+			associationValues[key] = typed
+		case *components.AssociationIDs:
+			if typed == nil {
+				continue
+			}
+			if typed.Field == "" {
+				typed.Field = key
+			}
+			associationValues[key] = *typed
+		default:
+			regularValues[key] = value
+		}
+	}
+	return regularValues, associationValues
+}
+
+func applyAssociationReplacements(db *gorm.DB, record any, associations map[string]components.AssociationIDs) error {
+	if len(associations) == 0 {
+		return nil
+	}
+
+	stmt := &gorm.Statement{DB: db}
+	if err := stmt.Parse(record); err != nil {
+		return err
+	}
+
+	for _, associationValue := range associations {
+		relationship, ok := stmt.Schema.Relationships.Relations[associationValue.Field]
+		if !ok {
+			return fmt.Errorf("unknown association field %q", associationValue.Field)
+		}
+		if relationship.Type != schema.Many2Many {
+			return fmt.Errorf("field %q is not a many-to-many association", associationValue.Field)
+		}
+
+		association := db.Model(record).Association(associationValue.Field)
+		if association.Error != nil {
+			return association.Error
+		}
+
+		if len(associationValue.IDs) == 0 {
+			if err := association.Clear(); err != nil {
+				return err
+			}
+			continue
+		}
+
+		replaceValue, err := buildAssociationReplaceValue(relationship, associationValue.IDs)
+		if err != nil {
+			return err
+		}
+		if err := association.Replace(replaceValue); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func buildAssociationReplaceValue(relationship *schema.Relationship, ids []uint) (any, error) {
+	sliceType := relationship.Field.FieldType
+	if sliceType.Kind() != reflect.Slice {
+		return nil, fmt.Errorf("field %q is not a slice association", relationship.Field.Name)
+	}
+
+	elemType := sliceType.Elem()
+	elemIsPointer := elemType.Kind() == reflect.Pointer
+	baseType := elemType
+	if elemIsPointer {
+		baseType = elemType.Elem()
+	}
+
+	sliceValue := reflect.MakeSlice(sliceType, 0, len(ids))
+	for _, id := range ids {
+		itemPtr := reflect.New(baseType)
+		idField := itemPtr.Elem().FieldByName("ID")
+		if !idField.IsValid() || !idField.CanSet() {
+			return nil, fmt.Errorf("association %q element type %s does not have a settable ID field", relationship.Field.Name, baseType)
+		}
+		switch idField.Kind() {
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			idField.SetUint(uint64(id))
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			idField.SetInt(int64(id))
+		default:
+			return nil, fmt.Errorf("association %q element ID field has unsupported kind %s", relationship.Field.Name, idField.Kind())
+		}
+
+		if elemIsPointer {
+			sliceValue = reflect.Append(sliceValue, itemPtr)
+		} else {
+			sliceValue = reflect.Append(sliceValue, itemPtr.Elem())
+		}
+	}
+
+	return sliceValue.Interface(), nil
+}
+
+func modelPrimaryKeyValue(record any) (any, error) {
+	value := reflect.ValueOf(record)
+	if value.Kind() == reflect.Pointer {
+		if value.IsNil() {
+			return nil, fmt.Errorf("record is nil")
+		}
+		value = value.Elem()
+	}
+	if !value.IsValid() {
+		return nil, fmt.Errorf("record is invalid")
+	}
+	idField := value.FieldByName("ID")
+	if !idField.IsValid() {
+		return nil, fmt.Errorf("record %T does not have an ID field", record)
+	}
+	switch idField.Kind() {
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return idField.Uint(), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return idField.Int(), nil
+	default:
+		return nil, fmt.Errorf("record %T has unsupported ID field kind %s", record, idField.Kind())
+	}
+}
+
 // --- Create Handler ---
 
 // CreateView parses the form, validates, creates a record of type T, and redirects to successUrl.
@@ -197,14 +329,18 @@ func CreateView[T any](successURL getters.Getter[string]) func(*View) *View {
 				}
 
 				db := r.Context().Value("$db").(*gorm.DB)
+				regularValues, associationValues := splitAssociationValues(values)
 
 				record := new(T)
-				if err = PopulateFromMap(record, values); err != nil {
-					fieldErrors["_form"] = fmt.Errorf("%v", err)
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
-					return
-				}
-				err = db.Create(record).Error
+				err = db.Transaction(func(tx *gorm.DB) error {
+					if err := PopulateFromMap(record, regularValues); err != nil {
+						return err
+					}
+					if err := tx.Create(record).Error; err != nil {
+						return err
+					}
+					return applyAssociationReplacements(tx, record, associationValues)
+				})
 				if err != nil {
 					fieldErrors["_form"] = fmt.Errorf("%v", err)
 					innerView.RenderWithErrors(w, r, fieldErrors, values)
@@ -246,13 +382,31 @@ func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
 					return
 				}
 
-				query := r.Context().Value("$db").(*gorm.DB).Model(new(T)).Where("id = ?", id)
-				for _, queryPatcher := range innerView.QueryPatchers {
-					query = queryPatcher.Value(innerView, r, query)
-				}
+				db := r.Context().Value("$db").(*gorm.DB)
+				regularValues, associationValues := splitAssociationValues(values)
+				err = db.Transaction(func(tx *gorm.DB) error {
+					query := tx.Model(new(T)).Where("id = ?", id)
+					for _, queryPatcher := range innerView.QueryPatchers {
+						query = queryPatcher.Value(innerView, r, query)
+					}
 
-				// Update using the map directly, ID already known from path
-				err = query.Updates(values).Error
+					record := new(T)
+					if err := query.First(record).Error; err != nil {
+						return err
+					}
+
+					if len(regularValues) > 0 {
+						updateQuery := tx.Model(new(T)).Where("id = ?", id)
+						for _, queryPatcher := range innerView.QueryPatchers {
+							updateQuery = queryPatcher.Value(innerView, r, updateQuery)
+						}
+						if err := updateQuery.Updates(regularValues).Error; err != nil {
+							return err
+						}
+					}
+
+					return applyAssociationReplacements(tx, record, associationValues)
+				})
 				if err != nil {
 					fieldErrors["_form"] = err
 					innerView.RenderWithErrors(w, r, fieldErrors, values)
@@ -296,10 +450,24 @@ func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
 				}
 
 				db := r.Context().Value("$db").(*gorm.DB)
-				instance := new(T)
-				db.FirstOrCreate(instance)
+				regularValues, associationValues := splitAssociationValues(values)
 
-				err = db.Model(instance).Updates(values).Error
+				instance := new(T)
+				err = db.Transaction(func(tx *gorm.DB) error {
+					if err := tx.FirstOrCreate(instance).Error; err != nil {
+						return err
+					}
+					if len(regularValues) > 0 {
+						id, err := modelPrimaryKeyValue(instance)
+						if err != nil {
+							return err
+						}
+						if err := tx.Model(new(T)).Where("id = ?", id).Updates(regularValues).Error; err != nil {
+							return err
+						}
+					}
+					return applyAssociationReplacements(tx, instance, associationValues)
+				})
 				if err != nil {
 					fieldErrors["_form"] = fmt.Errorf("%v", err)
 					innerView.RenderWithErrors(w, r, fieldErrors, values)

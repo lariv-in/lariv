@@ -20,7 +20,8 @@ func init() {
 		views.DetailView[Student]("student")(
 			lago.GetPageView("students.StudentDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("students.preload", views.QueryPatcherPreload("User")))
+			WithQueryPatcher("students.preload_user", views.QueryPatcherPreload("User")).
+			WithQueryPatcher("students.preload_assets", views.QueryPatcherPreload("Assets")))
 
 	// Create view - handles creating a new student
 	lago.RegistryView.Register("students.CreateView",
@@ -34,7 +35,8 @@ func init() {
 			views.UpdateView[Student](lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("students.StudentUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("students.preload", views.QueryPatcherPreload("User")))
+			WithQueryPatcher("students.preload_user", views.QueryPatcherPreload("User")).
+			WithQueryPatcher("students.preload_assets", views.QueryPatcherPreload("Assets")))
 
 	// Delete view - handles deleting a student
 	lago.RegistryView.Register("students.DeleteView",
@@ -42,7 +44,8 @@ func init() {
 			views.DeleteView[Student](lago.GetterRoutePath("students.DefaultRoute", nil))(
 				lago.GetPageView("students.StudentDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("students.preload", views.QueryPatcherPreload("User")))
+			WithQueryPatcher("students.preload_user", views.QueryPatcherPreload("User")).
+			WithQueryPatcher("students.preload_assets", views.QueryPatcherPreload("Assets")))
 
 	// Select view - modal table for selecting a student (for foreign key inputs)
 	lago.RegistryView.Register("students.SelectView",

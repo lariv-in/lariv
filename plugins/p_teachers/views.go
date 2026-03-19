@@ -52,4 +52,12 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("teachers.preload", views.QueryPatcherPreload("User")).
 			WithQueryPatcher("teachers.order", views.QueryPatcherOrderBy("code ASC")))
+
+	// Multi-select view - modal table for selecting multiple teachers
+	lago.RegistryView.Register("teachers.MultiSelectView",
+		views.ListView[Teacher]("teachers")(
+			lago.GetPageView("teachers.TeacherMultiSelectionTable")).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithQueryPatcher("teachers.preload", views.QueryPatcherPreload("User")).
+			WithQueryPatcher("teachers.order", views.QueryPatcherOrderBy("code ASC")))
 }

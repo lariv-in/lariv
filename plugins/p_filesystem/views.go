@@ -479,12 +479,12 @@ func init() {
 
 	lago.RegistryView.Register("filesystem.MultiSelectView",
 		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.MultiSelectionTable")).
-			WithQueryPatcher("filesystem.multi.root", rootDirectoryQuery).
+			WithQueryPatcher("filesystem.multi.root", rootVNodeQuery).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("filesystem.MultiSelectChildView",
 		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.MultiSelectionTable")).
-			WithQueryPatcher("filesystem.multi.child", browseDirectoryQuery).
+			WithQueryPatcher("filesystem.multi.child", browseVNodeQuery).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("filesystem.parent", loadVNodeMiddleware("parent_id")))
 

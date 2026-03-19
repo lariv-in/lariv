@@ -41,6 +41,12 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("teachers.SelectView"),
 	})
 
+	// Multi-select route - for many-to-many selection modal
+	_ = lago.RegistryRoute.Register("teachers.MultiSelectRoute", lago.Route{
+		Path:    AppUrl + "multi-select/",
+		Handler: lago.NewDynamicView("teachers.MultiSelectView"),
+	})
+
 }
 
 func init() {

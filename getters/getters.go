@@ -326,6 +326,25 @@ func GetterSelect[T, D comparable](name string, valueGetter Getter[T], displayGe
 	}
 }
 
+// GetterMultiSelect returns an Alpine @click expression that dispatches an
+// 'fk-multi-select' event for multi-selection inputs.
+func GetterMultiSelect[T, D comparable](name string, valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
+	var zeroT T
+	var zeroD D
+	return func(ctx context.Context) (string, error) {
+		value, err := IfOrGetter(valueGetter, ctx, zeroT)
+		if err != nil {
+			return "", err
+		}
+		display, err := IfOrGetter(displayGetter, ctx, zeroD)
+		if err != nil {
+			return "", err
+		}
+
+		return fmt.Sprintf("$dispatch('fk-multi-select',{name:'%s',value:'%v',display:'%v'})", name, value, display), nil
+	}
+}
+
 func GetterDeref[T any](g Getter[*T]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {

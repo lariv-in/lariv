@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -177,6 +178,83 @@ func listOrBrowseRoute(listRoute, browseRoute string) getters.Getter[string] {
 		return lago.GetterRoutePath(browseRoute, map[string]getters.Getter[any]{
 			"parent_id": getters.GetterAny(getters.GetterStatic(node.ID)),
 		})(ctx)
+	}
+}
+
+func withSelectionTarget(routeGetter getters.Getter[string]) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		route, err := routeGetter(ctx)
+		if err != nil || route == "" {
+			return route, err
+		}
+		r, _ := ctx.Value("$request").(*http.Request)
+		if r == nil {
+			return route, nil
+		}
+		targetInput := r.URL.Query().Get("target_input")
+		if targetInput == "" {
+			return route, nil
+		}
+		parsedURL, err := url.Parse(route)
+		if err != nil {
+			return route, nil
+		}
+		query := parsedURL.Query()
+		query.Set("target_input", targetInput)
+		parsedURL.RawQuery = query.Encode()
+		return parsedURL.String(), nil
+	}
+}
+
+func selectionTargetInput(defaultName string) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		r, _ := ctx.Value("$request").(*http.Request)
+		if r == nil {
+			return defaultName, nil
+		}
+		if targetInput := r.URL.Query().Get("target_input"); targetInput != "" {
+			return targetInput, nil
+		}
+		return defaultName, nil
+	}
+}
+
+func selectionBrowseRouteGetter(childRoute string) getters.Getter[string] {
+	return withSelectionTarget(lago.GetterRoutePath(childRoute, map[string]getters.Getter[any]{
+		"parent_id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+	}))
+}
+
+func selectionRowClickGetter(defaultName string, modalID string, childRoute string, multi bool, selectDirectories bool) getters.Getter[string] {
+	targetGetter := selectionTargetInput(defaultName)
+	return func(ctx context.Context) (string, error) {
+		isDirectory, err := getters.GetterKey[bool]("$row.IsDirectory")(ctx)
+		if err != nil {
+			return "", err
+		}
+		targetName, err := targetGetter(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		if isDirectory && !selectDirectories {
+			browseURL, err := selectionBrowseRouteGetter(childRoute)(ctx)
+			if err != nil {
+				return "", err
+			}
+			return fmt.Sprintf("htmx.ajax('GET', '%v', {target: '#%s', swap: 'outerHTML'})", browseURL, modalID), nil
+		}
+
+		if multi {
+			return getters.GetterMultiSelect(targetName,
+				getters.GetterKey[uint]("$row.ID"),
+				getters.GetterKey[string]("$row.Name"),
+			)(ctx)
+		}
+		return getters.GetterSelect(targetName,
+			getters.GetterKey[uint]("$row.ID"),
+			getters.GetterKey[string]("$row.Name"),
+		)(ctx)
 	}
 }
 
@@ -417,12 +495,6 @@ func registerMenus() {
 					&components.SidebarMenuItem{Title: getters.GetterStatic("Bulk Upload"), Url: currentVNodeUploadChildRoute(), Icon: "arrow-up-tray"},
 				},
 			},
-			&components.ShowIf{
-				Getter: currentVNodeIsFile(),
-				Children: []components.PageInterface{
-					&components.SidebarMenuItem{Title: getters.GetterStatic("Download"), Url: currentVNodeDownloadRoute(), Icon: "arrow-down-tray"},
-				},
-			},
 		},
 	})
 }
@@ -443,7 +515,7 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.ParentSelectionFilter", &components.FormComponent[VNode]{
-		Url:    listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute"),
+		Url:    withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute")),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
@@ -457,7 +529,7 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.DestinationSelectionFilter", &components.FormComponent[VNode]{
-		Url:    listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute"),
+		Url:    withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute")),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
@@ -648,23 +720,31 @@ func registerDetail() {
 	})
 }
 
-func selectionTable(name string, filterName string) *components.Modal {
+func selectionTable(name string, filterName string, childRoute string, multi bool, selectDirectories bool) *components.Modal {
+	title := "Select Directory"
+	subtitle := "Choose a folder"
+	if !selectDirectories {
+		title = "Select Files"
+		subtitle = "Choose files, or open folders to browse deeper"
+	}
+
+	modalID := "filesystem-selection-modal-" + name
+	onClick := selectionRowClickGetter(name, modalID, childRoute, multi, selectDirectories)
+
 	return &components.Modal{
-		UID:   "filesystem-selection-modal-" + name,
-		Title: "Select Directory",
+		UID:   modalID,
+		Title: title,
 		Children: []components.PageInterface{
 			&components.DataTable[VNode]{
 				UID:             "filesystem-selection-table-" + name,
 				Data:            getters.GetterKey[components.ObjectList[VNode]]("vnodes"),
-				Title:           "Directories",
-				Subtitle:        "Choose a folder",
+				Title:           title,
+				Subtitle:        subtitle,
 				FilterComponent: lago.DynamicPage{Name: filterName},
-				OnClick: getters.GetterSelect(name,
-					getters.GetterKey[uint]("$row.ID"),
-					getters.GetterKey[string]("$row.Name"),
-				),
+				OnClick:         onClick,
 				Columns: []components.TableColumn{
 					{Label: "Name", Key: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
+					{Label: "Type", Key: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$row")}}},
 					{Label: "Path", Key: "Path", Children: []components.PageInterface{&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
 					{Label: "Modified", Key: "UpdatedAt", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.UpdatedAt")}}},
 				},
@@ -674,9 +754,9 @@ func selectionTable(name string, filterName string) *components.Modal {
 }
 
 func registerSelection() {
-	lago.RegistryPage.Register("filesystem.ParentSelectionTable", selectionTable("ParentID", "filesystem.ParentSelectionFilter"))
-	lago.RegistryPage.Register("filesystem.MultiSelectionTable", selectionTable("ParentID", "filesystem.ParentSelectionFilter"))
-	lago.RegistryPage.Register("filesystem.DestinationSelectionTable", selectionTable("DestinationID", "filesystem.DestinationSelectionFilter"))
+	lago.RegistryPage.Register("filesystem.ParentSelectionTable", selectionTable("ParentID", "filesystem.ParentSelectionFilter", "filesystem.SelectChildRoute", false, true))
+	lago.RegistryPage.Register("filesystem.MultiSelectionTable", selectionTable("ParentID", "filesystem.ParentSelectionFilter", "filesystem.MultiSelectChildRoute", true, false))
+	lago.RegistryPage.Register("filesystem.DestinationSelectionTable", selectionTable("DestinationID", "filesystem.DestinationSelectionFilter", "filesystem.MoveSelectChildRoute", false, true))
 }
 
 func registerDelete() {
@@ -685,7 +765,7 @@ func registerDelete() {
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
-				Message: "Are you sure you want to delete this item? Directories will remove all nested contents.",
+				Message: "Are you sure you want to delete this item? Deleting directories will remove all nested contents.",
 				CancelUrl: lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
 				}),

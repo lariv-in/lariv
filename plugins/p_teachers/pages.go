@@ -124,9 +124,31 @@ func registerFilterPages() {
 		},
 	})
 
-	// Note: Multi-selection filter not implemented yet - lago getters package
-	// doesn't have GetterSelectMulti. The Assets many-to-many field exists
-	// in the model for schema parity but the selection UI is not exposed.
+	lago.RegistryPage.Register("teachers.TeacherMultiSelectionFilter", &components.FormComponent[Teacher]{
+		Url:    lago.GetterRoutePath("teachers.MultiSelectRoute", nil),
+		Method: http.MethodGet,
+		ChildrenInput: []components.PageInterface{
+			&components.InputText{
+				Label:  "Name",
+				Name:   "User.Name",
+				Getter: getters.GetterKey[string]("$get.User.Name"),
+			},
+			&components.InputText{
+				Label:  "Code",
+				Name:   "Code",
+				Getter: getters.GetterKey[string]("$get.Code"),
+			},
+		},
+		ChildrenAction: []components.PageInterface{
+			components.ContainerRow{
+				Classes: "flex gap-2",
+				Children: []components.PageInterface{
+					&components.ButtonSubmit{Label: "Apply"},
+					&components.ButtonClear{Label: "Clear"},
+				},
+			},
+		},
+	})
 }
 
 // --- Form Fields & Forms ---
@@ -367,6 +389,60 @@ func registerSelectionPages() {
 					),
 				),
 				FilterComponent: lago.DynamicPage{Name: "teachers.TeacherSelectionFilter"},
+				Columns: []components.TableColumn{
+					{
+						Label: "Name",
+						Key:   "User.Name",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.GetterForeignKey[p_users.User, uint, string](
+									getters.GetterKey[uint]("$row.UserID"),
+									"Name",
+								),
+							},
+						},
+					},
+					{
+						Label: "Code",
+						Key:   "Code",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.GetterKey[string]("$row.Code"),
+							},
+						},
+					},
+					{
+						Label: "Qualifications",
+						Key:   "Qualifications",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.GetterDeref(getters.GetterKey[*string]("$row.Qualifications")),
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("teachers.TeacherMultiSelectionTable", &components.Modal{
+		UID:   "teacher-multi-selection-modal",
+		Title: "Select Teachers",
+		Children: []components.PageInterface{
+			&components.DataTable[Teacher]{
+				UID:  "teacher-multi-selection-table",
+				Data: getters.GetterKey[components.ObjectList[Teacher]]("teachers"),
+				OnClick: getters.GetterMultiSelect("Teachers",
+					getters.GetterKey[uint]("$row.ID"),
+					getters.GetterFormat("%s (%s)",
+						getters.GetterAny(getters.GetterForeignKey[p_users.User, uint, string](
+							getters.GetterKey[uint]("$row.UserID"),
+							"Name",
+						)),
+						getters.GetterAny(getters.GetterKey[string]("$row.Code")),
+					),
+				),
+				FilterComponent: lago.DynamicPage{Name: "teachers.TeacherMultiSelectionFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
