@@ -16,6 +16,7 @@ type InputCheckbox struct {
 	Label    string
 	Name     string
 	Getter   getters.Getter[bool]
+	XModel   string
 	Required bool
 	Classes  string
 }
@@ -41,6 +42,7 @@ func (e InputCheckbox) Build(ctx context.Context) Node {
 				Name(e.Name),
 				Value("true"),
 				Class("checkbox"),
+				If(e.XModel != "", Attr("x-model", e.XModel)),
 				checkedNode,
 			),
 			Span(Class("label-text"), Text(e.Label)),

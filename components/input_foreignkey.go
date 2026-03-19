@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"github.com/lariv-in/getters"
 	"gorm.io/gorm"
@@ -103,6 +104,9 @@ func (e InputForeignKey[T]) Parse(v any, ctx context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
 		return "", nil
+	}
+	if strings.TrimSpace(vals[0]) == "" {
+		return nil, nil
 	}
 	i, err := strconv.Atoi(vals[0])
 	if err != nil {

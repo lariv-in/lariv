@@ -23,6 +23,7 @@ type FormComponent[T any] struct {
 	Classes        string
 	Title          string
 	Subtitle       string
+	Enctype        string
 }
 
 type FormInterface interface {
@@ -71,6 +72,16 @@ func (e FormComponent[T]) Build(ctx context.Context) Node {
 		headerNodes = append(headerNodes, Div(Class("text-sm text-gray-500"), Text(e.Subtitle)))
 	}
 
+	enctype := e.Enctype
+	if enctype == "" {
+		for _, input := range FindInputs(&e) {
+			if _, ok := input.(MultipartInputInterface); ok {
+				enctype = "multipart/form-data"
+				break
+			}
+		}
+	}
+
 	var formErrorNode Node
 	if errorMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]any); ok {
 		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
@@ -84,6 +95,7 @@ func (e FormComponent[T]) Build(ctx context.Context) Node {
 		Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
 		If(e.Method != "", Method(e.Method)),
 		If(urlString != "", Action(urlString)),
+		If(enctype != "", Attr("enctype", enctype)),
 		Group(headerNodes),
 		inputGroup,
 		formErrorNode,
@@ -148,7 +160,11 @@ func (e FormComponent[T]) ParseForm(r *http.Request) (map[string]any, map[string
 	for _, input := range inputs {
 		name := input.GetName()
 		if isMultipart {
-			inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name], r.Context())
+			if multipartInput, ok := input.(MultipartInputInterface); ok {
+				inputValues[name], inputErrors[name] = multipartInput.ParseMultipart(r.MultipartForm.File[name], r.Context())
+			} else {
+				inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name], r.Context())
+			}
 		} else {
 			inputValues[name], inputErrors[name] = input.Parse(r.Form[name], r.Context())
 		}
