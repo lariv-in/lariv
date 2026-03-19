@@ -1,0 +1,17 @@
+---
+description: Always consult project caveats
+alwaysApply: true
+---
+
+# Project Caveats
+
+Before making code changes in this repository, read `Caveats.md` and follow its guidance.
+
+Treat `Caveats.md` as the source of truth for project-specific conventions, especially around:
+- component pointer usage and patchability
+- getter usage and avoiding unnecessary custom getters
+- registry-based extension points
+- view composition and shared query patchers
+- error handling and component patching helpers
+
+If a requested change seems to conflict with `Caveats.md`, ask the user before proceeding.

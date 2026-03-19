@@ -11,13 +11,9 @@ import (
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/registry"
-	"gorm.io/gorm"
 )
 
-type (
-	FormPatcher  = func(view *View, r *http.Request, formData map[string]any) map[string]any
-	QueryPatcher = func(view *View, r *http.Request, db *gorm.DB) *gorm.DB
-)
+type FormPatcher = func(view *View, r *http.Request, formData map[string]any) map[string]any
 
 type Middleware = func(http.Handler) http.Handler
 
