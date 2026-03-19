@@ -20,6 +20,7 @@ use (
 	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally
 	./plugins/p_totschool_users
+	./plugins/p_nirmancampus_users
 	./plugins/p_users
 	./registry
 	./views
