@@ -1,0 +1,27 @@
+package p_students
+
+import (
+	"log"
+	"net/url"
+
+	"github.com/lariv-in/lago"
+)
+
+const AppUrl = "/students/"
+
+func init() {
+	u, err := url.Parse(AppUrl)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	err = lago.RegistryPlugin.Register("p_students", lago.Plugin{
+		Type:        lago.PluginTypeApp,
+		Icon:        "user",
+		URL:         u,
+		VerboseName: "Students",
+	})
+	if err != nil {
+		log.Panic(err)
+	}
+}

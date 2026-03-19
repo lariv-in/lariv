@@ -211,8 +211,8 @@ func CreateView[T any](successURL getters.Getter[string]) func(*View) *View {
 					return
 				}
 
-				id := reflect.ValueOf(*record).FieldByName("ID").Uint()
-				ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", id))
+				id := uint(reflect.ValueOf(*record).FieldByName("ID").Uint())
+				ctx := context.WithValue(r.Context(), "$id", id)
 				redirectUrl, _ := getters.IfOrGetter(successURL, ctx, "")
 				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
@@ -240,7 +240,7 @@ func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
 				}
 
 				idStr := r.PathValue("id")
-				id, err := strconv.Atoi(idStr)
+				id, err := strconv.ParseUint(idStr, 10, 64)
 				if err != nil {
 					http.Error(w, "Invalid ID", http.StatusBadRequest)
 					return
@@ -259,7 +259,7 @@ func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
 					return
 				}
 
-				ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", id))
+				ctx := context.WithValue(r.Context(), "$id", uint(id))
 				redirectUrl, _ := getters.IfOrGetter(successURL, ctx, "")
 				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})

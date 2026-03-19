@@ -24,14 +24,14 @@ func init() {
 
 	// Create view
 	lago.RegistryView.Register("courses.CreateView",
-		views.CreateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(
+		views.CreateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 			lago.GetPageView("courses.CourseCreateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	// Update view
 	lago.RegistryView.Register("courses.UpdateView",
 		views.DetailView[Course]("course")(
-			views.UpdateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(
+			views.UpdateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("courses.CourseUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
@@ -49,4 +49,3 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 }
-

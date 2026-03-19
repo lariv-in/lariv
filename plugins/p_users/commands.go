@@ -31,9 +31,9 @@ func createSuperuserCommand(config lago.LagoConfig) *cobra.Command {
 			phone, _ := cmd.Flags().GetString("phone")
 			password, _ := cmd.Flags().GetString("password")
 
-			var role Role
-			if err := db.Model(Role{}).Order("id ASC").First(&role).Error; err != nil {
-				return fmt.Errorf("Couldn't fetch roles, err: %v", err)
+			role := Role{Name: "Unassigned"}
+			if err := db.Where("name = ?", role.Name).FirstOrCreate(&role).Error; err != nil {
+				return fmt.Errorf("failed to fetch or create Unassigned role: %w", err)
 			}
 
 			user := User{

@@ -197,7 +197,6 @@ func AppointmentListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB)
 	return query
 }
 
-
 // AppointmentTimelineQueryPatcher filters appointments for the timeline view based on
 // the Date field from the timeline filter form ($get.Date). When no date is specified,
 // it filters to the current calendar day (same as time.Now()).
@@ -254,20 +253,20 @@ func init() {
 	)
 
 	lago.RegistryView.Register("appointments.CreateView",
-		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
+		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
 			WithFormPatcher("appointments.form", FormCreatedByPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.UpdateView",
 		views.DetailView[Appointment]("appointment")(
-			views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[string]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
+			views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
 			WithFormPatcher("appointments.form", FormCreatedByPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.DeleteView",
 		views.DetailView[Appointment]("appointment")(
-		views.DeleteView[Appointment](lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware)))
+			views.DeleteView[Appointment](lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm")).
+				WithMiddleware("users.auth", p_users.AuthenticationMiddleware)))
 
 	lago.RegistryView.Register("appointments.GenerateView",
 		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, generateHandler).
