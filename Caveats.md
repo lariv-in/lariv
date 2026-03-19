@@ -1,6 +1,5 @@
 # Caveats When Working On This Codebase
 
-
 - NEVER write go.mod or go.sum manually, use go mod init, go mod tidy -e, go work use for project management
 - In nearly all cases, take the address of components before inserting them into something that requires `PageInterface`. Otherwise, the value will not implement `MutableParentInterface` and its children will not be patchable.
 

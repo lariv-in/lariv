@@ -3,3 +3,5 @@ tmp/
 bin/
 
 *.toml
+.gocache
+.gomodcache
