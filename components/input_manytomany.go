@@ -45,6 +45,9 @@ func (e InputManyToMany[T]) GetRoles() []string {
 
 func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	items := e.initialSelections(ctx)
+	if items == nil {
+		items = []registry.Pair[string, string]{}
+	}
 
 	placeholder := e.Placeholder
 	if placeholder == "" {

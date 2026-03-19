@@ -216,6 +216,22 @@ func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
 	}
 }
 
+func TestInputManyToManyBuildEmptyStateUsesArray(t *testing.T) {
+	input := InputManyToMany[testAssociationModel]{
+		Label:       "Teachers",
+		Name:        "Teachers",
+		Placeholder: "Select teachers...",
+	}
+
+	html := renderNode(t, input.Build(context.Background()))
+	if !strings.Contains(html, `items: []`) {
+		t.Fatalf("expected empty items array in x-data, got %s", html)
+	}
+	if strings.Contains(html, `items: null`) {
+		t.Fatalf("expected not to render null items, got %s", html)
+	}
+}
+
 func TestFormComponentParseFormUsesRepeatedValuesForManyToMany(t *testing.T) {
 	db := openTestDB(t)
 	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {
