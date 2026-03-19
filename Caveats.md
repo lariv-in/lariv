@@ -42,7 +42,7 @@ Currently, there are the following views factories in views/crud.go:
     - SingletonView
 
 List view is needed whenever we need a ObjectList of a model
-Detail view is needed whenever we need a singl instance of a model
+Detail view is needed whenever we need a single instance of a model
 
 Almost always, DetailView needs to be chained with Update and Delete view
 
