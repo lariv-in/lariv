@@ -10,6 +10,7 @@ import (
 	_ "github.com/lariv-in/p_pwa"
 	_ "github.com/lariv-in/p_students"
 	_ "github.com/lariv-in/p_teachers"
+	_ "github.com/lariv-in/p_courses"
 	_ "github.com/lariv-in/p_users"
 )
 

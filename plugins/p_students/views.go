@@ -1,8 +1,6 @@
 package p_students
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/getters"
@@ -11,18 +9,6 @@ import (
 	"github.com/lariv-in/views"
 	"gorm.io/gorm"
 )
-
-// uintToStringGetter converts a uint getter to a string getter.
-// This is needed for route path building where path params must be strings.
-func uintToStringGetter(g getters.Getter[uint]) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		v, err := g(ctx)
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%d", v), nil
-	}
-}
 
 func init() {
 	// List view - displays all students with filtering
@@ -41,14 +27,14 @@ func init() {
 
 	// Create view - handles creating a new student
 	lago.RegistryView.Register("students.CreateView",
-		views.CreateView[Student](lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(uintToStringGetter(getters.GetterKey[uint]("$id")))}))(
+		views.CreateView[Student](lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 			lago.GetPageView("students.StudentCreateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	// Update view - handles updating an existing student
 	lago.RegistryView.Register("students.UpdateView",
 		views.DetailView[Student]("student")(
-			views.UpdateView[Student](lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(uintToStringGetter(getters.GetterKey[uint]("$id")))}))(
+			views.UpdateView[Student](lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("students.StudentUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("students.preload", preloadUserQuery))
