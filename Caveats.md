@@ -12,6 +12,8 @@
 
 - When defining getter arguments, the type should be the most restrictive type possible, 'any' type is almost always a bad idea.
 
+- For foreign key selectors, the `InputForeignKey.Name`, the selector route/page it opens, and the `GetterSelect(...)` event name all need to match. If a `ParentID` input opens a selector table built for `DestinationID`, the selection event will be dispatched with the wrong name and the input will not update or close its modal.
+
 # Registry
 
 Any thing that needs to be pactchable on an app wide scale should be done via a registry from registry/registry.go

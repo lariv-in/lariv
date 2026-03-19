@@ -330,7 +330,7 @@ func vnodeFormFields(includeFileInput bool, submitLabel string, multi bool) comp
 					Label:       "Location",
 					Name:        "ParentID",
 					Getter:      currentLocationGetter(),
-					Url:         listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute"),
+					Url:         listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute"),
 					Display:     getters.GetterKey[string]("$in.Name"),
 					Placeholder: "Root (no parent)",
 				},
