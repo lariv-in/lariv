@@ -10,11 +10,15 @@
 
 - Whenever anything requires a value that can depend on the request, it should use a Getter from @getters/getter.go.
 
-- Before writing a custom getter, always check if an existing getter can't cover the use case.
+- Before writing a custom getter, always check if an existing getter can't cover the use case:
+   - Use `getters.GetterDeref(getters.GetterKey[*T]("$in.Field"))` for nullable pointer fields instead of writing custom wrapper functions.
+   - Use `getters.GetterFormat("format", getters.GetterAny(getter1), ...)` to combine multiple getters into a formatted string instead of custom inline functions.
 
 - When defining getter arguments, the type should be the most restrictive type possible, 'any' type is almost always a bad idea.
 
 - For foreign key selectors, the `InputForeignKey.Name`, the selector route/page it opens, and the `GetterSelect(...)` event name all need to match. If a `ParentID` input opens a selector table built for `DestinationID`, the selection event will be dispatched with the wrong name and the input will not update or close its modal.
+
+- For `InputForeignKey.Getter`, use `getters.GetterAssociation[T](getters.GetterKey[uint]("$in.FieldID"))` - it infers the table name from the type `T` via GORM's `db.Model()`. Do not pass a hardcoded table name string.
 
 # Registry
 
@@ -32,6 +36,10 @@ Existing registries:
    - lago/registry_routes.go - for adding http routes
    - lago/registry_views.go - for adding views (see the views section below)
    - lago/regsitry_dbinit.go - for adding functions that will run after database is initialised, run automigrate of models here.
+
+# Database Models
+
+Models should implement `TableName()` method to explicitly define their table name, especially if the table name doesn't match GORM's default pluralization convention. This ensures `getters.GetterAssociation` and `getters.GetterForeignKey` work correctly across all plugins.
 
 # Views
 
