@@ -303,6 +303,19 @@ func registerFormPages() {
 	})
 }
 
+func announcementCreateUrlGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		role, err := getters.GetterKey[string]("$role")(ctx)
+		if err != nil {
+			return "", err
+		}
+		if role == "superuser" || role == "nirmancampus_admin" {
+			return lago.GetterRoutePath("announcements.CreateRoute", nil)(ctx)
+		}
+		return "", fmt.Errorf("you do not have permission to do this action")
+	}
+}
+
 // --- Tables ---
 
 func registerTablePages() {
@@ -321,7 +334,7 @@ func registerTablePages() {
 				UID:       "announcement-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
-				CreateUrl: lago.GetterRoutePath("announcements.CreateRoute", nil),
+				CreateUrl: announcementCreateUrlGetter(),
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 				})),
