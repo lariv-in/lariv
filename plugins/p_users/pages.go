@@ -236,6 +236,28 @@ func registerFormPages() {
 		},
 	})
 
+	lago.RegistryPage.Register("users.SelfUpdateForm", &components.ShellScaffold{
+		Sidebar: []components.PageInterface{
+			lago.DynamicPage{Name: "users.UserDetailMenu"},
+		},
+		Children: []components.PageInterface{
+			&components.FormComponent[User]{
+				Getter: getters.GetterKey[User]("user"),
+				Url:    lago.GetterRoutePath("users.SelfUpdateRoute", nil),
+				Method:   http.MethodPost,
+				Title:    "Edit My Profile",
+				Subtitle: "Update your account details",
+				Classes:  "@container",
+				ChildrenInput: []components.PageInterface{
+					userFormFields(),
+				},
+				ChildrenAction: []components.PageInterface{
+					&components.ButtonSubmit{Label: "Save Profile"},
+				},
+			},
+		},
+	})
+
 	lago.RegistryPage.Register("users.ChangePasswordForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "users.UserDetailMenu"},
@@ -311,6 +333,47 @@ func registerDetailPages() {
 			&components.Detail[User]{
 				Page: components.Page{
 					Key: "users.UserDetailContent",
+				},
+				Getter: getters.GetterKey[User]("user"),
+				Children: []components.PageInterface{
+					&components.ContainerColumn{
+						Children: []components.PageInterface{
+							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
+							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Email")},
+							&components.LabelInline{
+								Title:   "Phone",
+								Classes: "mt-2",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.Phone")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Superuser",
+								Children: []components.PageInterface{
+									&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$in.IsSuperuser")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Role",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterForeignKey[Role, uint, string](getters.GetterKey[uint]("$in.RoleID"), "Name")},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("users.SelfDetail", &components.ShellScaffold{
+		Sidebar: []components.PageInterface{
+			lago.DynamicPage{Name: "users.UserDetailMenu"},
+		},
+		Children: []components.PageInterface{
+			&components.Detail[User]{
+				Page: components.Page{
+					Key: "users.SelfDetailContent",
 				},
 				Getter: getters.GetterKey[User]("user"),
 				Children: []components.PageInterface{
