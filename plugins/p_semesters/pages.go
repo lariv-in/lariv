@@ -78,11 +78,11 @@ func registerFilterPages() {
 				Getter: getters.GetterKey[string]("$get.Code"),
 			},
 			&components.InputTernary{
-				Label:     "Active",
-				Name:      "IsActiveFilter",
-				TrueLabel: "Active Only",
+				Label:      "Active",
+				Name:       "IsActiveFilter",
+				TrueLabel:  "Active Only",
 				FalseLabel: "Inactive Only",
-				NoneLabel: "All",
+				NoneLabel:  "All",
 				// Intentionally omit Getter: we want the default selection to be "All".
 			},
 		},
@@ -107,11 +107,11 @@ func registerFilterPages() {
 				Getter: getters.GetterKey[string]("$get.Code"),
 			},
 			&components.InputTernary{
-				Label:     "Active",
-				Name:      "IsActiveFilter",
-				TrueLabel: "Active Only",
+				Label:      "Active",
+				Name:       "IsActiveFilter",
+				TrueLabel:  "Active Only",
 				FalseLabel: "Inactive Only",
-				NoneLabel: "All",
+				NoneLabel:  "All",
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -243,11 +243,11 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Semester]{
-				Url:    lago.GetterRoutePath("semesters.CreateRoute", nil),
-				Method: http.MethodPost,
-				Title:  "Create Semester",
+				Url:      lago.GetterRoutePath("semesters.CreateRoute", nil),
+				Method:   http.MethodPost,
+				Title:    "Create Semester",
 				Subtitle: "Create a new semester",
-				Classes: "@container",
+				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
 					semesterFormFields(),
 				},
@@ -292,10 +292,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Semester]{
-				Page:     components.Page{Key: "semesters.SemesterTableBody"},
-				UID:      "semester-table",
-				Classes:  "w-full",
-				Data:     getters.GetterKey[components.ObjectList[Semester]]("semesters"),
+				Page:      components.Page{Key: "semesters.SemesterTableBody"},
+				UID:       "semester-table",
+				Classes:   "w-full",
+				Data:      getters.GetterKey[components.ObjectList[Semester]]("semesters"),
 				CreateUrl: lago.GetterRoutePath("semesters.CreateRoute", nil),
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("semesters.DetailRoute", map[string]getters.Getter[any]{
@@ -362,22 +362,19 @@ func registerDetailPages() {
 							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
 							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Code")},
 							&components.LabelInline{
-								Title:   "Active",
-								Classes: "mt-4",
+								Title: "Active",
 								Children: []components.PageInterface{
 									&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$in.IsActive")},
 								},
 							},
 							&components.LabelInline{
-								Title:   "Start",
-								Classes: "mt-4",
+								Title: "Start",
 								Children: []components.PageInterface{
 									&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.Start")},
 								},
 							},
 							&components.LabelInline{
-								Title:   "End",
-								Classes: "mt-4",
+								Title: "End",
 								Children: []components.PageInterface{
 									&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.End")},
 								},
@@ -413,10 +410,10 @@ func registerSelectionPages() {
 		Title: "Select Semester",
 		Children: []components.PageInterface{
 			&components.DataTable[Semester]{
-				Page:    components.Page{Key: "semesters.SemesterSelectionTableBody"},
-				UID:     "semester-selection-table",
-				Data:    getters.GetterKey[components.ObjectList[Semester]]("semesters"),
-				OnClick: getters.GetterSelect("SemesterID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Page:            components.Page{Key: "semesters.SemesterSelectionTableBody"},
+				UID:             "semester-selection-table",
+				Data:            getters.GetterKey[components.ObjectList[Semester]]("semesters"),
+				OnClick:         getters.GetterSelect("SemesterID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "semesters.SemesterSelectionFilter"},
 				Columns: []components.TableColumn{
 					{
