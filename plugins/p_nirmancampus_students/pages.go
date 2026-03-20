@@ -173,8 +173,7 @@ func patchStudentDetail() {
 
 			column.Children = append(column.Children,
 				&components.LabelInline{
-					Title:   "Address",
-					Classes: "mt-4",
+					Title: "Address",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("Address", studentID),
@@ -183,7 +182,6 @@ func patchStudentDetail() {
 				},
 				&components.LabelInline{
 					Title: "Category",
-					Classes: "mt-4",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("Category", studentID),
@@ -191,8 +189,7 @@ func patchStudentDetail() {
 					},
 				},
 				&components.LabelInline{
-					Title:   "Father's Name",
-					Classes: "mt-4",
+					Title: "Father's Name",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("FathersName", studentID),
@@ -279,4 +276,3 @@ func init() {
 	patchStudentFilter()
 	patchStudentSelectionTable()
 }
-

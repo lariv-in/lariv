@@ -336,8 +336,7 @@ func registerDetailPages() {
 								Getter: getters.GetterKey[string]("$in.StudentNo"),
 							},
 							&components.LabelInline{
-								Title:   "Date of Birth",
-								Classes: "mt-4",
+								Title: "Date of Birth",
 								Children: []components.PageInterface{
 									&components.FieldDate{
 										Getter: dobDetailGetter(),
