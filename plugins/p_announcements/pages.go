@@ -149,30 +149,6 @@ func expiryAtInputGetter() getters.Getter[time.Time] {
 	}
 }
 
-func expiryAtStringFromIn() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		t, err := expiryAtInputGetter()(ctx)
-		if err != nil || t.IsZero() {
-			return "", nil
-		}
-		tz, _ := ctx.Value("$tz").(*time.Location)
-		if tz == nil {
-			tz = components.DefaultTimeZone
-		}
-		return t.In(tz).Format(time.DateTime), nil
-	}
-}
-
-func semesterNameFromIn() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		name, err := getters.GetterKey[string]("$in.Semester.Name")(ctx)
-		if err != nil {
-			return "", nil
-		}
-		return name, nil
-	}
-}
-
 func announcementFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{Key: "announcements.AnnouncementFormFieldsBody"},
@@ -415,26 +391,23 @@ func registerDetailPages() {
 						Page: components.Page{Key: "announcements.AnnouncementDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Title")},
-							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Description")},
+							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Semester.Name")},
 							&components.LabelInline{
-								Title:   "Semester",
-								Classes: "mt-4",
+								Title: "Description",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: semesterNameFromIn()},
+									&components.FieldTextArea{Getter: getters.GetterKey[string]("$in.Description")},
 								},
 							},
 							&components.LabelInline{
-								Title:   "Release At",
-								Classes: "mt-4",
+								Title: "Release At",
 								Children: []components.PageInterface{
 									&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.ReleaseAt")},
 								},
 							},
 							&components.LabelInline{
-								Title:   "Expiry At",
-								Classes: "mt-4",
+								Title: "Expiry At",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: expiryAtStringFromIn()},
+									&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$in.ExpiryAt"))},
 								},
 							},
 						},
