@@ -315,6 +315,7 @@ func registerTablePages() {
 				Label:   "Semester",
 				Key:     getters.GetterStatic("semester"),
 				Options: semestersEnvOptionsGetterForEnvironment,
+				Default: semesterEnvironmentDefaultGetter,
 			},
 			&components.DataTable[Announcement]{
 				UID:       "announcement-table",
@@ -488,6 +489,20 @@ func registerSelectionPages() {
 			},
 		},
 	})
+}
+
+// semesterEnvironmentDefaultGetter selects the semester whose [Start, End] contains time.Now(),
+// matching announcementsListSemesterEnvQueryPatcher when the environment cookie has no semester.
+func semesterEnvironmentDefaultGetter(ctx context.Context) (string, error) {
+	db, ok := ctx.Value("$db").(*gorm.DB)
+	if !ok || db == nil {
+		return "", nil
+	}
+	v, ok := semesterEnvironmentOptionForNow(db, time.Now())
+	if !ok {
+		return "", nil
+	}
+	return v, nil
 }
 
 // semestersEnvOptionsGetterForEnvironment returns dropdown options formatted as "ID:Name".
