@@ -15,6 +15,62 @@ import (
 
 // --- Auth Handlers (user-specific, not generalizable) ---
 
+func SelfUserQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	user := r.Context().Value("$user").(User)
+	return query.Where("id = ?", user.ID)
+}
+
+func SelfDetailHandler(v *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value("$user").(User)
+		db := r.Context().Value("$db").(*gorm.DB)
+
+		query := db.Model(new(User))
+		for _, queryPatcher := range v.QueryPatchers {
+			query = queryPatcher.Value(v, r, query)
+		}
+
+		var instance User
+		if err := query.First(&instance, user.ID).Error; err != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "user", instance)
+		v.RenderPage(w, r.WithContext(ctx))
+	})
+}
+
+func SelfUpdateHandler(v *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		values, fieldErrors, err := v.ParseForm(w, r)
+		if err != nil {
+			v.RenderWithErrors(w, r, map[string]error{"_form": err}, values)
+			return
+		}
+
+		if v.HasErrors(fieldErrors) {
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		user := r.Context().Value("$user").(User)
+		db := r.Context().Value("$db").(*gorm.DB)
+		query := db.Model(new(User)).Where("id = ?", user.ID)
+		for _, queryPatcher := range v.QueryPatchers {
+			query = queryPatcher.Value(v, r, query)
+		}
+
+		if err := query.Updates(values).Error; err != nil {
+			fieldErrors["_form"] = err
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		lago.NewRedirectView("users.SelfDetailRoute").ServeHTTP(w, r)
+	})
+}
+
 func LoginHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
@@ -222,6 +278,21 @@ func init() {
 				lago.GetPageView("users.UserUpdateForm"))).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+
+	// Self detail view (only current user)
+	lago.RegistryView.Register("users.SelfDetailView",
+		lago.GetPageView("users.SelfDetail").
+			WithMethod(http.MethodGet, SelfDetailHandler).
+			WithMiddleware("users.auth", AuthenticationMiddleware).
+			WithQueryPatcher("users.self_detail", SelfUserQueryPatcher))
+
+	// Self update view (only current user)
+	lago.RegistryView.Register("users.SelfUpdateView",
+		lago.GetPageView("users.SelfUpdateForm").
+			WithMethod(http.MethodGet, SelfDetailHandler).
+			WithMethod(http.MethodPost, SelfUpdateHandler).
+			WithMiddleware("users.auth", AuthenticationMiddleware).
+			WithQueryPatcher("users.self_update", SelfUserQueryPatcher))
 
 	// Delete view
 	lago.RegistryView.Register("users.DeleteView",

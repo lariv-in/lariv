@@ -35,6 +35,16 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("users.UpdateView"),
 	})
 
+	_ = lago.RegistryRoute.Register("users.SelfDetailRoute", lago.Route{
+		Path:    AppUrl + "self/",
+		Handler: lago.NewDynamicView("users.SelfDetailView"),
+	})
+
+	_ = lago.RegistryRoute.Register("users.SelfUpdateRoute", lago.Route{
+		Path:    AppUrl + "self/edit/",
+		Handler: lago.NewDynamicView("users.SelfUpdateView"),
+	})
+
 	_ = lago.RegistryRoute.Register("users.DeleteRoute", lago.Route{
 		Path:    AppUrl + "{id}/delete/",
 		Handler: lago.NewDynamicView("users.DeleteView"),
