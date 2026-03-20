@@ -1,9 +1,10 @@
 # Caveats When Working On This Codebase
 
 - NEVER write go.mod or go.sum manually, use go mod init, go mod tidy -e, go work use for project management
+- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patcher.go` and CRUD helpers), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
 - In nearly all cases, take the address of components before inserting them into something that requires `PageInterface`. Otherwise, the value will not implement `MutableParentInterface` and its children will not be patchable.
 
-- When creating new components, they should implement at least `PageInterface` from `components/page.go`.
+- When you do add a component, it should implement at least `PageInterface` from `components/page.go`.
 
 - If a component has children, it should implement `ParentInterface` from `components/parent.go` so its children can be traversed.
 - If a component allows modifying its children, it should implement `MutableParentInterface` from `components/parent.go`.
@@ -11,7 +12,7 @@
 
 - Whenever something requires a value that can depend on the request, it should use a `Getter` from `getters/getter.go`.
 
-- Before writing a custom getter, always check if an existing getter can't cover the use case:
+- Before writing a custom getter, always confirm that no existing getter in `getters/` (and no small composition of existing getters) already covers the use case:
    - Use `getters.GetterDeref(getters.GetterKey[*T]("$in.Field"))` for nullable pointer fields instead of writing custom wrapper functions.
    - Use `getters.GetterFormat("format", getters.GetterAny(getter1), ...)` to combine multiple getters into a formatted string instead of custom inline functions.
    - For route params like `id`, prefer `getters.GetterAny(getters.GetterKey[uint]("$id"))` instead of writing custom `uint -> string` wrapper getters.

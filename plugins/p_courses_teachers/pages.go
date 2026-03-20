@@ -106,28 +106,23 @@ func teachersDetailSection() *components.LabelInline {
 		Title:   "Teachers",
 		Classes: "items-start flex-col",
 		Children: []components.PageInterface{
-			&components.FieldList{
-				Classes: "flex flex-col gap-1",
-				Getter: getters.GetterAny(getters.GetterJoinAssociationList[CourseTeacher, p_teachers.Teacher](
+			&components.FieldManyToMany[p_teachers.Teacher]{
+				Getter: getters.GetterJoinAssociationList[CourseTeacher, p_teachers.Teacher](
 					getters.IfOrElseGetter(getters.GetterKey[uint]("$in.ID"), getters.GetterStatic(uint(0))),
 					"CourseID",
 					"TeacherID",
 					"code ASC",
 					"User",
-				)),
-				Children: []components.PageInterface{
-					&components.ButtonLink{
-						GetterLabel: getters.GetterFormat(
-							"%s (%s)",
-							getters.GetterAny(getters.GetterKey[string]("$row.User.Name")),
-							getters.GetterAny(getters.GetterKey[string]("$row.Code")),
-						),
-						Link: lago.GetterRoutePath("teachers.DetailRoute", map[string]getters.Getter[any]{
-							"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
-						}),
-						Classes: "btn-link btn-sm justify-start px-0 min-h-0 h-auto",
-					},
-				},
+				),
+				Display: getters.GetterFormat(
+					"%s (%s)",
+					getters.GetterAny(getters.GetterKey[string]("$in.User.Name")),
+					getters.GetterAny(getters.GetterKey[string]("$in.Code")),
+				),
+				Link: lago.GetterRoutePath("teachers.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+				}),
+				Classes: "w-full",
 			},
 		},
 	}
@@ -138,27 +133,22 @@ func coursesDetailSection() components.LabelInline {
 		Title:   "Courses",
 		Classes: "items-start flex-col",
 		Children: []components.PageInterface{
-			&components.FieldList{
-				Classes: "flex flex-col gap-1",
-				Getter: getters.GetterAny(getters.GetterJoinAssociationList[CourseTeacher, p_courses.Course](
+			&components.FieldManyToMany[p_courses.Course]{
+				Getter: getters.GetterJoinAssociationList[CourseTeacher, p_courses.Course](
 					getters.IfOrElseGetter(getters.GetterKey[uint]("$in.ID"), getters.GetterStatic(uint(0))),
 					"TeacherID",
 					"CourseID",
 					"name ASC",
-				)),
-				Children: []components.PageInterface{
-					&components.ButtonLink{
-						GetterLabel: getters.GetterFormat(
-							"%s (%s)",
-							getters.GetterAny(getters.GetterKey[string]("$row.Name")),
-							getters.GetterAny(getters.GetterKey[string]("$row.Code")),
-						),
-						Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
-							"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
-						}),
-						Classes: "btn-link btn-sm justify-start px-0 min-h-0 h-auto",
-					},
-				},
+				),
+				Display: getters.GetterFormat(
+					"%s (%s)",
+					getters.GetterAny(getters.GetterKey[string]("$in.Name")),
+					getters.GetterAny(getters.GetterKey[string]("$in.Code")),
+				),
+				Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+				}),
+				Classes: "w-full",
 			},
 		},
 	}

@@ -346,17 +346,13 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Assets",
 								Children: []components.PageInterface{
-									components.FieldList{
-										Getter: getters.GetterAny(getters.GetterKey[[]p_filesystem.VNode]("$in.Assets")),
-										Children: []components.PageInterface{
-											components.ButtonLink{
-												GetterLabel: getters.GetterKey[string]("$row.Name"),
-												Link: lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-													"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
-												}),
-												Classes: "btn-link btn-sm justify-start px-0",
-											},
-										},
+									&components.FieldManyToMany[p_filesystem.VNode]{
+										Getter:  getters.GetterKey[[]p_filesystem.VNode]("$in.Assets"),
+										Display: getters.GetterKey[string]("$in.Name"),
+										Link: lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+											"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+										}),
+										Classes: "w-full",
 									},
 								},
 							},

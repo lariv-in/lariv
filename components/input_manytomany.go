@@ -91,11 +91,25 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 			const display = detail.display ? String(detail.display) : value
 			this.items = [...this.items, { Key: value, Value: display }]
 		},
-		removeItem(value) {
+		removeItem(detail) {
+			const value = String(detail.value)
 			this.items = this.items.filter(item => item.Key !== value)
+		},
+		eventHandler(ev) {
+			if (ev.detail.name === %s) {
+				if (!ev.target.selected) {
+					this.addItem(ev.detail)
+					ev.target.classList.add('bg-primary/25', 'ring-2', 'ring-primary/50')
+					ev.target.selected = true
+				} else {
+					this.removeItem(ev.detail)
+					ev.target.classList.remove('bg-primary/25', 'ring-2', 'ring-primary/50')
+					ev.target.selected = false
+				}
+			}
 		}
-	}`, itemsJSON, placeholderJSON)
-	eventHandler := fmt.Sprintf("if ($event.detail.name === %s) { addItem($event.detail) }", string(nameJSON))
+	}`, itemsJSON, placeholderJSON, string(nameJSON))
+	eventHandler := "eventHandler($event)"
 
 	return Div(
 		Class(fmt.Sprintf("my-1 relative %s", e.Classes)),
@@ -298,6 +312,12 @@ func (e InputManyToMany[T]) selectionsForIDs(ctx context.Context, ids []uint) []
 }
 
 func (e InputManyToMany[T]) selectionForValue(ctx context.Context, value T) (registry.Pair[string, string], bool) {
+	return manyToManySelectionPair(ctx, value, e.Display, e.Key)
+}
+
+// manyToManySelectionPair maps a related model value to id/display strings; shared by
+// InputManyToMany and FieldManyToMany so detail and form views stay consistent.
+func manyToManySelectionPair[T any](ctx context.Context, value T, display getters.Getter[string], logKey string) (registry.Pair[string, string], bool) {
 	valueMap := getters.MapFromStruct(value)
 	if len(valueMap) == 0 {
 		return registry.Pair[string, string]{}, false
@@ -313,12 +333,12 @@ func (e InputManyToMany[T]) selectionForValue(ctx context.Context, value T) (reg
 	}
 
 	selection := registry.Pair[string, string]{Key: fmt.Sprintf("%v", rawID), Value: fmt.Sprintf("%v", rawID)}
-	if e.Display != nil {
-		display, err := e.Display(context.WithValue(ctx, getters.ContextKeyIn, valueMap))
+	if display != nil {
+		d, err := display(context.WithValue(ctx, getters.ContextKeyIn, valueMap))
 		if err != nil {
-			slog.Error("InputManyToMany display getter failed", "error", err, "key", e.Key)
-		} else if display != "" {
-			selection.Value = display
+			slog.Error("many-to-many display getter failed", "error", err, "key", logKey)
+		} else if d != "" {
+			selection.Value = d
 		}
 		return selection, true
 	}
