@@ -119,60 +119,6 @@ func registerFilterPages() {
 	})
 }
 
-// --- Form Fields / Helpers ---
-
-func expiryAtInputGetter() getters.Getter[time.Time] {
-	return func(ctx context.Context) (time.Time, error) {
-		inVal := ctx.Value(getters.ContextKeyIn) // "$in"
-		if inVal == nil {
-			return time.Time{}, nil
-		}
-		inMap, ok := inVal.(map[string]any)
-		if !ok {
-			return time.Time{}, nil
-		}
-		raw, ok := inMap["ExpiryAt"]
-		if !ok || raw == nil {
-			return time.Time{}, nil
-		}
-		switch typed := raw.(type) {
-		case time.Time:
-			return typed, nil
-		case *time.Time:
-			if typed == nil {
-				return time.Time{}, nil
-			}
-			return *typed, nil
-		default:
-			return time.Time{}, nil
-		}
-	}
-}
-
-func expiryAtStringFromIn() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		t, err := expiryAtInputGetter()(ctx)
-		if err != nil || t.IsZero() {
-			return "", nil
-		}
-		tz, _ := ctx.Value("$tz").(*time.Location)
-		if tz == nil {
-			tz = components.DefaultTimeZone
-		}
-		return t.In(tz).Format(time.DateTime), nil
-	}
-}
-
-func semesterNameFromIn() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		name, err := getters.GetterKey[string]("$in.Semester.Name")(ctx)
-		if err != nil {
-			return "", nil
-		}
-		return name, nil
-	}
-}
-
 func announcementFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{Key: "announcements.AnnouncementFormFieldsBody"},
@@ -227,7 +173,7 @@ func announcementFormFields() components.ContainerColumn {
 								Label:    "Expiry At",
 								Name:     "ExpiryAt",
 								Required: false,
-								Getter:   expiryAtInputGetter(),
+								Getter:   getters.GetterDeref(getters.GetterKey[*time.Time]("$in.ExpiryAt")),
 							},
 						},
 					},
@@ -365,7 +311,7 @@ func registerTablePages() {
 						Label: "Expiry At",
 						Key:   "ExpiryAt",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: expiryAtStringFromRow()},
+							&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$row.ExpiryAt"))},
 						},
 					},
 				},
@@ -381,23 +327,6 @@ func semesterNameFromRow() getters.Getter[string] {
 			return "", nil
 		}
 		return name, nil
-	}
-}
-
-func expiryAtStringFromRow() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		ptr, err := getters.GetterKey[*time.Time]("$row.ExpiryAt")(ctx)
-		if err != nil || ptr == nil {
-			return "", nil
-		}
-		if ptr.IsZero() {
-			return "", nil
-		}
-		tz, _ := ctx.Value("$tz").(*time.Location)
-		if tz == nil {
-			tz = components.DefaultTimeZone
-		}
-		return ptr.In(tz).Format(time.DateTime), nil
 	}
 }
 
@@ -421,7 +350,7 @@ func registerDetailPages() {
 								Title:   "Semester",
 								Classes: "mt-4",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: semesterNameFromIn()},
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.Semester.Name")},
 								},
 							},
 							&components.LabelInline{
@@ -435,7 +364,7 @@ func registerDetailPages() {
 								Title:   "Expiry At",
 								Classes: "mt-4",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: expiryAtStringFromIn()},
+									&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$in.ExpiryAt"))},
 								},
 							},
 						},

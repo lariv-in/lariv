@@ -117,13 +117,15 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 				Attr("x-for", "item in items"),
 				Attr(":key", "item.Key"),
 				Div(
-					Class("flex items-center gap-2 rounded-lg bg-base-200 px-2 py-1"),
+					Class("flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-1 py-1"),
+					Attr("@click", "$event.stopPropagation()"),
 					Input(Type("hidden"), Name(e.Name), Attr(":value", "item.Key")),
-					Span(Class("text-sm"), Attr("x-text", "item.Value")),
+					Span(Class("text-sm flex-1 min-w-0 truncate"), Attr("x-text", "item.Value")),
 					Button(
 						Type("button"),
-						Class("btn btn-ghost btn-xs"),
+						Class("btn btn-ghost btn-square btn-xs shrink-0"),
 						Attr("@click.stop", "removeItem(item.Key)"),
+						Attr("aria-label", "Remove"),
 						Render(Icon{Name: "x-mark"}, ctx),
 					),
 				),

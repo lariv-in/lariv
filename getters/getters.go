@@ -589,6 +589,9 @@ func GetterDeref[T any](g Getter[*T]) Getter[T] {
 		if err != nil {
 			return zero, err
 		}
+		if value == nil {
+			return zero, nil
+		}
 		return *value, nil
 	}
 }
