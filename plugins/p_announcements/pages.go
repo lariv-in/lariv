@@ -484,7 +484,7 @@ func semesterEnvironmentDefaultGetter(ctx context.Context) (string, error) {
 	if !ok || db == nil {
 		return "", nil
 	}
-	v, ok := semesterEnvironmentOptionForNow(db, time.Now())
+	v, ok := semesterEnvironmentDefault(db, time.Now())
 	if !ok {
 		return "", nil
 	}

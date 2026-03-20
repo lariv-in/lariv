@@ -28,9 +28,9 @@ func parseSemesterEnvID(raw string) (uint, bool) {
 	return uint(id), true
 }
 
-// semesterEnvironmentOptionForNow returns the environment option "ID:Name" for the
+// semesterEnvironmentDefault returns the environment option "ID:Name" for the
 // semester whose [Start, End] interval contains now (inclusive), or ("", false) if none.
-func semesterEnvironmentOptionForNow(db *gorm.DB, now time.Time) (string, bool) {
+func semesterEnvironmentDefault(db *gorm.DB, now time.Time) (string, bool) {
 	var sem p_semesters.Semester
 	err := db.Model(&p_semesters.Semester{}).
 		Where("start <= ? AND end >= ?", now, now).
@@ -56,7 +56,7 @@ func announcementsListSemesterEnvQueryPatcher(_ *views.View, r *http.Request, qu
 			return query
 		}
 		var found bool
-		raw, found = semesterEnvironmentOptionForNow(db, time.Now())
+		raw, found = semesterEnvironmentDefault(db, time.Now())
 		if !found {
 			return query
 		}
