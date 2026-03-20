@@ -12,7 +12,6 @@ var userViewsWithRoleMiddleware = []string{
 	"users.ListView", "users.DetailView", "users.CreateView", "users.UpdateView",
 	"users.DeleteView", "users.ChangePasswordView", "users.SelectView",
 	"users.RoleSelectView", "users.RoleListView", "users.RoleDetailView",
-	"users.RoleCreateView", "users.RoleUpdateView", "users.RoleDeleteView",
 }
 
 // Patch "users.role" middleware to allow nirmancampus_admin in addition to existing roles.

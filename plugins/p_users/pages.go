@@ -171,19 +171,6 @@ func userFormFields() components.ContainerColumn {
 					},
 				},
 			},
-			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.IsSuperuser"),
-				Children: []components.PageInterface{
-					&components.InputTernary{
-						Label:      "Superuser",
-						Name:       "IsSuperuser",
-						TrueLabel:  "Yes",
-						FalseLabel: "No",
-						NoneLabel:  "Not Set",
-						Getter:     getters.GetterKey[bool]("$in.IsSuperuser"),
-					},
-				},
-			},
 		},
 	}
 }

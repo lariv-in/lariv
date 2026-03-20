@@ -20,8 +20,8 @@ type User struct {
 	RoleID       uint   `gorm:"notnull"`
 	Role         Role   `gorm:"notnull"`
 	Password     []byte `gorm:"-"`
-	PasswordHash []byte `gorm:"notnull;column:password"`
-	PasswordSalt []byte `gorm:"notnull"`
+	PasswordHash []byte `gorm:"column:password"`
+	PasswordSalt []byte
 	Timezone     string `gorm:"default:Asia/Kolkata"`
 }
 
