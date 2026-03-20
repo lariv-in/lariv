@@ -17,6 +17,7 @@ import (
 	_ "github.com/lariv-in/p_programs"
 	_ "github.com/lariv-in/p_pwa"
 	_ "github.com/lariv-in/p_semesters"
+	_ "github.com/lariv-in/p_studentapplication"
 	_ "github.com/lariv-in/p_students"
 	_ "github.com/lariv-in/p_teachers"
 	_ "github.com/lariv-in/p_users"

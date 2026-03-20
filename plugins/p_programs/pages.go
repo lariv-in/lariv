@@ -330,7 +330,7 @@ func registerSelectionPages() {
 				Page:    components.Page{Key: "programs.ProgramSelectionTableBody"},
 				UID:     "program-selection-table",
 				Data:    getters.GetterKey[components.ObjectList[Program]]("programs"),
-				OnClick: getters.GetterSelect("program", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				OnClick: getters.GetterSelect("ProgramID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "programs.ProgramSelectionFilter"},
 				Columns: []components.TableColumn{
 					{

@@ -1,0 +1,46 @@
+package p_studentapplication
+
+import (
+	"log"
+
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/p_programs"
+	"gorm.io/gorm"
+)
+
+// StudentApplication stores an application submitted for a student (intake record).
+type StudentApplication struct {
+	gorm.Model
+
+	Name              string `gorm:"notnull"`
+	ProgramID         uint   `gorm:"notnull"`
+	Program           p_programs.Program
+	StudentName       string `gorm:"notnull"`
+	FatherName        string
+	Category          string
+	CompleteAddress   string
+	Mobile            string
+}
+
+func init() {
+	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+		if err := d.AutoMigrate(&StudentApplication{}); err != nil {
+			log.Panicf("failed to migrate StudentApplication model: %v", err)
+		}
+		return d
+	})
+
+	lago.RegistryAdmin.Register("p_studentapplication", lago.AdminPanel[StudentApplication]{
+		SearchField: "Name",
+		ListFields: []string{
+			"Name",
+			"Program.Name",
+			"StudentName",
+			"FatherName",
+			"Category",
+			"Mobile",
+			"UpdatedAt",
+		},
+		Preload: []string{"Program"},
+	})
+}

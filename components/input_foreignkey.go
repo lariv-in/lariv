@@ -108,7 +108,7 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 			),
 		),
 		Div(Attr("id", modalContainerId), Class("fk-modal-container"),
-			Attr("x-init", fmt.Sprintf("document.body.appendChild($el)"))),
+			Attr("x-init", "document.body.appendChild($el)")),
 	)
 }
 

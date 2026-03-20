@@ -23,6 +23,7 @@ use (
 	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally
 	./plugins/p_semesters
+	./plugins/p_studentapplication
 	./plugins/p_academicrecords
 	./plugins/p_academicrecords_programs
 	./plugins/p_totschool_users
