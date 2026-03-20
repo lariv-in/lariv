@@ -33,8 +33,8 @@ func parseSemesterEnvID(raw string) (uint, bool) {
 func semesterEnvironmentDefault(db *gorm.DB, now time.Time) (string, bool) {
 	var sem p_semesters.Semester
 	err := db.Model(&p_semesters.Semester{}).
-		Where("start <= ? AND end >= ?", now, now).
-		Order("start ASC").
+		Where(`"start" <= ? AND "end" >= ?`, now, now).
+		Order(`"start" ASC`).
 		First(&sem).Error
 	if err != nil {
 		return "", false
