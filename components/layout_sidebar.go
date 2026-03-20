@@ -52,7 +52,7 @@ func (e LayoutSidebar) Build(ctx context.Context) Node {
 				),
 			),
 
-			// Main Content (opaque bg so DaisyUI :root --page-scroll-bg during .modal-open is not visible through <main>)
+			// Main Content
 			Main(Class("overflow-y-auto p-4 relative h-full bg-base-200"),
 				Button(
 					Attr("@click", "showLeft = !showLeft"),
