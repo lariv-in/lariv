@@ -4,3 +4,4 @@
 4. fix announcements views.go file too
 5. m2m selector show selected in ui
 6. Make a fieldmanytomany component and use it in the manytomany detail views
+7. opening modal inverts background color for some reason
