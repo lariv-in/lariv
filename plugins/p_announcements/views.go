@@ -16,34 +16,37 @@ import (
 )
 
 func parseSemesterEnvID(raw string) (uint, bool) {
-	// components.Environment stores values as "ID:Name".
-	parts := strings.SplitN(raw, ":", 2)
-	if len(parts) == 0 || strings.TrimSpace(parts[0]) == "" {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
 		return 0, false
 	}
-	id, err := strconv.ParseUint(parts[0], 10, 64)
+	// Legacy environment values used "ID:Name"; id is the cookie value prefix.
+	if i := strings.IndexByte(raw, ':'); i > 0 {
+		raw = raw[:i]
+	}
+	id, err := strconv.ParseUint(raw, 10, 64)
 	if err != nil || id == 0 {
 		return 0, false
 	}
 	return uint(id), true
 }
 
-// semesterEnvironmentDefault returns the environment option "ID:Name" for the
-// semester whose [Start, End] interval contains now (inclusive), or ("", false) if none.
-func semesterEnvironmentDefault(db *gorm.DB, now time.Time) (string, bool) {
+// semesterEnvironmentDefault returns the semester id for the semester whose
+// [Start, End] interval contains now (inclusive), or (0, false) if none.
+func semesterEnvironmentDefault(db *gorm.DB, now time.Time) (uint, bool) {
 	var sem p_semesters.Semester
 	err := db.Model(&p_semesters.Semester{}).
 		Where(`"start" <= ? AND "end" >= ?`, now, now).
 		Order(`"start" ASC`).
 		First(&sem).Error
 	if err != nil {
-		return "", false
+		return 0, false
 	}
-	return fmt.Sprintf("%d:%s", sem.ID, sem.Name), true
+	return sem.ID, true
 }
 
 // announcementsListSemesterEnvQueryPatcher scopes the list view to the semester
-// selected in the environment cookie (components.Environment).
+// selected in the environment cookie (components.Environment[uint] semester key).
 func announcementsListSemesterEnvQueryPatcher(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	envMap, ok := r.Context().Value("$environment").(map[string]string)
 	if !ok {
@@ -55,11 +58,11 @@ func announcementsListSemesterEnvQueryPatcher(_ *views.View, r *http.Request, qu
 		if !dbOK || db == nil {
 			return query
 		}
-		var found bool
-		raw, found = semesterEnvironmentDefault(db, time.Now())
+		id, found := semesterEnvironmentDefault(db, time.Now())
 		if !found {
 			return query
 		}
+		raw = fmt.Sprintf("%d", id)
 	}
 	semesterID, ok := parseSemesterEnvID(raw)
 	if !ok {

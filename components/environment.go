@@ -4,30 +4,34 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/lariv-in/getters"
+	"github.com/lariv-in/registry"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
-type Environment struct {
+type Environment[T comparable] struct {
 	Page
 	Label   string
-	Key     getters.Getter[string]   // key used in the environment cookie map
-	Options getters.Getter[[]string] // option values
-	Default getters.Getter[string]
+	Key     getters.Getter[string] // key used in the environment cookie map
+	Options getters.Getter[[]registry.Pair[T, string]]
+	Default getters.Getter[T]
 	Classes string
 }
 
-func (e Environment) GetKey() string {
+func (e Environment[T]) GetKey() string {
 	return e.Page.Key
 }
 
-func (e Environment) GetRoles() []string {
+func (e Environment[T]) GetRoles() []string {
 	return e.Roles
 }
 
-func (e Environment) Build(ctx context.Context) Node {
+func (e Environment[T]) Build(ctx context.Context) Node {
+	var zero T
+
 	key := ""
 	if e.Key != nil {
 		k, err := e.Key(ctx)
@@ -37,7 +41,8 @@ func (e Environment) Build(ctx context.Context) Node {
 		}
 		key = k
 	}
-	options := []string{}
+
+	options := []registry.Pair[T, string]{}
 	if e.Options != nil {
 		opts, err := e.Options(ctx)
 		if err != nil {
@@ -47,27 +52,31 @@ func (e Environment) Build(ctx context.Context) Node {
 		options = opts
 	}
 
-	// Read current value from $environment context
-	var current string
+	rawSel := ""
+	inMap := false
 	if envMap, ok := ctx.Value("$environment").(map[string]string); ok {
-		var isEnvironmentPresent bool
-		current, isEnvironmentPresent = envMap[key]
-		if !isEnvironmentPresent && e.Default != nil {
-			def, err := e.Default(ctx)
-			if err != nil {
-				slog.Error("Environment Default getter failed", "error", err, "key", e.Key)
-				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
-			}
-			current = def
+		var raw string
+		raw, inMap = envMap[key]
+		rawSel = strings.TrimSpace(raw)
+	}
+	if !inMap && e.Default != nil {
+		def, err := e.Default(ctx)
+		if err != nil {
+			slog.Error("Environment Default getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		}
+		if any(def) != any(zero) {
+			rawSel = fmt.Sprint(def)
 		}
 	}
 
 	optionNodes := []Node{
-		Option(Value(""), If(current == "", Attr("selected", "")), Text("—")),
+		Option(Value(""), If(rawSel == "", Attr("selected", "")), Text("—")),
 	}
 	for _, opt := range options {
+		ks := fmt.Sprint(opt.Key)
 		optionNodes = append(optionNodes,
-			Option(Value(opt), If(current == opt, Attr("selected", "")), Text(opt)),
+			Option(Value(ks), If(rawSel == ks, Attr("selected", "")), Text(opt.Value)),
 		)
 	}
 

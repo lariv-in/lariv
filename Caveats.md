@@ -35,6 +35,18 @@
    - `filesystem.SelectRoute` and `filesystem.MoveSelectRoute` are directory pickers; directories are selectable.
    - `filesystem.MultiSelectRoute` is a file picker for asset-style many-to-many fields; files are selectable, but clicking a directory should browse into it instead of selecting it.
 
+# Environment selector
+
+- `components.Environment[T]` (`components/environment.go`) renders a `<select>` that reads and writes the `environment` JSON cookie; the parsed map is available as `$environment` (`map[string]string`) on the request context.
+- `Options` should be a `Getter` returning `[]registry.Pair[T, string]` from `registry/registry.go`: **Key** is the option id (stored in the cookie and sent as `<option value>`), **Value** is the display label. Keys are stringified with `fmt.Sprint` for HTML and for comparing to the cookie string.
+- `Default` is optional. When the cookie has no entry for `Key`, it runs; a **zero** `T` means “no default” (do not treat as a selected id).
+- Register `Environment` as **`&components.Environment[T]{...}`** inside `[]PageInterface` (and in registries that expect pointers) so the node implements `MutableParentInterface` and remains patchable—the same pointer rule as other `PageInterface` children.
+- List views, query patchers, and any other code that scopes data by the user’s choice must read the same cookie value and parse it the same way (e.g. numeric id string for `Environment[uint]`).
+
+# SQL identifiers (PostgreSQL)
+
+- Column names **`start`** and **`end`** must be quoted in GORM `Order` clauses and other raw SQL fragments, e.g. `` Order(`"start" ASC`) `` or `Where(`"start" <= ? AND "end" >= ?`, ...)`, because unquoted `start` is not a valid column reference in PostgreSQL.
+
 # Registry
 
 Anything that needs to be patchable on an app-wide scale should be done via a registry from `registry/registry.go`.

@@ -10,6 +10,7 @@ require (
 	github.com/lariv-in/components v0.0.0
 	github.com/lariv-in/getters v0.0.0
 	github.com/lariv-in/lago v0.0.0
+	github.com/lariv-in/registry v0.0.0
 	github.com/lariv-in/p_filesystem v0.0.0
 	github.com/lariv-in/p_semesters v0.0.0
 	github.com/lariv-in/p_users v0.0.0

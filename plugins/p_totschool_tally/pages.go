@@ -9,22 +9,32 @@ import (
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
 	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/registry"
 	"gorm.io/gorm"
 )
 
-func CurrentSessionGetter(ctx context.Context) any {
+// tallySessionEnvironmentDefault returns the TotSchoolSession id for the current quarter.
+func tallySessionEnvironmentDefault(ctx context.Context) (uint, error) {
 	db := ctx.Value("$db").(*gorm.DB)
-	date := time.Now()
-	session := EnsureSessionForDate(db, date)
-	return session.Name
+	session := EnsureSessionForDate(db, time.Now())
+	return session.ID, nil
 }
 
-// SessionsListGetter returns the list of all session names for use in
-// the session environment selector.
-func SessionsListGetter(ctx context.Context) ([]string, error) {
+// SessionsListGetter returns session id / display name pairs for the environment selector.
+func SessionsListGetter(ctx context.Context) ([]registry.Pair[uint, string], error) {
 	db := ctx.Value("$db").(*gorm.DB)
-	names := getAllSessionNames(db)
-	return names, nil
+	var sessions []TotSchoolSession
+	if err := db.Model(&TotSchoolSession{}).Order(`"start" DESC`).Find(&sessions).Error; err != nil {
+		return nil, err
+	}
+	out := make([]registry.Pair[uint, string], 0, len(sessions))
+	for _, s := range sessions {
+		out = append(out, registry.Pair[uint, string]{
+			Key:   s.ID,
+			Value: s.Name,
+		})
+	}
+	return out, nil
 }
 
 // CurrentEnvironmentSessionGetter resolves the active TotSchoolSession from
@@ -358,17 +368,11 @@ func init() {
 	}
 
 	// Session environment selector (shared across list, dashboard, leaderboard)
-	sessionEnvironment := components.Environment{
+	sessionEnvironment := &components.Environment[uint]{
 		Label:   "Session",
 		Key:     getters.GetterStatic("session"),
 		Options: SessionsListGetter,
-		Default: func(ctx context.Context) (string, error) {
-			v := CurrentSessionGetter(ctx)
-			if s, ok := v.(string); ok {
-				return s, nil
-			}
-			return "", nil
-		},
+		Default: tallySessionEnvironmentDefault,
 	}
 
 	// Tally Table
@@ -482,10 +486,11 @@ func init() {
 				func(*components.Detail[p_users.User]) components.ContainerColumn {
 					return components.ContainerColumn{
 						Children: []components.PageInterface{
-							components.Environment{
+							&components.Environment[uint]{
 								Label:   "Session",
 								Key:     getters.GetterStatic("session"),
 								Options: SessionsListGetter,
+								Default: tallySessionEnvironmentDefault,
 							},
 							TallySessionEntries{
 								Page: components.Page{

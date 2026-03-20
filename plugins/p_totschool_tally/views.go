@@ -15,32 +15,32 @@ import (
 	"gorm.io/gorm"
 )
 
-// getSessionFromEnvironment looks up the session selected in the $environment cookie,
-// falling back to the current quarter if none is selected.
+// getSessionFromEnvironment looks up the session selected in the $environment cookie
+// (session id), falling back to the current quarter if none is selected.
 func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSession {
 	if envMap, ok := ctx.Value("$environment").(map[string]string); ok {
-		if name, exists := envMap["session"]; exists && name != "" {
-			var session TotSchoolSession
-			if err := db.Where("name = ?", name).First(&session).Error; err != nil {
-				slog.Error("getSessionFromEnvironment: failed to load session by name from $environment",
-					"name", name,
-					"error", err,
-				)
-				return EnsureSessionForDate(db, time.Now())
+		if raw, exists := envMap["session"]; exists && raw != "" {
+			if id, err := strconv.ParseUint(raw, 10, 64); err == nil && id > 0 {
+				var session TotSchoolSession
+				if qerr := db.First(&session, uint(id)).Error; qerr == nil {
+					return session
+				} else {
+					slog.Error("getSessionFromEnvironment: failed to load session by id from $environment",
+						"id", raw,
+						"error", qerr,
+					)
+				}
 			} else {
-				return session
+				// Legacy: cookie held session name.
+				var session TotSchoolSession
+				if err := db.Where("name = ?", raw).First(&session).Error; err == nil {
+					return session
+				}
 			}
 		}
 	}
 	slog.Error("getSessionFromEnvironment: no session found in $environment", "environment", ctx.Value("$environment"))
 	return EnsureSessionForDate(db, time.Now())
-}
-
-// getAllSessionNames returns all TotSchoolSession names ordered by start date descending.
-func getAllSessionNames(db *gorm.DB) []string {
-	var names []string
-	db.Model(&TotSchoolSession{}).Order("start DESC").Pluck("name", &names)
-	return names
 }
 
 // TallyDashboardHandler displays user stats.
@@ -64,9 +64,8 @@ func TallyDashboardHandler(v *views.View) http.Handler {
 		dashboard := GetDashboardStats(db, userID, &session)
 
 		data := map[string]any{
-			"Dashboard":    dashboard,
-			"Session":      session,
-			"SessionNames": getAllSessionNames(db),
+			"Dashboard": dashboard,
+			"Session":   session,
 		}
 
 		// For non-admin users, provide WhatsApp report data for the dashboard.
@@ -93,7 +92,6 @@ func TallyLeaderboardHandler(v *views.View) http.Handler {
 		ctx := context.WithValue(r.Context(), "$in", map[string]any{
 			"Leaderboards": leaderboards,
 			"Title":        fmt.Sprintf("Leaderboard for %s", session.Name),
-			"SessionNames": getAllSessionNames(db),
 		})
 
 		v.RenderPage(w, r.WithContext(ctx))
@@ -231,31 +229,6 @@ func TallyListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm
 	return query
 }
 
-// TallySessionNamesMiddleware injects SessionNames into $in so the shared
-// session environment selector can render options on the tally list page.
-func TallySessionNamesMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		sessionNames := getAllSessionNames(db)
-
-		// Merge into existing $in map if present, otherwise create a new one.
-		inMap, _ := ctx.Value("$in").(map[string]any)
-		if inMap == nil {
-			inMap = map[string]any{}
-		}
-		inMap["SessionNames"] = sessionNames
-
-		ctx = context.WithValue(ctx, "$in", inMap)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 // TallyDailyFormHandler handles form submission for the logged-in user's daily tally.
 func TallyDailyFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -320,7 +293,6 @@ func init() {
 	lago.RegistryView.Register("tally.TallyListView",
 		views.ListView[Tally]("Tallies")(lago.GetPageView("tally.TallyTable")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("tally.sessionNames", TallySessionNamesMiddleware).
 			WithQueryPatcher("tally.list", TallyListQueryPatcher))
 
 	lago.RegistryView.Register("tally.TallyDailyFormView",

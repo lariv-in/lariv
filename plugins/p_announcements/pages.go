@@ -9,6 +9,7 @@ import (
 	"github.com/lariv-in/components"
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
+	"github.com/lariv-in/registry"
 	"github.com/lariv-in/p_semesters"
 	"gorm.io/gorm"
 )
@@ -324,7 +325,7 @@ func registerTablePages() {
 			lago.DynamicPage{Name: "announcements.AnnouncementMenu"},
 		},
 		Children: []components.PageInterface{
-			components.Environment{
+			&components.Environment[uint]{
 				Label:   "Semester",
 				Key:     getters.GetterStatic("semester"),
 				Options: semestersEnvOptionsGetterForEnvironment,
@@ -486,33 +487,35 @@ func registerSelectionPages() {
 
 // semesterEnvironmentDefaultGetter selects the semester whose [Start, End] contains time.Now(),
 // matching announcementsListSemesterEnvQueryPatcher when the environment cookie has no semester.
-func semesterEnvironmentDefaultGetter(ctx context.Context) (string, error) {
+func semesterEnvironmentDefaultGetter(ctx context.Context) (uint, error) {
 	db, ok := ctx.Value("$db").(*gorm.DB)
 	if !ok || db == nil {
-		return "", nil
+		return 0, nil
 	}
-	v, ok := semesterEnvironmentDefault(db, time.Now())
+	id, ok := semesterEnvironmentDefault(db, time.Now())
 	if !ok {
-		return "", nil
+		return 0, nil
 	}
-	return v, nil
+	return id, nil
 }
 
-// semestersEnvOptionsGetterForEnvironment returns dropdown options formatted as "ID:Name".
-func semestersEnvOptionsGetterForEnvironment(ctx context.Context) ([]string, error) {
+func semestersEnvOptionsGetterForEnvironment(ctx context.Context) ([]registry.Pair[uint, string], error) {
 	db, ok := ctx.Value("$db").(*gorm.DB)
 	if !ok || db == nil {
 		return nil, fmt.Errorf("semestersEnvOptionsGetterForEnvironment: missing $db in context")
 	}
 
 	var semesters []p_semesters.Semester
-	if err := db.Order("start ASC").Find(&semesters).Error; err != nil {
+	if err := db.Order(`"start" ASC`).Find(&semesters).Error; err != nil {
 		return nil, err
 	}
 
-	options := make([]string, 0, len(semesters))
+	options := make([]registry.Pair[uint, string], 0, len(semesters))
 	for _, s := range semesters {
-		options = append(options, fmt.Sprintf("%d:%s", s.ID, s.Name))
+		options = append(options, registry.Pair[uint, string]{
+			Key:   s.ID,
+			Value: s.Name,
+		})
 	}
 	return options, nil
 }
