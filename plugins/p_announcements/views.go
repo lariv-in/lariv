@@ -1,6 +1,7 @@
 package p_announcements
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/lariv-in/getters"
 	"github.com/lariv-in/lago"
+	"github.com/lariv-in/p_semesters"
 	"github.com/lariv-in/p_users"
 	"github.com/lariv-in/views"
 	"gorm.io/gorm"
@@ -26,6 +28,20 @@ func parseSemesterEnvID(raw string) (uint, bool) {
 	return uint(id), true
 }
 
+// semesterEnvironmentOptionForNow returns the environment option "ID:Name" for the
+// semester whose [Start, End] interval contains now (inclusive), or ("", false) if none.
+func semesterEnvironmentOptionForNow(db *gorm.DB, now time.Time) (string, bool) {
+	var sem p_semesters.Semester
+	err := db.Model(&p_semesters.Semester{}).
+		Where("start <= ? AND end >= ?", now, now).
+		Order("start ASC").
+		First(&sem).Error
+	if err != nil {
+		return "", false
+	}
+	return fmt.Sprintf("%d:%s", sem.ID, sem.Name), true
+}
+
 // announcementsListSemesterEnvQueryPatcher scopes the list view to the semester
 // selected in the environment cookie (components.Environment).
 func announcementsListSemesterEnvQueryPatcher(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
@@ -35,7 +51,15 @@ func announcementsListSemesterEnvQueryPatcher(_ *views.View, r *http.Request, qu
 	}
 	raw, ok := envMap["semester"]
 	if !ok || strings.TrimSpace(raw) == "" {
-		return query
+		db, dbOK := r.Context().Value("$db").(*gorm.DB)
+		if !dbOK || db == nil {
+			return query
+		}
+		var found bool
+		raw, found = semesterEnvironmentOptionForNow(db, time.Now())
+		if !found {
+			return query
+		}
 	}
 	semesterID, ok := parseSemesterEnvID(raw)
 	if !ok {
