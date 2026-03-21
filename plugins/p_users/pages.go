@@ -73,6 +73,28 @@ func registerMenuPages() {
 			},
 		},
 	})
+
+	lago.RegistryPage.Register("users.UserSelfMenu", &components.SidebarMenu{
+		Title: getters.GetterFormat("My account: %s", getters.GetterAny(getters.GetterKey[string]("user.Name"))),
+		Back: &components.SidebarMenuItem{
+			Title: getters.GetterStatic("Back to Home"),
+			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+		},
+		Children: []components.PageInterface{
+			&components.SidebarMenuItem{
+				Title: getters.GetterStatic("My Profile"),
+				Url:   lago.GetterRoutePath("users.SelfDetailRoute", nil),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.GetterStatic("Edit My Profile"),
+				Url:   lago.GetterRoutePath("users.SelfUpdateRoute", nil),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.GetterStatic("Change Password"),
+				Url:   lago.GetterRoutePath("users.SelfChangePasswordRoute", nil),
+			},
+		},
+	})
 }
 
 // --- Filters ---
@@ -225,7 +247,7 @@ func registerFormPages() {
 
 	lago.RegistryPage.Register("users.SelfUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserDetailMenu"},
+			lago.DynamicPage{Name: "users.UserSelfMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
@@ -240,6 +262,38 @@ func registerFormPages() {
 				},
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Profile"},
+				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("users.SelfChangePasswordForm", &components.ShellScaffold{
+		Sidebar: []components.PageInterface{
+			lago.DynamicPage{Name: "users.UserSelfMenu"},
+		},
+		Children: []components.PageInterface{
+			&components.FormComponent[User]{
+				Getter:   getters.GetterKey[User]("user"),
+				Url:      lago.GetterRoutePath("users.SelfChangePasswordRoute", nil),
+				Method:   http.MethodPost,
+				Title:    "Change Password",
+				Subtitle: "Update your password",
+				ChildrenInput: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.new_password"),
+						Children: []components.PageInterface{
+							&components.InputPassword{Name: "new_password", Label: "New Password", Required: true},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.confirm_password"),
+						Children: []components.PageInterface{
+							&components.InputPassword{Name: "confirm_password", Label: "Confirm New Password", Required: true},
+						},
+					},
+				},
+				ChildrenAction: []components.PageInterface{
+					&components.ButtonSubmit{Label: "Change Password"},
 				},
 			},
 		},
@@ -355,7 +409,7 @@ func registerDetailPages() {
 
 	lago.RegistryPage.Register("users.SelfDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserDetailMenu"},
+			lago.DynamicPage{Name: "users.UserSelfMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[User]{

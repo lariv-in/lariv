@@ -20,6 +20,15 @@ func SelfUserQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.
 	return query.Where("id = ?", user.ID)
 }
 
+func changeUserPassword(db *gorm.DB, userID uint, newPassword string) error {
+	var targetUser User
+	if err := db.Model(User{}).Last(&targetUser, "ID = ?", userID).Error; err != nil {
+		return err
+	}
+	targetUser.Password = []byte(newPassword)
+	return db.Save(&targetUser).Error
+}
+
 func SelfDetailHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("$user").(User)
@@ -223,27 +232,48 @@ func ChangePasswordHandler(v *views.View) http.Handler {
 			}
 		}
 
-		var targetUser User
-
-		err = db.Model(User{}).Last(&targetUser, "ID = ?", id).Error
-		if err != nil {
-			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
-			return
-		}
-
-		targetUser.Password = []byte(newPassword)
-		err = db.Save(&targetUser).Error
-		if err != nil {
+		if err := changeUserPassword(db, uint(id), newPassword); err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
 			v.RenderWithErrors(w, r, fieldErrors, values)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", targetUser.ID))
+		ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", id))
 		lago.NewRedirectView("users.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.GetterAny(getters.GetterKey[string]("$id")),
 		}).ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func SelfChangePasswordHandler(v *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		values, fieldErrors, err := v.ParseForm(w, r)
+		if err != nil {
+			return
+		}
+
+		newPassword, _ := values["new_password"].(string)
+		confirmPassword, _ := values["confirm_password"].(string)
+
+		if newPassword != confirmPassword {
+			fieldErrors["confirm_password"] = fmt.Errorf("Passwords do not match")
+		}
+
+		if v.HasErrors(fieldErrors) {
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		user := r.Context().Value("$user").(User)
+		db := r.Context().Value("$db").(*gorm.DB)
+
+		if err := changeUserPassword(db, user.ID, newPassword); err != nil {
+			fieldErrors["_form"] = fmt.Errorf("%v", err)
+			v.RenderWithErrors(w, r, fieldErrors, values)
+			return
+		}
+
+		lago.NewRedirectView("users.SelfDetailRoute", nil).ServeHTTP(w, r)
 	})
 }
 
@@ -293,6 +323,14 @@ func init() {
 			WithMethod(http.MethodPost, SelfUpdateHandler).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithQueryPatcher("users.self_update", SelfUserQueryPatcher))
+
+	// Self change password (only current user)
+	lago.RegistryView.Register("users.SelfChangePasswordView",
+		lago.GetPageView("users.SelfChangePasswordForm").
+			WithMethod(http.MethodGet, SelfDetailHandler).
+			WithMethod(http.MethodPost, SelfChangePasswordHandler).
+			WithMiddleware("users.auth", AuthenticationMiddleware).
+			WithQueryPatcher("users.self_change_password", SelfUserQueryPatcher))
 
 	// Delete view
 	lago.RegistryView.Register("users.DeleteView",

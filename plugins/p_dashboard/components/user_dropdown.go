@@ -57,6 +57,10 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		if err != nil {
 			slog.Error("user dropdown: resolve self update route", "error", err)
 		}
+		selfChangePasswordHref, err := getters.IfOrGetter(lago.GetterRoutePath("users.SelfChangePasswordRoute", nil), ctx, "")
+		if err != nil {
+			slog.Error("user dropdown: resolve self change password route", "error", err)
+		}
 		cardBody = append(cardBody, html.Div(
 			html.Class("flex flex-col gap-1 mt-2 pt-2 border-t border-base-300"),
 			html.A(
@@ -68,6 +72,11 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 				html.Class("btn btn-sm btn-ghost justify-start"),
 				html.Href(selfUpdateHref),
 				gomponents.Text("Edit profile"),
+			),
+			html.A(
+				html.Class("btn btn-sm btn-ghost justify-start"),
+				html.Href(selfChangePasswordHref),
+				gomponents.Text("Change password"),
 			),
 		))
 	}
