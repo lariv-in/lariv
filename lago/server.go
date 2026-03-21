@@ -23,7 +23,7 @@ func StartServer(config LagoConfig) error {
 
 	// Applying all middlewares
 	middlewares := RegistryMiddleware.All()
-	var router http.Handler = GetRouter()
+	var router http.Handler = GetRouter(config)
 	for _, middleware := range middlewares {
 		router = middleware(router)
 	}
