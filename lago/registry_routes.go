@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"strings"
 
 	"github.com/lariv-in/getters"
@@ -17,8 +18,11 @@ type Route struct {
 	Handler http.Handler
 }
 
-func GetRouter() *http.ServeMux {
+func GetRouter(config LagoConfig) *http.ServeMux {
 	baseRouter := http.NewServeMux()
+	if config.Debug {
+		baseRouter.Handle("/pprof/", pprof.Handler("heap"))
+	}
 	routes := RegistryRoute.All()
 	for _, route := range routes {
 		// Keep exact-match behavior for "directory-like" routes that end with "/"

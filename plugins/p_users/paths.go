@@ -45,6 +45,11 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("users.SelfUpdateView"),
 	})
 
+	_ = lago.RegistryRoute.Register("users.SelfChangePasswordRoute", lago.Route{
+		Path:    AppUrl + "self/change-password/",
+		Handler: lago.NewDynamicView("users.SelfChangePasswordView"),
+	})
+
 	_ = lago.RegistryRoute.Register("users.DeleteRoute", lago.Route{
 		Path:    AppUrl + "{id}/delete/",
 		Handler: lago.NewDynamicView("users.DeleteView"),
