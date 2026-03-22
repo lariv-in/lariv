@@ -291,6 +291,6 @@ func init() {
 	lago.RegistryView.Register("appointments.CardTimelineView",
 		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentCardTimeline")).
 			WithQueryPatcher("appointments.timeline", AppointmentTimelineQueryPatcher).
-			WithQueryPatcher("appointments.timeline_order", views.QueryPatcherOrderBy("datetime DESC")).
+			WithQueryPatcher("appointments.timeline_order", views.QueryPatcherOrderBy("datetime ASC")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 }
