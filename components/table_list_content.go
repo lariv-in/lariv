@@ -127,14 +127,18 @@ func (e *TableListContent[T]) SetChildren(children []PageInterface) {
 	}
 }
 
-// columnSortURL preserves the current query string, sets sort for the given column
-// (toggling ASC/DESC when that column is already active), and resets page to 1.
+// columnSortURL preserves the current query string, cycles sort for the column
+// (ASC → DESC → cleared), and resets page to 1. A different column always starts at ASC.
 func columnSortURL(req *http.Request, columnKey string) string {
 	current := req.URL.Query().Get("sort")
 	next := nextSortClause(current, columnKey)
 	u := *req.URL
 	q := u.Query()
-	q.Set("sort", next)
+	if next == "" {
+		q.Del("sort")
+	} else {
+		q.Set("sort", next)
+	}
 	q.Set("page", "1")
 	u.RawQuery = q.Encode()
 	return u.String()
@@ -156,7 +160,7 @@ func nextSortClause(current, key string) string {
 	}
 	if strings.EqualFold(curCol, key) {
 		if curDir == "DESC" {
-			return key + " ASC"
+			return ""
 		}
 		return key + " DESC"
 	}

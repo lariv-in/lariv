@@ -12,9 +12,9 @@ import (
 type TableColumn struct {
 	Label string
 	// Name is the column identifier used in the list view ?sort= query (e.g. "Name ASC").
-	// When non-empty, the list table header is a link that toggles ascending/descending order.
+	// When non-empty, the list header cycles sort: ascending, descending, then clears ?sort=.
 	Name string
-	// Orderable is reserved; header sorting is enabled whenever Key is non-empty.
+	// Orderable is reserved; header sorting is enabled whenever Name is non-empty.
 	Orderable bool
 	Children  []PageInterface
 }
