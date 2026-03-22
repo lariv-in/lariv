@@ -6,6 +6,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_filesystem"
 	"github.com/lariv-in/lago/p_programs"
 )
 
@@ -187,6 +188,33 @@ func applicationFormFields() components.ContainerColumn {
 					},
 				},
 			},
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.PhotoID"),
+						Children: []components.PageInterface{
+							&p_filesystem.InputVNode{
+								Label:            "Photo",
+								Name:             "PhotoID",
+								VNode:            getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.PhotoID"))),
+								AllowedFiletypes: []string{".jpg", ".jpeg", ".png", ".webp"},
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.Documents"),
+						Children: []components.PageInterface{
+							&p_filesystem.InputMultiVNode{
+								Label:            "Documents",
+								Name:             "Documents",
+								VNode:            getters.GetterKey[[]p_filesystem.VNode]("$in.Documents"),
+								AllowedFiletypes: []string{".pdf", ".jpg", ".jpeg", ".png", ".webp"},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -334,6 +362,23 @@ func registerDetailPages() {
 								Classes: "mt-2",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.CompleteAddress")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Photo",
+								Children: []components.PageInterface{
+									&p_filesystem.FieldPhoto{
+									VNode:   getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.PhotoID"))),
+									Classes: "w-48 rounded",
+								},
+								},
+							},
+							&components.LabelInline{
+								Title: "Documents",
+								Children: []components.PageInterface{
+									&p_filesystem.FieldManyFile{
+										VNode: getters.GetterKey[[]p_filesystem.VNode]("$in.Documents"),
+									},
 								},
 							},
 						},

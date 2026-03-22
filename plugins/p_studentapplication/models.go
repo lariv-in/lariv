@@ -5,6 +5,7 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/p_programs"
+	"github.com/lariv-in/lago/p_filesystem"
 	"gorm.io/gorm"
 )
 
@@ -20,6 +21,9 @@ type StudentApplication struct {
 	Category          string
 	CompleteAddress   string
 	Mobile            string
+	PhotoID           *uint
+	Photo             p_filesystem.VNode
+	Documents         []p_filesystem.VNode `gorm:"many2many:student_application_documents;"`
 }
 
 func init() {

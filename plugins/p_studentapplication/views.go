@@ -18,7 +18,9 @@ func init() {
 		views.DetailView[StudentApplication]("studentapplication")(
 			lago.GetPageView("studentapplications.ApplicationDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")))
+			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
+			WithQueryPatcher("studentapplications.preload_photo", views.QueryPatcherPreload("Photo")).
+			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")))
 
 	lago.RegistryView.Register("studentapplications.CreateView",
 		views.CreateView[StudentApplication](lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
@@ -30,7 +32,9 @@ func init() {
 			views.UpdateView[StudentApplication](lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("studentapplications.ApplicationUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")))
+			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
+			WithQueryPatcher("studentapplications.preload_photo", views.QueryPatcherPreload("Photo")).
+			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")))
 
 	lago.RegistryView.Register("studentapplications.DeleteView",
 		views.DetailView[StudentApplication]("studentapplication")(
