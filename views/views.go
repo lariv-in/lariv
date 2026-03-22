@@ -125,7 +125,6 @@ func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println(components.Render(page, ctx))
 	err := components.Render(page, ctx).Render(dw)
 	// #region agent log
 	debugLogView("initial", "H5", "views/views.go:117", "page render result", map[string]any{
