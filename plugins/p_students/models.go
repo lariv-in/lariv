@@ -26,6 +26,7 @@ func init() {
 		if err := d.AutoMigrate(&Student{}); err != nil {
 			log.Panicf("failed to migrate Student model: %v", err)
 		}
+		d.FirstOrCreate(&p_users.Role{}, p_users.Role{Name: "student"})
 		return d
 	})
 
