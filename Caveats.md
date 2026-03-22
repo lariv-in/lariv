@@ -112,3 +112,12 @@ Use `components.InsertChildBefore`, `components.InsertChildAfter`, and `componen
 - If a page or form is intended to be extended by another plugin, add stable `Page.Key` values in the base plugin first, then patch against those keys. Do not rely on brittle structural matching when a reusable extension point can be made explicit.
 
 - If a selector route/page is generally useful beyond one addon, add it to the base plugin instead of creating a one-off copy in the addon plugin.
+
+# Generators
+
+- Plugins register data generators via `lago.RegistryGenerator.Register("name", lago.Generator{Create: ..., Remove: ...})` inside their `init()` func.
+- Execution order is strictly determined by the `GeneratorOrder` array defined in the deployment's TOML config (e.g., `nirmancampus.toml`).
+- `RunGenerators` executes in two phases to respect foreign-key constraints:
+  - **Phase 1 (Remove):** Iterates *backwards* through the TOML list, deleting dependent tables before base tables.
+  - **Phase 2 (Create):** Iterates *forwards* through the TOML list, creating base tables before dependent ones.
+- **Many-to-Many Cleanup:** When writing a generator's `Remove` function, you must manually issue raw SQL to clear any many-to-many join tables (e.g., `db.Exec("DELETE FROM student_assets")`) before deleting the primary model, because GORM/PostgreSQL will not automatically cascade delete rows from many-to-many join tables, resulting in FK violation errors.

@@ -59,8 +59,9 @@ func init() {
 		d.AutoMigrate(User{})
 		d.AutoMigrate(Role{})
 
-		// Ensure ID 1 is always the safe "Unassigned" fallback role
-		d.FirstOrCreate(&Role{}, Role{Name: "Unassigned"})
+		// Ensure ID 1 is always the safe "Unassigned" fallback role (Attrs applies on insert only).
+		var unassigned Role
+		d.Attrs(Role{Model: gorm.Model{ID: 1}}).FirstOrCreate(&unassigned, Role{Name: "unassigned"})
 
 		return d
 	})

@@ -134,8 +134,7 @@ func patchAcademicRecordDetail() {
 			recordID := getters.GetterKey[uint]("$in.ID")
 			column.Children = append(column.Children,
 				&components.LabelInline{
-					Title:   "Program",
-					Classes: "mt-4",
+					Title: "Program",
 					Children: []components.PageInterface{
 						&components.FieldText{Getter: academicRecordProgramNameGetter(recordID)},
 					},
@@ -153,4 +152,3 @@ func init() {
 	patchAcademicRecordTable()
 	patchAcademicRecordDetail()
 }
-

@@ -217,10 +217,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[AcademicRecord]{
-				Page:     components.Page{Key: "academicrecords.AcademicRecordTableBody"},
-				UID:      "academicrecords-table",
-				Classes:  "w-full",
-				Data:     getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
+				Page:      components.Page{Key: "academicrecords.AcademicRecordTableBody"},
+				UID:       "academicrecords-table",
+				Classes:   "w-full",
+				Data:      getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
 				CreateUrl: lago.GetterRoutePath("academicrecords.CreateRoute", nil),
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
@@ -273,15 +273,13 @@ func registerDetailPages() {
 							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Student.User.Name")},
 							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Student.StudentNo")},
 							&components.LabelInline{
-								Title:   "Semester",
-								Classes: "mt-4",
+								Title: "Semester",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Semester.Name")},
 								},
 							},
 							&components.LabelInline{
-								Title:   "Status",
-								Classes: "mt-2",
+								Title: "Status",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Status")},
 								},
@@ -348,4 +346,3 @@ func registerSelectionPages() {
 		},
 	})
 }
-
