@@ -1,0 +1,66 @@
+package p_academicrecords
+
+import (
+	"fmt"
+	"log/slog"
+	"net/http"
+
+	"github.com/lariv-in/p_students"
+	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/views"
+	"gorm.io/gorm"
+)
+
+// AcademicRecordScopeByRole restricts academic record queries:
+// - superuser ($role "superuser"): full queryset
+// - student: filtered to AcademicRecords for this user's Student row
+// - default (any other role): empty queryset — extend with new cases when needed
+func AcademicRecordScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	ctx := r.Context()
+
+	rawUser := ctx.Value("$user")
+	if rawUser == nil {
+		slog.Error("AcademicRecordScopeByRole: missing $user in context – auth middleware not applied?")
+		panic("AcademicRecordScopeByRole: $user is nil in context")
+	}
+	user, ok := rawUser.(p_users.User)
+	if !ok {
+		slog.Error("AcademicRecordScopeByRole: $user has unexpected type",
+			"type", fmt.Sprintf("%T", rawUser),
+		)
+		panic("AcademicRecordScopeByRole: $user has wrong type in context")
+	}
+
+	rawRole := ctx.Value("$role")
+	if rawRole == nil {
+		slog.Error("AcademicRecordScopeByRole: missing $role in context – auth middleware not applied?")
+		panic("AcademicRecordScopeByRole: $role is nil in context")
+	}
+	roleName, ok := rawRole.(string)
+	if !ok {
+		slog.Error("AcademicRecordScopeByRole: $role has unexpected type",
+			"type", fmt.Sprintf("%T", rawRole),
+		)
+		panic("AcademicRecordScopeByRole: $role has wrong type in context")
+	}
+
+	dbVal := ctx.Value("$db")
+	db, ok := dbVal.(*gorm.DB)
+	if !ok || db == nil {
+		slog.Error("AcademicRecordScopeByRole: missing or invalid $db in context",
+			"type", fmt.Sprintf("%T", dbVal),
+		)
+		panic("AcademicRecordScopeByRole: $db is nil or wrong type in context")
+	}
+
+	// AuthenticationMiddleware sets $role to "superuser" for superusers, else Role.name from DB.
+	switch roleName {
+	case "superuser":
+		return query
+	case "student":
+		sub := db.Model(&p_students.Student{}).Select("id").Where("user_id = ?", user.ID)
+		return query.Where("student_id IN (?)", sub)
+	default:
+		return query.Where("1 = 0")
+	}
+}

@@ -15,7 +15,8 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
-			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")),
+			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")).
+			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
 	// Detail view
@@ -25,7 +26,8 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
-			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")),
+			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")).
+			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
 	// Create view
@@ -53,7 +55,8 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
-			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")),
+			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")).
+			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
 	// Delete view
@@ -67,7 +70,8 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
-			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")),
+			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")).
+			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
 	// Selection view
@@ -77,7 +81,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
-			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")),
+			WithQueryPatcher("academicrecords.preload_semester", views.QueryPatcherPreload("Semester")).
+			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 }
-
