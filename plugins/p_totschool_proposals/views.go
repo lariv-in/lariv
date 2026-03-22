@@ -435,6 +435,26 @@ func exportPdfHandler(v *views.View) http.Handler {
 
 		result, err := conv.Convert(r.Context(), md2pdf.Input{
 			Markdown: proposal.GeneratedContent,
+			CSS: `
+			@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Noto+Serif+Devanagari:wght@100..900&display=swap');
+			html, body {
+				font-family:
+					"Noto Serif Devanagari",
+					"Tiro Devanagari Hindi",
+					"Nirmala UI",
+					"Mangal",
+					"Kokila",
+					"Aparajita",
+					"Lohit Devanagari",
+					"Noto Serif",
+					"Noto Sans Devanagari",
+					"Arial Unicode MS",
+					serif;
+			}
+			code, pre, kbd, samp {
+				font-family: ui-monospace, "Roboto Mono", monospace;
+			}
+			`,
 		})
 		if err != nil {
 			slog.Error("exportPdfHandler: PDF conversion failed",
