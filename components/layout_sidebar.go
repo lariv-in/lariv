@@ -53,7 +53,7 @@ func (e LayoutSidebar) Build(ctx context.Context) Node {
 			),
 
 			// Main Content
-			Main(Class("overflow-y-auto p-4 relative h-full bg-base-200"),
+			Main(Class("overflow-y-auto p-4 relative h-full bg-base"),
 				Button(
 					Attr("@click", "showLeft = !showLeft"),
 					Class("btn btn-sm btn-square mb-2"), Render(Icon{Name: "bars-3"}, ctx),

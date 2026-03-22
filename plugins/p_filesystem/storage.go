@@ -53,6 +53,37 @@ func (s *LocalFilestore) ensureBaseDir() (string, error) {
 	return dir, nil
 }
 
+// SaveFromReader persists data from an io.Reader into the local filestore,
+// using the given file extension for the temp file name. Returns the stored
+// path on disk. This is the shared core used by Save and available to
+// generators or any other code that has raw bytes instead of a multipart upload.
+func (s *LocalFilestore) SaveFromReader(r io.Reader, ext string) (string, error) {
+	dir, err := s.ensureBaseDir()
+	if err != nil {
+		return "", err
+	}
+
+	dst, err := os.CreateTemp(dir, "store-*"+ext)
+	if err != nil {
+		slog.Error("failed creating local filestore temp file", "dir", dir, "error", err)
+		return "", err
+	}
+
+	if _, err := io.Copy(dst, r); err != nil {
+		_ = dst.Close()
+		_ = os.Remove(dst.Name())
+		slog.Error("failed copying data to local filestore", "path", dst.Name(), "error", err)
+		return "", err
+	}
+	if err := dst.Close(); err != nil {
+		_ = os.Remove(dst.Name())
+		slog.Error("failed closing local filestore temp file", "path", dst.Name(), "error", err)
+		return "", err
+	}
+
+	return dst.Name(), nil
+}
+
 func (s *LocalFilestore) Save(file *multipart.FileHeader) (string, error) {
 	if file == nil {
 		return "", nil
@@ -65,30 +96,7 @@ func (s *LocalFilestore) Save(file *multipart.FileHeader) (string, error) {
 	}
 	defer src.Close()
 
-	dir, err := s.ensureBaseDir()
-	if err != nil {
-		return "", err
-	}
-
-	dst, err := os.CreateTemp(dir, "upload-*"+filepath.Ext(file.Filename))
-	if err != nil {
-		slog.Error("failed creating local filestore temp file", "dir", dir, "filename", file.Filename, "error", err)
-		return "", err
-	}
-
-	if _, err := io.Copy(dst, src); err != nil {
-		_ = dst.Close()
-		_ = os.Remove(dst.Name())
-		slog.Error("failed copying uploaded file to local filestore", "path", dst.Name(), "filename", file.Filename, "error", err)
-		return "", err
-	}
-	if err := dst.Close(); err != nil {
-		_ = os.Remove(dst.Name())
-		slog.Error("failed closing local filestore temp file", "path", dst.Name(), "error", err)
-		return "", err
-	}
-
-	return dst.Name(), nil
+	return s.SaveFromReader(src, filepath.Ext(file.Filename))
 }
 
 func (s *LocalFilestore) Open(path string, name string) (*FileDownload, error) {
