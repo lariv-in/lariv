@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
@@ -115,15 +116,34 @@ func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
 		return &existing, nil
 	}
 
+	role := Role{Name: "superuser"}
+	db.Where("name = ?", "superuser").FirstOrCreate(&role)
+
 	user := User{
 		Name:        "Super Admin",
 		Email:       "superadmin@lariv.in",
 		Password:    []byte(defaultPassword),
 		IsSuperuser: true,
+		RoleID:      role.ID,
 	}
 	if err := db.Create(&user).Error; err != nil {
 		return nil, err
 	}
 	fmt.Println("Created overall superuser")
 	return &user, nil
+}
+
+func init() {
+	lago.RegistryGenerator.Register("users.Generator", lago.Generator{
+		Create: func(db *gorm.DB) error {
+			_, err := CreateOverallSuperuser(db)
+			return err
+		},
+		Remove: func(db *gorm.DB) error {
+			if err := db.Unscoped().Where("1=1").Delete(&User{}).Error; err != nil {
+				return err
+			}
+			return nil
+		},
+	})
 }

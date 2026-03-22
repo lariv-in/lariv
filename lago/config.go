@@ -2,12 +2,13 @@ package lago
 
 import (
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"log/slog"
 	"os"
 	"path/filepath"
+
+	"github.com/BurntSushi/toml"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 )
 
 type LagoConfig struct {
@@ -18,6 +19,7 @@ type LagoConfig struct {
 	Address        string
 	CertFile       string
 	KeyFile        string
+	GeneratorOrder []string
 	Plugins        map[string]toml.Primitive
 }
 

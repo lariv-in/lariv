@@ -1,7 +1,6 @@
 package p_nirmancampus_students
 
 import (
-	"errors"
 	"math/rand"
 	"time"
 
@@ -92,27 +91,14 @@ func init() {
 					address = randomAddress(r)
 				}
 
-				var existing NirmancampusStudentDetails
-				err := db.Where("student_id = ?", student.ID).Take(&existing).Error
+				err := db.Where(NirmancampusStudentDetails{StudentID: student.ID}).
+					Assign(NirmancampusStudentDetails{
+						FathersName: fathersName,
+						Category:    category,
+						Address:     address,
+					}).
+					FirstOrCreate(&NirmancampusStudentDetails{}).Error
 				if err != nil {
-					if errors.Is(err, gorm.ErrRecordNotFound) {
-						if err := db.Create(&NirmancampusStudentDetails{
-							StudentID:    student.ID,
-							FathersName: fathersName,
-							Category:    category,
-							Address:     address,
-						}).Error; err != nil {
-							return err
-						}
-						continue
-					}
-					return err
-				}
-
-				existing.FathersName = fathersName
-				existing.Category = category
-				existing.Address = address
-				if err := db.Save(&existing).Error; err != nil {
 					return err
 				}
 			}
@@ -124,4 +110,3 @@ func init() {
 		},
 	})
 }
-

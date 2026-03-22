@@ -2,6 +2,7 @@ package p_students
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -102,6 +103,10 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
+			// Clear many-to-many join table before deleting students
+			if err := db.Exec("DELETE FROM student_assets").Error; err != nil {
+				slog.Error("failed clearing student_assets join table", "error", err)
+			}
 			return db.Unscoped().Where("1=1").Delete(&Student{}).Error
 		},
 	})

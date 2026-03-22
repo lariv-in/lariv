@@ -17,7 +17,7 @@ type User struct {
 	Email        string `gorm:"unique"`
 	Phone        string `gorm:"unique"`
 	IsSuperuser  bool   `gorm:"notnull"`
-	RoleID       uint   `gorm:"notnull"`
+	RoleID       uint   `gorm:"notnull;default:1"`
 	Role         Role   `gorm:"notnull"`
 	Password     []byte `gorm:"-"`
 	PasswordHash []byte `gorm:"column:password"`
@@ -58,6 +58,10 @@ func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
 		d.AutoMigrate(User{})
 		d.AutoMigrate(Role{})
+
+		// Ensure ID 1 is always the safe "Unassigned" fallback role
+		d.FirstOrCreate(&Role{}, Role{Name: "Unassigned"})
+
 		return d
 	})
 	lago.RegistryAdmin.Register("p_users", lago.AdminPanel[User]{

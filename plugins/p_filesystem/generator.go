@@ -156,18 +156,7 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
-			// Fetch all file nodes to clean up their stored files.
-			var files []VNode
-			if err := db.Unscoped().Where("is_directory = ?", false).Find(&files).Error; err != nil {
-				slog.Error("failed fetching file VNodes for cleanup", "error", err)
-			}
-			for _, f := range files {
-				if f.FilePath != "" {
-					if err := Store.Delete(f.FilePath); err != nil {
-						slog.Error("failed removing stored file during generator cleanup", "path", f.FilePath, "error", err)
-					}
-				}
-			}
+			// VNode.AfterDelete hook handles file cleanup on disk automatically.
 			return db.Unscoped().Where("1=1").Delete(&VNode{}).Error
 		},
 	})
