@@ -141,8 +141,9 @@ func registerDetail() {
 					Children: []components.PageInterface{
 						components.ContainerColumn{Classes: "my-2", Children: []components.PageInterface{
 							components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
-								components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
+								components.ContainerColumn{Classes: "flex flex-wrap gap-2 items-center", Children: []components.PageInterface{
 									components.ButtonDownload{Label: "Export to PDF", Link: lago.GetterRoutePath("proposals.ExportPdfRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
+									components.ButtonDownload{Label: "Export to Word", Link: lago.GetterRoutePath("proposals.ExportDocxRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
 									components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("proposals.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
 									components.ButtonPost{Label: "Regenerate Proposal", URL: lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
 								}},

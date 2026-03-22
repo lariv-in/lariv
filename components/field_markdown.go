@@ -10,7 +10,7 @@ import (
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/lariv-in/lago/getters"
-	. "maragu.dev/gomponents"
+	"maragu.dev/gomponents"
 	ghtml "maragu.dev/gomponents/html"
 )
 
@@ -57,11 +57,12 @@ func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus
 	}
 	if n, ok := node.(*ast.List); ok {
 		if n.ListFlags&ast.ListTypeTerm != 0 {
-			n.Attribute = appendOrAssign(n.Attribute, "list-disc", "my-2", "gap-2")
+			n.Attribute = appendOrAssign(n.Attribute, "list-disc")
 		}
 		if n.ListFlags&ast.ListTypeOrdered != 0 {
-			n.Attribute = appendOrAssign(n.Attribute, "list-decimal", "my-2", "gap-2")
+			n.Attribute = appendOrAssign(n.Attribute, "list-decimal")
 		}
+		n.Attribute = appendOrAssign(n.Attribute, "my-2", "gap-2", "list-inside")
 	}
 	return ast.GoToNext, false
 }
@@ -71,9 +72,8 @@ func RenderMarkdown(md string) string {
 	opts := html.RendererOptions{Flags: html.CommonFlags}
 	opts.RenderNodeHook = customRenderHook
 	renderer := html.NewRenderer(opts)
-	s := string(markdown.Render(doc, renderer))
 
-	return s
+	return string(markdown.Render(doc, renderer))
 }
 
 func (e FieldMarkdown) GetKey() string {
@@ -84,7 +84,7 @@ func (e FieldMarkdown) GetRoles() []string {
 	return e.Roles
 }
 
-func (e FieldMarkdown) Build(ctx context.Context) Node {
+func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 	if e.Getter == nil {
 		return ghtml.Div()
 	}
@@ -96,5 +96,5 @@ func (e FieldMarkdown) Build(ctx context.Context) Node {
 	if s == "" {
 		return ghtml.Div()
 	}
-	return ghtml.Div(ghtml.Class(e.Classes), Raw(RenderMarkdown(s)))
+	return ghtml.Div(ghtml.Class(e.Classes), gomponents.Raw(RenderMarkdown(s)))
 }

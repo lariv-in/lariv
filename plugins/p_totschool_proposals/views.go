@@ -1,10 +1,13 @@
 package p_totschool_proposals
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/alnah/go-md2pdf"
@@ -395,6 +398,59 @@ Rules:
 	})
 }
 
+func exportDocxHandler(v *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		idStr := r.PathValue("id")
+		db := proposalDB(r, "exportDocxHandler")
+		if db == nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		var proposal Proposal
+		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+			slog.Error("exportDocxHandler: proposal not found or DB error",
+				"error", err,
+				"id", idStr,
+				"pageName", v.PageName)
+			http.NotFound(w, r)
+			return
+		}
+
+		if proposal.GeneratedContent == "" {
+			slog.Warn("exportDocxHandler: export attempted with empty generated content",
+				"proposalID", proposal.ID,
+				"pageName", v.PageName)
+			http.Error(w, "No proposal content to export. Please generate the proposal first.", http.StatusUnprocessableEntity)
+			return
+		}
+
+		pandoc := exec.CommandContext(r.Context(), "pandoc", "-s", "-f", "markdown", "-t", "docx", "-o", "-")
+		pandoc.Stdin = strings.NewReader(proposal.GeneratedContent)
+		var docxOut, docxErr bytes.Buffer
+		pandoc.Stdout = &docxOut
+		pandoc.Stderr = &docxErr
+		if err := pandoc.Run(); err != nil {
+			slog.Error("exportDocxHandler: pandoc failed",
+				"error", err,
+				"stderr", docxErr.String(),
+				"proposalID", proposal.ID,
+				"pageName", v.PageName)
+			http.Error(w, "Failed to export proposal (is pandoc installed?)", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.docx"`, proposal.Title))
+		if _, err := w.Write(docxOut.Bytes()); err != nil {
+			slog.Error("exportDocxHandler: failed to write DOCX response",
+				"error", err,
+				"proposalID", proposal.ID,
+				"pageName", v.PageName)
+		}
+	})
+}
+
 func exportPdfHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
@@ -440,15 +496,9 @@ func exportPdfHandler(v *views.View) http.Handler {
 			html, body {
 				font-family:
 					"Noto Serif Devanagari",
-					"Tiro Devanagari Hindi",
-					"Nirmala UI",
-					"Mangal",
-					"Kokila",
-					"Aparajita",
 					"Lohit Devanagari",
 					"Noto Serif",
 					"Noto Sans Devanagari",
-					"Arial Unicode MS",
 					serif;
 			}
 			code, pre, kbd, samp {
@@ -525,5 +575,9 @@ func init() {
 
 	lago.RegistryView.Register("proposals.ExportPdfView",
 		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodGet, exportPdfHandler).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+
+	lago.RegistryView.Register("proposals.ExportDocxView",
+		lago.GetPageView("proposals.ProposalDetail").WithMethod(http.MethodGet, exportDocxHandler).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 }

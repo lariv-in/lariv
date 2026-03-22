@@ -21,6 +21,7 @@ import (
 	_ "github.com/lariv-in/lago/p_students"
 	_ "github.com/lariv-in/lago/p_teachers"
 	_ "github.com/lariv-in/lago/p_users"
+	_ "github.com/lariv-in/lago/p_nirmancampus_website"
 )
 
 func main() {

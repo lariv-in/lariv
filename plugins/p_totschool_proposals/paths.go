@@ -45,4 +45,8 @@ func init() {
 		Path:    AppUrl + "{id}/export-pdf/",
 		Handler: lago.NewDynamicView("proposals.ExportPdfView"),
 	})
+	_ = lago.RegistryRoute.Register("proposals.ExportDocxRoute", lago.Route{
+		Path:    AppUrl + "{id}/export-docx/",
+		Handler: lago.NewDynamicView("proposals.ExportDocxView"),
+	})
 }
