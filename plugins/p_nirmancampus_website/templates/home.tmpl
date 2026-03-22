@@ -1,0 +1,410 @@
+{{ template "header.tmpl" . }}
+
+<section 
+  class="relative h-screen bg-cover bg-center" 
+  style="background-image:url('/images/main2.jpg')"
+>
+  <!-- dark overlay -->
+  <div class="absolute inset-0 bg-black/50"></div>
+
+  <!-- Main hero content -->
+  <div class="relative z-6 flex flex-col items-center justify-center h-full text-center px-4 -translate-y-20">
+    <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
+      Welcome to Nirman Campus
+    </h1>
+    <p class="text-lg md:text-2xl text-gray-200 mb-8">
+      Empowering Education, Inspiring Futures
+    </p>
+    <a 
+      href="/about-us.php" 
+      class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition"
+    >
+      Learn More
+    </a>
+    <a
+      href="https://wa.me/919478450740"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chat on WhatsApp for Admissions"
+      class="inline-flex items-center bg-[#25D366] hover:bg-[#20AB53] text-white font-semibold py-3 px-8 rounded-lg transition duration-150 ease-in-out"
+    >
+      <i class="fab fa-whatsapp fa-lg"></i> <span class="ml-2">Admission Line</span>
+    </a>
+  </div>
+
+  <!-- Important Updates card: centered on mobile, bottom-right on desktop -->
+  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 z-20 w-[80%] md:w-[30%]">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div class="bg-blue-600 px-4 py-2">
+        <h2 class="text-white text-lg font-semibold">Announcements</h2>
+      </div>
+      <div class="p-4 max-h-56 overflow-y-auto">
+        <ul class="space-y-3">
+          {{ range .Announcements }}
+            <li class="flex items-start">
+              <img src="/images/new_icon.gif" alt="New" class="h-5 w-5 mt-1 mr-2"/>
+              <span class="text-gray-800">{{ .Text }}</span>
+            </li>
+          {{ else }}
+            <li class="text-gray-500">No announcements right now.</li>
+          {{ end }}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="hero" class="pt-8">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row items-center md:items-start gap-8 justify-center">
+      
+      <!-- Image on the left -->
+      <div class="w-full md:w-1/4">
+        <img
+          src="images/main2.jpg"
+          alt="Nirman Campus"
+          class="w-full h-64 md:h-auto object-cover rounded-lg shadow-lg"
+        />
+      </div>
+
+      <!-- Content on the right -->
+      <div class="w-full md:w-1/2 flex flex-col justify-center space-y-4">
+        <h2 class="text-2xl md:text-3xl font-semibold">
+          NIRMAN CAMPUS OF EDUCATION, RESEARCH AND TRAINING, <br>SUNAM UDHAM SINGHWALA (PUNJAB)
+        </h2>
+        <p class="text-justify">
+          Nirman Campus of Education, Research and Training is a non-profit joint venture of Kansal Foundation and NASO,
+          initiated by its visionary founder Dr. Amit Kansal. The institute is committed to providing accessible,
+          high-quality education through both regular and distance learning modes.
+        </p>
+        <p class="text-justify">
+          We’re proudly affiliated with Indira Gandhi National Open University (IGNOU), a central university under the
+          Ministry of Education, and Maharaja Ranjit Singh Punjab Technical University (MRSPTU), Bathinda, a leading
+          state technical university.
+        </p>
+        <p class="text-justify">
+          At Nirman Campus, we offer a wide range of undergraduate, postgraduate, diploma, and certification programs.
+          Our experienced faculty and supportive academic environment empower students to succeed in their chosen careers.
+          Whether you’re a working professional or a full-time learner, we provide the right platform for your academic goals
+          and lifelong learning.
+        </p>
+
+        <!-- Prospectus Buttons -->
+        <div class="flex flex-wrap gap-4 mt-4">
+          <a
+            href="/downloads/brochure.pdf"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Download NCERT Prospectus
+          </a>
+          <a
+            href="https://www.ignou.ac.in/viewFile/hq/common/Common-Prospectus-English.pdf"
+            target="_blank"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Download IGNOU Prospectus
+          </a>
+          
+          <a
+            href="/downloads/ADMISSION APPLICATION FORM.pdf"
+            target="_blank"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Admission Form (MRSPTU)
+          </a>
+          
+        </div>
+
+        <!-- Student Zone & Social Icons -->
+        <div class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-start gap-4">
+          <a
+            href="/stuzone.php"
+            class="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700"
+          >
+            Student Zone
+          </a>
+          <a
+            href="/feedback-form.php"
+            class="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700"
+          >
+            Give Your Feedback!
+          </a>
+          <div class="flex space-x-4">
+            <a href="https://whatsapp.com/channel/0029Vaj8AM0F6sn7LHwyQE0D" target="_blank">
+              <img src="/images/wa.png" alt="WhatsApp" class="h-10 w-10 rounded" />
+            </a>
+            <a href="https://t.me/nirmancampus" target="_blank">
+              <img src="/images/tele.png" alt="Telegram" class="h-10 w-10 rounded" />
+            </a>
+            <a href="https://www.youtube.com/channel/UC3ZaEEWH9hsCDM7alcIEvDA" target="_blank">
+              <img src="/images/yt.png" alt="YouTube" class="h-10 w-10 rounded" />
+            </a>
+            <a href="https://www.facebook.com/nirmancampus.sunam/" target="_blank">
+              <img src="/images/fb.png" alt="Facebook" class="h-10 w-10 rounded" />
+            </a>
+            <a href="https://www.instagram.com/nirmancampussunam/" target="_blank">
+              <img src="/images/ig.svg" alt="Instagram" class="h-10 w-10 rounded" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="founder-note" class="pt-12">
+  <div class="container mx-auto px-4">
+    <div class="flex flex-col md:flex-row items-center md:items-start gap-8 justify-center">
+
+      <!-- Content on the left -->
+      <div class="w-full md:w-1/2 flex flex-col justify-center space-y-4">
+        <h2 class="text-2xl md:text-3xl font-semibold">
+          A Note from the Founder
+        </h2>
+        <p class="text-justify">
+          Welcome to Nirman Campus! Your journey here contributes directly to our vision of <strong>Vikasit Bharat</strong>—a thriving, self-reliant nation built on the foundations of quality education and innovation.
+        </p>
+        <p class="text-justify">
+          We believe in <strong>Youth Empowerment</strong>. You are the catalysts for change, and your talents and initiatives will shape communities, bridge gaps, and inspire others to join this transformative mission.
+        </p>
+        <p class="text-justify">
+          True <strong>Nationalism</strong> is active service: uplifting those around you, upholding the values of integrity and unity, and dedicating your skills to the progress of our country.
+        </p>
+        <p class="mt-4 font-semibold">
+          Dr. Amit Kansal<br/>
+          Founder, Nirman Campus &amp; Kansal Foundation
+        </p>
+      </div>
+
+      <!-- Founder’s photo on the right -->
+      <div class="w-full md:w-1/5">
+        <img
+          src="/images/drkansal.jpeg"
+          alt="Dr. Amit Kansal"
+          class="w-full h-64 md:h-auto object-cover rounded-lg shadow-lg"
+        />
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="services" class="mt-12 pt-12 pb-12 bg-gray-50">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-8">
+      <h3 class="text-2xl font-bold">WELCOME TO NCERT</h3>
+      <p class="text-gray-600">NIRMAN CAMPUS OF EDUCATION, RESEARCH &amp; TRAINING</p>
+    </div>
+
+    <!-- First Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h4 class="font-semibold mb-3">IGNOU</h4>
+        <p class="text-gray-700">
+          IGNOU is a Central University run by the Government of India. It has NIRF #1 Rank, is recognised by UGC and is the Largest Open University in India.
+          <strong>IGNOU Degrees are completely valid and recognised in India and Abroad, they are approved by UGC, DEB, AIU, AICTE and Ministry of Education - Govt. of India.</strong>
+        </p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h4 class="font-semibold mb-3">MRSPTU</h4>
+        <p class="text-gray-700">
+          Maharaja Ranjit Singh Punjab Technical University (MRSPTU), Bathinda was established by Punjab Act No. 5 of
+          2015. It offers technical, scientific, and professional education with focus on innovation and industry readiness.
+        </p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h4 class="font-semibold mb-3">NCERT – Nirman Campus</h4>
+        <p class="text-gray-700">
+          Striving to provide top-quality “Edu-Tech” support at minimal cost, NCERT delivers holistic development with
+          qualified faculty and infrastructure at the birthplace of Shaheed Udham Singh.
+        </p>
+      </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h4 class="font-semibold mb-3">IGNOU Study Center - 2299</h4>
+          <ul class="space-y-3 mb-3">
+            <li>
+              <a
+                href="/stuzone.php"
+                class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-900"
+              >
+                <i class="fas fa-user-graduate"></i> Student Zone Nirman Campus
+              </a>
+            </li>
+            <li>
+              <a
+                href="/downloads/DECE-04 - Additional Guidelines for Project Work.pdf" target="_blank"
+                class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-900"
+              >
+                <i class="fas fa-user-graduate"></i>DECE-04 Additional Guidelines for Project Work (for learners enrolled in Jan-2025 and Jul-2025)
+              </a>
+            </li>
+          </ul>
+        <h4 class="font-semibold mb-3 inline-flex items-center">
+          Alerts &amp; Updates
+          <img src="/images/new_icon.gif" alt="New" class="h-5 w-5 ml-2" />
+        </h4>
+        <ul class="space-y-3">
+          <!--<li>
+            <a
+              href="/downloads/CS/blis_250830_134005.pdf"
+              class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-900"
+              target="_blank"
+            >
+              <i class="fas fa-calendar-check"></i> BLIS Counseling (January 2025)
+            </a>
+          </li>
+          <li>
+            <a
+              href="/downloads/CS/BAPFC_250830_134103.pdf"
+              class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-900"
+              target="_blank"
+            >
+              <i class="fas fa-calendar-check"></i> BAPFC Counseling (January 2025)
+            </a>
+          </li>
+          <li>
+            <a
+              href="/downloads/CS/MAPC_250830_134124.pdf"
+              class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-900"
+              target="_blank"
+            >
+              <i class="fas fa-calendar-check"></i> MAPC Counseling (January 2025)
+            </a>
+          </li> -->
+          <li> 
+            <a
+              href="/downloads/CS/DECE july25.pdf"
+              class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-900"
+              target="_blank"
+            >
+              <i class="fas fa-laptop"></i> DECE Online Counseling (July 2025)
+            </a>
+          </li> 
+          
+            <li>
+            <a
+              href="https://onlineservices.ignou.ac.in/convocation/"
+              class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-900"
+              target="_blank"
+            >
+              <i class="fas fa-calendar-check"></i>ONLINE REGISTRATION FOR 39TH CONVOCATION
+            </a>
+            </li>
+             
+            <li>
+            <a
+              href="https://ignou.samarth.edu.in/index.php/site/login"
+              class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-900"
+              target="_blank"
+            >
+            <i class="fas fa-calendar-check"></i>DOWNLOAD HALL ADMIT CARD FOR IGNOU EXAM DEC 2025
+            </a>
+             </li>
+         <li>
+            <a
+              href="/downloads/CS/TEE-DEC2025.pdf"
+              class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-900"
+              target="_blank"
+            >
+              <i class="fas fa-calendar-check"></i>Date Sheet-DEC 2025 TEE
+            </a>
+          </li>
+          
+          <li>
+            <a
+              href="https://onlineproject.ignou.ac.in/projectjun25/"
+              class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-900"
+              target="_blank"
+            >
+              <i class="fas fa-calendar-check"></i>Online Submission of Project Reports/Dissertation/Fieldwork Journals/Internship Reports/Practicum files for June 2025 TEE
+            </a>
+          </li>
+    
+          <!--<li>
+            <a
+              href="/downloads/Project Guidelines 2022 - 23.pdf"
+              class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              target="_blank"
+            >
+              <i class="fas fa-file-alt"></i> DECE-4 Project Guidelines
+            </a>
+          </li>-->
+        </ul>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h4 class="font-semibold mb-3">MRSPTU Notice Board</h4>
+        <ul class="space-y-3">
+          <li>
+            <a
+              href="https://www.mrsptu.ac.in/"
+              class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              target="_blank"
+            >
+              <i class="fas fa-globe"></i> MRSPTU Official Site
+            </a>
+          </li>
+          <li>
+            <a
+              href="/downloads/ADMISSION APPLICATION FORM.pdf"
+              class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              target="_blank"
+            >
+              <i class="fas fa-globe"></i> Download Admission Form
+            </a>
+          </li>
+          <li>
+            <a
+              href="/downloads/Mandatory Disclosure.pdf"
+              class="inline-flex items-center gap-2 bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+              target="_blank"
+            >
+              <i class="fas fa-exclamation-triangle"></i> Mandatory Disclosure
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h5 class="font-semibold">Kansal Foundation</h5>
+        <ul class="list-disc list-inside space-y-2 mt-2 text-gray-700">
+          <li>Shiksha Ropan - Door to Door Education</li>
+          <li>Youth for Seva Program</li>
+          <li>Sankalp Se Siddhi - Awareness Against Drugs</li>
+          <li>SAMVAD</li>
+          <li>Shaheed Udham Singh Scholarship Test</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{{ if .HasPopup }}
+  <div class="popup-overlay" id="latestInfoPopup">
+    <div class="popup-content">
+      <img src="{{ .PopupImageURL }}" alt="Latest Information">
+      <button class="close-btn" onclick="closePopup()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      document.getElementById('latestInfoPopup').style.display = 'flex';
+    };
+
+    function closePopup() {
+      document.getElementById('latestInfoPopup').style.display = 'none';
+    }
+
+    document.getElementById('latestInfoPopup').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closePopup();
+      }
+    });
+  </script>
+{{ end }}
+
+{{ template "footer.tmpl" . }}

@@ -2,11 +2,15 @@ package views
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"maps"
 	"net/http"
+	"os"
 	"reflect"
+	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -19,13 +23,53 @@ type Middleware = func(http.Handler) http.Handler
 
 type View struct {
 	PageName      string
-	Registry      map[string]components.PageInterface
+	PageLookup    func(name string) (components.PageInterface, bool)
 	Handlers      map[string]func(*View) http.Handler
 	FormPatchers  []registry.Pair[string, FormPatcher]
 	QueryPatchers []registry.Pair[string, QueryPatcher]
 	// Middlewares are applied in slice order to preserve insertion order.
 	Middlewares []registry.Pair[string, Middleware]
 }
+
+type debugResponseWriter struct {
+	http.ResponseWriter
+	status int
+	bytes  int
+}
+
+func (w *debugResponseWriter) WriteHeader(statusCode int) {
+	w.status = statusCode
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *debugResponseWriter) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = http.StatusOK
+	}
+	n, err := w.ResponseWriter.Write(b)
+	w.bytes += n
+	return n, err
+}
+
+// #region agent log
+func debugLogView(runID, hypothesisID, location, message string, data map[string]any) {
+	f, err := os.OpenFile("/home/sandy/source_repos/lago/.cursor/debug-84938a.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	_ = json.NewEncoder(f).Encode(map[string]any{
+		"sessionId":    "84938a",
+		"runId":        runID,
+		"hypothesisId": hypothesisID,
+		"location":     location,
+		"message":      message,
+		"data":         data,
+		"timestamp":    time.Now().UnixMilli(),
+	})
+}
+
+// #endregion
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler, isHandlerPresent := v.Handlers[r.Method]
@@ -44,26 +88,57 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (v *View) GetPage() (components.PageInterface, bool) {
-	page, isPagePresent := v.Registry[v.PageName]
-	return page, isPagePresent
+	return v.PageLookup(v.PageName)
 }
 
 func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 	page, isPagePresent := v.GetPage()
+	// #region agent log
+	debugLogView("initial", "H2", "views/views.go:75", "render page lookup", map[string]any{
+		"pageName":        v.PageName,
+		"isPagePresent":   isPagePresent,
+		"pageType":        fmt.Sprintf("%T", page),
+		"path":            r.URL.Path,
+		"middlewareCount": len(v.Middlewares),
+	})
+	// #endregion
 	if !isPagePresent {
 		http.NotFound(w, r)
 		return
 	}
 	ctx := r.Context()
+	dw := &debugResponseWriter{ResponseWriter: w}
 
 	if shell, ok := page.(components.Shell); ok {
 		if isBoosted, _ := ctx.Value("isHtmxBoosted").(bool); isBoosted {
-			shell.Body(ctx).Render(w)
+			err := shell.Body(ctx).Render(dw)
+			// #region agent log
+			debugLogView("initial", "H5", "views/views.go:102", "shell body render result", map[string]any{
+				"status":      dw.status,
+				"bytes":       dw.bytes,
+				"contentType": dw.Header().Get("Content-Type"),
+				"error":       fmt.Sprint(err),
+				"isBoosted":   true,
+			})
+			// #endregion
 			return
 		}
 	}
 
-	components.Render(page, ctx).Render(w)
+	fmt.Println(components.Render(page, ctx))
+	err := components.Render(page, ctx).Render(dw)
+	// #region agent log
+	debugLogView("initial", "H5", "views/views.go:117", "page render result", map[string]any{
+		"status":      dw.status,
+		"bytes":       dw.bytes,
+		"contentType": dw.Header().Get("Content-Type"),
+		"error":       fmt.Sprint(err),
+		"isBoosted":   false,
+	})
+	// #endregion
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (v *View) WithMethod(method string, viewHandler func(*View) http.Handler) *View {
