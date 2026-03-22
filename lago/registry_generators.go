@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 

@@ -1,4 +1,4 @@
-module github.com/lariv-in/views
+module github.com/lariv-in/lago/views
 
 go 1.26.1
 

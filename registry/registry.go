@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/lariv-in/getters"
+	"github.com/lariv-in/lago/getters"
 )
 
 func NewRegistry[T any]() Registry[T] {

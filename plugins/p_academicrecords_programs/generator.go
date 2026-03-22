@@ -3,9 +3,9 @@ package p_academicrecords_programs
 import (
 	"fmt"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_academicrecords"
-	"github.com/lariv-in/p_programs"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_academicrecords"
+	"github.com/lariv-in/lago/p_programs"
 	"gorm.io/gorm"
 )
 

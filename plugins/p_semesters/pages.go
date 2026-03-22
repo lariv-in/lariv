@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/lago"
 )
 
 func init() {

@@ -1,4 +1,4 @@
-module github.com/lariv-in/p_filesystem
+module github.com/lariv-in/lago/p_filesystem
 
 go 1.26.1
 

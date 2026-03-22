@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_filesystem"
-	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_filesystem"
+	"github.com/lariv-in/lago/p_users"
 )
 
 // dobGetter returns a getter for the DOB field that handles the nullable *time.Time.

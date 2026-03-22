@@ -3,8 +3,8 @@ package p_studentapplication
 import (
 	"log"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_programs"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_programs"
 	"gorm.io/gorm"
 )
 

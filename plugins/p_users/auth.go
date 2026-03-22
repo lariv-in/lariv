@@ -13,7 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/google/uuid"
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 	"golang.org/x/crypto/scrypt"
 	"gorm.io/gorm"
 )

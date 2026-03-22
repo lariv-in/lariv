@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_courses"
-	"github.com/lariv-in/p_teachers"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_courses"
+	"github.com/lariv-in/lago/p_teachers"
 	"gorm.io/gorm"
 )
 

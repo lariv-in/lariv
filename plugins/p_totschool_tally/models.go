@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_users"
 	"gorm.io/gorm"
 )
 

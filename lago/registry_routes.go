@@ -7,8 +7,8 @@ import (
 	"net/http/pprof"
 	"strings"
 
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 var RegistryRoute registry.Registry[Route] = registry.NewRegistry[Route]()

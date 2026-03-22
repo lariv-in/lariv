@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/components"
+	"github.com/lariv-in/lago/components"
 	"gorm.io/gorm"
 )
 

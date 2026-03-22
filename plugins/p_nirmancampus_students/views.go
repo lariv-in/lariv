@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/lago"
-	baseviews "github.com/lariv-in/views"
-	"github.com/lariv-in/p_students"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/lago"
+	baseviews "github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lago/p_students"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )

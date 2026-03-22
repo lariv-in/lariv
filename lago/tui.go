@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/registry"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"

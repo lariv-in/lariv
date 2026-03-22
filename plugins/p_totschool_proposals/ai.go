@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )

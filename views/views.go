@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 )
 
 type FormPatcher = func(view *View, r *http.Request, formData map[string]any) map[string]any

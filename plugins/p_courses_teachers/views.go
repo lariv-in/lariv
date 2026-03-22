@@ -7,12 +7,12 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_courses"
-	"github.com/lariv-in/p_teachers"
-	baseviews "github.com/lariv-in/views"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_courses"
+	"github.com/lariv-in/lago/p_teachers"
+	baseviews "github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 

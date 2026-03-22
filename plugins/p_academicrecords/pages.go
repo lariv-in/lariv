@@ -3,11 +3,11 @@ package p_academicrecords
 import (
 	"net/http"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_semesters"
-	"github.com/lariv-in/p_students"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_semesters"
+	"github.com/lariv-in/lago/p_students"
 )
 
 func init() {

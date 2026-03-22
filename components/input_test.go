@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lariv-in/getters"
+	"github.com/lariv-in/lago/getters"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"maragu.dev/gomponents"

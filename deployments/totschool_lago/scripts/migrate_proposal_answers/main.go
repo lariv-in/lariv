@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 

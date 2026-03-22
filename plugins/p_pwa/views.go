@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/views"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/views"
 	. "maragu.dev/gomponents/html"
 )
 

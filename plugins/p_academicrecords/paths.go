@@ -1,6 +1,6 @@
 package p_academicrecords
 
-import "github.com/lariv-in/lago"
+import "github.com/lariv-in/lago/lago"
 
 func registerRoutes() {
 	_ = lago.RegistryRoute.Register("academicrecords.DefaultRoute", lago.Route{

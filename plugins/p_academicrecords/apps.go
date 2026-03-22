@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 )
 
 const AppUrl = "/academicrecords/"

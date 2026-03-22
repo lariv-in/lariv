@@ -4,10 +4,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_filesystem"
-	"github.com/lariv-in/p_semesters"
-	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_filesystem"
+	"github.com/lariv-in/lago/p_semesters"
+	"github.com/lariv-in/lago/p_users"
 	"gorm.io/gorm"
 )
 

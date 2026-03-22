@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 	"gorm.io/gorm"
 )
 

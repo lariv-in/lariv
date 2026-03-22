@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/datatypes"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"

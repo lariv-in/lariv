@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/mail"
 
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/spf13/cobra"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lariv-in/getters"
+	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	g_html "maragu.dev/gomponents/html"
 )

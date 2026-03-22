@@ -8,7 +8,7 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
-	"github.com/lariv-in/getters"
+	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	ghtml "maragu.dev/gomponents/html"
 )

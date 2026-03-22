@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 	"gorm.io/gorm"
 )
 

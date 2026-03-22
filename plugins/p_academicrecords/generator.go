@@ -3,9 +3,9 @@ package p_academicrecords
 import (
 	"fmt"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_semesters"
-	"github.com/lariv-in/p_students"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_semesters"
+	"github.com/lariv-in/lago/p_students"
 	"gorm.io/gorm"
 )
 

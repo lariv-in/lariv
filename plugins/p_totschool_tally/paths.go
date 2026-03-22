@@ -1,7 +1,7 @@
 package p_totschool_tally
 
 import (
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 )
 
 func init() {

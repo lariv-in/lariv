@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/lariv-in/views"
+	"github.com/lariv-in/lago/views"
 )
 
 func GetPageView(pageName string) *views.View {

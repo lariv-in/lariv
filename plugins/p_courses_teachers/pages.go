@@ -1,11 +1,11 @@
 package p_courses_teachers
 
 import (
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_courses"
-	"github.com/lariv-in/p_teachers"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_courses"
+	"github.com/lariv-in/lago/p_teachers"
 )
 
 const (

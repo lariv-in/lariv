@@ -1,9 +1,9 @@
-module github.com/lariv-in/p_totschool_tally
+module github.com/lariv-in/lago/p_totschool_tally
 
 go 1.26.1
 
 require (
-	github.com/lariv-in/registry v0.0.0
+	github.com/lariv-in/lago/registry v0.0.0
 	gorm.io/gorm v1.31.1
 	maragu.dev/gomponents v1.2.0
 )

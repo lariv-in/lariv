@@ -3,7 +3,7 @@ package p_filesystem
 import (
 	"log"
 
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 )
 
 type FilesystemConfig struct {

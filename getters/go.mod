@@ -1,4 +1,4 @@
-module github.com/lariv-in/getters
+module github.com/lariv-in/lago/getters
 
 go 1.26.1
 

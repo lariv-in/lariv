@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/lariv-in/views"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 

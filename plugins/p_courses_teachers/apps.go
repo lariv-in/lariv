@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_courses"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_courses"
 )
 
 func init() {

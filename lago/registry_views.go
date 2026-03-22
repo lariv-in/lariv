@@ -3,9 +3,9 @@ package lago
 import (
 	"net/http"
 
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/registry"
-	"github.com/lariv-in/views"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago/views"
 )
 
 var RegistryView registry.Registry[*views.View] = registry.NewRegistry[*views.View]()

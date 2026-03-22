@@ -1,6 +1,6 @@
 package p_totschool_appointments
 
-import "github.com/lariv-in/lago"
+import "github.com/lariv-in/lago/lago"
 
 type TotscholAppointmentsConfig struct {
 	APIKey string `toml:"apiKey"`

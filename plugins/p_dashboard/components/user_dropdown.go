@@ -4,10 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/components"
-	"github.com/lariv-in/getters"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/p_users"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )

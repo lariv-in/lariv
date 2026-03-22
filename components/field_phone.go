@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/getters"
+	"github.com/lariv-in/lago/getters"
 	"github.com/nyaruka/phonenumbers"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"

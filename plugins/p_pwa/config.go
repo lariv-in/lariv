@@ -1,6 +1,6 @@
 package p_pwa
 
-import "github.com/lariv-in/lago"
+import "github.com/lariv-in/lago/lago"
 
 type PwaIconConfig struct {
 	Src   string `toml:"src" json:"src"`

@@ -1,4 +1,4 @@
-module github.com/lariv-in/p_totschool_appointments
+module github.com/lariv-in/lago/p_totschool_appointments
 
 go 1.26.1
 

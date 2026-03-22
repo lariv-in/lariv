@@ -1,10 +1,10 @@
 package p_nirmancampus_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/views"
+	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/views"
 
-	"github.com/lariv-in/p_users"
+	"github.com/lariv-in/lago/p_users"
 )
 
 // userViewsWithRoleMiddleware are the users plugin views that use "users.role" middleware.

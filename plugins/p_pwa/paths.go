@@ -1,6 +1,6 @@
 package p_pwa
 
-import "github.com/lariv-in/lago"
+import "github.com/lariv-in/lago/lago"
 
 func init() {
 	_ = lago.RegistryRoute.Register("pwa.ManifestRoute", lago.Route{

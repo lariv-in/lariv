@@ -3,17 +3,17 @@ package main
 import (
 	"log/slog"
 
-	"github.com/lariv-in/lago"
-	_ "github.com/lariv-in/p_dashboard"
-	_ "github.com/lariv-in/p_filesystem"
-	_ "github.com/lariv-in/p_otp"
-	_ "github.com/lariv-in/p_pwa"
-	_ "github.com/lariv-in/p_totschool_appointments"
-	_ "github.com/lariv-in/p_totschool_proposals"
-	_ "github.com/lariv-in/p_totschool_tally"
-	_ "github.com/lariv-in/p_totschool_users"
-	_ "github.com/lariv-in/p_announcements"
-	_ "github.com/lariv-in/p_users"
+	"github.com/lariv-in/lago/lago"
+	_ "github.com/lariv-in/lago/p_dashboard"
+	_ "github.com/lariv-in/lago/p_filesystem"
+	_ "github.com/lariv-in/lago/p_otp"
+	_ "github.com/lariv-in/lago/p_pwa"
+	_ "github.com/lariv-in/lago/p_totschool_appointments"
+	_ "github.com/lariv-in/lago/p_totschool_proposals"
+	_ "github.com/lariv-in/lago/p_totschool_tally"
+	_ "github.com/lariv-in/lago/p_totschool_users"
+	_ "github.com/lariv-in/lago/p_announcements"
+	_ "github.com/lariv-in/lago/p_users"
 )
 
 func main() {

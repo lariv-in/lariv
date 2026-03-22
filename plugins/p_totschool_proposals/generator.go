@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/lariv-in/p_users"
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/p_users"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )

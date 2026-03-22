@@ -1,7 +1,7 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/lago"
 )
 
 func registerRoutes() {

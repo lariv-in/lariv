@@ -1,6 +1,6 @@
 package p_filesystem
 
-import "github.com/lariv-in/lago"
+import "github.com/lariv-in/lago/lago"
 
 func init() {
 	_ = lago.RegistryRoute.Register("filesystem.ListRoute", lago.Route{

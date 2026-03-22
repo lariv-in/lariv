@@ -1,7 +1,7 @@
 package lago
 
 import (
-	"github.com/lariv-in/registry"
+	"github.com/lariv-in/lago/registry"
 	"github.com/spf13/cobra"
 )
 
