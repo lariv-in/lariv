@@ -168,33 +168,36 @@ func userFormFields() components.ContainerColumn {
 					},
 				},
 			},
-			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+			&components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Phone"),
 				Children: []components.PageInterface{
-					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Phone"),
-						Children: []components.PageInterface{
-							&components.InputPhone{Label: "Phone", Name: "Phone", Required: true, Getter: getters.GetterKey[string]("$in.Phone")},
-						},
-					},
-					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.RoleID"),
-						Children: []components.PageInterface{
-							&components.InputForeignKey[Role]{
-								Label:       "Role",
-								Name:        "RoleID",
-								Url:         lago.GetterRoutePath("users.RoleSelectRoute", nil),
-								Display:     getters.GetterKey[string]("$in.Name"),
-								Placeholder: "Select a role...",
-								Required:    true,
-								Getter:      getters.GetterAssociation[Role](getters.GetterKey[uint]("$in.RoleID")),
-							},
-						},
+					&components.InputPhone{Label: "Phone", Name: "Phone", Required: true, Getter: getters.GetterKey[string]("$in.Phone")},
+				},
+			},
+			&components.ContainerError{
+				Page:  components.Page{Key: "users.RoleField"},
+				Error: getters.GetterKey[error]("$error.RoleID"),
+				Children: []components.PageInterface{
+					&components.InputForeignKey[Role]{
+						Label:       "Role",
+						Name:        "RoleID",
+						Url:         lago.GetterRoutePath("users.RoleSelectRoute", nil),
+						Display:     getters.GetterKey[string]("$in.Name"),
+						Placeholder: "Select a role...",
+						Required:    true,
+						Getter:      getters.GetterAssociation[Role](getters.GetterKey[uint]("$in.RoleID")),
 					},
 				},
 			},
 		},
 	}
+}
+
+func selfFormFields() components.ContainerColumn {
+	fields := userFormFields()
+	// Remove the Role field — users should not edit their own role
+	components.RemoveChild[*components.ContainerError](&fields, "users.RoleField")
+	return fields
 }
 
 func registerFormPages() {
@@ -251,14 +254,14 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
-				Getter: getters.GetterKey[User]("user"),
-				Url:    lago.GetterRoutePath("users.SelfUpdateRoute", nil),
+				Getter:   getters.GetterKey[User]("user"),
+				Url:      lago.GetterRoutePath("users.SelfUpdateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Edit My Profile",
 				Subtitle: "Update your account details",
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
-					userFormFields(),
+					selfFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Profile"},

@@ -83,3 +83,25 @@ func InsertChildAfter[T, V PageInterface](p MutableParentInterface, key string, 
 	p.SetChildren(result)
 	return targetFound
 }
+
+func RemoveChild[T PageInterface](p MutableParentInterface, key string) bool {
+	children := p.GetChildren()
+	result := make([]PageInterface, 0, len(children))
+	targetFound := false
+	for _, child := range children {
+		if _, isNeedle := child.(T); isNeedle && child.GetKey() == key {
+			targetFound = true
+		} else {
+			if parent, isParent := child.(MutableParentInterface); isParent {
+				childTargetFound := RemoveChild[T](parent, key)
+				if childTargetFound {
+					targetFound = childTargetFound
+				}
+			}
+			result = append(result, child)
+		}
+	}
+
+	p.SetChildren(result)
+	return targetFound
+}
