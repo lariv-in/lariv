@@ -5,9 +5,19 @@ import (
 )
 
 func init() {
+	_ = lago.RegistryRoute.Register("nirmancampus_website.StaticRoute", lago.Route{
+		Path:    "/nirman/static/{path...}",
+		Handler: lago.NewDynamicView("nirmancampus_website.StaticView"),
+	})
+
 	_ = lago.RegistryRoute.Register("nirmancampus_website.PopupImageRoute", lago.Route{
 		Path:    "/nirmancampus/popup-images/{id}/",
 		Handler: lago.NewDynamicView("nirmancampus_website.PopupImageView"),
+	})
+
+	_ = lago.RegistryRoute.Register("nirmancampus_website.CoursesRoute", lago.Route{
+		Path:    "/courses-offered/",
+		Handler: lago.NewDynamicView("nirmancampus_website.CoursesView"),
 	})
 
 	// Overrides the root route (path "/", i.e. URL with no extra path segments).

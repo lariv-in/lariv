@@ -1,12 +1,14 @@
 package p_nirmancampus_website
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/views"
@@ -66,6 +68,25 @@ func popupImageHandler(_ *views.View) http.Handler {
 func init() {
 	lago.RegistryView.Register("nirmancampus_website.HomeView",
 		lago.GetPageView("nirmancampus_website.HomePage"))
+
+	coursesBase := lago.GetPageView("nirmancampus_website.CoursesPage")
+	coursesView := &views.View{
+		PageName:      coursesBase.PageName,
+		PageLookup:    coursesBase.PageLookup,
+		FormPatchers:  coursesBase.FormPatchers,
+		QueryPatchers: coursesBase.QueryPatchers,
+		Middlewares:   coursesBase.Middlewares,
+		Handlers: map[string]func(*views.View) http.Handler{
+			http.MethodGet: func(v *views.View) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					level := strings.TrimSpace(r.URL.Query().Get("level"))
+					ctx := context.WithValue(r.Context(), "$get", map[string]any{"Level": level})
+					v.RenderPage(w, r.WithContext(ctx))
+				})
+			},
+		},
+	}
+	lago.RegistryView.Register("nirmancampus_website.CoursesView", coursesView)
 	lago.RegistryView.Register("nirmancampus_website.PopupImageView", &views.View{
 		Handlers: map[string]func(*views.View) http.Handler{
 			http.MethodGet: popupImageHandler,

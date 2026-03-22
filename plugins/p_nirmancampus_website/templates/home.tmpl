@@ -2,7 +2,7 @@
 
 <section 
   class="relative h-screen bg-cover bg-center" 
-  style="background-image:url('/images/main2.jpg')"
+  style="background-image:url('{{ static "images/main2.jpg" }}')"
 >
   <!-- dark overlay -->
   <div class="absolute inset-0 bg-black/50"></div>
@@ -16,7 +16,7 @@
       Empowering Education, Inspiring Futures
     </p>
     <a 
-      href="/about-us.php" 
+      href="/about-us/" 
       class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition"
     >
       Learn More
@@ -42,7 +42,7 @@
         <ul class="space-y-3">
           {{ range .Announcements }}
             <li class="flex items-start">
-              <img src="/images/new_icon.gif" alt="New" class="h-5 w-5 mt-1 mr-2"/>
+              <img src="{{ static "images/new_icon.gif" }}" alt="New" class="h-5 w-5 mt-1 mr-2"/>
               <span class="text-gray-800">{{ .Text }}</span>
             </li>
           {{ else }}
@@ -60,7 +60,7 @@
       <!-- Image on the left -->
       <div class="w-full md:w-1/4">
         <img
-          src="images/main2.jpg"
+          src="{{ static "images/main2.jpg" }}"
           alt="Nirman Campus"
           class="w-full h-64 md:h-auto object-cover rounded-lg shadow-lg"
         />
@@ -91,7 +91,7 @@
         <!-- Prospectus Buttons -->
         <div class="flex flex-wrap gap-4 mt-4">
           <a
-            href="/downloads/brochure.pdf"
+            href="{{ static "downloads/brochure.pdf" }}"
             class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Download NCERT Prospectus
@@ -105,7 +105,7 @@
           </a>
           
           <a
-            href="/downloads/ADMISSION APPLICATION FORM.pdf"
+            href="{{ static "downloads/ADMISSION APPLICATION FORM.pdf" }}"
             target="_blank"
             class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
@@ -117,32 +117,32 @@
         <!-- Student Zone & Social Icons -->
         <div class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-start gap-4">
           <a
-            href="/stuzone.php"
+            href="/stuzone/"
             class="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700"
           >
             Student Zone
           </a>
           <a
-            href="/feedback-form.php"
+            href="/feedback-form/"
             class="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700"
           >
             Give Your Feedback!
           </a>
           <div class="flex space-x-4">
             <a href="https://whatsapp.com/channel/0029Vaj8AM0F6sn7LHwyQE0D" target="_blank">
-              <img src="/images/wa.png" alt="WhatsApp" class="h-10 w-10 rounded" />
+              <img src="{{ static "images/wa.png" }}" alt="WhatsApp" class="h-10 w-10 rounded" />
             </a>
             <a href="https://t.me/nirmancampus" target="_blank">
-              <img src="/images/tele.png" alt="Telegram" class="h-10 w-10 rounded" />
+              <img src="{{ static "images/tele.png" }}" alt="Telegram" class="h-10 w-10 rounded" />
             </a>
             <a href="https://www.youtube.com/channel/UC3ZaEEWH9hsCDM7alcIEvDA" target="_blank">
-              <img src="/images/yt.png" alt="YouTube" class="h-10 w-10 rounded" />
+              <img src="{{ static "images/yt.png" }}" alt="YouTube" class="h-10 w-10 rounded" />
             </a>
             <a href="https://www.facebook.com/nirmancampus.sunam/" target="_blank">
-              <img src="/images/fb.png" alt="Facebook" class="h-10 w-10 rounded" />
+              <img src="{{ static "images/fb.png" }}" alt="Facebook" class="h-10 w-10 rounded" />
             </a>
             <a href="https://www.instagram.com/nirmancampussunam/" target="_blank">
-              <img src="/images/ig.svg" alt="Instagram" class="h-10 w-10 rounded" />
+              <img src="{{ static "images/ig.svg" }}" alt="Instagram" class="h-10 w-10 rounded" />
             </a>
           </div>
         </div>
@@ -177,7 +177,7 @@
       <!-- Founder’s photo on the right -->
       <div class="w-full md:w-1/5">
         <img
-          src="/images/drkansal.jpeg"
+          src="{{ static "images/drkansal.jpeg" }}"
           alt="Dr. Amit Kansal"
           class="w-full h-64 md:h-auto object-cover rounded-lg shadow-lg"
         />
@@ -226,7 +226,7 @@
           <ul class="space-y-3 mb-3">
             <li>
               <a
-                href="/stuzone.php"
+                href="/stuzone/"
                 class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-900"
               >
                 <i class="fas fa-user-graduate"></i> Student Zone Nirman Campus
@@ -234,7 +234,7 @@
             </li>
             <li>
               <a
-                href="/downloads/DECE-04 - Additional Guidelines for Project Work.pdf" target="_blank"
+                href="{{ static "downloads/DECE-04 - Additional Guidelines for Project Work.pdf" }}" target="_blank"
                 class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-900"
               >
                 <i class="fas fa-user-graduate"></i>DECE-04 Additional Guidelines for Project Work (for learners enrolled in Jan-2025 and Jul-2025)
@@ -243,7 +243,7 @@
           </ul>
         <h4 class="font-semibold mb-3 inline-flex items-center">
           Alerts &amp; Updates
-          <img src="/images/new_icon.gif" alt="New" class="h-5 w-5 ml-2" />
+          <img src="{{ static "images/new_icon.gif" }}" alt="New" class="h-5 w-5 ml-2" />
         </h4>
         <ul class="space-y-3">
           <!--<li>
@@ -275,7 +275,7 @@
           </li> -->
           <li> 
             <a
-              href="/downloads/CS/DECE july25.pdf"
+              href="{{ static "downloads/CS/DECE july25.pdf" }}"
               class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-900"
               target="_blank"
             >
@@ -304,7 +304,7 @@
              </li>
          <li>
             <a
-              href="/downloads/CS/TEE-DEC2025.pdf"
+              href="{{ static "downloads/CS/TEE-DEC2025.pdf" }}"
               class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-900"
               target="_blank"
             >
@@ -348,7 +348,7 @@
           </li>
           <li>
             <a
-              href="/downloads/ADMISSION APPLICATION FORM.pdf"
+              href="{{ static "downloads/ADMISSION APPLICATION FORM.pdf" }}"
               class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               target="_blank"
             >
@@ -357,7 +357,7 @@
           </li>
           <li>
             <a
-              href="/downloads/Mandatory Disclosure.pdf"
+              href="{{ static "downloads/Mandatory Disclosure.pdf" }}"
               class="inline-flex items-center gap-2 bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
               target="_blank"
             >

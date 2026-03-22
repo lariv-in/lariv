@@ -86,14 +86,14 @@
 
       <!-- Logo -->
       <div class="flex items-center space-x-4">
-        <a href="/index.php">
-          <img src="/images/NIRMAN CAMPUS.png" alt="Logo 1" class="h-12 md:h-16" />
+        <a href="/">
+          <img src="{{ static "images/NIRMAN CAMPUS.png" }}" alt="Logo 1" class="h-12 md:h-16" />
         </a>
-        <a href="/index.php">
-          <img src="/images/naac.png" class="h-12 md:h-16" />
+        <a href="/">
+          <img src="{{ static "images/naac.png" }}" class="h-12 md:h-16" />
         </a>
-        <a href="/index.php">
-          <img src="/images/ignou-logo.png" alt="Logo 3" class="h-12 md:h-16" />
+        <a href="/">
+          <img src="{{ static "images/ignou-logo.png" }}" alt="Logo 3" class="h-12 md:h-16" />
         </a>
       </div>
 
@@ -113,7 +113,7 @@
       <nav :class="open ? 'block' : 'hidden'" class="absolute top-full left-0 w-full bg-white md:static md:block md:w-auto">
         <ul class="flex flex-col md:flex-row md:space-x-6 border-t md:border-0">
           
-          <li><a href="/index.php" class="block px-4 py-2 hover:text-blue-600">Home</a></li>
+          <li><a href="/" class="block px-4 py-2 hover:text-blue-600">Home</a></li>
 
           <!-- Nirman dropdown -->
           <li x-data="{ open: false }" class="relative group">
@@ -128,8 +128,8 @@
             <ul x-show="open" @click.away="open = false"
                 class="bg-white shadow-lg rounded mt-1 space-y-1 md:absolute md:left-0 md:top-full md:w-48">
               <li><a href="https://amitkansal.in/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">About Dr. Amit Kansal</a></li>
-              <li><a href="/stuzone.php"          class="block px-4 py-2 hover:bg-gray-100">Student Zone</a></li>
-              <li><a href="/courses.php"          class="block px-4 py-2 hover:bg-gray-100">Courses Offered</a></li>
+              <li><a href="/stuzone/"          class="block px-4 py-2 hover:bg-gray-100">Student Zone</a></li>
+              <li><a href="/courses-offered/"          class="block px-4 py-2 hover:bg-gray-100">Courses Offered</a></li>
             </ul>
           </li>
 
@@ -147,8 +147,8 @@
                 class="bg-white shadow-lg rounded mt-1 space-y-1 md:absolute md:left-0 md:top-full md:w-48">
               <li><a href="https://www.mrsptu.ac.in/"   class="block px-4 py-2 hover:bg-gray-100">About University</a></li>
               
-              <li><a href="/mrsptuadmco.php"   class="block px-4 py-2 hover:bg-gray-100">Admission Cells</a></li>
-              <li><a href="/mrscmt.php"   class="block px-4 py-2 hover:bg-gray-100">Essential Committees</a></li>
+              <li><a href="/mrsptuadmco/"   class="block px-4 py-2 hover:bg-gray-100">Admission Cells</a></li>
+              <li><a href="/mrscmt/"   class="block px-4 py-2 hover:bg-gray-100">Essential Committees</a></li>
               <li><a href="https://www.mrsptuadmissions.com/registration.aspx"   class="block px-4 py-2 hover:bg-gray-100">
                 Register for New Admission</a></li>
               <li><a href="https://www.mrsptuadmissions.com/login.aspx"   class="block px-4 py-2 hover:bg-gray-100">
@@ -175,9 +175,9 @@
             <ul x-show="open" @click.away="open = false"
                 class="bg-white shadow-lg rounded mt-1 space-y-1 md:absolute md:right-0 md:top-full md:w-56 max-h-[50vh] overflow-y-auto">
               <li><a href="https://www.ignou.ac.in/" class="block px-4 py-2 hover:bg-gray-100">About IGNOU</a></li>
-              <li><a href="/stuzone.php" class="block px-4 py-2 hover:bg-gray-100">Student Zone</a></li>
+              <li><a href="/stuzone/" class="block px-4 py-2 hover:bg-gray-100">Student Zone</a></li>
               <li><a href="https://onlineservices.ignou.ac.in/convocation/" target=_blank class="block px-4 py-2 hover:bg-gray-100">Online Registration for 39th Convocation</a></li>
-              <li><a href="/oss2281.php" class="block px-4 py-2 hover:bg-gray-100">Online Support Services</a></li>
+              <li><a href="/oss2281/" class="block px-4 py-2 hover:bg-gray-100">Online Support Services</a></li>
               <li><a href="https://www.ignou.ac.in/viewFile/hq/common/Common-Prospectus-English.pdf" target="_blank"
                      class="block px-4 py-2 hover:bg-gray-100">Download Prospectus</a></li>
               <li><a href="https://ignouadmission.samarth.edu.in/" target="_blank"
@@ -186,8 +186,8 @@
                      class="block px-4 py-2 hover:bg-gray-100">IGNOU Re-registration</a></li>
               <li><a href="https://isms.ignou.ac.in/changeadmdata/AdmissionStatusNew.ASP" target="_blank"
                      class="block px-4 py-2 hover:bg-gray-100">Admission Status</a></li>
-              <li><a href="/ig3.php"     class="block px-4 py-2 hover:bg-gray-100">E-Gyankosh Material</a></li>
-              <li><a href="/ig2.php"     class="block px-4 py-2 hover:bg-gray-100">Download Assignments</a></li>
+              <li><a href="/ig3/"     class="block px-4 py-2 hover:bg-gray-100">E-Gyankosh Material</a></li>
+              <li><a href="/ig2/"     class="block px-4 py-2 hover:bg-gray-100">Download Assignments</a></li>
               <li><a href="https://webservices.ignou.ac.in/Pre-Question/" target="_blank"
                      class="block px-4 py-2 hover:bg-gray-100">Old Question Papers</a></li>
               <li><a href="https://ignou.samarth.edu.in/index.php/site/login" target="_blank"
@@ -201,8 +201,8 @@
               <li><a href="https://onlineservices.ignou.ac.in/idms/" target="_blank"
                      class="block px-4 py-2 hover:bg-gray-100">Degree Delivery Portal</a></li>
               <!-- <li><a href="http://www.ignou.ac.in/ignou/studentzone/results/6"     class="block px-4 py-2 hover:bg-gray-100">Hall Ticket</a></li> -->
-              <!-- <li><a href="/ig6.php"     class="block px-4 py-2 hover:bg-gray-100">Result</a></li>
-              <li><a href="/ig7.php"     class="block px-4 py-2 hover:bg-gray-100">Grade Card</a></li> -->
+              <!-- <li><a href="/ig6/"     class="block px-4 py-2 hover:bg-gray-100">Result</a></li>
+              <li><a href="/ig7/"     class="block px-4 py-2 hover:bg-gray-100">Grade Card</a></li> -->
             </ul>
           </li>
 
@@ -239,13 +239,13 @@
             </button>
             <ul x-show="open" @click.away="open = false"
                 class="bg-white shadow-lg rounded mt-1 space-y-1 md:absolute md:left-0 md:top-full md:w-48">
-              <li><a href="/about-us.php" class="block px-4 py-2 hover:bg-gray-100">Contact Us</a></li>
+              <li><a href="/about-us/" class="block px-4 py-2 hover:bg-gray-100">Contact Us</a></li>
               
-              <li><a href="/privacy_policy.php" class="block px-4 py-2 hover:bg-gray-100">Privacy Policy</a></li>
+              <li><a href="/privacy-policy/" class="block px-4 py-2 hover:bg-gray-100">Privacy Policy</a></li>
             </ul>
           </li>
           
-          <!-- <li><a href="/login.php"    class="block px-4 py-2 hover:text-blue-600">Admin</a></li> 
+          <!-- <li><a href="/users/login/"    class="block px-4 py-2 hover:text-blue-600">Admin</a></li> 
           <li><a href="" class="block px-4 py-2 hover:text-blue-600"></a></li>
           <li><a href="" class="block px-4 py-2 hover:text-blue-600"></a></li> -->
         </ul>
