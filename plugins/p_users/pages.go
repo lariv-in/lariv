@@ -433,6 +433,7 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
+								Page:  components.Page{Roles: []string{"superuser"}},
 								Title: "Superuser",
 								Children: []components.PageInterface{
 									&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$in.IsSuperuser")},
