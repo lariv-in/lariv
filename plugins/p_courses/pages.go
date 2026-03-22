@@ -250,19 +250,19 @@ func registerTablePages() {
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
-					{Label: "Code", Key: "Code", Children: []components.PageInterface{
+					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 					}},
-					{Label: "Subject", Key: "Subject", Children: []components.PageInterface{
+					{Label: "Subject", Name: "Subject", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Subject")},
 					}},
-					{Label: "Level", Key: "Level", Children: []components.PageInterface{
+					{Label: "Level", Name: "Level", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Level")},
 					}},
-					{Label: "Active", Key: "IsActive", Children: []components.PageInterface{
+					{Label: "Active", Name: "IsActive", Children: []components.PageInterface{
 						&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsActive")},
 					}},
 				},
@@ -348,13 +348,13 @@ func registerSelectionPages() {
 				OnClick:         getters.GetterSelect("course", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseSelectionFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
-					{Label: "Code", Key: "Code", Children: []components.PageInterface{
+					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 					}},
-					{Label: "Level", Key: "Level", Children: []components.PageInterface{
+					{Label: "Level", Name: "Level", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Level")},
 					}},
 				},
@@ -372,13 +372,13 @@ func registerSelectionPages() {
 				OnClick:         getters.GetterMultiSelect("Courses", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
-					{Label: "Code", Key: "Code", Children: []components.PageInterface{
+					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 					}},
-					{Label: "Level", Key: "Level", Children: []components.PageInterface{
+					{Label: "Level", Name: "Level", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Level")},
 					}},
 				},

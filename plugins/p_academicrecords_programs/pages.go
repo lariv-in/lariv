@@ -106,7 +106,7 @@ func patchAcademicRecordTable() {
 			table.Columns = append(table.Columns,
 				components.TableColumn{
 					Label: "Program",
-					Key:   "Program",
+					Name:  "Program",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: academicRecordProgramNameGetter(rowID),

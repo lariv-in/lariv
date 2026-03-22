@@ -3,6 +3,8 @@ package components
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
@@ -25,9 +27,27 @@ func (e TableListContent[T]) Build(ctx context.Context) Node {
 		}
 	}
 
+	req, hasReq := ctx.Value("$request").(*http.Request)
+	var currentSort string
+	if hasReq {
+		currentSort = req.URL.Query().Get("sort")
+	}
+
 	var ths []Node
 	for _, col := range e.Columns {
-		ths = append(ths, g_html.Th(g_html.Class("whitespace-nowrap min-w-[100px]"), Text(col.Label)))
+		if col.Name == "" || !hasReq {
+			ths = append(ths, g_html.Th(g_html.Class("whitespace-nowrap min-w-[100px]"), Text(col.Label)))
+			continue
+		}
+		sortURL := columnSortURL(req, col.Name)
+		ind := sortColumnIndicator(currentSort, col.Name)
+		ths = append(ths, g_html.Th(g_html.Class("whitespace-nowrap min-w-[100px]"),
+			g_html.A(
+				g_html.Href(sortURL),
+				g_html.Class("link link-hover link-neutral no-underline hover:underline cursor-pointer font-inherit text-inherit inline-flex items-center gap-1"),
+				Text(col.Label+ind),
+			),
+		))
 	}
 
 	var trs []Node
@@ -105,4 +125,55 @@ func (e *TableListContent[T]) SetChildren(children []PageInterface) {
 	if offset < len(children) && len(e.Columns) > 0 {
 		e.Columns[len(e.Columns)-1].Children = append(e.Columns[len(e.Columns)-1].Children, children[offset:]...)
 	}
+}
+
+// columnSortURL preserves the current query string, sets sort for the given column
+// (toggling ASC/DESC when that column is already active), and resets page to 1.
+func columnSortURL(req *http.Request, columnKey string) string {
+	current := req.URL.Query().Get("sort")
+	next := nextSortClause(current, columnKey)
+	u := *req.URL
+	q := u.Query()
+	q.Set("sort", next)
+	q.Set("page", "1")
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
+func nextSortClause(current, key string) string {
+	current = strings.TrimSpace(current)
+	if current == "" {
+		return key + " ASC"
+	}
+	parts := strings.Fields(current)
+	if len(parts) == 0 {
+		return key + " ASC"
+	}
+	curCol := parts[0]
+	curDir := "ASC"
+	if len(parts) >= 2 {
+		curDir = strings.ToUpper(parts[len(parts)-1])
+	}
+	if strings.EqualFold(curCol, key) {
+		if curDir == "DESC" {
+			return key + " ASC"
+		}
+		return key + " DESC"
+	}
+	return key + " ASC"
+}
+
+func sortColumnIndicator(currentSort, columnKey string) string {
+	currentSort = strings.TrimSpace(currentSort)
+	if currentSort == "" {
+		return ""
+	}
+	parts := strings.Fields(currentSort)
+	if len(parts) < 1 || !strings.EqualFold(parts[0], columnKey) {
+		return ""
+	}
+	if len(parts) >= 2 && strings.ToUpper(parts[len(parts)-1]) == "DESC" {
+		return " \u25BC"
+	}
+	return " \u25B2"
 }

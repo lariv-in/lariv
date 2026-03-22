@@ -125,7 +125,7 @@ func patchStudentTable() {
 			table.Columns = append(table.Columns,
 				components.TableColumn{
 					Label: "Father's Name",
-					Key:   "FathersName",
+					Name:  "FathersName",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("FathersName", rowStudentID),
@@ -134,7 +134,7 @@ func patchStudentTable() {
 				},
 				components.TableColumn{
 					Label: "Category",
-					Key:   "Category",
+					Name:  "Category",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("Category", rowStudentID),
@@ -143,7 +143,7 @@ func patchStudentTable() {
 				},
 				components.TableColumn{
 					Label: "Address",
-					Key:   "Address",
+					Name:  "Address",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("Address", rowStudentID),
@@ -244,7 +244,7 @@ func patchStudentSelectionTable() {
 			table.Columns = append(table.Columns,
 				components.TableColumn{
 					Label: "Father's Name",
-					Key:   "FathersName",
+					Name:  "FathersName",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("FathersName", rowStudentID),
@@ -253,7 +253,7 @@ func patchStudentSelectionTable() {
 				},
 				components.TableColumn{
 					Label: "Category",
-					Key:   "Category",
+					Name:  "Category",
 					Children: []components.PageInterface{
 						&components.FieldText{
 							Getter: studentDetailsFieldGetter("Category", rowStudentID),

@@ -278,7 +278,7 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "User.Name",
+						Name:  "User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterForeignKey[p_users.User, uint, string](
@@ -290,7 +290,7 @@ func registerTablePages() {
 					},
 					{
 						Label: "Student No",
-						Key:   "StudentNo",
+						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterKey[string]("$row.StudentNo"),
@@ -299,7 +299,7 @@ func registerTablePages() {
 					},
 					{
 						Label: "Email",
-						Key:   "User.Email",
+						Name:  "User.Email",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterForeignKey[p_users.User, uint, string](
@@ -393,7 +393,7 @@ func registerSelectionPages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "User.Name",
+						Name:  "User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterForeignKey[p_users.User, uint, string](
@@ -405,7 +405,7 @@ func registerSelectionPages() {
 					},
 					{
 						Label: "Student No",
-						Key:   "StudentNo",
+						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterKey[string]("$row.StudentNo"),

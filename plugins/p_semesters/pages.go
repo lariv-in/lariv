@@ -306,35 +306,35 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "Name",
+						Name:  "Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 						},
 					},
 					{
 						Label: "Code",
-						Key:   "Code",
+						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 						},
 					},
 					{
 						Label: "Start",
-						Key:   "Start",
+						Name:  "Start",
 						Children: []components.PageInterface{
 							&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Start")},
 						},
 					},
 					{
 						Label: "End",
-						Key:   "End",
+						Name:  "End",
 						Children: []components.PageInterface{
 							&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.End")},
 						},
 					},
 					{
 						Label: "Active",
-						Key:   "IsActive",
+						Name:  "IsActive",
 						Children: []components.PageInterface{
 							&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsActive")},
 						},
@@ -418,28 +418,28 @@ func registerSelectionPages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "Name",
+						Name:  "Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 						},
 					},
 					{
 						Label: "Code",
-						Key:   "Code",
+						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 						},
 					},
 					{
 						Label: "Start",
-						Key:   "Start",
+						Name:  "Start",
 						Children: []components.PageInterface{
 							&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Start")},
 						},
 					},
 					{
 						Label: "Active",
-						Key:   "IsActive",
+						Name:  "IsActive",
 						Children: []components.PageInterface{
 							&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsActive")},
 						},

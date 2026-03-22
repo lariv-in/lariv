@@ -269,7 +269,7 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "User.Name",
+						Name:  "User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterForeignKey[p_users.User, uint, string](
@@ -281,7 +281,7 @@ func registerTablePages() {
 					},
 					{
 						Label: "Code",
-						Key:   "Code",
+						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterKey[string]("$row.Code"),
@@ -290,7 +290,7 @@ func registerTablePages() {
 					},
 					{
 						Label: "Email",
-						Key:   "User.Email",
+						Name:  "User.Email",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterForeignKey[p_users.User, uint, string](
@@ -302,7 +302,7 @@ func registerTablePages() {
 					},
 					{
 						Label: "Qualifications",
-						Key:   "Qualifications",
+						Name:  "Qualifications",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterDeref(getters.GetterKey[*string]("$row.Qualifications")),
@@ -398,7 +398,7 @@ func registerSelectionPages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "User.Name",
+						Name:  "User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterForeignKey[p_users.User, uint, string](
@@ -410,7 +410,7 @@ func registerSelectionPages() {
 					},
 					{
 						Label: "Code",
-						Key:   "Code",
+						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterKey[string]("$row.Code"),
@@ -419,7 +419,7 @@ func registerSelectionPages() {
 					},
 					{
 						Label: "Qualifications",
-						Key:   "Qualifications",
+						Name:  "Qualifications",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterDeref(getters.GetterKey[*string]("$row.Qualifications")),
@@ -452,7 +452,7 @@ func registerSelectionPages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "User.Name",
+						Name:  "User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterForeignKey[p_users.User, uint, string](
@@ -464,7 +464,7 @@ func registerSelectionPages() {
 					},
 					{
 						Label: "Code",
-						Key:   "Code",
+						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterKey[string]("$row.Code"),
@@ -473,7 +473,7 @@ func registerSelectionPages() {
 					},
 					{
 						Label: "Qualifications",
-						Key:   "Qualifications",
+						Name:  "Qualifications",
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.GetterDeref(getters.GetterKey[*string]("$row.Qualifications")),

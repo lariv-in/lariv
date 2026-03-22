@@ -184,11 +184,11 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Program]{
-				Url:    lago.GetterRoutePath("programs.CreateRoute", nil),
-				Method: http.MethodPost,
-				Title:  "Create Program",
+				Url:      lago.GetterRoutePath("programs.CreateRoute", nil),
+				Method:   http.MethodPost,
+				Title:    "Create Program",
 				Subtitle: "Create a new program",
-				Classes: "@container",
+				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
 					// Embed directly so extensions can patch by Page.Key.
 					programFormFields(),
@@ -234,10 +234,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Program]{
-				Page:     components.Page{Key: "programs.ProgramTableBody"},
-				UID:      "program-table",
-				Classes:  "w-full",
-				Data:     getters.GetterKey[components.ObjectList[Program]]("programs"),
+				Page:      components.Page{Key: "programs.ProgramTableBody"},
+				UID:       "program-table",
+				Classes:   "w-full",
+				Data:      getters.GetterKey[components.ObjectList[Program]]("programs"),
 				CreateUrl: lago.GetterRoutePath("programs.CreateRoute", nil),
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
@@ -248,21 +248,21 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "Name",
+						Name:  "Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 						},
 					},
 					{
 						Label: "Code",
-						Key:   "Code",
+						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 						},
 					},
 					{
 						Label: "Description",
-						Key:   "Description",
+						Name:  "Description",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Description")},
 						},
@@ -327,22 +327,22 @@ func registerSelectionPages() {
 		Title: "Select Program",
 		Children: []components.PageInterface{
 			&components.DataTable[Program]{
-				Page:    components.Page{Key: "programs.ProgramSelectionTableBody"},
-				UID:     "program-selection-table",
-				Data:    getters.GetterKey[components.ObjectList[Program]]("programs"),
-				OnClick: getters.GetterSelect("ProgramID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Page:            components.Page{Key: "programs.ProgramSelectionTableBody"},
+				UID:             "program-selection-table",
+				Data:            getters.GetterKey[components.ObjectList[Program]]("programs"),
+				OnClick:         getters.GetterSelect("ProgramID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "programs.ProgramSelectionFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "Name",
+						Name:  "Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 						},
 					},
 					{
 						Label: "Code",
-						Key:   "Code",
+						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 						},
@@ -352,4 +352,3 @@ func registerSelectionPages() {
 		},
 	})
 }
-

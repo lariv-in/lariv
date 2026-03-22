@@ -389,14 +389,14 @@ func init() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Date",
-						Key:   "Date",
+						Name:  "Date",
 						Children: []components.PageInterface{
 							components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Date")},
 						},
 					},
 					{
 						Label: "User",
-						Key:   "User.Name",
+						Name:  "User.Name",
 						Children: []components.PageInterface{
 							components.FieldText{
 								Getter: getters.GetterKey[string]("$row.User.Name"),
@@ -405,7 +405,7 @@ func init() {
 					},
 					{
 						Label: "Visits",
-						Key:   "Visits",
+						Name:  "Visits",
 						Children: []components.PageInterface{
 							components.FieldText{
 								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Visits")),
@@ -414,7 +414,7 @@ func init() {
 					},
 					{
 						Label: "Appointments",
-						Key:   "Appointments",
+						Name:  "Appointments",
 						Children: []components.PageInterface{
 							components.FieldText{
 								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Appointments")),
@@ -423,7 +423,7 @@ func init() {
 					},
 					{
 						Label: "Policies",
-						Key:   "Policies",
+						Name:  "Policies",
 						Children: []components.PageInterface{
 							components.FieldText{
 								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Policies")),
@@ -432,7 +432,7 @@ func init() {
 					},
 					{
 						Label: "Premium",
-						Key:   "Premium",
+						Name:  "Premium",
 						Children: []components.PageInterface{
 							components.FieldText{
 								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Premium")),

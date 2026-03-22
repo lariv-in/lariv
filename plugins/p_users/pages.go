@@ -351,13 +351,13 @@ func registerTablePages() {
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "users.UserFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
-					{Label: "Email", Key: "Email", Children: []components.PageInterface{
+					{Label: "Email", Name: "Email", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Email")},
 					}},
-					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{
+					{Label: "Phone", Name: "Phone", Children: []components.PageInterface{
 						&components.FieldPhone{Getter: getters.GetterKey[string]("$row.Phone")},
 					}},
 				},
@@ -601,13 +601,13 @@ func registerSelectionPages() {
 				OnClick:         getters.GetterSelect("UserID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.UserSelectionFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
-					{Label: "Email", Key: "Email", Children: []components.PageInterface{
+					{Label: "Email", Name: "Email", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Email")},
 					}},
-					{Label: "Phone", Key: "Phone", Children: []components.PageInterface{
+					{Label: "Phone", Name: "Phone", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Phone")},
 					}},
 				},
@@ -625,7 +625,7 @@ func registerSelectionPages() {
 				OnClick:         getters.GetterSelect("RoleID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleSelectionFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
 				},
@@ -689,7 +689,7 @@ func registerRolePages() {
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Name", Key: "Name", Children: []components.PageInterface{
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 					}},
 				},

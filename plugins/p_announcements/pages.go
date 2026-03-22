@@ -9,8 +9,8 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/p_semesters"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -343,28 +343,28 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
-						Key:   "Title",
+						Name:  "Title",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "Semester",
-						Key:   "Semester",
+						Name:  "Semester",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: semesterNameFromRow()},
 						},
 					},
 					{
 						Label: "Release At",
-						Key:   "ReleaseAt",
+						Name:  "ReleaseAt",
 						Children: []components.PageInterface{
 							&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.ReleaseAt")},
 						},
 					},
 					{
 						Label: "Expiry At",
-						Key:   "ExpiryAt",
+						Name:  "ExpiryAt",
 						Children: []components.PageInterface{
 							&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$row.ExpiryAt"))},
 						},
@@ -460,21 +460,21 @@ func registerSelectionPages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
-						Key:   "Title",
+						Name:  "Title",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "Semester",
-						Key:   "Semester",
+						Name:  "Semester",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: semesterNameFromRow()},
 						},
 					},
 					{
 						Label: "Release At",
-						Key:   "ReleaseAt",
+						Name:  "ReleaseAt",
 						Children: []components.PageInterface{
 							&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.ReleaseAt")},
 						},

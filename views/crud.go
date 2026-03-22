@@ -25,8 +25,10 @@ func ListView[T any](key string) func(*View) *View {
 
 				// Build a whitelist of allowed filter fields from the GORM schema.
 				// Keys are lowercased field / column names, values are the schema fields.
+				var rootSchema *schema.Schema
 				fieldByParam := map[string]*schema.Field{}
 				if stmt := (&gorm.Statement{DB: db}); stmt.Parse(new(T)) == nil && stmt.Schema != nil {
+					rootSchema = stmt.Schema
 					for _, f := range stmt.Schema.Fields {
 						if f.DBName == "" {
 							continue
@@ -74,11 +76,27 @@ func ListView[T any](key string) func(*View) *View {
 
 				// Apply query param filters using a safe, whitelisted set of columns.
 				for param, values := range r.URL.Query() {
-					if len(values) == 0 || values[0] == "" {
+					if len(values) == 0 {
 						continue
 					}
 					if param == "sort" {
-						query = query.Order(values[0])
+						if rootSchema != nil {
+							query = applyListViewSorts(query, rootSchema, values)
+						} else {
+							var namer schema.Namer = schema.NamingStrategy{}
+							if db.Config != nil && db.Config.NamingStrategy != nil {
+								namer = db.Config.NamingStrategy
+							}
+							for _, vv := range values {
+								clause := sortQueryValueToOrder(namer, vv)
+								if clause != "" {
+									query = query.Order(clause)
+								}
+							}
+						}
+						continue
+					}
+					if values[0] == "" {
 						continue
 					}
 					if param == "page" {
@@ -104,6 +122,8 @@ func ListView[T any](key string) func(*View) *View {
 					query = queryPatcher.Value(v, r, query)
 				}
 
+				// Count assumes sort-driven Joins are BelongsTo/HasOne only (no row duplication);
+				// see applyListViewSorts.
 				var total int64
 				if err := query.Count(&total).Error; err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -510,4 +530,48 @@ func DeleteView[T any](successUrl getters.Getter[string]) func(*View) *View {
 			})
 		})
 	}
+}
+
+// sortQueryValueToOrder maps one URL sort value (e.g. "Name ASC", "User.Name DESC")
+// to a GORM Order clause: each path segment is converted with the DB naming strategy
+// (snake_case by default), and optional trailing ASC/DESC is preserved.
+func sortQueryValueToOrder(namer schema.Namer, raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	parts := strings.Fields(raw)
+	if len(parts) == 0 {
+		return ""
+	}
+	dir := ""
+	colTokens := parts
+	if n := len(parts); n >= 2 {
+		last := strings.ToUpper(parts[n-1])
+		if last == "ASC" || last == "DESC" {
+			dir = " " + last
+			colTokens = parts[:n-1]
+		}
+	}
+	if len(colTokens) == 0 {
+		return ""
+	}
+	ident := strings.Join(colTokens, " ")
+	colExpr := sortIdentPathToSnakeColumns(namer, ident)
+	if colExpr == "" {
+		return ""
+	}
+	return colExpr + dir
+}
+
+func sortIdentPathToSnakeColumns(namer schema.Namer, ident string) string {
+	segs := strings.Split(ident, ".")
+	for i, s := range segs {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return ""
+		}
+		segs[i] = namer.ColumnName("", s)
+	}
+	return strings.Join(segs, ".")
 }

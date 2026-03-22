@@ -231,21 +231,21 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Student",
-						Key:   "Student.User.Name",
+						Name:  "Student.User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Student.User.Name")},
 						},
 					},
 					{
 						Label: "Semester",
-						Key:   "Semester.Name",
+						Name:  "Semester.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Semester.Name")},
 						},
 					},
 					{
 						Label: "Status",
-						Key:   "Status",
+						Name:  "Status",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Status")},
 						},
@@ -322,21 +322,21 @@ func registerSelectionPages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Student",
-						Key:   "Student.User.Name",
+						Name:  "Student.User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Student.User.Name")},
 						},
 					},
 					{
 						Label: "Semester",
-						Key:   "Semester.Name",
+						Name:  "Semester.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Semester.Name")},
 						},
 					},
 					{
 						Label: "Status",
-						Key:   "Status",
+						Name:  "Status",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Status")},
 						},

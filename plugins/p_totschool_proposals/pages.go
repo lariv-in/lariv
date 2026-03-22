@@ -122,9 +122,9 @@ func registerTable() {
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "proposals.ProposalFilter"},
 				Columns: []components.TableColumn{
-					{Label: "Title", Key: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Title")}}},
-					{Label: "Created At", Key: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.CreatedAt")}}},
-					{Label: "Updated At", Key: "UpdatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.UpdatedAt")}}},
+					{Label: "Title", Name: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Title")}}},
+					{Label: "Created At", Name: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.CreatedAt")}}},
+					{Label: "Updated At", Name: "UpdatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.UpdatedAt")}}},
 				},
 			},
 		},

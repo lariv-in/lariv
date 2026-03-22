@@ -283,28 +283,28 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Key:   "Name",
+						Name:  "Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
 						},
 					},
 					{
 						Label: "Program",
-						Key:   "Program.Name",
+						Name:  "Program.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Program.Name")},
 						},
 					},
 					{
 						Label: "Student",
-						Key:   "StudentName",
+						Name:  "StudentName",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.StudentName")},
 						},
 					},
 					{
 						Label: "Mobile",
-						Key:   "Mobile",
+						Name:  "Mobile",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Mobile")},
 						},
@@ -368,9 +368,9 @@ func registerDetailPages() {
 								Title: "Photo",
 								Children: []components.PageInterface{
 									&p_filesystem.FieldPhoto{
-									VNode:   getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.PhotoID"))),
-									Classes: "w-48 rounded",
-								},
+										VNode:   getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.PhotoID"))),
+										Classes: "w-48 rounded",
+									},
 								},
 							},
 							&components.LabelInline{
