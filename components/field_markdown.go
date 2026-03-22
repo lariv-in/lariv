@@ -2,10 +2,11 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
-	"strings"
 
 	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/lariv-in/lago/getters"
@@ -21,22 +22,56 @@ type FieldMarkdown struct {
 	Classes string
 }
 
+func appendOrAssign(attr *ast.Attribute, values ...string) *ast.Attribute {
+	attribute := attr
+	if attr == nil {
+		attribute = &ast.Attribute{
+			ID:      []byte{},
+			Classes: [][]byte{},
+			Attrs:   map[string][]byte{},
+		}
+	}
+	for _, v := range values {
+		attribute.Classes = append(attribute.Classes, []byte(v))
+	}
+	return attribute
+}
+
+func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+	if n, ok := node.(*ast.Heading); ok {
+		if n.Level == 1 {
+			n.Attribute = appendOrAssign(n.Attribute, "text-2xl", "font-bold")
+		}
+		if n.Level == 2 {
+			n.Attribute = appendOrAssign(n.Attribute, "text-xl", "font-semibold")
+		}
+		if n.Level == 3 {
+			n.Attribute = appendOrAssign(n.Attribute, "text-lg", "font-medium")
+		}
+	}
+	if n, ok := node.(*ast.HorizontalRule); ok {
+		n.Attribute = appendOrAssign(n.Attribute, "my-4")
+	}
+	if n, ok := node.(*ast.Paragraph); ok {
+		n.Attribute = appendOrAssign(n.Attribute, "my-2")
+	}
+	if n, ok := node.(*ast.List); ok {
+		if n.ListFlags&ast.ListTypeTerm != 0 {
+			n.Attribute = appendOrAssign(n.Attribute, "list-disc", "my-2", "gap-2")
+		}
+		if n.ListFlags&ast.ListTypeOrdered != 0 {
+			n.Attribute = appendOrAssign(n.Attribute, "list-decimal", "my-2", "gap-2")
+		}
+	}
+	return ast.GoToNext, false
+}
+
 func RenderMarkdown(md string) string {
 	doc := parser.NewWithExtensions(mdExtensions).Parse([]byte(md))
 	opts := html.RendererOptions{Flags: html.CommonFlags}
+	opts.RenderNodeHook = customRenderHook
 	renderer := html.NewRenderer(opts)
 	s := string(markdown.Render(doc, renderer))
-
-	// Add Tailwind-style classes to headings
-	s = strings.ReplaceAll(s, `<h1 id="`, `<h1 class="text-2xl font-bold" id="`)
-	s = strings.ReplaceAll(s, `<h2 id="`, `<h2 class="text-xl font-semibold" id="`)
-	s = strings.ReplaceAll(s, `<h3 id="`, `<h3 class="text-lg font-medium" id="`)
-
-	// Add vertical margin to horizontal rules
-	s = strings.ReplaceAll(s, "<hr", `<hr class="my-4"`)
-	s = strings.ReplaceAll(s, "<p", `<p class="my-2"`)
-	s = strings.ReplaceAll(s, "<ul", `<ul class="list-disc m-2 gap-1"`)
-	s = strings.ReplaceAll(s, "<ol", `<ol class="list-decimal m-2 gap-1"`)
 
 	return s
 }
