@@ -5,3 +5,4 @@
 5. Follow up letter in appointments
     - follow up letters are sent using the proposal data after the questionnaire is filled but before the proposal is made and sent
 6. proposals need to have a set template, and they need to be exported in an editable format, like docx or pptx
+7. Verify generator implementation
