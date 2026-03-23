@@ -7,12 +7,15 @@ import (
 	_ "github.com/lariv-in/lago/p_academicrecords"
 	_ "github.com/lariv-in/lago/p_academicrecords_programs"
 	_ "github.com/lariv-in/lago/p_announcements"
+	_ "github.com/lariv-in/lago/p_assignments"
+	_ "github.com/lariv-in/lago/p_assignmentresults"
 	_ "github.com/lariv-in/lago/p_courses"
 	_ "github.com/lariv-in/lago/p_courses_teachers"
 	_ "github.com/lariv-in/lago/p_dashboard"
 	_ "github.com/lariv-in/lago/p_filesystem"
 	_ "github.com/lariv-in/lago/p_nirmancampus_students"
 	_ "github.com/lariv-in/lago/p_nirmancampus_users"
+	_ "github.com/lariv-in/lago/p_nirmancampus_website"
 	_ "github.com/lariv-in/lago/p_otp"
 	_ "github.com/lariv-in/lago/p_programs"
 	_ "github.com/lariv-in/lago/p_pwa"
@@ -21,7 +24,6 @@ import (
 	_ "github.com/lariv-in/lago/p_students"
 	_ "github.com/lariv-in/lago/p_teachers"
 	_ "github.com/lariv-in/lago/p_users"
-	_ "github.com/lariv-in/lago/p_nirmancampus_website"
 )
 
 func main() {
