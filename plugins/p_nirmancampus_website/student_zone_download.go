@@ -13,6 +13,19 @@ import (
 	"gorm.io/gorm"
 )
 
+func isHtmxRequest(r *http.Request) bool {
+	return r.Header.Get("HX-Request") == "true"
+}
+
+func htmxRedirect(w http.ResponseWriter, r *http.Request, url string, code int) {
+	if isHtmxRequest(r) {
+		w.Header().Set("HX-Redirect", url)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Redirect(w, r, url, code)
+}
+
 func studentZoneItemHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
@@ -35,12 +48,20 @@ func studentZoneItemHandler(_ *views.View) http.Handler {
 		}
 
 		if item.IsLink {
-			http.Redirect(w, r, item.Link, http.StatusFound)
+			htmxRedirect(w, r, item.Link, http.StatusFound)
 			return
 		}
 
 		if item.File == nil {
 			http.NotFound(w, r)
+			return
+		}
+
+		// For htmx requests, redirect back to the same URL so the browser
+		// performs a normal (non-boosted) GET that returns the file content.
+		if isHtmxRequest(r) {
+			w.Header().Set("HX-Redirect", r.URL.String())
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
