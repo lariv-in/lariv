@@ -361,9 +361,9 @@ func registerSelectionPages() {
 		Title: "Select Assignment Result",
 		Children: []components.PageInterface{
 			&components.DataTable[AssignmentResult]{
-				Page:            components.Page{Key: "assignmentresults.AssignmentResultSelectionTableBody"},
-				UID:             "assignment-result-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[AssignmentResult]]("assignmentresults"),
+				Page: components.Page{Key: "assignmentresults.AssignmentResultSelectionTableBody"},
+				UID:  "assignment-result-selection-table",
+				Data: getters.GetterKey[components.ObjectList[AssignmentResult]]("assignmentresults"),
 				OnClick: getters.GetterSelect("AssignmentResultID", getters.GetterKey[uint]("$row.ID"), getters.GetterFormat(
 					"%s / %s — %s",
 					getters.GetterAny(getters.GetterKey[string]("$row.Assignment.Name")),
@@ -411,9 +411,9 @@ func assignmentDetailResultsSection() components.PageInterface {
 	return components.ContainerColumn{
 		Page: components.Page{Key: "assignmentresults.AssignmentDetailResultsSection"},
 		Children: []components.PageInterface{
-			&components.FieldTitle{Getter: getters.GetterStatic("Results")},
 			&components.DataTable[AssignmentResult]{
 				Page:    components.Page{Key: "assignmentresults.AssignmentDetailResultsTable"},
+				Title:   "Results",
 				UID:     "assignment-detail-results-table",
 				Classes: "w-full mt-2",
 				Data:    getters.GetterKey[components.ObjectList[AssignmentResult]]("assignmentresults"),
@@ -431,11 +431,7 @@ func assignmentDetailResultsSection() components.PageInterface {
 						Name:  "AcademicRecord",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterFormat(
-									"%s — %s",
-									getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Student.User.Name")),
-									getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Semester.Name")),
-								),
+								Getter: getters.GetterKey[string]("$row.AcademicRecord.Student.User.Name"),
 							},
 						},
 					},
@@ -469,7 +465,7 @@ func registerAssignmentPatches() {
 		}
 		menu.Children = append(menu.Children, &components.SidebarMenuItem{
 			Page:  components.Page{Key: "assignmentresults.menu_all_results"},
-			Title: getters.GetterStatic("All results"),
+			Title: getters.GetterStatic("All Results"),
 			Url:   lago.GetterRoutePath("assignmentresults.DefaultRoute", nil),
 		})
 		return menu
