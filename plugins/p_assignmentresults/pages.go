@@ -29,8 +29,10 @@ func registerMenuPages() {
 			getters.GetterAny(getters.GetterKey[string]("assignmentresult.AcademicRecord.Student.User.Name")),
 		),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to all results"),
-			Url:   lago.GetterRoutePath("assignmentresults.DefaultRoute", nil),
+			Title: getters.GetterStatic("Back to Assignment"),
+			Url: lago.GetterRoutePath("assignments.DetailRoute", map[string]getters.Getter[any]{
+				"id": getters.GetterAny(getters.GetterKey[uint]("assignmentresult.AssignmentID")),
+			}),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
@@ -99,10 +101,21 @@ func registerFilterPages() {
 	})
 }
 
+func assignmentResultSemesterEnvironment() *components.Environment[uint] {
+	return &components.Environment[uint]{
+		Label:   "Semester",
+		Key:     getters.GetterStatic("semester"),
+		Options: p_academicrecords.SemesterEnvironmentOptions,
+		Default: p_academicrecords.SemesterEnvironmentDefaultGetter,
+		Classes: "w-full max-w-md",
+	}
+}
+
 func assignmentResultFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{Key: "assignmentresults.AssignmentResultFormFieldsBody"},
 		Children: []components.PageInterface{
+			assignmentResultSemesterEnvironment(),
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{

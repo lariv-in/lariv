@@ -137,5 +137,6 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("assignments.preload_semester", views.QueryPatcherPreload("Semester")).
-			WithQueryPatcher("assignments.order_due", assignmentsOrderDueQueryPatcher))
+			WithQueryPatcher("assignments.order_due", assignmentsOrderDueQueryPatcher).
+			WithQueryPatcher("assignments.filter_env_semester", assignmentsListSemesterEnvQueryPatcher))
 }

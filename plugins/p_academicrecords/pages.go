@@ -385,3 +385,14 @@ func semestersEnvOptionsGetterForEnvironment(ctx context.Context) ([]registry.Pa
 	}
 	return options, nil
 }
+
+// SemesterEnvironmentDefaultGetter is the default semester for components.Environment[uint] when the
+// environment cookie has no "semester" entry. Matches academicRecordsListSemesterEnvQueryPatcher.
+func SemesterEnvironmentDefaultGetter(ctx context.Context) (uint, error) {
+	return semesterEnvironmentDefaultGetter(ctx)
+}
+
+// SemesterEnvironmentOptions lists semesters for components.Environment[uint] dropdowns (same as list pages).
+func SemesterEnvironmentOptions(ctx context.Context) ([]registry.Pair[uint, string], error) {
+	return semestersEnvOptionsGetterForEnvironment(ctx)
+}
