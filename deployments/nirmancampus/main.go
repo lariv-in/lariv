@@ -16,6 +16,7 @@ import (
 	_ "github.com/lariv-in/lago/p_filesystem"
 	_ "github.com/lariv-in/lago/p_nirmancampus_students"
 	_ "github.com/lariv-in/lago/p_nirmancampus_users"
+	_ "github.com/lariv-in/lago/p_nirmancampus_student_zone"
 	_ "github.com/lariv-in/lago/p_nirmancampus_website"
 	_ "github.com/lariv-in/lago/p_otp"
 	_ "github.com/lariv-in/lago/p_programs"

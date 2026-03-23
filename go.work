@@ -18,6 +18,7 @@ use (
 	./plugins/p_courses_teachers
 	./plugins/p_dashboard
 	./plugins/p_filesystem
+	./plugins/p_nirmancampus_student_zone
 	./plugins/p_nirmancampus_students
 	./plugins/p_nirmancampus_users
 	./plugins/p_nirmancampus_website

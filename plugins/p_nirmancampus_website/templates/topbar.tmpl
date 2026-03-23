@@ -1,0 +1,16 @@
+<nav class="navbar bg-base-100 border-b border-base-300 px-4 flex justify-between items-center">
+  <div class="flex-1">
+    <a href="/"><img src="{{ static "images/logo.png" }}" alt="Nirman Campus" class="h-10"></a>
+  </div>
+  <div class="flex-none flex items-center gap-4">
+    <a href="/" class="hover:underline">Home</a>
+    <a href="/courses-offered/" class="hover:underline">Courses</a>
+    <a href="/students-zone/" class="hover:underline">Student Zone</a>
+    <a href="/contact-us/" class="hover:underline">Contact Us</a>
+    {{ if .IsAuthenticated }}
+    <a href="/apps/" class="btn btn-primary btn-sm">Dashboard</a>
+    {{ else }}
+    <a href="/users/login/" class="btn btn-primary btn-sm">Sign In</a>
+    {{ end }}
+  </div>
+</nav>
