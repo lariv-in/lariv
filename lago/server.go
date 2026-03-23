@@ -2,7 +2,9 @@ package lago
 
 import (
 	"log/slog"
+	"net"
 	"net/http"
+	"os"
 
 	_ "gorm.io/driver/sqlite"
 )
@@ -28,16 +30,17 @@ func StartServer(config LagoConfig) error {
 		router = middleware(router)
 	}
 
-	if len(config.CertFile) != 0 && len(config.KeyFile) != 0 {
-		return http.ListenAndServeTLS(config.Address, config.CertFile, config.KeyFile, router)
-	}
-
-	if len(config.CertFile) != 0 {
-		slog.Warn("certFile for tls was not provided")
-	}
-	if len(config.KeyFile) != 0 {
-		slog.Warn("keyFile for tls was not provided")
-	}
 	slog.Warn("Using plain http without tls, ensure this is running in debug or behind a reverse proxy")
+	if config.UDS != "" {
+		if err := os.Remove(config.UDS); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		ln, err := net.Listen("unix", config.UDS)
+		if err != nil {
+			return err
+		}
+		defer ln.Close()
+		return http.Serve(ln, router)
+	}
 	return http.ListenAndServe(config.Address, router)
 }

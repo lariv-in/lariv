@@ -11,9 +11,9 @@ use (
 	./plugins/p_academicrecords
 	./plugins/p_academicrecords_courses
 	./plugins/p_academicrecords_programs
-	./plugins/p_assignments
-	./plugins/p_assignmentresults
 	./plugins/p_announcements
+	./plugins/p_assignmentresults
+	./plugins/p_assignments
 	./plugins/p_courses
 	./plugins/p_courses_teachers
 	./plugins/p_dashboard
