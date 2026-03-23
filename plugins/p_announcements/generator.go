@@ -59,7 +59,7 @@ func init() {
 			for si, sem := range semesters {
 				for i := range perSemester {
 					base := announcementTitles[(si*perSemester+i)%len(announcementTitles)]
-					title := fmt.Sprintf("[%s] %s", sem.Name, base)
+					title := base
 
 					release := now.Add(-time.Duration(si*perSemester+i) * 24 * time.Hour)
 					var expiry *time.Time

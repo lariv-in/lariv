@@ -1,13 +1,18 @@
 package p_academicrecords
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/p_semesters"
 	"github.com/lariv-in/lago/p_students"
+	"github.com/lariv-in/lago/registry"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -216,6 +221,12 @@ func registerTablePages() {
 			lago.DynamicPage{Name: "academicrecords.AcademicRecordMenu"},
 		},
 		Children: []components.PageInterface{
+			&components.Environment[uint]{
+				Label:   "Semester",
+				Key:     getters.GetterStatic("semester"),
+				Options: semestersEnvOptionsGetterForEnvironment,
+				Default: semesterEnvironmentDefaultGetter,
+			},
 			&components.DataTable[AcademicRecord]{
 				Page:      components.Page{Key: "academicrecords.AcademicRecordTableBody"},
 				UID:       "academicrecords-table",
@@ -234,13 +245,6 @@ func registerTablePages() {
 						Name:  "Student.User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Student.User.Name")},
-						},
-					},
-					{
-						Label: "Semester",
-						Name:  "Semester.Name",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Semester.Name")},
 						},
 					},
 					{
@@ -345,4 +349,39 @@ func registerSelectionPages() {
 			},
 		},
 	})
+}
+
+// semesterEnvironmentDefaultGetter selects the semester whose [Start, End] contains time.Now(),
+// matching academicRecordsListSemesterEnvQueryPatcher when the environment cookie has no semester.
+func semesterEnvironmentDefaultGetter(ctx context.Context) (uint, error) {
+	db, ok := ctx.Value("$db").(*gorm.DB)
+	if !ok || db == nil {
+		return 0, nil
+	}
+	id, ok := semesterEnvironmentDefault(db, time.Now())
+	if !ok {
+		return 0, nil
+	}
+	return id, nil
+}
+
+func semestersEnvOptionsGetterForEnvironment(ctx context.Context) ([]registry.Pair[uint, string], error) {
+	db, ok := ctx.Value("$db").(*gorm.DB)
+	if !ok || db == nil {
+		return nil, fmt.Errorf("semestersEnvOptionsGetterForEnvironment: missing $db in context")
+	}
+
+	var semesters []p_semesters.Semester
+	if err := db.Order(`"start" ASC`).Find(&semesters).Error; err != nil {
+		return nil, err
+	}
+
+	options := make([]registry.Pair[uint, string], 0, len(semesters))
+	for _, s := range semesters {
+		options = append(options, registry.Pair[uint, string]{
+			Key:   s.ID,
+			Value: s.Name,
+		})
+	}
+	return options, nil
 }

@@ -349,13 +349,6 @@ func registerTablePages() {
 						},
 					},
 					{
-						Label: "Semester",
-						Name:  "Semester",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: semesterNameFromRow()},
-						},
-					},
-					{
 						Label: "Release At",
 						Name:  "ReleaseAt",
 						Children: []components.PageInterface{
