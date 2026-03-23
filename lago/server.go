@@ -39,6 +39,10 @@ func StartServer(config LagoConfig) error {
 		if err != nil {
 			return err
 		}
+		err = os.Chmod(config.UDS, 0777)
+		if err != nil {
+			return err
+		}
 		defer ln.Close()
 		return http.Serve(ln, router)
 	}
