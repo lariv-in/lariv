@@ -24,7 +24,7 @@ type AcademicRecordProgramDetails struct {
 	Program   p_programs.Program `gorm:"constraint:OnDelete:CASCADE;foreignKey:ProgramID;references:ID"`
 }
 
-func upsertAcademicRecordProgram(tx *gorm.DB, academicRecordID uint, programID uint) error {
+func UpsertAcademicRecordProgram(tx *gorm.DB, academicRecordID uint, programID uint) error {
 	// Empty selection clears the extension record.
 	if programID == 0 {
 		return tx.Where("academic_record_id = ?", academicRecordID).

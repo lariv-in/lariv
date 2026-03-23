@@ -99,11 +99,11 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 			if (ev.detail.name === %s) {
 				if (!ev.target.selected) {
 					this.addItem(ev.detail)
-					ev.target.classList.add('bg-primary/25', 'ring-2', 'ring-primary/50')
+					ev.target.classList.add('bg-success')
 					ev.target.selected = true
 				} else {
 					this.removeItem(ev.detail)
-					ev.target.classList.remove('bg-primary/25', 'ring-2', 'ring-primary/50')
+					ev.target.classList.remove('bg-success')
 					ev.target.selected = false
 				}
 			}
