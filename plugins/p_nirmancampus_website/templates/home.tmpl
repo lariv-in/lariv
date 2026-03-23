@@ -8,7 +8,7 @@
   <div class="absolute inset-0 bg-black/50"></div>
 
   <!-- Main hero content -->
-  <div class="relative z-6 flex flex-col items-center justify-center h-full text-center px-4 -translate-y-20">
+  <div class="relative z-6 flex flex-col items-center justify-center h-full text-center px-4">
     <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
       Welcome to Nirman Campus
     </h1>
@@ -31,28 +31,32 @@
       <i class="fab fa-whatsapp fa-lg"></i> <span class="ml-2">Admission Line</span>
     </a>
   </div>
+</section>
 
-  <!-- Important Updates card: centered on mobile, bottom-right on desktop -->
-  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 z-20 w-[80%] md:w-[30%]">
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-      <div class="bg-blue-600 px-4 py-2">
-        <h2 class="text-white text-lg font-semibold">Announcements</h2>
-      </div>
-      <div class="p-4 max-h-56 overflow-y-auto">
-        <ul class="space-y-3">
-          {{ range .Announcements }}
-            <li class="flex items-start">
-              <img src="{{ static "images/new_icon.gif" }}" alt="New" class="h-5 w-5 mt-1 mr-2"/>
-              <span class="text-gray-800">{{ .Text }}</span>
-            </li>
-          {{ else }}
-            <li class="text-gray-500">No announcements right now.</li>
-          {{ end }}
-        </ul>
+<section class="bg-gray-50 py-12 border-t border-gray-200" aria-labelledby="announcements-heading">
+  <div class="container mx-auto px-4">
+    <h2 id="announcements-heading" class="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8">
+      Announcements
+    </h2>
+    <div class="max-h-80 md:max-h-96 overflow-y-auto overscroll-y-contain pr-2 [scrollbar-gutter:stable]">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-1">
+      {{ range .Announcements }}
+        <article class="bg-white rounded-xl shadow-md border border-gray-100 p-5 flex items-start gap-3 hover:shadow-lg transition-shadow">
+          <img src="{{ static "images/new_icon.gif" }}" alt="" class="h-5 w-5 mt-0.5 flex-shrink-0" aria-hidden="true"/>
+          <p class="text-gray-800 text-sm md:text-base leading-relaxed">{{ .Text }}</p>
+        </article>
+      {{ else }}
+        <div class="col-span-full">
+          <div class="bg-white rounded-xl shadow-md border border-gray-100 p-8 text-center text-gray-500 max-w-xl mx-auto">
+            No announcements right now.
+          </div>
+        </div>
+      {{ end }}
       </div>
     </div>
   </div>
 </section>
+
 <section id="hero" class="pt-8">
   <div class="container mx-auto px-4">
     <div class="flex flex-col md:flex-row items-center md:items-start gap-8 justify-center">
@@ -114,14 +118,8 @@
           
         </div>
 
-        <!-- Student Zone & Social Icons -->
+        <!-- Feedback & social -->
         <div class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-start gap-4">
-          <a
-            href="/stuzone/"
-            class="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700"
-          >
-            Student Zone
-          </a>
           <a
             href="/feedback-form/"
             class="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700"
@@ -224,14 +222,6 @@
       <div class="bg-white p-6 rounded-lg shadow">
         <h4 class="font-semibold mb-3">IGNOU Study Center - 2299</h4>
           <ul class="space-y-3 mb-3">
-            <li>
-              <a
-                href="/stuzone/"
-                class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-900"
-              >
-                <i class="fas fa-user-graduate"></i> Student Zone Nirman Campus
-              </a>
-            </li>
             <li>
               <a
                 href="{{ static "downloads/DECE-04 - Additional Guidelines for Project Work.pdf" }}" target="_blank"

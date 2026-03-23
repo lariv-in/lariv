@@ -128,7 +128,6 @@
             <ul x-show="open" @click.away="open = false"
                 class="bg-white shadow-lg rounded mt-1 space-y-1 md:absolute md:left-0 md:top-full md:w-48">
               <li><a href="https://amitkansal.in/" target="_blank" class="block px-4 py-2 hover:bg-gray-100">About Dr. Amit Kansal</a></li>
-              <li><a href="/stuzone/"          class="block px-4 py-2 hover:bg-gray-100">Student Zone</a></li>
               <li><a href="/courses-offered/"          class="block px-4 py-2 hover:bg-gray-100">Courses Offered</a></li>
             </ul>
           </li>
@@ -175,7 +174,6 @@
             <ul x-show="open" @click.away="open = false"
                 class="bg-white shadow-lg rounded mt-1 space-y-1 md:absolute md:right-0 md:top-full md:w-56 max-h-[50vh] overflow-y-auto">
               <li><a href="https://www.ignou.ac.in/" class="block px-4 py-2 hover:bg-gray-100">About IGNOU</a></li>
-              <li><a href="/stuzone/" class="block px-4 py-2 hover:bg-gray-100">Student Zone</a></li>
               <li><a href="https://onlineservices.ignou.ac.in/convocation/" target=_blank class="block px-4 py-2 hover:bg-gray-100">Online Registration for 39th Convocation</a></li>
               <li><a href="/oss2281/" class="block px-4 py-2 hover:bg-gray-100">Online Support Services</a></li>
               <li><a href="https://www.ignou.ac.in/viewFile/hq/common/Common-Prospectus-English.pdf" target="_blank"
@@ -248,8 +246,15 @@
           <!-- <li><a href="/users/login/"    class="block px-4 py-2 hover:text-blue-600">Admin</a></li> 
           <li><a href="" class="block px-4 py-2 hover:text-blue-600"></a></li>
           <li><a href="" class="block px-4 py-2 hover:text-blue-600"></a></li> -->
+          <li class="md:flex md:items-center md:pl-2">
+            <a
+              href="/users/login/"
+              class="block mx-4 my-2 md:mx-0 md:my-0 text-center px-4 py-2 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors text-sm font-medium"
+            >
+              Login
+            </a>
+          </li>
         </ul>
       </nav>
-    </div>
     </div>
   </header>

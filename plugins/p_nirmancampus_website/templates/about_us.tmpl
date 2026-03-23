@@ -1,0 +1,170 @@
+{{ template "header.tmpl" . }}
+
+<main class="bg-gray-50 min-h-screen">
+<section id="contact-us" class="py-12 bg-gray-50">
+  <!-- Title & Breadcrumb -->
+  <div class="container mx-auto px-4 mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+      <h1 class="text-3xl font-bold">Contact Us</h1>
+      <nav aria-label="breadcrumb" class="mt-4 md:mt-0">
+        <ol class="flex space-x-2 text-gray-600 text-sm">
+          <li>
+            <a href="/" class="hover:underline">Home</a>
+            <span>/</span>
+          </li>
+          <li class="font-medium text-gray-800">Contact Us</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Accordions -->
+    <div x-data="{ exec: false, contact: false, support: false, details: false }" class="space-y-4">
+      <!-- Executive Team -->
+      <div class="border rounded-lg bg-white overflow-hidden">
+        <button
+          type="button"
+          @click="exec = !exec"
+          class="w-full px-4 py-3 text-left flex justify-between items-center bg-blue-600 text-white"
+        >
+          <span class="font-semibold">Nirman Executive Team</span>
+          <svg x-bind:class="{ 'rotate-180': exec }" class="h-5 w-5 transform transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div x-show="exec" x-transition class="p-4 space-y-3">
+          <p class="text-gray-700">
+            These people are dedicated to execute the NIRMAN activities and to serve the society. The central responsibility
+            of NIRMAN execution and coordination is carried out from Sunam by its governing body:
+          </p>
+          <ul class="space-y-1">
+            <li class="bg-gray-100 px-3 py-2 rounded"><strong>Bhagwan Dass</strong>, Patron</li>
+            <li class="bg-yellow-100 px-3 py-2 rounded"><strong>Darshna Kansal</strong>, Chairperson</li>
+            <li class="bg-blue-100 px-3 py-2 rounded"><strong>Dr. Amit Kansal</strong>, Founder &amp; CEO, Ph.D., M.A., MBA, LL.B.</li>
+            <li class="bg-red-100 px-3 py-2 rounded"><strong>Vikas Kansal</strong>, Director(Education), MCA, UGC-NET Qualified, M.Sc.(Geography), MA Tourism</li>
+            <li class="bg-red-100 px-3 py-2 rounded"><strong>Deepak Bansal</strong>, (Director Administration)</li>
+            <li class="bg-gray-100 px-3 py-2 rounded"><strong>Raman Kansal</strong>, Secretary Finance, M.Sc. (Chemistry), B.Ed.</li>
+            <li class="bg-yellow-100 px-3 py-2 rounded"><strong>Sonia</strong>, Executive Director, M.Sc.(IT)</li>
+            <li class="bg-blue-100 px-3 py-2 rounded"><strong>Sakshi</strong>, Director (Public Awareness &amp; Health), M.A., M.Phil</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Email & Phone -->
+      <div class="border rounded-lg bg-white overflow-hidden">
+        <button
+          type="button"
+          @click="contact = !contact"
+          class="w-full px-4 py-3 text-left flex justify-between items-center bg-green-600 text-white"
+        >
+          <span class="font-semibold">Email &amp; Phone Numbers</span>
+          <svg x-bind:class="{ 'rotate-180': contact }" class="h-5 w-5 transform transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div x-show="contact" x-transition class="p-4 space-y-3 text-gray-700">
+          <p class="font-medium">You can contact us anytime and we will respond to your query.</p>
+          <ul class="list-disc pl-5 space-y-1 text-red-900">
+            <li><strong>Email:</strong> nirmancampus@gmail.com</li>
+            <li><strong>Student Support:</strong> +91-98150-98210</li>
+            <li><strong>Admissions Helpline:</strong> +91-94784-50740</li>
+          </ul>
+          <p class="mt-3 font-medium">Head Office Address:</p>
+          <ul class="list-inside pl-5 space-y-1 text-gray-700">
+            <li>Smt. Darshna Kansal, Chairperson</li>
+            <li>Nirman, Peer Bana Banoi Road</li>
+            <li>Sunam – 148028</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Supporting Members -->
+      <div class="border rounded-lg bg-white overflow-hidden">
+        <button
+          type="button"
+          @click="support = !support"
+          class="w-full px-4 py-3 text-left flex justify-between items-center bg-purple-600 text-white"
+        >
+          <span class="font-semibold">Our Supporting Members</span>
+          <svg x-bind:class="{ 'rotate-180': support }" class="h-5 w-5 transform transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div x-show="support" x-transition class="p-4 space-y-3">
+          <p class="text-gray-700">
+            These people support NIRMAN activities to help the organization achieve its goals.
+          </p>
+          <ul class="space-y-1">
+            <li class="bg-gray-100 px-3 py-2 rounded"><strong>Kamal Singla</strong>, MD, Krishna Group of Institutes</li>
+            <li class="bg-yellow-100 px-3 py-2 rounded"><strong>Dr. Rajeev Jindal</strong>, MBBS, M.S.</li>
+            <li class="bg-yellow-100 px-3 py-2 rounded"><strong>Dr. Priya Singla</strong>, Ph.D., M.Sc (Food and Nutrition), UGC-NET</li>
+            <li class="bg-blue-100 px-3 py-2 rounded"><strong>Dr. Rajinder</strong>, Ph.D. (Mathematics), M.Sc., UGC-NET</li>
+            <li class="bg-red-100 px-3 py-2 rounded"><strong>Dr. Rohtash Chauhan</strong>, Ph.D. History, M.A., UGC-NET</li>
+            <li class="bg-gray-100 px-3 py-2 rounded"><strong>Dr. Ravi Kumar</strong>, Ph.D. (Geography), M.Sc., UGC-NET</li>
+            <li class="bg-yellow-100 px-3 py-2 rounded"><strong>Rahul Kumar</strong>, M.Sc. (Psychology), UGC-NET</li>
+            <li class="bg-yellow-100 px-3 py-2 rounded"><strong>Dr. Vikas</strong>, Ph.D (Computer Science), MCA, UGC-NET, MTTM</li>
+            <li class="bg-yellow-100 px-3 py-2 rounded"><strong>Raj Tagore</strong>, M.Sc. (Robotics)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Postal & Account Details -->
+      <div class="border rounded-lg bg-white overflow-hidden">
+        <button
+          type="button"
+          @click="details = !details"
+          class="w-full px-4 py-3 text-left flex justify-between items-center bg-red-600 text-white"
+        >
+          <span class="font-semibold">Postal Address &amp; Account Details</span>
+          <svg x-bind:class="{ 'rotate-180': details }" class="h-5 w-5 transform transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div x-show="details" x-transition class="p-4 space-y-3 text-gray-700">
+          <p class="font-medium text-green-700 text-center">(Main Campus)</p>
+          <div class="space-y-1">
+            <p>Nirman Campus of Education, Research &amp; Training</p>
+            <p>Jakhepal-Ghasiawala Road, Sunam-148028, Distt. Sangrur, Punjab</p>
+          </div>
+          <p class="font-medium text-green-700 mt-4 text-center">Bank Account Details</p>
+          <div class="space-y-1 text-blue-700">
+            <p><strong>Beneficiary:</strong> Nirman - A Social Organization</p>
+            <p><strong>Bank:</strong> Federal Bank, Sunam</p>
+            <p><strong>Acc No:</strong> 19750100042364</p>
+            <p><strong>IFSC:</strong> FDRL0001975</p>
+          </div>
+          <p class="text-sm text-green-700 mt-2 text-center">
+            * You can also find us on Google Maps as shown below
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Our Team -->
+    <div>
+      <h2 class="text-2xl font-bold text-center mb-6">Our Team</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="bg-white rounded-lg shadow text-center p-4">
+          <h5 class="mt-4 font-semibold">Sh. Bhagwan Dass Kansal</h5>
+          <p class="text-gray-600">Patron</p>
+        </div>
+        <div class="bg-white rounded-lg shadow text-center p-4">
+          <h5 class="mt-4 font-semibold">Smt. Darshna Devi Kansal</h5>
+          <p class="text-gray-600">Chairperson</p>
+        </div>
+        <div class="bg-white rounded-lg shadow text-center p-4">
+          <h5 class="mt-4 font-semibold">Dr. Amit Kansal</h5>
+          <p class="text-gray-600">Founder &amp; CEO</p>
+        </div>
+        <div class="bg-white rounded-lg shadow text-center p-4">
+          <h5 class="mt-4 font-semibold">Sh. Deepak Bansal</h5>
+          <p class="text-gray-600">Director (Administration)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+{{ template "footer.tmpl" . }}

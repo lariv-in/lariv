@@ -87,6 +87,16 @@ func init() {
 		},
 	}
 	lago.RegistryView.Register("nirmancampus_website.CoursesView", coursesView)
+	lago.RegistryView.Register("nirmancampus_website.AboutUsView",
+		lago.GetPageView("nirmancampus_website.AboutUsPage"))
+	lago.RegistryView.Register("nirmancampus_website.PrivacyPolicyView",
+		lago.GetPageView("nirmancampus_website.PrivacyPolicyPage"))
+	lago.RegistryView.Register("nirmancampus_website.MrscmtView",
+		lago.GetPageView("nirmancampus_website.MrscmtPage"))
+	lago.RegistryView.Register("nirmancampus_website.MrsptuadmcoView",
+		lago.GetPageView("nirmancampus_website.MrsptuadmcoPage"))
+	lago.RegistryView.Register("nirmancampus_website.Oss2281View",
+		lago.GetPageView("nirmancampus_website.Oss2281Page"))
 	lago.RegistryView.Register("nirmancampus_website.PopupImageView", &views.View{
 		Handlers: map[string]func(*views.View) http.Handler{
 			http.MethodGet: popupImageHandler,

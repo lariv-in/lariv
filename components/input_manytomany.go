@@ -138,7 +138,7 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 					Button(
 						Type("button"),
 						Class("btn btn-ghost btn-square btn-xs shrink-0"),
-						Attr("@click.stop", "removeItem(item.Key)"),
+						Attr("@click.stop", "removeItem({ value: item.Key })"),
 						Attr("aria-label", "Remove"),
 						Render(Icon{Name: "x-mark"}, ctx),
 					),
