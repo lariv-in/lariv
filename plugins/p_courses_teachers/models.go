@@ -2,7 +2,6 @@ package p_courses_teachers
 
 import (
 	"log"
-	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/p_courses"
@@ -11,9 +10,7 @@ import (
 )
 
 type CourseTeacher struct {
-	ID        uint `gorm:"primaryKey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	gorm.Model
 
 	CourseID uint             `gorm:"notnull;index;uniqueIndex:idx_course_teacher_pair"`
 	Course   p_courses.Course `gorm:"constraint:OnDelete:CASCADE"`

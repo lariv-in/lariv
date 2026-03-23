@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func programIDFromValues(values map[string]any) uint {
+func ProgramIDFromValues(values map[string]any) uint {
 	raw, ok := values["ProgramID"]
 	if !ok || raw == nil {
 		return 0
@@ -37,7 +37,7 @@ func programIDFromValues(values map[string]any) uint {
 	}
 }
 
-func splitRegularValues(values map[string]any) map[string]any {
+func RegularValuesWithoutProgram(values map[string]any) map[string]any {
 	regularValues := make(map[string]any, len(values))
 	for k, v := range values {
 		if k == "ProgramID" {
@@ -74,8 +74,8 @@ func createAcademicRecordWithProgram(successURL getters.Getter[string]) func(*ba
 			}
 
 			db := r.Context().Value("$db").(*gorm.DB)
-			programID := programIDFromValues(values)
-			regularValues := splitRegularValues(values)
+			programID := ProgramIDFromValues(values)
+			regularValues := RegularValuesWithoutProgram(values)
 
 			record := new(p_academicrecords.AcademicRecord)
 			err = db.Transaction(func(tx *gorm.DB) error {
@@ -85,7 +85,7 @@ func createAcademicRecordWithProgram(successURL getters.Getter[string]) func(*ba
 				if err := tx.Create(record).Error; err != nil {
 					return err
 				}
-				return upsertAcademicRecordProgram(tx, record.ID, programID)
+				return UpsertAcademicRecordProgram(tx, record.ID, programID)
 			})
 
 			if err != nil {
@@ -121,8 +121,8 @@ func updateAcademicRecordWithProgram(successURL getters.Getter[string]) func(*ba
 			}
 
 			db := r.Context().Value("$db").(*gorm.DB)
-			programID := programIDFromValues(values)
-			regularValues := splitRegularValues(values)
+			programID := ProgramIDFromValues(values)
+			regularValues := RegularValuesWithoutProgram(values)
 
 			err = db.Transaction(func(tx *gorm.DB) error {
 				query := tx.Model(new(p_academicrecords.AcademicRecord)).Where("id = ?", id)
@@ -146,7 +146,7 @@ func updateAcademicRecordWithProgram(successURL getters.Getter[string]) func(*ba
 					}
 				}
 
-				return upsertAcademicRecordProgram(tx, uint(id), programID)
+				return UpsertAcademicRecordProgram(tx, uint(id), programID)
 			})
 			if err != nil {
 				fieldErrors["_form"] = err

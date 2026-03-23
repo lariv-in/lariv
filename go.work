@@ -9,6 +9,7 @@ use (
 	./getters
 	./lago
 	./plugins/p_academicrecords
+	./plugins/p_academicrecords_courses
 	./plugins/p_academicrecords_programs
 	./plugins/p_assignments
 	./plugins/p_assignmentresults
