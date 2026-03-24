@@ -1,4 +1,4 @@
-package p_studentapplication
+package p_studentapplications
 
 import (
 	"fmt"
