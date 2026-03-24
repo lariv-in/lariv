@@ -53,7 +53,7 @@ func assignmentsListSemesterEnvQueryPatcher(_ *baseviews.View, r *http.Request, 
 		return query
 	}
 	raw, ok := envMap["semester"]
-	if !ok || strings.TrimSpace(raw) == "" {
+	if !ok {
 		db, dbOK := r.Context().Value("$db").(*gorm.DB)
 		if !dbOK || db == nil {
 			return query
@@ -63,6 +63,9 @@ func assignmentsListSemesterEnvQueryPatcher(_ *baseviews.View, r *http.Request, 
 			return query
 		}
 		raw = fmt.Sprintf("%d", id)
+	}
+	if strings.TrimSpace(raw) == "" {
+		return query
 	}
 	semesterID, ok := parseSemesterEnvID(raw)
 	if !ok {
