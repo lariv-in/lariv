@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/p_studentapplications
+module github.com/lariv-in/lago/p_nirmancampus_studentapplications
 
 go 1.26.1
 

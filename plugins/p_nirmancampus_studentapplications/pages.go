@@ -1,4 +1,4 @@
-package p_studentapplications
+package p_nirmancampus_studentapplications
 
 import (
 	"net/http"

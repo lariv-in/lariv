@@ -28,7 +28,7 @@ use (
 	./plugins/p_programs
 	./plugins/p_pwa
 	./plugins/p_semesters
-	./plugins/p_studentapplications
+	./plugins/p_nirmancampus_studentapplications
 	./plugins/p_students
 	./plugins/p_teachers
 	./plugins/p_totschool_appointments
