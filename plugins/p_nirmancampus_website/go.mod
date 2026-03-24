@@ -48,7 +48,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lariv-in/lago/getters v0.0.0 // indirect
 	github.com/lariv-in/lago/p_filesystem v0.0.0 // indirect
-	github.com/lariv-in/lago/p_semesters v0.0.0 // indirect
 	github.com/lariv-in/lago/registry v0.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.20 // indirect
