@@ -24,7 +24,7 @@ import (
 	_ "github.com/lariv-in/lago/p_programs"
 	_ "github.com/lariv-in/lago/p_pwa"
 	_ "github.com/lariv-in/lago/p_semesters"
-	_ "github.com/lariv-in/lago/p_studentapplications"
+	_ "github.com/lariv-in/lago/p_nirmancampus_studentapplications"
 	_ "github.com/lariv-in/lago/p_students"
 	_ "github.com/lariv-in/lago/p_teachers"
 	_ "github.com/lariv-in/lago/p_users"

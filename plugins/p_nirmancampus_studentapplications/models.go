@@ -1,4 +1,4 @@
-package p_studentapplications
+package p_nirmancampus_studentapplications
 
 import (
 	"log"
@@ -34,7 +34,7 @@ func init() {
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_studentapplications", lago.AdminPanel[StudentApplication]{
+	lago.RegistryAdmin.Register("p_nirmancampus_studentapplications", lago.AdminPanel[StudentApplication]{
 		SearchField: "Name",
 		ListFields: []string{
 			"Name",
