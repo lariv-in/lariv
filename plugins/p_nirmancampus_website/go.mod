@@ -58,7 +58,7 @@ require (
 	github.com/nyaruka/phonenumbers v1.6.11 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
@@ -78,8 +78,8 @@ replace (
 	github.com/lariv-in/lago/lago => ../../lago
 	github.com/lariv-in/lago/p_announcements => ../p_announcements
 	github.com/lariv-in/lago/p_courses => ../p_courses
-	github.com/lariv-in/lago/p_nirmancampus_student_zone => ../p_nirmancampus_student_zone
 	github.com/lariv-in/lago/p_filesystem => ../p_filesystem
+	github.com/lariv-in/lago/p_nirmancampus_student_zone => ../p_nirmancampus_student_zone
 	github.com/lariv-in/lago/p_semesters => ../p_semesters
 	github.com/lariv-in/lago/p_users => ../p_users
 	github.com/lariv-in/lago/registry => ../../registry

@@ -17,8 +17,7 @@ type LagoConfig struct {
 	SqliteConfig   *sqlite.Config
 	PostgresConfig *postgres.Config
 	Address        string
-	CertFile       string
-	KeyFile        string
+	UDS            string
 	GeneratorOrder []string
 	Plugins        map[string]toml.Primitive
 }
