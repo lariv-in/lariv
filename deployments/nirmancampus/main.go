@@ -10,6 +10,7 @@ import (
 	_ "github.com/lariv-in/lago/p_announcements"
 	_ "github.com/lariv-in/lago/p_announcements_semesters"
 	_ "github.com/lariv-in/lago/p_assignments"
+	_ "github.com/lariv-in/lago/p_assignments_semesters"
 	_ "github.com/lariv-in/lago/p_assignmentresults"
 	_ "github.com/lariv-in/lago/p_courses"
 	_ "github.com/lariv-in/lago/p_courses_teachers"

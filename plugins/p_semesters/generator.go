@@ -29,19 +29,19 @@ func init() {
 
 			rows := []Semester{
 				{
-					Name:     fmt.Sprintf("Generated previous (%s – %s)", pastStart.Format("Jan 2006"), pastEnd.Format("Jan 2006")),
+					Name:     fmt.Sprintf("%s – %s", pastStart.Format("Jan 2006"), pastEnd.Format("Jan 2006")),
 					Start:    pastStart,
 					End:      pastEnd,
 					IsActive: false,
 				},
 				{
-					Name:     fmt.Sprintf("Generated current (%s – %s)", currentStart.Format("Jan 2006"), currentEnd.Format("Jan 2006")),
+					Name:     fmt.Sprintf("%s – %s", currentStart.Format("Jan 2006"), currentEnd.Format("Jan 2006")),
 					Start:    currentStart,
 					End:      currentEnd,
 					IsActive: true,
 				},
 				{
-					Name:     fmt.Sprintf("Generated upcoming (%s – %s)", futureStart.Format("Jan 2006"), futureEnd.Format("Jan 2006")),
+					Name:     fmt.Sprintf("%s – %s", futureStart.Format("Jan 2006"), futureEnd.Format("Jan 2006")),
 					Start:    futureStart,
 					End:      futureEnd,
 					IsActive: false,

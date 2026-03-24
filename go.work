@@ -15,6 +15,7 @@ use (
 	./plugins/p_announcements_semesters
 	./plugins/p_assignmentresults
 	./plugins/p_assignments
+	./plugins/p_assignments_semesters
 	./plugins/p_courses
 	./plugins/p_courses_teachers
 	./plugins/p_dashboard

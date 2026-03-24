@@ -1,3 +1,5 @@
+// Package p_assignments registers assignments.Generator for sample assignments (no semester FK).
+// With p_assignments_semesters, list assignments_semesters.Generator after this in GeneratorOrder.
 package p_assignments
 
 import (
@@ -6,21 +8,12 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_semesters"
 	"gorm.io/gorm"
 )
 
 func init() {
 	lago.RegistryGenerator.Register("assignments.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var semesters []p_semesters.Semester
-			if err := db.Order("id ASC").Find(&semesters).Error; err != nil {
-				return fmt.Errorf("failed to load semesters: %w", err)
-			}
-			if len(semesters) == 0 {
-				return fmt.Errorf("need at least one semester row before generating assignments")
-			}
-
 			now := time.Now()
 			items := []Assignment{
 				{
@@ -42,15 +35,12 @@ func init() {
 					MaxMarks:    30,
 				},
 			}
-			for i := range items {
-				items[i].SemesterID = semesters[i%len(semesters)].ID
-			}
 			for _, a := range items {
 				if err := db.Create(&a).Error; err != nil {
 					return fmt.Errorf("failed to create assignment %q: %w", a.Name, err)
 				}
 			}
-			fmt.Printf("Created %d assignments (%d semesters)\n", len(items), len(semesters))
+			fmt.Printf("Created %d assignments\n", len(items))
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
