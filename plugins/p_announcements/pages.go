@@ -9,9 +9,6 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_semesters"
-	"github.com/lariv-in/lago/registry"
-	"gorm.io/gorm"
 )
 
 func init() {
@@ -122,58 +119,6 @@ func registerFilterPages() {
 
 // --- Form Fields / Helpers ---
 
-func expiryAtInputGetter() getters.Getter[time.Time] {
-	return func(ctx context.Context) (time.Time, error) {
-		inVal := ctx.Value(getters.ContextKeyIn) // "$in"
-		if inVal == nil {
-			return time.Time{}, nil
-		}
-		inMap, ok := inVal.(map[string]any)
-		if !ok {
-			return time.Time{}, nil
-		}
-		raw, ok := inMap["ExpiryAt"]
-		if !ok || raw == nil {
-			return time.Time{}, nil
-		}
-		switch typed := raw.(type) {
-		case time.Time:
-			return typed, nil
-		case *time.Time:
-			if typed == nil {
-				return time.Time{}, nil
-			}
-			return *typed, nil
-		default:
-			return time.Time{}, nil
-		}
-	}
-}
-
-func expiryAtStringFromIn() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		t, err := expiryAtInputGetter()(ctx)
-		if err != nil || t.IsZero() {
-			return "", nil
-		}
-		tz, _ := ctx.Value("$tz").(*time.Location)
-		if tz == nil {
-			tz = components.DefaultTimeZone
-		}
-		return t.In(tz).Format(time.DateTime), nil
-	}
-}
-
-func semesterNameFromIn() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		name, err := getters.GetterKey[string]("$in.Semester.Name")(ctx)
-		if err != nil {
-			return "", nil
-		}
-		return name, nil
-	}
-}
-
 func announcementFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{Key: "announcements.AnnouncementFormFieldsBody"},
@@ -231,21 +176,6 @@ func announcementFormFields() components.ContainerColumn {
 								Getter:   getters.GetterDeref(getters.GetterKey[*time.Time]("$in.ExpiryAt")),
 							},
 						},
-					},
-				},
-			},
-
-			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.SemesterID"),
-				Children: []components.PageInterface{
-					&components.InputForeignKey[p_semesters.Semester]{
-						Label:       "Semester",
-						Name:        "SemesterID",
-						Required:    true,
-						Getter:      getters.GetterAssociation[p_semesters.Semester](getters.GetterKey[uint]("$in.SemesterID")),
-						Url:         lago.GetterRoutePath("semesters.SelectRoute", nil),
-						Display:     getters.GetterKey[string]("$in.Name"),
-						Placeholder: "Select a semester...",
 					},
 				},
 			},
@@ -325,13 +255,8 @@ func registerTablePages() {
 			lago.DynamicPage{Name: "announcements.AnnouncementMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.Environment[uint]{
-				Label:   "Semester",
-				Key:     getters.GetterStatic("semester"),
-				Options: semestersEnvOptionsGetterForEnvironment,
-				Default: semesterEnvironmentDefaultGetter,
-			},
 			&components.DataTable[Announcement]{
+				Page:      components.Page{Key: "announcements.AnnouncementTableBody"},
 				UID:       "announcement-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
@@ -368,16 +293,6 @@ func registerTablePages() {
 	})
 }
 
-func semesterNameFromRow() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		name, err := getters.GetterKey[string]("$row.Semester.Name")(ctx)
-		if err != nil {
-			return "", nil
-		}
-		return name, nil
-	}
-}
-
 // --- Detail & Delete ---
 
 func registerDetailPages() {
@@ -392,12 +307,14 @@ func registerDetailPages() {
 					components.ContainerColumn{
 						Page: components.Page{Key: "announcements.AnnouncementDetailContent"},
 						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Title")},
-							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Semester.Name")},
+							&components.FieldTitle{
+								Page:   components.Page{Key: "announcements.AnnouncementDetailTitle"},
+								Getter: getters.GetterKey[string]("$in.Title"),
+							},
 							&components.LabelInline{
 								Title: "Description",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: semesterNameFromIn()},
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.Description")},
 								},
 							},
 							&components.LabelInline{
@@ -443,6 +360,7 @@ func registerSelectionPages() {
 		Title: "Select Announcement",
 		Children: []components.PageInterface{
 			&components.DataTable[Announcement]{
+				Page: components.Page{Key: "announcements.AnnouncementSelectionTableBody"},
 				UID:  "announcement-selection-table",
 				Data: getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
 				OnClick: getters.GetterSelect("AnnouncementID",
@@ -459,13 +377,6 @@ func registerSelectionPages() {
 						},
 					},
 					{
-						Label: "Semester",
-						Name:  "Semester",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: semesterNameFromRow()},
-						},
-					},
-					{
 						Label: "Release At",
 						Name:  "ReleaseAt",
 						Children: []components.PageInterface{
@@ -476,39 +387,4 @@ func registerSelectionPages() {
 			},
 		},
 	})
-}
-
-// semesterEnvironmentDefaultGetter selects the semester whose [Start, End] contains time.Now(),
-// matching announcementsListSemesterEnvQueryPatcher when the environment cookie has no semester.
-func semesterEnvironmentDefaultGetter(ctx context.Context) (uint, error) {
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		return 0, nil
-	}
-	id, ok := semesterEnvironmentDefault(db, time.Now())
-	if !ok {
-		return 0, nil
-	}
-	return id, nil
-}
-
-func semestersEnvOptionsGetterForEnvironment(ctx context.Context) ([]registry.Pair[uint, string], error) {
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		return nil, fmt.Errorf("semestersEnvOptionsGetterForEnvironment: missing $db in context")
-	}
-
-	var semesters []p_semesters.Semester
-	if err := db.Order(`"start" ASC`).Find(&semesters).Error; err != nil {
-		return nil, err
-	}
-
-	options := make([]registry.Pair[uint, string], 0, len(semesters))
-	for _, s := range semesters {
-		options = append(options, registry.Pair[uint, string]{
-			Key:   s.ID,
-			Value: s.Name,
-		})
-	}
-	return options, nil
 }

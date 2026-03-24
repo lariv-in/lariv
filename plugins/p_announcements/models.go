@@ -6,7 +6,6 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/p_filesystem"
-	"github.com/lariv-in/lago/p_semesters"
 	"github.com/lariv-in/lago/p_users"
 	"gorm.io/gorm"
 )
@@ -28,10 +27,6 @@ type Announcement struct {
 
 	ReleaseAt time.Time
 	ExpiryAt  *time.Time
-
-	// Semester is non-null in Lago UI: the semester selector expects a concrete FK value.
-	SemesterID uint
-	Semester   p_semesters.Semester `gorm:"constraint:OnDelete:CASCADE;foreignKey:SemesterID;references:ID"`
 
 	Assets []p_filesystem.VNode `gorm:"many2many:announcement_assets;"`
 }
@@ -59,12 +54,10 @@ func init() {
 			"Description",
 			"ReleaseAt",
 			"ExpiryAt",
-			"Semester.Name",
 			"CreatedBy.Name",
 			"UpdatedAt",
 		},
 		Preload: []string{
-			"Semester",
 			"CreatedBy",
 		},
 	})

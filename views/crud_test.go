@@ -201,8 +201,11 @@ func createCoursePage() *components.ContainerColumn {
 func newCrudTestView(page components.PageInterface) *View {
 	return &View{
 		PageName: "test.form",
-		Registry: map[string]components.PageInterface{
-			"test.form": page,
+		PageLookup: func(name string) (components.PageInterface, bool) {
+			if name != "test.form" {
+				return nil, false
+			}
+			return page, true
 		},
 		Handlers:      map[string]func(*View) http.Handler{},
 		FormPatchers:  nil,
