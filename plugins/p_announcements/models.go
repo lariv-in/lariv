@@ -21,6 +21,7 @@ type Announcement struct {
 
 	Title       string `gorm:"notnull"`
 	Description string `gorm:"type:text;notnull"`
+	URL         string
 
 	CreatedByID *uint
 	CreatedBy   *p_users.User `gorm:"constraint:OnDelete:SET NULL;foreignKey:CreatedByID;references:ID"`
@@ -52,6 +53,7 @@ func init() {
 		ListFields: []string{
 			"Title",
 			"Description",
+			"URL",
 			"ReleaseAt",
 			"ExpiryAt",
 			"CreatedBy.Name",

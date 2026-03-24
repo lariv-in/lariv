@@ -21,6 +21,7 @@ type homeAnnouncement struct {
 	Title       string
 	Description template.HTML
 	Date        string
+	URL         string
 }
 
 func buildHomePageData(_ context.Context) homePageData {
@@ -58,6 +59,7 @@ func loadHomeAnnouncements(db *gorm.DB, now time.Time) []homeAnnouncement {
 			Title:       title,
 			Description: template.HTML(components.RenderMarkdown(desc)),
 			Date:        a.ReleaseAt.Format("Jan 2, 2006"),
+			URL:         strings.TrimSpace(a.URL),
 		})
 	}
 	return items
