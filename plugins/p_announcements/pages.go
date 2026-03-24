@@ -397,7 +397,7 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Description",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: semesterNameFromIn()},
+									&components.FieldMarkdown{Getter: getters.GetterKey[string]("$in.Description")},
 								},
 							},
 							&components.LabelInline{

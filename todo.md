@@ -8,3 +8,4 @@
 7. [x] proposals need to be exported in an editable format, like docx or pptx
 8. Verify generator implementation
 9. [x] Appointments timeline view does not order appointments by time (fix immediately)
+10. [ ] split up p_studentapplications into p_studentsapplications and p_nirmancampus_student_applications
