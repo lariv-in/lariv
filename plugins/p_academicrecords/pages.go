@@ -216,6 +216,9 @@ func registerFormPages() {
 // --- Tables ---
 
 func registerTablePages() {
+	createURLGetter := lago.GetterRoutePath("academicrecords.CreateRoute", nil)
+	roleGetter := getters.GetterKey[string]("$role")
+
 	lago.RegistryPage.Register("academicrecords.AcademicRecordTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "academicrecords.AcademicRecordMenu"},
@@ -232,7 +235,16 @@ func registerTablePages() {
 				UID:       "academicrecords-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
-				CreateUrl: lago.GetterRoutePath("academicrecords.CreateRoute", nil),
+				CreateUrl: func(ctx context.Context) (string, error) {
+					role, err := roleGetter(ctx)
+					if err != nil {
+						return "", err
+					}
+					if role != "superuser" && role != "admin" {
+						return "", nil
+					}
+					return createURLGetter(ctx)
+				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
