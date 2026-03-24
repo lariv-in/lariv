@@ -16,11 +16,6 @@ func init() {
 		Classes: "btn-sm btn-square btn-outline",
 	})
 	components.RegistryTopbar.Register("dashboard.userDropdown", pcomps.UserDropdown{})
-	components.RegistryTopbar.Register("dashboard.logoutButton", components.ButtonPost{
-		Icon:    "arrow-right-start-on-rectangle",
-		URL:     lago.GetterRoutePath("users.LogoutRoute", nil),
-		Classes: "btn-sm btn-square btn-error",
-	})
 
 	lago.RegistryPage.Register("dashboard.AppsPage", components.ShellTopbarScaffold{
 		Children: []components.PageInterface{

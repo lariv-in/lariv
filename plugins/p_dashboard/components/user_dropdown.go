@@ -56,10 +56,16 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		cardBody = append(cardBody, html.Div(
 			html.Class("flex flex-col gap-1 mt-2 pt-2 border-t border-base-300"),
 			html.A(
-				html.Class("btn btn-sm btn-ghost justify-start"),
+				html.Class("btn justify-start w-full"),
 				html.Href(selfDetailHref),
-				gomponents.Text("My profile"),
+				gomponents.Text("My Account"),
 			),
+			components.Render(components.ButtonPost{
+				Label:   "Logout",
+				Icon:    "arrow-right-start-on-rectangle",
+				URL:     lago.GetterRoutePath("users.LogoutRoute", nil),
+				Classes: "btn btn-error justify-start w-full",
+			}, ctx),
 		))
 	}
 
