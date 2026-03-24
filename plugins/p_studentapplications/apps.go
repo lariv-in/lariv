@@ -1,4 +1,4 @@
-package p_studentapplication
+package p_studentapplications
 
 import (
 	"log"
@@ -15,7 +15,7 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugin.Register("p_studentapplication", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_studentapplications", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "document-text",
 		URL:         u,
