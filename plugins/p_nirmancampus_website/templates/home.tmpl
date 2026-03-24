@@ -14,7 +14,7 @@
     <div class="card bg-base-100 shadow-md">
       <div class="card-body">
         <h3 class="card-title">{{ .Title }}</h3>
-        {{ if .Description }}<p>{{ .Description }}</p>{{ end }}
+        {{ if .Description }}<div class="prose">{{ .Description }}</div>{{ end }}
         <div class="text-sm opacity-60 mt-2">{{ .Date }}</div>
       </div>
     </div>

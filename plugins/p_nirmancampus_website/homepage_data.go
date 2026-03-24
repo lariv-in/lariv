@@ -3,10 +3,12 @@ package p_nirmancampus_website
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"strings"
 	"time"
 
+	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/p_announcements"
 	"gorm.io/gorm"
 )
@@ -19,7 +21,7 @@ type homePageData struct {
 
 type homeAnnouncement struct {
 	Title       string
-	Description string
+	Description template.HTML
 	Date        string
 }
 
@@ -61,9 +63,10 @@ func loadHomeAnnouncements(db *gorm.DB, now time.Time) []homeAnnouncement {
 		if title == "" {
 			continue
 		}
+		desc := strings.TrimSpace(a.Description)
 		items = append(items, homeAnnouncement{
 			Title:       title,
-			Description: strings.TrimSpace(a.Description),
+			Description: template.HTML(components.RenderMarkdown(desc)),
 			Date:        a.ReleaseAt.Format("Jan 2, 2006"),
 		})
 	}
