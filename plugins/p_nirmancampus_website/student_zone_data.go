@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 
-	p_nirmancampus_student_zone "github.com/lariv-in/lago/p_nirmancampus_student_zone"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +29,7 @@ func buildStudentZonePageData(ctx context.Context) studentZonePageData {
 		return studentZonePageData{}
 	}
 
-	var sections []p_nirmancampus_student_zone.StudentZoneSection
+	var sections []StudentZoneSection
 	if err := db.Order(`"order" ASC`).Find(&sections).Error; err != nil {
 		slog.Error("nirmancampus_website: failed loading student zone sections", "error", err)
 		return studentZonePageData{}
@@ -38,7 +37,7 @@ func buildStudentZonePageData(ctx context.Context) studentZonePageData {
 
 	result := make([]studentZoneSection, 0, len(sections))
 	for _, s := range sections {
-		var items []p_nirmancampus_student_zone.StudentZoneItem
+		var items []StudentZoneItem
 		if err := db.Where("student_zone_section_id = ?", s.ID).Find(&items).Error; err != nil {
 			slog.Error("nirmancampus_website: failed loading student zone items", "error", err, "section_id", s.ID)
 			continue

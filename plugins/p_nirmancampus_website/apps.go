@@ -1,4 +1,4 @@
-package p_nirmancampus_student_zone
+package p_nirmancampus_website
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
-const AppUrl = "/student-zone/"
+const AppUrl = "/website/"
 
 func init() {
 	u, err := url.Parse(AppUrl)
@@ -15,14 +15,14 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugin.Register("p_nirmancampus_student_zone", lago.Plugin{
+	if err := lago.RegistryPlugin.Register("p_nirmancampus_website", lago.Plugin{
 		Type:        lago.PluginTypeApp,
-		Icon:        "academic-cap",
+		Icon:        "globe-alt",
 		URL:         u,
-		VerboseName: "Student Zone",
+		VerboseName: "Website",
 		Roles:       []string{"nirmancampus_admin"},
-	})
-	if err != nil {
+	}); err != nil {
 		log.Panic(err)
 	}
 }
+

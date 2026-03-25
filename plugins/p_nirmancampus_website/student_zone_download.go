@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	p_nirmancampus_student_zone "github.com/lariv-in/lago/p_nirmancampus_student_zone"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -41,7 +40,7 @@ func studentZoneItemHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		var item p_nirmancampus_student_zone.StudentZoneItem
+		var item StudentZoneItem
 		if err := db.Preload("File").First(&item, id).Error; err != nil {
 			http.NotFound(w, r)
 			return
