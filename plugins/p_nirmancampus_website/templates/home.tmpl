@@ -17,11 +17,16 @@
     <h2 class="text-3xl font-bold text-center mb-10">Announcements</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {{ range .Announcements }}
-      <div class="card bg-base-200 border border-base-300 shadow-sm">
-        <div class="card-body">
-          <h3 class="card-title">{{ .Title }}</h3>
-          {{ if .Description }}<div class="prose max-w-none [&_a]:text-blue-600 [&_a]:underline [&_a:hover]:text-blue-800 dark:[&_a]:text-blue-400 dark:[&_a:hover]:text-blue-300">{{ .Description }}</div>{{ end }}
-          <div class="text-sm opacity-60 mt-2">{{ .Date }}</div>
+      <div class="card bg-base-200 relative overflow-hidden{{ if .URL }} border-2 border-primary/40 shadow-md cursor-pointer transition-[box-shadow,transform,border-color] duration-300 ease-out hover:shadow-xl hover:-translate-y-1 hover:border-primary/70 focus-within:shadow-xl focus-within:-translate-y-1 focus-within:border-primary/70{{ else }} border border-base-300/50 shadow-sm{{ end }}">
+        <div class="card-body relative">
+          {{ if .URL }}
+          <a href="{{ .URL }}" class="absolute inset-0 z-[1] rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/60" {{ if externalURL .URL }}target="_blank" rel="noopener noreferrer"{{ end }} aria-label="{{ .Title }}"><span class="sr-only">{{ .Title }}</span></a>
+          {{ end }}
+          <div class="relative z-[2]{{ if .URL }} pointer-events-none [&_a]:pointer-events-auto{{ end }}">
+            <h3 class="card-title">{{ .Title }}</h3>
+            {{ if .Description }}<div class="prose max-w-none [&_a]:text-blue-600 [&_a]:underline [&_a:hover]:text-blue-800 dark:[&_a]:text-blue-400 dark:[&_a:hover]:text-blue-300">{{ .Description }}</div>{{ end }}
+            <div class="text-sm opacity-60 mt-2">{{ .Date }}</div>
+          </div>
         </div>
       </div>
       {{ end }}
