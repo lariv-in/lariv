@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
-	github.com/nyaruka/phonenumbers v1.6.11
+	github.com/nyaruka/phonenumbers v1.6.12
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.49.0
 	gorm.io/gorm v1.31.1
