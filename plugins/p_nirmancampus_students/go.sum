@@ -41,11 +41,11 @@ github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
 github.com/jinzhu/now v1.1.5/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
-github.com/lariv-in/lago/components v0.5.3 h1:p/Q0koe+6fw+xoROLRclBbt7SNT8KCxvkRFqLnPVptM=
-github.com/lariv-in/lago/getters v0.5.3 h1:LBhyg62kOGu1DNIFDmVoMBa3Ftf8836wyqjFUDj68AU=
-github.com/lariv-in/lago/lago v0.5.3 h1:0Y6Xm51Z1hng7d6RVWSCD8mLyqlW9koZ6IZ5epyvTDU=
-github.com/lariv-in/lago/plugins/p_students v0.5.3 h1:y/dYpgMX0t6p4JjlhNdCbVwKyD+F0NRA0AQ6O01jjmw=
-github.com/lariv-in/lago/views v0.5.3 h1:FgbR/evSmDwFjUIsr8CNTOLJI6K9nA9w4PzDupajgB4=
+github.com/lariv-in/lago/components v0.5.5 h1:p/Q0koe+6fw+xoROLRclBbt7SNT8KCxvkRFqLnPVptM=
+github.com/lariv-in/lago/getters v0.5.5 h1:LBhyg62kOGu1DNIFDmVoMBa3Ftf8836wyqjFUDj68AU=
+github.com/lariv-in/lago/lago v0.5.5 h1:0Y6Xm51Z1hng7d6RVWSCD8mLyqlW9koZ6IZ5epyvTDU=
+github.com/lariv-in/lago/plugins/p_students v0.5.5 h1:y/dYpgMX0t6p4JjlhNdCbVwKyD+F0NRA0AQ6O01jjmw=
+github.com/lariv-in/lago/views v0.5.5 h1:FgbR/evSmDwFjUIsr8CNTOLJI6K9nA9w4PzDupajgB4=
 github.com/lucasb-eyer/go-colorful v1.3.0 h1:2/yBRLdWBZKrf7gB40FoiKfAWYQ0lqNcbuQwVHXptag=
 github.com/mattn/go-runewidth v0.0.20 h1:WcT52H91ZUAwy8+HUkdM3THM6gXqXuLJi9O3rjcQQaQ=
 github.com/mattn/go-sqlite3 v1.14.22 h1:2gZY6PC6kBnID23Tichd1K+Z0oS6nE/XwU+Vz/5o4kU=

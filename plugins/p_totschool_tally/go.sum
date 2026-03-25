@@ -1,6 +1,6 @@
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
 github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
-github.com/lariv-in/lago/registry v0.5.3 h1:QnJBHcOhMLpQSDV6iipyNUEzneTOztabJgPVBnb3Eio=
+github.com/lariv-in/lago/registry v0.5.5 h1:QnJBHcOhMLpQSDV6iipyNUEzneTOztabJgPVBnb3Eio=
 golang.org/x/text v0.35.0 h1:JOVx6vVDFokkpaq1AEptVzLTpDe9KGpj5tR4/X+ybL8=
 gorm.io/gorm v1.31.1 h1:7CA8FTFz/gRfgqgpeKIBcervUn3xSyPUmr6B2WXJ7kg=
 maragu.dev/gomponents v1.2.0 h1:H7/N5htz1GCnhu0HB1GasluWeU2rJZOYztVEyN61iTc=
