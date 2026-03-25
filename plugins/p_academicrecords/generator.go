@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_semesters"
 	"github.com/lariv-in/lago/plugins/p_students"
 	"gorm.io/gorm"
 )
@@ -28,32 +27,19 @@ func init() {
 				return fmt.Errorf("need at least one student before generating academic records")
 			}
 
-			var semesters []p_semesters.Semester
-			if err := db.Order("id ASC").Find(&semesters).Error; err != nil {
-				return fmt.Errorf("failed to load semesters: %w", err)
-			}
-			if len(semesters) == 0 {
-				return fmt.Errorf("need at least one semester before generating academic records")
-			}
-
 			n := 0
-			k := 0
-			for _, st := range students {
-				for _, sem := range semesters {
-					rec := AcademicRecord{
-						StudentID:  st.ID,
-						SemesterID: sem.ID,
-						Status:     sampleStatuses[k%len(sampleStatuses)],
-					}
-					k++
-					if err := db.Create(&rec).Error; err != nil {
-						return fmt.Errorf("failed to create academic record (student_id=%d semester_id=%d): %w", st.ID, sem.ID, err)
-					}
-					n++
+			for k, st := range students {
+				rec := AcademicRecord{
+					StudentID: st.ID,
+					Status:    sampleStatuses[k%len(sampleStatuses)],
 				}
+				if err := db.Create(&rec).Error; err != nil {
+					return fmt.Errorf("failed to create academic record (student_id=%d): %w", st.ID, err)
+				}
+				n++
 			}
 
-			fmt.Printf("Created %d academic records (%d students × %d semesters)\n", n, len(students), len(semesters))
+			fmt.Printf("Created %d academic records (%d students)\n", n, len(students))
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {

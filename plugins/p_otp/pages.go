@@ -179,7 +179,7 @@ func init() {
 	})
 
 	lago.RegistryPage.Register("otp.OTPPreferencesForm", components.ShellScaffold{
-		Page: components.Page{Roles: []string{"totschool_admin", "superuser"}},
+		Page: components.Page{Roles: []string{"superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "otp.OTPPreferencesMenu"},
 		},

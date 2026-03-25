@@ -1,6 +1,3 @@
-// Package p_announcements registers announcements.Generator for sample announcements (no semester FK).
-// With p_announcements_semesters, list announcements_semesters.Generator after this in GeneratorOrder.
-// Remove clears announcement_assets then deletes announcements (extension rows cascade).
 package p_announcements
 
 import (
@@ -61,11 +58,11 @@ func init() {
 				}
 
 				var url string
-			if rand.Intn(100) < 50 {
-				url = fmt.Sprintf("https://example.com/announcements/%d", i+1)
-			}
+				if rand.Intn(100) < 50 {
+					url = fmt.Sprintf("https://example.com/announcements/%d", i+1)
+				}
 
-			a := Announcement{
+				a := Announcement{
 					Title:       title,
 					Description: fmt.Sprintf("This is sample generated content for: %s. Please refer to the office for official documents.", title),
 					URL:         url,

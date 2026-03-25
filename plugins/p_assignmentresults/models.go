@@ -37,11 +37,10 @@ func init() {
 			"Assignment.Name",
 			"AcademicRecord.Student.StudentNo",
 			"AcademicRecord.Student.User.Name",
-			"AcademicRecord.Semester.Name",
 			"Marks",
 			"Remarks",
 			"UpdatedAt",
 		},
-		Preload: []string{"Assignment", "AcademicRecord", "AcademicRecord.Student", "AcademicRecord.Student.User", "AcademicRecord.Semester"},
+		Preload: []string{"Assignment", "AcademicRecord", "AcademicRecord.Student", "AcademicRecord.Student.User"},
 	})
 }

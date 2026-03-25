@@ -56,8 +56,7 @@ func assignmentDetailLoadResultsMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		q := db.Model(&AssignmentResult{}).Where("assignment_id = ?", aid).
-			Preload("AcademicRecord").Preload("AcademicRecord.Student.User").
-			Preload("AcademicRecord.Semester")
+			Preload("AcademicRecord").Preload("AcademicRecord.Student.User")
 		q = assignmentResultsOrderIDDesc(nil, r, q)
 		q = q.Limit(pageSize).Offset((pageNum - 1) * pageSize)
 		var results []AssignmentResult
@@ -118,7 +117,6 @@ func init() {
 			WithQueryPatcher("assignmentresults.preload_assignment", views.QueryPatcherPreload("Assignment")).
 			WithQueryPatcher("assignmentresults.preload_academic_record", views.QueryPatcherPreload("AcademicRecord")).
 			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_semester", views.QueryPatcherPreload("AcademicRecord.Semester")).
 			WithQueryPatcher("assignmentresults.order_id_desc", assignmentResultsOrderIDDesc))
 
 	lago.RegistryView.Register("assignmentresults.DetailView",
@@ -128,8 +126,7 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("assignmentresults.preload_assignment", views.QueryPatcherPreload("Assignment")).
 			WithQueryPatcher("assignmentresults.preload_academic_record", views.QueryPatcherPreload("AcademicRecord")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_semester", views.QueryPatcherPreload("AcademicRecord.Semester")))
+			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")))
 
 	lago.RegistryView.Register("assignmentresults.CreateView",
 		views.CreateView[AssignmentResult](
@@ -154,8 +151,7 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("assignmentresults.preload_assignment", views.QueryPatcherPreload("Assignment")).
 			WithQueryPatcher("assignmentresults.preload_academic_record", views.QueryPatcherPreload("AcademicRecord")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_semester", views.QueryPatcherPreload("AcademicRecord.Semester")))
+			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")))
 
 	lago.RegistryView.Register("assignmentresults.DeleteView",
 		views.DetailView[AssignmentResult]("assignmentresult")(
@@ -168,8 +164,7 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("assignmentresults.preload_assignment", views.QueryPatcherPreload("Assignment")).
 			WithQueryPatcher("assignmentresults.preload_academic_record", views.QueryPatcherPreload("AcademicRecord")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_semester", views.QueryPatcherPreload("AcademicRecord.Semester")))
+			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")))
 
 	lago.RegistryView.Register("assignmentresults.SelectView",
 		views.ListView[AssignmentResult]("assignmentresults")(
@@ -179,7 +174,6 @@ func init() {
 			WithQueryPatcher("assignmentresults.preload_assignment", views.QueryPatcherPreload("Assignment")).
 			WithQueryPatcher("assignmentresults.preload_academic_record", views.QueryPatcherPreload("AcademicRecord")).
 			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")).
-			WithQueryPatcher("assignmentresults.preload_academic_record_semester", views.QueryPatcherPreload("AcademicRecord.Semester")).
 			WithQueryPatcher("assignmentresults.order_id_desc", assignmentResultsOrderIDDesc))
 
 	lago.RegistryView.Patch("assignments.DetailView", func(view *views.View) *views.View {

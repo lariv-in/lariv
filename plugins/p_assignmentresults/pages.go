@@ -101,21 +101,10 @@ func registerFilterPages() {
 	})
 }
 
-func assignmentResultSemesterEnvironment() *components.Environment[uint] {
-	return &components.Environment[uint]{
-		Label:   "Semester",
-		Key:     getters.GetterStatic("semester"),
-		Options: p_academicrecords.SemesterEnvironmentOptions,
-		Default: p_academicrecords.SemesterEnvironmentDefaultGetter,
-		Classes: "w-full max-w-md",
-	}
-}
-
 func assignmentResultFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{Key: "assignmentresults.AssignmentResultFormFieldsBody"},
 		Children: []components.PageInterface{
-			assignmentResultSemesterEnvironment(),
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
@@ -144,11 +133,7 @@ func assignmentResultFormFields() components.ContainerColumn {
 								Required:    true,
 								Url:         lago.GetterRoutePath("academicrecords.SelectRoute", nil),
 								Placeholder: "Select an academic record...",
-								Display: getters.GetterFormat(
-									"%s — %s",
-									getters.GetterAny(getters.GetterKey[string]("$in.Student.User.Name")),
-									getters.GetterAny(getters.GetterKey[string]("$in.Semester.Name")),
-								),
+								Display: getters.GetterKey[string]("$in.Student.User.Name"),
 								Getter: getters.GetterAssociation[p_academicrecords.AcademicRecord](
 									getters.GetterKey[uint]("$in.AcademicRecordID"),
 								),
@@ -266,11 +251,7 @@ func registerTablePages() {
 						Name:  "AcademicRecord",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterFormat(
-									"%s — %s",
-									getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Student.User.Name")),
-									getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Semester.Name")),
-								),
+								Getter: getters.GetterKey[string]("$row.AcademicRecord.Student.User.Name"),
 							},
 						},
 					},
@@ -312,23 +293,13 @@ func registerDetailPages() {
 								Getter: getters.GetterKey[string]("$in.Assignment.Name"),
 							},
 							&components.FieldSubtitle{
-								Getter: getters.GetterFormat(
-									"%s — %s",
-									getters.GetterAny(getters.GetterKey[string]("$in.AcademicRecord.Student.User.Name")),
-									getters.GetterAny(getters.GetterKey[string]("$in.AcademicRecord.Semester.Name")),
-								),
+								Getter: getters.GetterKey[string]("$in.AcademicRecord.Student.User.Name"),
 							},
 							&components.LabelInline{
 								Title:   "Student number",
 								Classes: "mt-2",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.AcademicRecord.Student.StudentNo")},
-								},
-							},
-							&components.LabelInline{
-								Title: "Semester",
-								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.AcademicRecord.Semester.Name")},
 								},
 							},
 							&components.LabelInline{
@@ -378,10 +349,9 @@ func registerSelectionPages() {
 				UID:  "assignment-result-selection-table",
 				Data: getters.GetterKey[components.ObjectList[AssignmentResult]]("assignmentresults"),
 				OnClick: getters.GetterSelect("AssignmentResultID", getters.GetterKey[uint]("$row.ID"), getters.GetterFormat(
-					"%s / %s — %s",
+					"%s / %s",
 					getters.GetterAny(getters.GetterKey[string]("$row.Assignment.Name")),
 					getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Student.User.Name")),
-					getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Semester.Name")),
 				)),
 				FilterComponent: lago.DynamicPage{Name: "assignmentresults.AssignmentResultSelectionFilter"},
 				Columns: []components.TableColumn{
@@ -397,11 +367,7 @@ func registerSelectionPages() {
 						Name:  "AcademicRecord",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterFormat(
-									"%s — %s",
-									getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Student.User.Name")),
-									getters.GetterAny(getters.GetterKey[string]("$row.AcademicRecord.Semester.Name")),
-								),
+								Getter: getters.GetterKey[string]("$row.AcademicRecord.Student.User.Name"),
 							},
 						},
 					},

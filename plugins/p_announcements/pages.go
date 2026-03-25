@@ -256,7 +256,7 @@ func announcementCreateUrlGetter() getters.Getter[string] {
 		if err != nil {
 			return "", err
 		}
-		if role == "superuser" || role == "nirmancampus_admin" {
+		if role == "superuser" {
 			return lago.GetterRoutePath("announcements.CreateRoute", nil)(ctx)
 		}
 		return "", fmt.Errorf("you do not have permission to do this action")
