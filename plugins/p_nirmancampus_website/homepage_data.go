@@ -15,7 +15,9 @@ import (
 
 const homeAnnouncementLimit = 10
 
-type homePageData struct{}
+type homePageData struct {
+	Announcements []homeAnnouncement
+}
 
 type homeAnnouncement struct {
 	Title       string
@@ -23,8 +25,16 @@ type homeAnnouncement struct {
 	Date        string
 }
 
-func buildHomePageData(_ context.Context) homePageData {
-	return homePageData{}
+func buildHomePageData(ctx context.Context) homePageData {
+	db, err := homePageDB(ctx)
+	if err != nil {
+		slog.Error("nirmancampus_website: missing db while building home page", "error", err)
+		return homePageData{}
+	}
+
+	return homePageData{
+		Announcements: loadHomeAnnouncements(db, time.Now()),
+	}
 }
 
 func homePageDB(ctx context.Context) (*gorm.DB, error) {

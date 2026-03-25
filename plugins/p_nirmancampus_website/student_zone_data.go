@@ -4,15 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
 
 	p_nirmancampus_student_zone "github.com/lariv-in/lago/p_nirmancampus_student_zone"
 	"gorm.io/gorm"
 )
 
 type studentZonePageData struct {
-	Announcements []homeAnnouncement
-	Sections      []studentZoneSection
+	Sections []studentZoneSection
 }
 
 type studentZoneSection struct {
@@ -61,7 +59,6 @@ func buildStudentZonePageData(ctx context.Context) studentZonePageData {
 	}
 
 	return studentZonePageData{
-		Announcements: loadHomeAnnouncements(db, time.Now()),
-		Sections:      result,
+		Sections: result,
 	}
 }
