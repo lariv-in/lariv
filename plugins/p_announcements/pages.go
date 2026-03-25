@@ -153,6 +153,22 @@ func announcementFormFields() components.ContainerColumn {
 			},
 
 			components.ContainerRow{
+				Classes: "grid grid-cols-1",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.URL"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "URL",
+								Name:   "URL",
+								Getter: getters.GetterKey[string]("$in.URL"),
+							},
+						},
+					},
+				},
+			},
+
+			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
@@ -274,6 +290,13 @@ func registerTablePages() {
 						},
 					},
 					{
+						Label: "URL",
+						Name:  "URL",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.URL")},
+						},
+					},
+					{
 						Label: "Release At",
 						Name:  "ReleaseAt",
 						Children: []components.PageInterface{
@@ -315,6 +338,12 @@ func registerDetailPages() {
 								Title: "Description",
 								Children: []components.PageInterface{
 									&components.FieldMarkdown{Getter: getters.GetterKey[string]("$in.Description")},
+								},
+							},
+							&components.LabelInline{
+								Title: "URL",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.URL")},
 								},
 							},
 							&components.LabelInline{

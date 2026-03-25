@@ -60,9 +60,15 @@ func init() {
 					expiry = &t
 				}
 
-				a := Announcement{
+				var url string
+			if rand.Intn(100) < 50 {
+				url = fmt.Sprintf("https://example.com/announcements/%d", i+1)
+			}
+
+			a := Announcement{
 					Title:       title,
 					Description: fmt.Sprintf("This is sample generated content for: %s. Please refer to the office for official documents.", title),
+					URL:         url,
 					CreatedByID: createdByID,
 					ReleaseAt:   release,
 					ExpiryAt:    expiry,
