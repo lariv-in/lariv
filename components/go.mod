@@ -26,10 +26,7 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 )
 
-replace (
-	github.com/lariv-in/lago/getters => ../getters
-	github.com/lariv-in/lago/registry => ../registry
-)
+
 
 require (
 	github.com/nyaruka/phonenumbers v1.6.11

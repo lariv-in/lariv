@@ -65,10 +65,4 @@ require (
 	maragu.dev/gomponents v1.2.0 // indirect
 )
 
-replace (
-	github.com/lariv-in/lago/components => ../../components
-	github.com/lariv-in/lago/getters => ../../getters
-	github.com/lariv-in/lago/lago => ../../lago
-	github.com/lariv-in/lago/plugins/p_students => ../p_students
-	github.com/lariv-in/lago/views => ../../views
-)
+

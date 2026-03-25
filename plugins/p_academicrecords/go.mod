@@ -68,15 +68,3 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
-
-replace (
-	github.com/lariv-in/lago/components => ../../components
-	github.com/lariv-in/lago/getters => ../../getters
-	github.com/lariv-in/lago/lago => ../../lago
-	github.com/lariv-in/lago/plugins/p_semesters => ../p_semesters
-	github.com/lariv-in/lago/plugins/p_students => ../p_students
-	github.com/lariv-in/lago/plugins/p_users => ../p_users
-	github.com/lariv-in/lago/views => ../../views
-)
-
-replace github.com/lariv-in/lago/registry => ../../registry

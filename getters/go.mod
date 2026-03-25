@@ -3,7 +3,7 @@ module github.com/lariv-in/lago/getters
 go 1.26.1
 
 require (
-	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
+	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90
 	gorm.io/gorm v1.31.1
 )
 
