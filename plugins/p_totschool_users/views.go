@@ -4,7 +4,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/views"
 
-	"github.com/lariv-in/lago/p_users"
+	"github.com/lariv-in/lago/plugins/p_users"
 )
 
 // userViewsWithRoleMiddleware are the users plugin views that use "users.role" middleware.

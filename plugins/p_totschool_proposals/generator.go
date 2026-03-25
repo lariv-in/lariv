@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/lariv-in/lago/p_users"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/registry"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"

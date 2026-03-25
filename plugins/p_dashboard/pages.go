@@ -3,7 +3,7 @@ package p_dashboard
 import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/lago"
-	pcomps "github.com/lariv-in/lago/p_dashboard/components"
+	pcomps "github.com/lariv-in/lago/plugins/p_dashboard/components"
 )
 
 func init() {

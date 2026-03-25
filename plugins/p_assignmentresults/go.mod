@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/p_assignmentresults
+module github.com/lariv-in/lago/plugins/p_assignmentresults
 
 go 1.26.1
 
@@ -6,9 +6,9 @@ require (
 	github.com/lariv-in/lago/components v0.0.0
 	github.com/lariv-in/lago/getters v0.0.0
 	github.com/lariv-in/lago/lago v0.0.0
-	github.com/lariv-in/lago/p_academicrecords v0.0.0
-	github.com/lariv-in/lago/p_assignments v0.0.0
-	github.com/lariv-in/lago/p_users v0.0.0
+	github.com/lariv-in/lago/plugins/p_academicrecords v0.0.0
+	github.com/lariv-in/lago/plugins/p_assignments v0.0.0
+	github.com/lariv-in/lago/plugins/p_users v0.0.0
 	github.com/lariv-in/lago/views v0.0.0
 	gorm.io/gorm v1.31.1
 )
@@ -72,8 +72,8 @@ replace (
 	github.com/lariv-in/lago/components => ../../components
 	github.com/lariv-in/lago/getters => ../../getters
 	github.com/lariv-in/lago/lago => ../../lago
-	github.com/lariv-in/lago/p_academicrecords => ../p_academicrecords
-	github.com/lariv-in/lago/p_assignments => ../p_assignments
-	github.com/lariv-in/lago/p_users => ../p_users
+	github.com/lariv-in/lago/plugins/p_academicrecords => ../p_academicrecords
+	github.com/lariv-in/lago/plugins/p_assignments => ../p_assignments
+	github.com/lariv-in/lago/plugins/p_users => ../p_users
 	github.com/lariv-in/lago/views => ../../views
 )

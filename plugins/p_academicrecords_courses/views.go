@@ -9,8 +9,8 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_academicrecords"
-	"github.com/lariv-in/lago/p_academicrecords_programs"
+	"github.com/lariv-in/lago/plugins/p_academicrecords"
+	"github.com/lariv-in/lago/plugins/p_academicrecords_programs"
 	baseviews "github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )

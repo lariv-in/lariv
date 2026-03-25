@@ -2,7 +2,7 @@ package p_dashboard
 
 import (
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_users"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
 )
 

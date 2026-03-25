@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_programs"
+	"github.com/lariv-in/lago/plugins/p_programs"
 	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )

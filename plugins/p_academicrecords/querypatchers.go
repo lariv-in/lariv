@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/lago/p_students"
-	"github.com/lariv-in/lago/p_users"
+	"github.com/lariv-in/lago/plugins/p_students"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )

@@ -12,8 +12,8 @@ import (
 
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_assignments"
-	"github.com/lariv-in/lago/p_semesters"
+	"github.com/lariv-in/lago/plugins/p_assignments"
+	"github.com/lariv-in/lago/plugins/p_semesters"
 	baseviews "github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )

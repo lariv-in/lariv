@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_announcements"
+	"github.com/lariv-in/lago/plugins/p_announcements"
 )
 
 func init() {

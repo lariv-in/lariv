@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/p_assignments_semesters
+module github.com/lariv-in/lago/plugins/p_assignments_semesters
 
 go 1.26.1
 
@@ -6,8 +6,8 @@ require (
 	github.com/lariv-in/lago/components v0.0.0
 	github.com/lariv-in/lago/getters v0.0.0
 	github.com/lariv-in/lago/lago v0.0.0
-	github.com/lariv-in/lago/p_assignments v0.0.0
-	github.com/lariv-in/lago/p_semesters v0.0.0
+	github.com/lariv-in/lago/plugins/p_assignments v0.0.0
+	github.com/lariv-in/lago/plugins/p_semesters v0.0.0
 	github.com/lariv-in/lago/registry v0.0.0
 	github.com/lariv-in/lago/views v0.0.0
 	gorm.io/gorm v1.31.1
@@ -45,8 +45,8 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/lariv-in/lago/p_filesystem v0.0.0 // indirect
-	github.com/lariv-in/lago/p_users v0.0.0 // indirect
+	github.com/lariv-in/lago/plugins/p_filesystem v0.0.0 // indirect
+	github.com/lariv-in/lago/plugins/p_users v0.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
@@ -74,10 +74,10 @@ replace (
 	github.com/lariv-in/lago/components => ../../components
 	github.com/lariv-in/lago/getters => ../../getters
 	github.com/lariv-in/lago/lago => ../../lago
-	github.com/lariv-in/lago/p_assignments => ../p_assignments
-	github.com/lariv-in/lago/p_filesystem => ../p_filesystem
-	github.com/lariv-in/lago/p_semesters => ../p_semesters
-	github.com/lariv-in/lago/p_users => ../p_users
+	github.com/lariv-in/lago/plugins/p_assignments => ../p_assignments
+	github.com/lariv-in/lago/plugins/p_filesystem => ../p_filesystem
+	github.com/lariv-in/lago/plugins/p_semesters => ../p_semesters
+	github.com/lariv-in/lago/plugins/p_users => ../p_users
 	github.com/lariv-in/lago/registry => ../../registry
 	github.com/lariv-in/lago/views => ../../views
 )

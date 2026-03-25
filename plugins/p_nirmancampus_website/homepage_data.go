@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/p_announcements"
+	"github.com/lariv-in/lago/plugins/p_announcements"
 	"gorm.io/gorm"
 )
 

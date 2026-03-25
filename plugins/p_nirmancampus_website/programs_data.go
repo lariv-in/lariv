@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/lago/p_nirmancampus_programs"
-	"github.com/lariv-in/lago/p_programs"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	"github.com/lariv-in/lago/plugins/p_programs"
 )
 
 type programsPageData struct {

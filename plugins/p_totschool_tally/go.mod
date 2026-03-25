@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/p_totschool_tally
+module github.com/lariv-in/lago/plugins/p_totschool_tally
 
 go 1.26.1
 

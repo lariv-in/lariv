@@ -10,8 +10,8 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_courses"
-	"github.com/lariv-in/lago/p_teachers"
+	"github.com/lariv-in/lago/plugins/p_courses"
+	"github.com/lariv-in/lago/plugins/p_teachers"
 	baseviews "github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )

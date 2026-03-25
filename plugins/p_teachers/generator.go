@@ -6,7 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_users"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"gorm.io/gorm"
 )
 

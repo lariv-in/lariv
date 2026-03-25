@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/p_programs"
+	"github.com/lariv-in/lago/plugins/p_programs"
 	"gorm.io/gorm"
 )
 

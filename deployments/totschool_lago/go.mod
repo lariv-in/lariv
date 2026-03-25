@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/totschool_lago
+module github.com/lariv-in/lago/deployments/totschool_lago
 
 go 1.26.1
 

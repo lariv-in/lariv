@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/p_users
+module github.com/lariv-in/lago/plugins/p_users
 
 go 1.26.1
 

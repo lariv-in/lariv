@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/p_otp
+module github.com/lariv-in/lago/plugins/p_otp
 
 go 1.26.1
 

@@ -17,12 +17,13 @@ use (
 	./plugins/p_assignmentresults
 	./plugins/p_assignments
 	./plugins/p_assignments_semesters
+	./plugins/p_contacts
 	./plugins/p_courses
 	./plugins/p_courses_teachers
-	./plugins/p_contacts
 	./plugins/p_dashboard
 	./plugins/p_filesystem
 	./plugins/p_nirmancampus_programs
+	./plugins/p_nirmancampus_studentapplications
 	./plugins/p_nirmancampus_students
 	./plugins/p_nirmancampus_users
 	./plugins/p_nirmancampus_website
@@ -30,7 +31,6 @@ use (
 	./plugins/p_programs
 	./plugins/p_pwa
 	./plugins/p_semesters
-	./plugins/p_nirmancampus_studentapplications
 	./plugins/p_students
 	./plugins/p_teachers
 	./plugins/p_totschool_appointments

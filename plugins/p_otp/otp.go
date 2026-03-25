@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lariv-in/lago/p_otp/adapters"
+	"github.com/lariv-in/lago/plugins/p_otp/adapters"
 	"gorm.io/gorm"
 )
 
