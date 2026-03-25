@@ -4,6 +4,7 @@ toolchain go1.26.1
 
 use (
 	./components
+	./deployments/lariv
 	./deployments/nirmancampus
 	./deployments/totschool_lago
 	./getters
@@ -18,6 +19,7 @@ use (
 	./plugins/p_assignments_semesters
 	./plugins/p_courses
 	./plugins/p_courses_teachers
+	./plugins/p_contacts
 	./plugins/p_dashboard
 	./plugins/p_filesystem
 	./plugins/p_nirmancampus_student_zone
