@@ -1,4 +1,4 @@
-package p_nirmancampus_student_zone
+package p_nirmancampus_website
 
 import (
 	"log"
@@ -41,14 +41,15 @@ func init() {
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_nirmancampus_student_zone.sections", lago.AdminPanel[StudentZoneSection]{
+	lago.RegistryAdmin.Register("p_nirmancampus_website.student_zone_sections", lago.AdminPanel[StudentZoneSection]{
 		SearchField: "Title",
 		ListFields:  []string{"Title", "Order", "UpdatedAt"},
 	})
 
-	lago.RegistryAdmin.Register("p_nirmancampus_student_zone.items", lago.AdminPanel[StudentZoneItem]{
+	lago.RegistryAdmin.Register("p_nirmancampus_website.student_zone_items", lago.AdminPanel[StudentZoneItem]{
 		SearchField: "Title",
 		ListFields:  []string{"Title", "IsLink", "Link", "StudentZoneSection.Title", "UpdatedAt"},
 		Preload:     []string{"StudentZoneSection", "File"},
 	})
 }
+

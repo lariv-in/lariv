@@ -14,6 +14,10 @@ func init() {
 		lago.GetPageView("nirmancampus_website.CoursesPage").
 			WithMiddleware("users.optional_auth", p_users.OptionalAuthMiddleware))
 
+	lago.RegistryView.Register("nirmancampus_website.ProgramsView",
+		lago.GetPageView("nirmancampus_website.ProgramsPage").
+			WithMiddleware("users.optional_auth", p_users.OptionalAuthMiddleware))
+
 	lago.RegistryView.Register("nirmancampus_website.ContactView",
 		lago.GetPageView("nirmancampus_website.ContactPage").
 			WithMiddleware("users.optional_auth", p_users.OptionalAuthMiddleware))

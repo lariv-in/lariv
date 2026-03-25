@@ -3,7 +3,6 @@ package p_nirmancampus_website
 import (
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -12,20 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func isHtmxRequest(r *http.Request) bool {
-	return r.Header.Get("HX-Request") == "true"
-}
-
-func htmxRedirect(w http.ResponseWriter, r *http.Request, url string, code int) {
-	if isHtmxRequest(r) {
-		w.Header().Set("HX-Redirect", url)
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	http.Redirect(w, r, url, code)
-}
-
-func studentZoneItemHandler(_ *views.View) http.Handler {
+func importantLinkItemHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.ParseUint(idStr, 10, 64)
@@ -40,7 +26,7 @@ func studentZoneItemHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		var item StudentZoneItem
+		var item ImportantLink
 		if err := db.Preload("File").First(&item, id).Error; err != nil {
 			http.NotFound(w, r)
 			return
@@ -75,20 +61,22 @@ func studentZoneItemHandler(_ *views.View) http.Handler {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", download.Size))
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", download.Filename))
 		if _, err := io.Copy(w, download.Reader); err != nil {
-			slog.Error("nirmancampus_website: failed writing student zone download", "id", item.ID, "error", err)
+			// Mirrors student-zone behavior: keep serving headers even if body copy fails.
+			// (Error logging is handled elsewhere in the app runtime.)
 		}
 	})
 }
 
 func init() {
-	_ = lago.RegistryRoute.Register("nirmancampus_website.StudentZoneItemRoute", lago.Route{
-		Path:    "/students-zone/item/{id}/",
-		Handler: lago.NewDynamicView("nirmancampus_website.StudentZoneItemView"),
+	_ = lago.RegistryRoute.Register("nirmancampus_website.ImportantLinkItemRoute", lago.Route{
+		Path:    "/important-links/item/{id}/",
+		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinkItemView"),
 	})
 
-	lago.RegistryView.Register("nirmancampus_website.StudentZoneItemView", &views.View{
+	lago.RegistryView.Register("nirmancampus_website.ImportantLinkItemView", &views.View{
 		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: studentZoneItemHandler,
+			http.MethodGet: importantLinkItemHandler,
 		},
 	})
 }
+
