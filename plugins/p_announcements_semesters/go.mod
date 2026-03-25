@@ -3,13 +3,13 @@ module github.com/lariv-in/lago/plugins/p_announcements_semesters
 go 1.26.1
 
 require (
-	github.com/lariv-in/lago/components v0.0.0
-	github.com/lariv-in/lago/getters v0.0.0
-	github.com/lariv-in/lago/lago v0.0.0
-	github.com/lariv-in/lago/plugins/p_announcements v0.0.0
-	github.com/lariv-in/lago/plugins/p_semesters v0.0.0
-	github.com/lariv-in/lago/registry v0.0.0
-	github.com/lariv-in/lago/views v0.0.0
+	github.com/lariv-in/lago/components v0.5.3
+	github.com/lariv-in/lago/getters v0.5.3
+	github.com/lariv-in/lago/lago v0.5.3
+	github.com/lariv-in/lago/plugins/p_announcements v0.5.3
+	github.com/lariv-in/lago/plugins/p_semesters v0.5.3
+	github.com/lariv-in/lago/registry v0.5.3
+	github.com/lariv-in/lago/views v0.5.3
 	gorm.io/gorm v1.31.1
 )
 
@@ -45,8 +45,8 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/lariv-in/lago/plugins/p_filesystem v0.0.0 // indirect
-	github.com/lariv-in/lago/plugins/p_users v0.0.0 // indirect
+	github.com/lariv-in/lago/plugins/p_filesystem v0.5.3 // indirect
+	github.com/lariv-in/lago/plugins/p_users v0.5.3 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
@@ -57,11 +57,11 @@ require (
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
+	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gorm.io/datatypes v1.2.7 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
@@ -69,5 +69,3 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
-
-
