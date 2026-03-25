@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/lariv-in/lago/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/p_programs"
 )
 
@@ -15,6 +16,7 @@ type websiteProgram struct {
 	Name        string
 	Code        string
 	Description string
+	University  string
 }
 
 func buildProgramsPageData(ctx context.Context) programsPageData {
@@ -32,12 +34,31 @@ func buildProgramsPageData(ctx context.Context) programsPageData {
 		return programsPageData{}
 	}
 
+	universityByProgramID := map[uint]string{}
+	if len(programs) > 0 {
+		ids := make([]uint, len(programs))
+		for i := range programs {
+			ids[i] = programs[i].ID
+		}
+		var details []p_nirmancampus_programs.NirmancampusProgramDetails
+		if err := db.Where("program_id IN ?", ids).Find(&details).Error; err != nil {
+			slog.Error("nirmancampus_website: failed loading program university details", "error", err)
+		} else {
+			for _, d := range details {
+				if d.University != "" {
+					universityByProgramID[d.ProgramID] = d.University
+				}
+			}
+		}
+	}
+
 	items := make([]websiteProgram, 0, len(programs))
 	for _, p := range programs {
 		items = append(items, websiteProgram{
 			Name:        p.Name,
 			Code:        p.Code,
 			Description: p.Description,
+			University:  universityByProgramID[p.ID],
 		})
 	}
 

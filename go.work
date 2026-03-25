@@ -22,6 +22,7 @@ use (
 	./plugins/p_contacts
 	./plugins/p_dashboard
 	./plugins/p_filesystem
+	./plugins/p_nirmancampus_programs
 	./plugins/p_nirmancampus_students
 	./plugins/p_nirmancampus_users
 	./plugins/p_nirmancampus_website

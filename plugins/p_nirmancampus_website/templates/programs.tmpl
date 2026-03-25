@@ -15,11 +15,14 @@
       {{ range .Programs }}
       <div
         class="card bg-base-200 shadow-md"
-        x-show="!search || '{{ js .Name }} {{ js .Code }}'.toLowerCase().includes(search.toLowerCase())"
+        x-show="!search || '{{ js .Name }} {{ js .Code }} {{ js .University }}'.toLowerCase().includes(search.toLowerCase())"
       >
         <div class="card-body">
           <h2 class="card-title">{{ .Name }}</h2>
-          {{ if .Code }}<div class="badge badge-outline">{{ .Code }}</div>{{ end }}
+          <div class="flex flex-wrap gap-2 items-center">
+            {{ if .Code }}<div class="badge badge-outline">{{ .Code }}</div>{{ end }}
+            {{ if .University }}<div class="badge badge-secondary">{{ .University }}</div>{{ end }}
+          </div>
           {{ if .Description }}<p class="mt-2">{{ .Description }}</p>{{ end }}
         </div>
       </div>

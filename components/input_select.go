@@ -14,6 +14,7 @@ import (
 // InputSelect renders a <select> bound to a form field. Choices lists option
 // keys and labels; Getter supplies the current selection as a Pair (Key is the
 // stored value, Value is the label). Parse returns the submitted option Key as T.
+// When Required is false, a first option with value "" is shown (label from EmptyLabel or "—").
 // T must be comparable because it is the Key type of registry.Pair.
 type InputSelect[T comparable] struct {
 	Page
@@ -22,8 +23,11 @@ type InputSelect[T comparable] struct {
 	Choices  getters.Getter[[]registry.Pair[T, string]]
 	Getter   getters.Getter[registry.Pair[T, string]]
 	Required bool
-	Classes  string
-	Hidden   bool
+	// EmptyLabel is the visible label for the empty value option when Required is false.
+	// If empty, "—" is used.
+	EmptyLabel string
+	Classes    string
+	Hidden     bool
 }
 
 func (e InputSelect[T]) GetKey() string {
@@ -57,10 +61,15 @@ func (e InputSelect[T]) Build(ctx context.Context) Node {
 		}
 	}
 
+	emptyLab := "—"
+	if e.EmptyLabel != "" {
+		emptyLab = e.EmptyLabel
+	}
+
 	optionNodes := []Node{}
 	if !e.Required {
 		optionNodes = append(optionNodes,
-			Option(Value(""), If(rawSel == "", Attr("selected", "")), Text("—")),
+			Option(Value(""), If(rawSel == "", Attr("selected", "")), Text(emptyLab)),
 		)
 	}
 	for _, opt := range choices {
