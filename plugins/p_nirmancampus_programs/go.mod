@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/p_nirmancampus_website
+module github.com/lariv-in/lago/p_nirmancampus_programs
 
 go 1.26.1
 
@@ -6,15 +6,10 @@ require (
 	github.com/lariv-in/lago/components v0.0.0
 	github.com/lariv-in/lago/getters v0.0.0
 	github.com/lariv-in/lago/lago v0.0.0
-	github.com/lariv-in/lago/p_announcements v0.0.0
-	github.com/lariv-in/lago/p_courses v0.0.0
-	github.com/lariv-in/lago/p_filesystem v0.0.0
-	github.com/lariv-in/lago/p_nirmancampus_programs v0.0.0
 	github.com/lariv-in/lago/p_programs v0.0.0
-	github.com/lariv-in/lago/p_users v0.0.0
+	github.com/lariv-in/lago/registry v0.0.0
 	github.com/lariv-in/lago/views v0.0.0
 	gorm.io/gorm v1.31.1
-	maragu.dev/gomponents v1.2.0
 )
 
 require (
@@ -49,9 +44,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/lariv-in/lago/getters v0.0.0 // indirect
-	github.com/lariv-in/lago/p_filesystem v0.0.0 // indirect
-	github.com/lariv-in/lago/registry v0.0.0 // indirect
+	github.com/lariv-in/lago/p_users v0.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
@@ -72,18 +65,14 @@ require (
 	gorm.io/driver/mysql v1.5.6 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
+	maragu.dev/gomponents v1.2.0 // indirect
 )
 
 replace (
 	github.com/lariv-in/lago/components => ../../components
 	github.com/lariv-in/lago/getters => ../../getters
 	github.com/lariv-in/lago/lago => ../../lago
-	github.com/lariv-in/lago/p_announcements => ../p_announcements
-	github.com/lariv-in/lago/p_courses => ../p_courses
-	github.com/lariv-in/lago/p_filesystem => ../p_filesystem
-	github.com/lariv-in/lago/p_nirmancampus_programs => ../p_nirmancampus_programs
 	github.com/lariv-in/lago/p_programs => ../p_programs
-	github.com/lariv-in/lago/p_semesters => ../p_semesters
 	github.com/lariv-in/lago/p_users => ../p_users
 	github.com/lariv-in/lago/registry => ../../registry
 	github.com/lariv-in/lago/views => ../../views

@@ -5,6 +5,7 @@ import (
 	"context"
 	"embed"
 	"html/template"
+	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -31,6 +32,10 @@ var footerTmpl = template.Must(template.New("footer.tmpl").Funcs(template.FuncMa
 
 var homePageTmpl = template.Must(template.New("home.tmpl").Funcs(template.FuncMap{
 	"static": websiteStaticPath,
+	"externalURL": func(s string) bool {
+		s = strings.TrimSpace(strings.ToLower(s))
+		return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
+	},
 }).ParseFS(
 	pageTemplatesFS,
 	"templates/home.tmpl",

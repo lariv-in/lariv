@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"maragu.dev/gomponents"
@@ -27,6 +28,53 @@ func TestInputImplementations(t *testing.T) {
 	var _ InputInterface = InputPassword{}
 	var _ InputInterface = InputPhone{}
 	var _ InputInterface = InputText{}
+	var _ InputInterface = InputSelect[string]{}
+}
+
+func TestInputSelectParse(t *testing.T) {
+	choices := getters.GetterStatic([]registry.Pair[string, string]{
+		{Key: "a", Value: "Alpha"},
+		{Key: "b", Value: "Beta"},
+	})
+	input := InputSelect[string]{Name: "x", Choices: choices}
+
+	v, err := input.Parse([]string{"b"}, context.Background())
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if v != "b" {
+		t.Fatalf("expected b, got %#v", v)
+	}
+
+	empty, err := input.Parse([]string{""}, context.Background())
+	if err != nil {
+		t.Fatalf("Parse empty: %v", err)
+	}
+	if empty != "" {
+		t.Fatalf("expected empty string, got %#v", empty)
+	}
+
+	_, err = input.Parse([]string{"nope"}, context.Background())
+	if err == nil {
+		t.Fatalf("expected error for invalid choice")
+	}
+}
+
+func TestInputSelectBuildSelected(t *testing.T) {
+	choices := getters.GetterStatic([]registry.Pair[string, string]{
+		{Key: "a", Value: "Alpha"},
+		{Key: "b", Value: "Beta"},
+	})
+	current := getters.GetterStatic(registry.Pair[string, string]{Key: "b", Value: "Beta"})
+	input := InputSelect[string]{Label: "Pick", Name: "pick", Choices: choices, Getter: current}
+
+	html := renderNode(t, input.Build(context.Background()))
+	if !strings.Contains(html, `selected`) || !strings.Contains(html, "Beta") {
+		t.Fatalf("expected selected Beta option in html: %s", html)
+	}
+	if !strings.Contains(html, `name="pick"`) {
+		t.Fatalf("expected name pick: %s", html)
+	}
 }
 
 type testAssociationModel struct {
