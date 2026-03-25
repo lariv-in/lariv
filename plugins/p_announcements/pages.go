@@ -327,7 +327,7 @@ func registerDetailPages() {
 			&components.Detail[Announcement]{
 				Getter: getters.GetterKey[Announcement]("announcement"),
 				Children: []components.PageInterface{
-					components.ContainerColumn{
+					&components.ContainerColumn{
 						Page: components.Page{Key: "announcements.AnnouncementDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{

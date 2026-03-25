@@ -57,6 +57,10 @@ func InsertChildBefore[T, V PageInterface](p MutableParentInterface, key string,
 }
 
 func InsertChildAfter[T, V PageInterface](p MutableParentInterface, key string, replacement func(T) V) bool {
+	return insertChildAfter[T, V](p, key, replacement, true)
+}
+
+func insertChildAfter[T, V PageInterface](p MutableParentInterface, key string, replacement func(T) V, logMiss bool) bool {
 	children := p.GetChildren()
 	result := make([]PageInterface, 0, len(children)+1)
 	targetFound := false
@@ -67,7 +71,7 @@ func InsertChildAfter[T, V PageInterface](p MutableParentInterface, key string, 
 			targetFound = true
 		} else {
 			if parent, isParent := child.(MutableParentInterface); isParent {
-				childTargetFound := InsertChildAfter(parent, key, replacement)
+				childTargetFound := insertChildAfter(parent, key, replacement, false)
 				if childTargetFound {
 					targetFound = childTargetFound
 				}
@@ -76,7 +80,7 @@ func InsertChildAfter[T, V PageInterface](p MutableParentInterface, key string, 
 		}
 	}
 
-	if !targetFound {
+	if !targetFound && logMiss {
 		slog.Error("Target not found", "parent", p, "key", key)
 	}
 

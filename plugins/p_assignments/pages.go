@@ -291,7 +291,7 @@ func registerDetailPages() {
 			&components.Detail[Assignment]{
 				Getter: getters.GetterKey[Assignment]("assignment"),
 				Children: []components.PageInterface{
-					components.ContainerColumn{
+					&components.ContainerColumn{
 						Page: components.Page{Key: "assignments.AssignmentDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{
