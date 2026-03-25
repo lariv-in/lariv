@@ -97,11 +97,17 @@
   <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
     <div class="card bg-base-200 shadow-md">
       <div class="card-body">
-        <h2 class="card-title text-2xl">Contact Us</h2>
-        <p>Nirman Campus is dedicated to empowering students through quality education and holistic development.</p>
-        <div class="card-actions justify-end mt-4">
-          <a href="/contact-us/" class="btn btn-primary">Read More</a>
+        <h2 class="card-title text-2xl">Important Links</h2>
+        <p class="text-sm opacity-70 -mt-1 mb-4">Important links for Nirman Campus operations</p>
+        {{ if .ImportantLinks }}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {{ range .ImportantLinks }}
+          <a href="{{ .URL }}" class="btn btn-primary btn-sm justify-start">{{ .Title }}</a>
+          {{ end }}
         </div>
+        {{ else }}
+        <p class="opacity-60">No important links configured yet.</p>
+        {{ end }}
       </div>
     </div>
     <div class="card bg-base-200 shadow-md">

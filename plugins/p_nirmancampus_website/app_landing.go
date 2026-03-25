@@ -68,6 +68,10 @@ func init() {
 				Title: getters.GetterStatic("Student Zone Items"),
 				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 			},
+			&components.SidebarMenuItem{
+				Title: getters.GetterStatic("Important Links"),
+				Url:   lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+			},
 		},
 	})
 
