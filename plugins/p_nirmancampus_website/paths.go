@@ -25,6 +25,11 @@ func init() {
 		Handler: lago.NewDynamicView("nirmancampus_website.CoursesView"),
 	})
 
+	_ = lago.RegistryRoute.Register("nirmancampus_website.ProgramsRoute", lago.Route{
+		Path:    "/programs-offered/",
+		Handler: lago.NewDynamicView("nirmancampus_website.ProgramsView"),
+	})
+
 	_ = lago.RegistryRoute.Register("nirmancampus_website.StudentZoneRoute", lago.Route{
 		Path:    "/students-zone/",
 		Handler: lago.NewDynamicView("nirmancampus_website.StudentZoneView"),

@@ -57,6 +57,13 @@ var coursesPageTmpl = template.Must(template.New("courses.tmpl").Funcs(template.
 	"templates/courses.tmpl",
 ))
 
+var programsPageTmpl = template.Must(template.New("programs.tmpl").Funcs(template.FuncMap{
+	"static": websiteStaticPath,
+}).ParseFS(
+	pageTemplatesFS,
+	"templates/programs.tmpl",
+))
+
 var studentZonePageTmpl = template.Must(template.New("student_zone.tmpl").Funcs(template.FuncMap{
 	"static": websiteStaticPath,
 }).ParseFS(
@@ -140,6 +147,27 @@ func (e *coursesPage) Build(ctx context.Context) gomponents.Node {
 func (e *coursesPage) GetKey() string     { return e.Key }
 func (e *coursesPage) GetRoles() []string { return e.Roles }
 
+type programsPage struct {
+	components.Page
+}
+
+func (e *programsPage) Build(ctx context.Context) gomponents.Node {
+	var buf bytes.Buffer
+	if err := programsPageTmpl.Execute(&buf, buildProgramsPageData(ctx)); err != nil {
+		panic(err)
+	}
+	return components.Render(components.ShellBase{
+		Children: []components.PageInterface{
+			&rawPage{content: renderTopbar(ctx)},
+			&rawPage{content: buf.String()},
+			&rawPage{content: renderFooter()},
+		},
+	}, ctx)
+}
+
+func (e *programsPage) GetKey() string     { return e.Key }
+func (e *programsPage) GetRoles() []string { return e.Roles }
+
 type contactPage struct {
 	components.Page
 }
@@ -206,6 +234,7 @@ func (e *studentZonePage) GetRoles() []string { return e.Roles }
 func init() {
 	lago.RegistryPage.Register("nirmancampus_website.HomePage", &homePage{})
 	lago.RegistryPage.Register("nirmancampus_website.CoursesPage", &coursesPage{})
+	lago.RegistryPage.Register("nirmancampus_website.ProgramsPage", &programsPage{})
 	lago.RegistryPage.Register("nirmancampus_website.ContactPage", &contactPage{})
 	lago.RegistryPage.Register("nirmancampus_website.PrivacyPage", &privacyPage{})
 	lago.RegistryPage.Register("nirmancampus_website.StudentZonePage", &studentZonePage{})
