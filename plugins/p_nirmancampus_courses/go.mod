@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/plugins/p_courses
+module github.com/lariv-in/lago/plugins/p_nirmancampus_courses
 
 go 1.26.1
 

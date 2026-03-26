@@ -98,10 +98,10 @@ github.com/lariv-in/lago/plugins/p_assignmentresults v0.5.9 h1:97AmvZi4EaJYJh7+F
 github.com/lariv-in/lago/plugins/p_assignmentresults v0.5.9/go.mod h1:hVhVvJ8im34pQfxt2t/8ddgtWJdgCBWWbBJ9FvnyOFs=
 github.com/lariv-in/lago/plugins/p_assignments v0.5.9 h1:Ew8KaZxJJQeNtwRdnFWXLCySfyVh2PIM3DWtatsNXXA=
 github.com/lariv-in/lago/plugins/p_assignments v0.5.9/go.mod h1:5c0Ku5CE5Uw87/+XQn8T3jwzULzxHeVPev27x6EWZsY=
-github.com/lariv-in/lago/plugins/p_courses v0.5.9 h1:RlSjnAHTaW6JJIht+J2bdADX5M9qDxeXEYdnCz2lJXA=
-github.com/lariv-in/lago/plugins/p_courses v0.5.9/go.mod h1:UkdNKbUsEAyvE2wkHDJowuaegrJpW2bJIv7NMK/U8uQ=
-github.com/lariv-in/lago/plugins/p_courses_teachers v0.5.9 h1:SUEHWOn2FB1bPhn7U5lU4kv93KOF8N1fn48CWvJc6W8=
-github.com/lariv-in/lago/plugins/p_courses_teachers v0.5.9/go.mod h1:sAOGjoOXL87PHaks8rY212l01cA7ZDc8yyRYdj7121M=
+github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.9 h1:RlSjnAHTaW6JJIht+J2bdADX5M9qDxeXEYdnCz2lJXA=
+github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.9/go.mod h1:UkdNKbUsEAyvE2wkHDJowuaegrJpW2bJIv7NMK/U8uQ=
+github.com/lariv-in/lago/plugins/p_nirmancampus_courses_teachers v0.5.9 h1:SUEHWOn2FB1bPhn7U5lU4kv93KOF8N1fn48CWvJc6W8=
+github.com/lariv-in/lago/plugins/p_nirmancampus_courses_teachers v0.5.9/go.mod h1:sAOGjoOXL87PHaks8rY212l01cA7ZDc8yyRYdj7121M=
 github.com/lariv-in/lago/plugins/p_dashboard v0.5.9 h1:7VwgAo7Klg9mzn3nDGzrgwTqYX/0U681qi/qH4jRfhQ=
 github.com/lariv-in/lago/plugins/p_dashboard v0.5.9/go.mod h1:NsueWFdt9hw5/iXLFUPuK/3y3F6es0eHwQX+H3g35ek=
 github.com/lariv-in/lago/plugins/p_filesystem v0.5.9 h1:46j+lTeSn5KitBY7hNpMFcD0+Lpx67zURGsFGdY9I3k=

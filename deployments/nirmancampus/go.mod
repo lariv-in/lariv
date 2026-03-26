@@ -7,8 +7,8 @@ require (
 	github.com/lariv-in/lago/plugins/p_academicrecords v0.5.9
 	github.com/lariv-in/lago/plugins/p_assignmentresults v0.5.9
 	github.com/lariv-in/lago/plugins/p_assignments v0.5.9
-	github.com/lariv-in/lago/plugins/p_courses v0.5.9
-	github.com/lariv-in/lago/plugins/p_courses_teachers v0.5.9
+	github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.9
+	github.com/lariv-in/lago/plugins/p_nirmancampus_courses_teachers v0.5.9
 	github.com/lariv-in/lago/plugins/p_dashboard v0.5.9
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.9
 	github.com/lariv-in/lago/plugins/p_nirmancampus_announcements v0.0.0-20260326081203-a40ac47e777f
