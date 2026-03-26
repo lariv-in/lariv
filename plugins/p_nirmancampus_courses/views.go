@@ -1,4 +1,4 @@
-package p_courses
+package p_nirmancampus_courses
 
 import (
 	"github.com/lariv-in/lago/getters"

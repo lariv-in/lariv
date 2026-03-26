@@ -1,4 +1,4 @@
-package p_courses
+package p_nirmancampus_courses
 
 import (
 	"github.com/lariv-in/lago/lago"
@@ -21,6 +21,5 @@ func init() {
 		d.AutoMigrate(Course{})
 		return d
 	})
-	lago.RegistryAdmin.Register("p_courses", lago.AdminPanel[Course]{SearchField: "Name"})
+	lago.RegistryAdmin.Register("p_nirmancampus_courses", lago.AdminPanel[Course]{SearchField: "Name"})
 }
-

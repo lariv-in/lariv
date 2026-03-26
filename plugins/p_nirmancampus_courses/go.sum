@@ -90,14 +90,8 @@ github.com/lariv-in/lago/getters v0.5.10 h1:ots+Q55arAAbB2i/FE5MEZr6f3yyNZtDiEcv
 github.com/lariv-in/lago/getters v0.5.10/go.mod h1:6wEjjeBr5CRR1Iwz+rjsIGoZPnpojYrEFIda1T5sZng=
 github.com/lariv-in/lago/lago v0.5.10 h1:0UMnkxbYamlZVtnjTL007IPn5IQaukLWm9xEC/i7fWc=
 github.com/lariv-in/lago/lago v0.5.10/go.mod h1:+zbrjS12vdNOZisvRVn9BHC5pspQPjVf1g6KSU+MMKY=
-github.com/lariv-in/lago/plugins/p_courses v0.5.9 h1:RlSjnAHTaW6JJIht+J2bdADX5M9qDxeXEYdnCz2lJXA=
-github.com/lariv-in/lago/plugins/p_courses v0.5.9/go.mod h1:UkdNKbUsEAyvE2wkHDJowuaegrJpW2bJIv7NMK/U8uQ=
-github.com/lariv-in/lago/plugins/p_filesystem v0.5.5 h1:u0Y685ML/Akg6pzJ7QSF1/A6OWmx/vAprfabaKIEBzA=
-github.com/lariv-in/lago/plugins/p_filesystem v0.5.5/go.mod h1:LP4Uwklrkn7+5itAius4o1f++69dFughvKW7b4B/3CI=
-github.com/lariv-in/lago/plugins/p_teachers v0.5.9 h1:n2A0j+pbTpFqTcwAmUqilEldcbl9sXZMDbDBj23JxGA=
-github.com/lariv-in/lago/plugins/p_teachers v0.5.9/go.mod h1:OVBs7OFF520s2Tb2A8lFBaggpdchQoZjvEVfPplS5ow=
-github.com/lariv-in/lago/plugins/p_users v0.5.6 h1:VatFUCg6jwIsVZ45aFjESjIHw5BuTNyumUgf+pr31ww=
-github.com/lariv-in/lago/plugins/p_users v0.5.6/go.mod h1:9e46Zgvhb1MRgK7fRXu7YMQZXWY0gfDISRLwfp5npS4=
+github.com/lariv-in/lago/plugins/p_users v0.5.10 h1:2ErBYXwImYP0Op/yEvsClGnK2ofNXQBGK9CGYzlzDqs=
+github.com/lariv-in/lago/plugins/p_users v0.5.10/go.mod h1:VgDEjlJVHh1zXYVx0HHN5BvX9WFsEzPIvudCLY+sBlc=
 github.com/lariv-in/lago/registry v0.5.9 h1:SdQn9Qfo1dO+UC9OCVcqZRgpBj26tR27GW/OSk2AGYg=
 github.com/lariv-in/lago/registry v0.5.9/go.mod h1:aqlqYRO3tHZTmiSt5/V/c85pM7rx9k0ufjB7kkz9MK0=
 github.com/lariv-in/lago/views v0.5.10 h1:E+ne4PhVbiuwd2RDUxqs4GPwVkEYH847iEOMovMR5qc=

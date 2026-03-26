@@ -8,15 +8,14 @@ use (
 	./deployments/totschool_lago
 	./getters
 	./lago
-	./plugins/p_nirmancampus_academicrecords
 	./plugins/p_assignmentresults
 	./plugins/p_assignments
 	./plugins/p_contacts
-	./plugins/p_courses
-	./plugins/p_courses_teachers
 	./plugins/p_dashboard
 	./plugins/p_filesystem
+	./plugins/p_nirmancampus_academicrecords
 	./plugins/p_nirmancampus_announcements
+	./plugins/p_nirmancampus_courses
 	./plugins/p_nirmancampus_programs
 	./plugins/p_nirmancampus_sessions
 	./plugins/p_nirmancampus_studentapplications
@@ -25,7 +24,6 @@ use (
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp
 	./plugins/p_pwa
-	./plugins/p_teachers
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally

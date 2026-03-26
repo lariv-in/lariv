@@ -2,7 +2,7 @@ module github.com/lariv-in/lago/registry
 
 go 1.26.1
 
-require github.com/lariv-in/lago/getters v0.5.9
+require github.com/lariv-in/lago/getters v0.5.10
 
 require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
