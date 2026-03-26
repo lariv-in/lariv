@@ -15,6 +15,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
+			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
@@ -25,6 +26,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
+			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
@@ -53,6 +55,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
+			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
@@ -67,6 +70,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
+			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
@@ -77,6 +81,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
+			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 }

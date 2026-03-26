@@ -6,6 +6,7 @@ require (
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
+	github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
@@ -68,5 +69,7 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
+
+replace github.com/lariv-in/lago/plugins/p_nirmancampus_programs => ../p_nirmancampus_programs
 
 replace github.com/lariv-in/lago/plugins/p_nirmancampus_students => ../p_nirmancampus_students

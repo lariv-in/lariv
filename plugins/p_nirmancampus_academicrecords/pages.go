@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 )
 
@@ -77,6 +78,21 @@ func registerFilterPages() {
 				Name:   "Status",
 				Getter: getters.GetterKey[string]("$get.Status"),
 			},
+			&components.InputNumber{
+				Label:  "Semester",
+				Name:   "Semester",
+				Getter: academicRecordSemesterQueryGetter(),
+			},
+			&components.InputForeignKey[p_nirmancampus_programs.Program]{
+				Label:       "Program",
+				Name:        "ProgramID",
+				Url:         lago.GetterRoutePath("programs.SelectRoute", nil),
+				Placeholder: "Filter by program...",
+				Display:     getters.GetterKey[string]("$in.Name"),
+				Getter: getters.GetterAssociation[p_nirmancampus_programs.Program](
+					getters.GetterKey[uint]("$get.ProgramID"),
+				),
+			},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{
@@ -92,6 +108,18 @@ func registerFilterPages() {
 
 // --- Form Fields ---
 
+func academicRecordSemesterQueryGetter() getters.Getter[int] {
+	return func(ctx context.Context) (int, error) {
+		if v, err := getters.GetterKey[int]("$get.Semester")(ctx); err == nil {
+			return v, nil
+		}
+		if v, err := getters.GetterKey[uint]("$get.Semester")(ctx); err == nil {
+			return int(v), nil
+		}
+		return 0, nil
+	}
+}
+
 func academicRecordFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{
@@ -99,7 +127,7 @@ func academicRecordFormFields() components.ContainerColumn {
 		},
 		Children: []components.PageInterface{
 			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1",
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.StudentID"),
@@ -117,10 +145,26 @@ func academicRecordFormFields() components.ContainerColumn {
 							},
 						},
 					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.ProgramID"),
+						Children: []components.PageInterface{
+							&components.InputForeignKey[p_nirmancampus_programs.Program]{
+								Label:       "Program",
+								Name:        "ProgramID",
+								Required:    true,
+								Url:         lago.GetterRoutePath("programs.SelectRoute", nil),
+								Display:     getters.GetterKey[string]("$in.Name"),
+								Placeholder: "Select a program...",
+								Getter: getters.GetterAssociation[p_nirmancampus_programs.Program](
+									getters.GetterKey[uint]("$in.ProgramID"),
+								),
+							},
+						},
+					},
 				},
 			},
 			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1",
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.Status"),
@@ -130,6 +174,19 @@ func academicRecordFormFields() components.ContainerColumn {
 								Name:     "Status",
 								Required: true,
 								Getter:   getters.GetterKey[string]("$in.Status"),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.Semester"),
+						Children: []components.PageInterface{
+							&components.InputNumber{
+								Label:    "Semester",
+								Name:     "Semester",
+								Required: true,
+								Getter: getters.GetterNumberCast[int](
+									getters.GetterKey[uint]("$in.Semester"),
+								),
 							},
 						},
 					},
@@ -204,10 +261,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[AcademicRecord]{
-				Page:      components.Page{Key: "academicrecords.AcademicRecordTableBody"},
-				UID:       "academicrecords-table",
-				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
+				Page:    components.Page{Key: "academicrecords.AcademicRecordTableBody"},
+				UID:     "academicrecords-table",
+				Classes: "w-full",
+				Data:    getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
 				CreateUrl: func(ctx context.Context) (string, error) {
 					role, err := roleGetter(ctx)
 					if err != nil {
@@ -233,10 +290,26 @@ func registerTablePages() {
 						},
 					},
 					{
+						Label: "Program",
+						Name:  "Program.Name",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.Program.Name")},
+						},
+					},
+					{
 						Label: "Status",
 						Name:  "Status",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Status")},
+						},
+					},
+					{
+						Label: "Semester",
+						Name:  "Semester",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("$row.Semester"))),
+							},
 						},
 					},
 				},
@@ -262,9 +335,23 @@ func registerDetailPages() {
 							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Student.User.Name")},
 							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Student.StudentNo")},
 							&components.LabelInline{
+								Title: "Program",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.Program.Name")},
+								},
+							},
+							&components.LabelInline{
 								Title: "Status",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Status")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Semester",
+								Children: []components.PageInterface{
+									&components.FieldText{
+										Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("$in.Semester"))),
+									},
 								},
 							},
 						},
@@ -298,10 +385,15 @@ func registerSelectionPages() {
 		Title: "Select Academic Record",
 		Children: []components.PageInterface{
 			&components.DataTable[AcademicRecord]{
-				Page:    components.Page{Key: "academicrecords.AcademicRecordSelectionTableBody"},
-				UID:     "academicrecords-selection-table",
-				Data:    getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
-				OnClick: getters.GetterSelect("AcademicRecordID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Status")),
+				Page: components.Page{Key: "academicrecords.AcademicRecordSelectionTableBody"},
+				UID:  "academicrecords-selection-table",
+				Data: getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
+				OnClick: getters.GetterSelect("AcademicRecordID", getters.GetterKey[uint]("$row.ID"), getters.GetterFormat(
+					"%s · %s · sem %d",
+					getters.GetterAny(getters.GetterKey[string]("$row.Program.Name")),
+					getters.GetterAny(getters.GetterKey[string]("$row.Status")),
+					getters.GetterAny(getters.GetterKey[uint]("$row.Semester")),
+				)),
 				Columns: []components.TableColumn{
 					{
 						Label: "Student",
@@ -311,10 +403,26 @@ func registerSelectionPages() {
 						},
 					},
 					{
+						Label: "Program",
+						Name:  "Program.Name",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.Program.Name")},
+						},
+					},
+					{
 						Label: "Status",
 						Name:  "Status",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.Status")},
+						},
+					},
+					{
+						Label: "Semester",
+						Name:  "Semester",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("$row.Semester"))),
+							},
 						},
 					},
 				},

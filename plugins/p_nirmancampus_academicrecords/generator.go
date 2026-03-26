@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"gorm.io/gorm"
 )
@@ -27,11 +28,21 @@ func init() {
 				return fmt.Errorf("need at least one student before generating academic records")
 			}
 
+			var programs []p_nirmancampus_programs.Program
+			if err := db.Order("id ASC").Find(&programs).Error; err != nil {
+				return fmt.Errorf("failed to load programs: %w", err)
+			}
+			if len(programs) == 0 {
+				return fmt.Errorf("need at least one program before generating academic records")
+			}
+
 			n := 0
 			for k, st := range students {
 				rec := AcademicRecord{
 					StudentID: st.ID,
+					ProgramID: programs[k%len(programs)].ID,
 					Status:    sampleStatuses[k%len(sampleStatuses)],
+					Semester:  uint(k%8 + 1),
 				}
 				if err := db.Create(&rec).Error; err != nil {
 					return fmt.Errorf("failed to create academic record (student_id=%d): %w", st.ID, err)

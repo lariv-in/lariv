@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"gorm.io/gorm"
 )
@@ -12,10 +13,15 @@ import (
 type AcademicRecord struct {
 	gorm.Model
 
-	StudentID uint `gorm:"notnull;index"`
+	StudentID uint                            `gorm:"notnull;index"`
 	Student   p_nirmancampus_students.Student `gorm:"constraint:OnDelete:CASCADE;foreignKey:StudentID;references:ID"`
 
+	ProgramID uint                            `gorm:"not null;index"`
+	Program   p_nirmancampus_programs.Program `gorm:"constraint:OnDelete:RESTRICT;foreignKey:ProgramID;references:ID"`
+
 	Status string `gorm:"type:varchar(50);notnull"`
+
+	Semester uint `gorm:"not null;index;default:1"`
 }
 
 func init() {
@@ -28,8 +34,7 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_academicrecords", lago.AdminPanel[AcademicRecord]{
 		SearchField: "Status",
-		ListFields:  []string{"Status", "Student.StudentNo", "UpdatedAt"},
-		Preload:     []string{"Student.User"},
+		ListFields:  []string{"Status", "Semester", "Program.Name", "Student.StudentNo", "UpdatedAt"},
+		Preload:     []string{"Student.User", "Program"},
 	})
 }
-
