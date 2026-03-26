@@ -1,4 +1,4 @@
-package p_semesters
+package p_nirmancampus_sessions
 
 import (
 	"fmt"
@@ -55,9 +55,8 @@ func init() {
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_semesters", lago.AdminPanel[Semester]{
+	lago.RegistryAdmin.Register("p_nirmancampus_sessions", lago.AdminPanel[Semester]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "Code", "Start", "End", "IsActive"},
 	})
 }
-

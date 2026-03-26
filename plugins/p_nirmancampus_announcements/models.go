@@ -1,4 +1,4 @@
-package p_announcements
+package p_nirmancampus_announcements
 
 import (
 	"log"
@@ -48,7 +48,7 @@ func init() {
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_announcements", lago.AdminPanel[Announcement]{
+	lago.RegistryAdmin.Register("p_nirmancampus_announcements", lago.AdminPanel[Announcement]{
 		SearchField: "Title",
 		ListFields: []string{
 			"Title",

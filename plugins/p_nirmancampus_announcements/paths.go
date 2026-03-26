@@ -1,4 +1,4 @@
-package p_announcements
+package p_nirmancampus_announcements
 
 import (
 	"github.com/lariv-in/lago/lago"

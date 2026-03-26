@@ -1,4 +1,4 @@
-package p_semesters
+package p_nirmancampus_sessions
 
 import (
 	"fmt"

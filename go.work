@@ -9,7 +9,7 @@ use (
 	./getters
 	./lago
 	./plugins/p_academicrecords
-	./plugins/p_announcements
+	./plugins/p_nirmancampus_announcements
 	./plugins/p_assignmentresults
 	./plugins/p_assignments
 	./plugins/p_contacts
@@ -24,7 +24,7 @@ use (
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp
 	./plugins/p_pwa
-	./plugins/p_semesters
+	./plugins/p_nirmancampus_sessions
 	./plugins/p_teachers
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals

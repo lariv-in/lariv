@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/plugins/p_announcements
+module github.com/lariv-in/lago/plugins/p_nirmancampus_sessions
 
 go 1.26.1
 
@@ -6,7 +6,6 @@ require (
 	github.com/lariv-in/lago/components v0.5.5
 	github.com/lariv-in/lago/getters v0.5.5
 	github.com/lariv-in/lago/lago v0.5.5
-	github.com/lariv-in/lago/plugins/p_filesystem v0.5.5
 	github.com/lariv-in/lago/plugins/p_users v0.5.6
 	github.com/lariv-in/lago/views v0.5.5
 	gorm.io/gorm v1.31.1

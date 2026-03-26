@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/plugins/p_announcements"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_announcements"
 	"gorm.io/gorm"
 )
 
@@ -55,8 +55,8 @@ func homePageDB(ctx context.Context) (*gorm.DB, error) {
 }
 
 func loadHomeAnnouncements(db *gorm.DB, now time.Time) []homeAnnouncement {
-	var announcements []p_announcements.Announcement
-	if err := db.Model(&p_announcements.Announcement{}).
+	var announcements []p_nirmancampus_announcements.Announcement
+	if err := db.Model(&p_nirmancampus_announcements.Announcement{}).
 		Where("release_at <= ?", now).
 		Where("expiry_at IS NULL OR expiry_at > ?", now).
 		Order("release_at DESC").

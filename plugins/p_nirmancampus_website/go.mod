@@ -6,7 +6,7 @@ require (
 	github.com/lariv-in/lago/components v0.5.5
 	github.com/lariv-in/lago/getters v0.5.5
 	github.com/lariv-in/lago/lago v0.5.5
-	github.com/lariv-in/lago/plugins/p_announcements v0.5.5
+	github.com/lariv-in/lago/plugins/p_nirmancampus_announcements v0.5.5
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.5
 	github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.5.5
 	github.com/lariv-in/lago/plugins/p_users v0.5.6
