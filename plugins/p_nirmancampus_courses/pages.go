@@ -31,10 +31,6 @@ func registerMenuPages() {
 				Title: getters.GetterStatic("All Courses"),
 				Url:   lago.GetterRoutePath("courses.DefaultRoute", nil),
 			},
-			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Program Mappings"),
-				Url:   lago.GetterRoutePath("courses.CourseProgramDefaultRoute", nil),
-			},
 		},
 	})
 
@@ -56,22 +52,6 @@ func registerMenuPages() {
 			&components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete Course"),
 				Url:   lago.GetterRoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
-			},
-			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Program Mappings"),
-				Url: getters.GetterFormat(
-					"%s?CourseID=%d",
-					getters.GetterAny(lago.GetterRoutePath("courses.CourseProgramDefaultRoute", nil)),
-					getters.GetterAny(getters.GetterKey[uint]("course.ID")),
-				),
-			},
-			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Add Program Mapping"),
-				Url: getters.GetterFormat(
-					"%s?CourseID=%d",
-					getters.GetterAny(lago.GetterRoutePath("courses.CourseProgramCreateRoute", nil)),
-					getters.GetterAny(getters.GetterKey[uint]("course.ID")),
-				),
 			},
 		},
 	})
@@ -319,7 +299,6 @@ func registerDetailPages() {
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Description")},
 								},
 							},
-							courseProgramCourseDetailSection(),
 						},
 					},
 				},
