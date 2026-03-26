@@ -4,7 +4,6 @@ go 1.26.1
 
 require (
 	github.com/lariv-in/lago/lago v0.5.9
-	github.com/lariv-in/lago/plugins/p_academicrecords v0.5.9
 	github.com/lariv-in/lago/plugins/p_assignmentresults v0.5.9
 	github.com/lariv-in/lago/plugins/p_assignments v0.5.9
 	github.com/lariv-in/lago/plugins/p_courses v0.5.9
@@ -59,7 +58,6 @@ require (
 	github.com/lariv-in/lago/getters v0.5.5 // indirect
 	github.com/lariv-in/lago/plugins/p_announcements v0.5.5 // indirect
 	github.com/lariv-in/lago/plugins/p_programs v0.5.5 // indirect
-	github.com/lariv-in/lago/plugins/p_semesters v0.5.5 // indirect
 	github.com/lariv-in/lago/plugins/p_students v0.5.5 // indirect
 	github.com/lariv-in/lago/registry v0.5.5 // indirect
 	github.com/lariv-in/lago/views v0.5.5 // indirect

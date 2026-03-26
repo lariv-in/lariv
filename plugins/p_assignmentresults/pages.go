@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_academicrecords"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_assignments"
 )
 
@@ -127,14 +127,14 @@ func assignmentResultFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.AcademicRecordID"),
 						Children: []components.PageInterface{
-							&components.InputForeignKey[p_academicrecords.AcademicRecord]{
+							&components.InputForeignKey[p_nirmancampus_academicrecords.AcademicRecord]{
 								Label:       "Academic record",
 								Name:        "AcademicRecordID",
 								Required:    true,
 								Url:         lago.GetterRoutePath("academicrecords.SelectRoute", nil),
 								Placeholder: "Select an academic record...",
 								Display: getters.GetterKey[string]("$in.Student.User.Name"),
-								Getter: getters.GetterAssociation[p_academicrecords.AcademicRecord](
+								Getter: getters.GetterAssociation[p_nirmancampus_academicrecords.AcademicRecord](
 									getters.GetterKey[uint]("$in.AcademicRecordID"),
 								),
 							},

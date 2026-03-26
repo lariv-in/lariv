@@ -1,4 +1,4 @@
-package p_academicrecords
+package p_nirmancampus_academicrecords
 
 import (
 	"log"
@@ -15,7 +15,7 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugin.Register("p_academicrecords", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_nirmancampus_academicrecords", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "book-open",
 		URL:         u,

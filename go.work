@@ -8,7 +8,7 @@ use (
 	./deployments/totschool_lago
 	./getters
 	./lago
-	./plugins/p_academicrecords
+	./plugins/p_nirmancampus_academicrecords
 	./plugins/p_assignmentresults
 	./plugins/p_assignments
 	./plugins/p_contacts

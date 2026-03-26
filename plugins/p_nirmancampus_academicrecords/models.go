@@ -1,4 +1,4 @@
-package p_academicrecords
+package p_nirmancampus_academicrecords
 
 import (
 	"log"
@@ -26,7 +26,7 @@ func init() {
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_academicrecords", lago.AdminPanel[AcademicRecord]{
+	lago.RegistryAdmin.Register("p_nirmancampus_academicrecords", lago.AdminPanel[AcademicRecord]{
 		SearchField: "Status",
 		ListFields:  []string{"Status", "Student.StudentNo", "UpdatedAt"},
 		Preload:     []string{"Student.User"},

@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_academicrecords"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_assignments"
 	"gorm.io/gorm"
 )
@@ -17,7 +17,7 @@ type AssignmentResult struct {
 	Assignment   p_assignments.Assignment `gorm:"constraint:OnDelete:CASCADE;foreignKey:AssignmentID;references:ID"`
 
 	AcademicRecordID uint                             `gorm:"notnull;index;uniqueIndex:idx_assignment_result_pair"`
-	AcademicRecord   p_academicrecords.AcademicRecord `gorm:"constraint:OnDelete:CASCADE;foreignKey:AcademicRecordID;references:ID"`
+	AcademicRecord   p_nirmancampus_academicrecords.AcademicRecord `gorm:"constraint:OnDelete:CASCADE;foreignKey:AcademicRecordID;references:ID"`
 
 	Marks   int    `gorm:"notnull"`
 	Remarks string `gorm:"type:text"`

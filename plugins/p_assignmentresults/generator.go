@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_academicrecords"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_assignments"
 	"gorm.io/gorm"
 )
@@ -16,7 +16,7 @@ func init() {
 			if err := db.Order("id ASC").First(&asg).Error; err != nil {
 				return fmt.Errorf("assignmentresults generator needs at least one assignment: %w", err)
 			}
-			var rec p_academicrecords.AcademicRecord
+			var rec p_nirmancampus_academicrecords.AcademicRecord
 			if err := db.Order("id ASC").First(&rec).Error; err != nil {
 				return fmt.Errorf("assignmentresults generator needs at least one academic record: %w", err)
 			}

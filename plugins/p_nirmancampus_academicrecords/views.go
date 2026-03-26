@@ -1,4 +1,4 @@
-package p_academicrecords
+package p_nirmancampus_academicrecords
 
 import (
 	"github.com/lariv-in/lago/getters"
