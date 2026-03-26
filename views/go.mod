@@ -4,13 +4,26 @@ go 1.26.1
 
 require (
 	github.com/go-viper/mapstructure/v2 v2.5.0
+	github.com/lariv-in/lago/components v0.5.9
+	github.com/lariv-in/lago/getters v0.5.9
+	github.com/lariv-in/lago/registry v0.5.9
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
 )
 
 require (
+	filippo.io/edwards25519 v1.2.0 // indirect
+	github.com/go-sql-driver/mysql v1.9.3 // indirect
+	github.com/gomarkdown/markdown v0.0.0-20260217112301-37c66b85d6ab // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-sqlite3 v1.14.37 // indirect
+	github.com/nyaruka/phonenumbers v1.6.12 // indirect
+	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
 	golang.org/x/text v0.35.0 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
+	gorm.io/datatypes v1.2.7 // indirect
+	gorm.io/driver/mysql v1.6.0 // indirect
+	maragu.dev/gomponents v1.2.0 // indirect
 )

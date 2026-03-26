@@ -4,8 +4,8 @@ go 1.26.1
 
 require (
 	github.com/gomarkdown/markdown v0.0.0-20260217112301-37c66b85d6ab
-	github.com/lariv-in/lago/getters v0.5.5
-	github.com/lariv-in/lago/registry v0.5.5
+	github.com/lariv-in/lago/getters v0.5.9
+	github.com/lariv-in/lago/registry v0.5.9
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
@@ -14,15 +14,12 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgx/v5 v5.9.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-sqlite3 v1.14.37 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 )
