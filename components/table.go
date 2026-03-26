@@ -2,7 +2,9 @@ package components
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
@@ -30,6 +32,8 @@ type DataTable[T any] struct {
 	// Displays is a map of view name to display component
 	// e.g. "List": TableListContent, "Grid": TableGridContent
 	Displays        map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
+	// DefaultView is the initial display mode; must match a key in Displays. Empty means "List".
+	DefaultView     string
 	FilterComponent PageInterface
 	CreateUrl       getters.Getter[string]
 	OnClick         getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
@@ -89,9 +93,29 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 		uid = "table-container"
 	}
 
+	initialView := e.DefaultView
+	if initialView == "" {
+		initialView = "List"
+	}
+	if _, ok := e.Displays[initialView]; !ok {
+		if _, ok := e.Displays["List"]; ok {
+			initialView = "List"
+		} else {
+			keys := make([]string, 0, len(e.Displays))
+			for k := range e.Displays {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			if len(keys) > 0 {
+				initialView = keys[0]
+			}
+		}
+	}
+	xData, _ := json.Marshal(map[string]string{"view": initialView})
+
 	return Div(
 		ID(uid), Class(fmt.Sprintf("w-full data-table-container %s", e.Classes)),
-		Attr("x-data", "{ view: 'List' }"),
+		Attr("x-data", string(xData)),
 		Div(Class("flex justify-between items-center my-2"),
 			Div(
 				If(e.Title != "", Div(Class("text-xl font-semibold"), Text(e.Title))),

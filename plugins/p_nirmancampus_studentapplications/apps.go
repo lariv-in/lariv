@@ -19,7 +19,7 @@ func init() {
 		Type:        lago.PluginTypeApp,
 		Icon:        "document-text",
 		URL:         u,
-		VerboseName: "Student applications",
+		VerboseName: "Student Applications",
 		Roles:       []string{"superuser", "nirmancampus_admin"},
 	})
 	if err != nil {
