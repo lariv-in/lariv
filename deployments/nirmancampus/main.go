@@ -11,15 +11,14 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_filesystem"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_announcements"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
-	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_courses_teachers"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_sessions"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_studentapplications"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_users"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_website"
 	_ "github.com/lariv-in/lago/plugins/p_otp"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
-	_ "github.com/lariv-in/lago/plugins/p_teachers"
 	_ "github.com/lariv-in/lago/plugins/p_users"
 )
 
