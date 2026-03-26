@@ -1,8 +1,10 @@
 package views
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -36,6 +38,71 @@ type crudTestStudent struct {
 	Name   string
 	UserID uint
 	User   crudTestUser
+}
+
+func TestJsonImportCreatesRecordsFromUploadedArray(t *testing.T) {
+	db := openCrudTestDB(t)
+	if err := db.AutoMigrate(&crudTestTeacher{}); err != nil {
+		t.Fatalf("AutoMigrate failed: %v", err)
+	}
+
+	view := newCrudTestView(createImportPage("Import"))
+	JsonImport[crudTestTeacher]("Import", getters.GetterStatic("/teachers/"))(view)
+
+	req := newMultipartRequest(t, "Import", "teachers.json", `[{"Name":"Ada"},{"Name":"Grace"}]`)
+	req = req.WithContext(context.WithValue(req.Context(), "$db", db))
+	rec := httptest.NewRecorder()
+
+	view.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("expected redirect, got %d", rec.Code)
+	}
+	if location := rec.Header().Get("Location"); location != "/teachers/" {
+		t.Fatalf("expected redirect to /teachers/, got %q", location)
+	}
+
+	var teachers []crudTestTeacher
+	if err := db.Order("id ASC").Find(&teachers).Error; err != nil {
+		t.Fatalf("loading teachers failed: %v", err)
+	}
+	if len(teachers) != 2 {
+		t.Fatalf("expected 2 teachers, got %d", len(teachers))
+	}
+	if teachers[0].Name != "Ada" || teachers[1].Name != "Grace" {
+		t.Fatalf("unexpected teachers: %#v", teachers)
+	}
+}
+
+func TestJsonImportRejectsNonJSONUploads(t *testing.T) {
+	db := openCrudTestDB(t)
+	if err := db.AutoMigrate(&crudTestTeacher{}); err != nil {
+		t.Fatalf("AutoMigrate failed: %v", err)
+	}
+
+	view := newCrudTestView(createImportPage("Import"))
+	JsonImport[crudTestTeacher]("Import", getters.GetterStatic("/teachers/"))(view)
+
+	req := newMultipartRequest(t, "Import", "teachers.txt", `[{"Name":"Ada"}]`)
+	req = req.WithContext(context.WithValue(req.Context(), "$db", db))
+	rec := httptest.NewRecorder()
+
+	view.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected rendered form, got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `must be a .json file`) {
+		t.Fatalf("expected extension error, got body %q", rec.Body.String())
+	}
+
+	var count int64
+	if err := db.Model(&crudTestTeacher{}).Count(&count).Error; err != nil {
+		t.Fatalf("count teachers failed: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no imported teachers, got %d", count)
+	}
 }
 
 func TestCreateViewPersistsManyToManyAssociations(t *testing.T) {
@@ -181,6 +248,19 @@ func TestUpdateViewWithPreloadedBelongsToDoesNotDuplicateForeignKeyAssignments(t
 	}
 }
 
+func createImportPage(fileField string) *components.ContainerColumn {
+	return &components.ContainerColumn{
+		Children: []components.PageInterface{
+			&components.FormComponent[map[string]any]{
+				Method: http.MethodPost,
+				ChildrenInput: []components.PageInterface{
+					components.InputFile{Name: fileField},
+				},
+			},
+		},
+	}
+}
+
 func createCoursePage() *components.ContainerColumn {
 	return &components.ContainerColumn{
 		Children: []components.PageInterface{
@@ -226,4 +306,25 @@ func openCrudTestDB(t *testing.T) *gorm.DB {
 
 func stringsReader(value string) *strings.Reader {
 	return strings.NewReader(value)
+}
+
+func newMultipartRequest(t *testing.T, fieldName, filename, contents string) *http.Request {
+	t.Helper()
+
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	fileWriter, err := writer.CreateFormFile(fieldName, filename)
+	if err != nil {
+		t.Fatalf("CreateFormFile failed: %v", err)
+	}
+	if _, err := fileWriter.Write([]byte(contents)); err != nil {
+		t.Fatalf("Write upload failed: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close multipart writer failed: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", &body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	return req
 }

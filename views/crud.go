@@ -2,9 +2,13 @@ package views
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -326,6 +330,101 @@ func modelPrimaryKeyValue(record any) (any, error) {
 		return idField.Int(), nil
 	default:
 		return nil, fmt.Errorf("record %T has unsupported ID field kind %s", record, idField.Kind())
+	}
+}
+
+func uploadedJSONFile(values map[string]any, fileField string) (*multipart.FileHeader, error) {
+	fileValue, ok := values[fileField]
+	if !ok || fileValue == nil {
+		return nil, fmt.Errorf("missing %q upload", fileField)
+	}
+
+	fileHeader, ok := fileValue.(*multipart.FileHeader)
+	if !ok {
+		return nil, fmt.Errorf("field %q must be a single file upload", fileField)
+	}
+	if fileHeader.Filename == "" {
+		return nil, fmt.Errorf("field %q did not include a file", fileField)
+	}
+	if !strings.EqualFold(filepath.Ext(fileHeader.Filename), ".json") {
+		return nil, fmt.Errorf("field %q must be a .json file", fileField)
+	}
+	return fileHeader, nil
+}
+
+func decodeJSONArrayFile[T any](fileHeader *multipart.FileHeader) ([]T, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var records []T
+	decoder := json.NewDecoder(file)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&records); err != nil {
+		return nil, err
+	}
+	if decoder.More() {
+		return nil, fmt.Errorf("json upload must contain exactly one array")
+	}
+	var trailing json.RawMessage
+	if err := decoder.Decode(&trailing); err != nil && err != io.EOF {
+		return nil, err
+	}
+	if len(records) == 0 {
+		return []T{}, nil
+	}
+	return records, nil
+}
+
+// JsonImport parses a multipart form, decodes one uploaded .json file into []T,
+// creates all rows in a single transaction, and redirects on success.
+func JsonImport[T any](fileField string, successURL getters.Getter[string]) func(*View) *View {
+	return func(v *View) *View {
+		return v.WithMethod(http.MethodPost, func(innerView *View) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				values, fieldErrors, err := innerView.ParseForm(w, r)
+				if err != nil {
+					innerView.RenderWithErrors(w, r, map[string]error{"_form": err}, values)
+					return
+				}
+
+				if innerView.HasErrors(fieldErrors) {
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					return
+				}
+
+				fileHeader, err := uploadedJSONFile(values, fileField)
+				if err != nil {
+					fieldErrors["_form"] = err
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					return
+				}
+
+				records, err := decodeJSONArrayFile[T](fileHeader)
+				if err != nil {
+					fieldErrors["_form"] = fmt.Errorf("invalid json import: %w", err)
+					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					return
+				}
+
+				db := r.Context().Value("$db").(*gorm.DB)
+				if len(records) > 0 {
+					if err := db.Transaction(func(tx *gorm.DB) error {
+						return tx.Create(&records).Error
+					}); err != nil {
+						fieldErrors["_form"] = fmt.Errorf("%v", err)
+						innerView.RenderWithErrors(w, r, fieldErrors, values)
+						return
+					}
+				}
+
+				ctx := context.WithValue(r.Context(), "$count", len(records))
+				redirectURL, _ := getters.IfOrGetter(successURL, ctx, "")
+				http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+			})
+		})
 	}
 }
 

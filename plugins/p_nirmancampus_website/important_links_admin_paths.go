@@ -16,6 +16,11 @@ func init() {
 		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinksCreateView"),
 	})
 
+	_ = lago.RegistryRoute.Register("nirmancampus_website.ImportantLinksImportRoute", lago.Route{
+		Path:    importantLinksAdminUrl + "import/",
+		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinksImportView"),
+	})
+
 	_ = lago.RegistryRoute.Register("nirmancampus_website.ImportantLinksDetailRoute", lago.Route{
 		Path:    importantLinksAdminUrl + "{id}/",
 		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinksDetailView"),

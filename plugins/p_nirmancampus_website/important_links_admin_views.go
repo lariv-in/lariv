@@ -41,6 +41,17 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("important_links_admin.role", importantLinksAdminRoleMiddleware))
 
+	// --- Import ---
+	lago.RegistryView.Register("nirmancampus_website.ImportantLinksImportView",
+		views.JsonImport[ImportantLink](
+			"ImportFile",
+			lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+		)(
+			lago.GetPageView("nirmancampus_website.ImportantLinksImportForm"),
+		).
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("important_links_admin.role", importantLinksAdminRoleMiddleware))
+
 	// --- Update ---
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksUpdateView",
 		views.DetailView[ImportantLink]("link")(

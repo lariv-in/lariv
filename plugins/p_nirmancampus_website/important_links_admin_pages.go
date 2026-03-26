@@ -161,6 +161,42 @@ func registerImportantLinksAdminFormPages() {
 		},
 	})
 
+	lago.RegistryPage.Register("nirmancampus_website.ImportantLinksImportForm", &components.ShellScaffold{
+		Sidebar: []components.PageInterface{
+			lago.DynamicPage{Name: "nirmancampus_website.WebsiteAdminMenu"},
+		},
+		Children: []components.PageInterface{
+			&components.FormComponent[map[string]any]{
+				Url:      lago.GetterRoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
+				Method:   http.MethodPost,
+				Title:    "Import Important Links",
+				Subtitle: "Upload a .json file containing an array of important link objects.",
+				Classes:  "@container",
+				ChildrenInput: []components.PageInterface{
+					&components.InputFile{
+						Label:    "JSON File",
+						Name:     "ImportFile",
+						Required: true,
+						Accept:   ".json,application/json",
+					},
+				},
+				ChildrenAction: []components.PageInterface{
+					components.ContainerRow{
+						Classes: "flex gap-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Import"},
+							&components.ButtonLink{
+								Label:   "Cancel",
+								Link:    lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+								Classes: "btn-outline",
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
 	lago.RegistryPage.Register("nirmancampus_website.ImportantLinksUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksDetailMenu"},
@@ -192,6 +228,17 @@ func registerImportantLinksAdminTablePages() {
 			lago.DynamicPage{Name: "nirmancampus_website.WebsiteAdminMenu"},
 		},
 		Children: []components.PageInterface{
+			components.ContainerRow{
+				Classes: "flex justify-end mb-2",
+				Children: []components.PageInterface{
+					&components.ButtonLink{
+						Label:   "Import JSON",
+						Link:    lago.GetterRoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
+						Icon:    "arrow-up-tray",
+						Classes: "btn-outline btn-sm",
+					},
+				},
+			},
 			&components.DataTable[ImportantLink]{
 				UID:       "important-links-table",
 				Classes:   "w-full",

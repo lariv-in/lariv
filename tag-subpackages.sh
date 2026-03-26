@@ -13,7 +13,6 @@ readonly SUBPACKAGES=(
   "plugins/p_academicrecords_courses"
   "plugins/p_academicrecords_programs"
   "plugins/p_nirmancampus_announcements"
-  "plugins/p_nirmancampus_announcements_semesters"
   "plugins/p_assignmentresults"
   "plugins/p_assignments"
   "plugins/p_assignments_semesters"
