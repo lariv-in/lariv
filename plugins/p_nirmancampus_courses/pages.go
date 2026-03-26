@@ -31,6 +31,10 @@ func registerMenuPages() {
 				Title: getters.GetterStatic("All Courses"),
 				Url:   lago.GetterRoutePath("courses.DefaultRoute", nil),
 			},
+			&components.SidebarMenuItem{
+				Title: getters.GetterStatic("Program Mappings"),
+				Url:   lago.GetterRoutePath("courses.CourseProgramDefaultRoute", nil),
+			},
 		},
 	})
 
@@ -52,6 +56,22 @@ func registerMenuPages() {
 			&components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete Course"),
 				Url:   lago.GetterRoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.GetterStatic("Program Mappings"),
+				Url: getters.GetterFormat(
+					"%s?CourseID=%d",
+					getters.GetterAny(lago.GetterRoutePath("courses.CourseProgramDefaultRoute", nil)),
+					getters.GetterAny(getters.GetterKey[uint]("course.ID")),
+				),
+			},
+			&components.SidebarMenuItem{
+				Title: getters.GetterStatic("Add Program Mapping"),
+				Url: getters.GetterFormat(
+					"%s?CourseID=%d",
+					getters.GetterAny(lago.GetterRoutePath("courses.CourseProgramCreateRoute", nil)),
+					getters.GetterAny(getters.GetterKey[uint]("course.ID")),
+				),
 			},
 		},
 	})
@@ -149,12 +169,6 @@ func courseFormFields() *components.ContainerColumn {
 						Error: getters.GetterKey[error]("$error.Subject"),
 						Children: []components.PageInterface{
 							&components.InputText{Label: "Subject", Name: "Subject", Getter: getters.GetterKey[string]("$in.Subject")},
-						},
-					},
-					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Level"),
-						Children: []components.PageInterface{
-							&components.InputText{Label: "Level", Name: "Level", Getter: getters.GetterKey[string]("$in.Level")},
 						},
 					},
 				},
@@ -259,9 +273,6 @@ func registerTablePages() {
 					{Label: "Subject", Name: "Subject", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Subject")},
 					}},
-					{Label: "Level", Name: "Level", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Level")},
-					}},
 					{Label: "Active", Name: "IsActive", Children: []components.PageInterface{
 						&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsActive")},
 					}},
@@ -297,12 +308,6 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
-								Title: "Level",
-								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Level")},
-								},
-							},
-							&components.LabelInline{
 								Title: "Active",
 								Children: []components.PageInterface{
 									&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$in.IsActive")},
@@ -314,6 +319,7 @@ func registerDetailPages() {
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Description")},
 								},
 							},
+							courseProgramCourseDetailSection(),
 						},
 					},
 				},
@@ -345,7 +351,7 @@ func registerSelectionPages() {
 			&components.DataTable[Course]{
 				UID:             "course-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				OnClick:         getters.GetterSelect("course", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				OnClick:         getters.GetterSelect("CourseID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseSelectionFilter"},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
@@ -353,9 +359,6 @@ func registerSelectionPages() {
 					}},
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
-					}},
-					{Label: "Level", Name: "Level", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Level")},
 					}},
 				},
 			},
@@ -377,9 +380,6 @@ func registerSelectionPages() {
 					}},
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
-					}},
-					{Label: "Level", Name: "Level", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Level")},
 					}},
 				},
 			},
