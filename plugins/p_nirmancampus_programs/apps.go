@@ -5,20 +5,21 @@ import (
 	"net/url"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_programs"
 )
 
+const AppUrl = "/programs/"
+
 func init() {
-	u, err := url.Parse(p_programs.AppUrl)
+	u, err := url.Parse(AppUrl)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	err = lago.RegistryPlugin.Register("p_nirmancampus_programs", lago.Plugin{
-		Type:        lago.PluginTypeAddon,
+		Type:        lago.PluginTypeApp,
 		Icon:        "academic-cap",
 		URL:         u,
-		VerboseName: "Programs (Nirmancampus)",
+		VerboseName: "Programs",
 	})
 	if err != nil {
 		log.Panic(err)

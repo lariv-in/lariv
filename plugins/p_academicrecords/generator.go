@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_students"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +19,7 @@ var sampleStatuses = []string{
 func init() {
 	lago.RegistryGenerator.Register("academicrecords.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var students []p_students.Student
+			var students []p_nirmancampus_students.Student
 			if err := db.Order("id ASC").Find(&students).Error; err != nil {
 				return fmt.Errorf("failed to load students: %w", err)
 			}

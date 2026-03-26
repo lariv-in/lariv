@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_students"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 )
 
 func init() {
@@ -104,14 +104,14 @@ func academicRecordFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.StudentID"),
 						Children: []components.PageInterface{
-							&components.InputForeignKey[p_students.Student]{
+							&components.InputForeignKey[p_nirmancampus_students.Student]{
 								Label:       "Student",
 								Name:        "StudentID",
 								Required:    true,
 								Url:         lago.GetterRoutePath("students.SelectRoute", nil),
 								Display:     getters.GetterKey[string]("$in.StudentNo"),
 								Placeholder: "Select a student...",
-								Getter: getters.GetterAssociation[p_students.Student](
+								Getter: getters.GetterAssociation[p_nirmancampus_students.Student](
 									getters.GetterKey[uint]("$in.StudentID"),
 								),
 							},

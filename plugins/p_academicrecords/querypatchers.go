@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/lago/plugins/p_students"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -58,7 +58,7 @@ func AcademicRecordScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *
 	case "superuser":
 		return query
 	case "student":
-		sub := db.Model(&p_students.Student{}).Select("id").Where("user_id = ?", user.ID)
+		sub := db.Model(&p_nirmancampus_students.Student{}).Select("id").Where("user_id = ?", user.ID)
 		return query.Where("student_id IN (?)", sub)
 	default:
 		return query.Where("1 = 0")

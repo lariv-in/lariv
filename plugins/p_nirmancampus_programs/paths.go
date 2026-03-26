@@ -1,4 +1,4 @@
-package p_programs
+package p_nirmancampus_programs
 
 import (
 	"github.com/lariv-in/lago/lago"
@@ -39,4 +39,3 @@ func registerRoutes() {
 func init() {
 	registerRoutes()
 }
-

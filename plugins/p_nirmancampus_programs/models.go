@@ -4,25 +4,39 @@ import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_programs"
 	"gorm.io/gorm"
 )
 
-// NirmancampusProgramDetails is a one-to-one extension of p_programs.Program.
-type NirmancampusProgramDetails struct {
+// Program is the single programs row for Nirmancampus (replaces p_programs.Program + NirmancampusProgramDetails).
+//
+// If you already had data in nirmancampus_program_details, after AutoMigrate adds programs.university (PostgreSQL):
+//
+//	UPDATE programs AS p
+//	SET university = d.university
+//	FROM nirmancampus_program_details AS d
+//	WHERE d.program_id = p.id AND d.deleted_at IS NULL;
+//	DROP TABLE nirmancampus_program_details;
+//
+// Confirm table/column names in your database before running.
+type Program struct {
 	gorm.Model
 
-	ProgramID uint `gorm:"uniqueIndex;not null"`
-	Program   p_programs.Program `gorm:"constraint:OnDelete:CASCADE;foreignKey:ProgramID;references:ID"`
-
-	University string `gorm:"type:varchar(32);not null;default:''"`
+	Name        string
+	Code        string `gorm:"uniqueIndex"`
+	Description string
+	University  string `gorm:"type:varchar(32);not null;default:''"`
 }
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&NirmancampusProgramDetails{}); err != nil {
-			log.Panicf("failed to migrate NirmancampusProgramDetails: %v", err)
+		if err := d.AutoMigrate(&Program{}); err != nil {
+			log.Panicf("failed to migrate Program: %v", err)
 		}
 		return d
+	})
+
+	lago.RegistryAdmin.Register("p_nirmancampus_programs", lago.AdminPanel[Program]{
+		SearchField: "Name",
+		ListFields:  []string{"Name", "Code", "University"},
 	})
 }

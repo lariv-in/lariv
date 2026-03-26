@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_students"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +13,7 @@ type AcademicRecord struct {
 	gorm.Model
 
 	StudentID uint `gorm:"notnull;index"`
-	Student   p_students.Student `gorm:"constraint:OnDelete:CASCADE;foreignKey:StudentID;references:ID"`
+	Student   p_nirmancampus_students.Student `gorm:"constraint:OnDelete:CASCADE;foreignKey:StudentID;references:ID"`
 
 	Status string `gorm:"type:varchar(50);notnull"`
 }

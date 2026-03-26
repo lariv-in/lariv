@@ -7,7 +7,7 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/plugins/p_programs"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"gorm.io/gorm"
 )
 
@@ -132,7 +132,7 @@ func loadFileNodes(db *gorm.DB) ([]p_filesystem.VNode, error) {
 func init() {
 	lago.RegistryGenerator.Register("studentapplications.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var programs []p_programs.Program
+			var programs []p_nirmancampus_programs.Program
 			if err := db.Find(&programs).Error; err != nil {
 				return fmt.Errorf("load programs: %w", err)
 			}

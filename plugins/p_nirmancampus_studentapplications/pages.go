@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/plugins/p_programs"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 )
 
 func init() {
@@ -118,11 +118,11 @@ func applicationFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.ProgramID"),
 						Children: []components.PageInterface{
-							&components.InputForeignKey[p_programs.Program]{
+							&components.InputForeignKey[p_nirmancampus_programs.Program]{
 								Label:       "Program",
 								Name:        "ProgramID",
 								Required:    true,
-								Getter:      getters.GetterAssociation[p_programs.Program](getters.GetterKey[uint]("$in.ProgramID")),
+								Getter:      getters.GetterAssociation[p_nirmancampus_programs.Program](getters.GetterKey[uint]("$in.ProgramID")),
 								Url:         lago.GetterRoutePath("programs.SelectRoute", nil),
 								Display:     getters.GetterKey[string]("$in.Name"),
 								Placeholder: "Select a program...",

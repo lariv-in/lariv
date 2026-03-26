@@ -4,19 +4,14 @@ toolchain go1.26.1
 
 use (
 	./components
-	./deployments/lariv
 	./deployments/nirmancampus
 	./deployments/totschool_lago
 	./getters
 	./lago
 	./plugins/p_academicrecords
-	./plugins/p_academicrecords_courses
-	./plugins/p_academicrecords_programs
 	./plugins/p_announcements
-	./plugins/p_announcements_semesters
 	./plugins/p_assignmentresults
 	./plugins/p_assignments
-	./plugins/p_assignments_semesters
 	./plugins/p_contacts
 	./plugins/p_courses
 	./plugins/p_courses_teachers
@@ -28,10 +23,8 @@ use (
 	./plugins/p_nirmancampus_users
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp
-	./plugins/p_programs
 	./plugins/p_pwa
 	./plugins/p_semesters
-	./plugins/p_students
 	./plugins/p_teachers
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals

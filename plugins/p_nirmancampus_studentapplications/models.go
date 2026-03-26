@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_programs"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +15,7 @@ type StudentApplication struct {
 
 	Name              string `gorm:"notnull"`
 	ProgramID         uint   `gorm:"notnull"`
-	Program           p_programs.Program
+	Program           p_nirmancampus_programs.Program
 	StudentName       string `gorm:"notnull"`
 	FatherName        string
 	Category          string

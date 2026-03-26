@@ -5,8 +5,6 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	_ "github.com/lariv-in/lago/plugins/p_academicrecords"
-	_ "github.com/lariv-in/lago/plugins/p_academicrecords_courses"
-	_ "github.com/lariv-in/lago/plugins/p_academicrecords_programs"
 	_ "github.com/lariv-in/lago/plugins/p_announcements"
 	_ "github.com/lariv-in/lago/plugins/p_assignmentresults"
 	_ "github.com/lariv-in/lago/plugins/p_assignments"
@@ -20,9 +18,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_users"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_website"
 	_ "github.com/lariv-in/lago/plugins/p_otp"
-	_ "github.com/lariv-in/lago/plugins/p_programs"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
-	_ "github.com/lariv-in/lago/plugins/p_students"
 	_ "github.com/lariv-in/lago/plugins/p_teachers"
 	_ "github.com/lariv-in/lago/plugins/p_users"
 )

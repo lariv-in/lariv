@@ -6,7 +6,8 @@ require (
 	github.com/lariv-in/lago/components v0.5.5
 	github.com/lariv-in/lago/getters v0.5.5
 	github.com/lariv-in/lago/lago v0.5.5
-	github.com/lariv-in/lago/plugins/p_students v0.5.5
+	github.com/lariv-in/lago/plugins/p_filesystem v0.5.5
+	github.com/lariv-in/lago/plugins/p_users v0.5.6
 	github.com/lariv-in/lago/views v0.5.5
 	gorm.io/gorm v1.31.1
 )
@@ -43,8 +44,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/lariv-in/lago/plugins/p_filesystem v0.5.5 // indirect
-	github.com/lariv-in/lago/plugins/p_users v0.5.6 // indirect
 	github.com/lariv-in/lago/registry v0.5.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect

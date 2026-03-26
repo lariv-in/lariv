@@ -9,7 +9,6 @@ require (
 	github.com/lariv-in/lago/plugins/p_announcements v0.5.5
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.5
 	github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.5.5
-	github.com/lariv-in/lago/plugins/p_programs v0.5.5
 	github.com/lariv-in/lago/plugins/p_users v0.5.6
 	github.com/lariv-in/lago/views v0.5.5
 	gorm.io/gorm v1.31.1
@@ -70,3 +69,5 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
+
+replace github.com/lariv-in/lago/plugins/p_nirmancampus_programs => ../p_nirmancampus_programs

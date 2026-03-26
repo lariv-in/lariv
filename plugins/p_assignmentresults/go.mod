@@ -46,8 +46,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.5 // indirect
-	github.com/lariv-in/lago/plugins/p_semesters v0.5.5 // indirect
-	github.com/lariv-in/lago/plugins/p_students v0.5.5 // indirect
+	github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.0.0-00010101000000-000000000000 // indirect
 	github.com/lariv-in/lago/registry v0.5.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
@@ -71,3 +70,7 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
+
+replace github.com/lariv-in/lago/plugins/p_academicrecords => ../p_academicrecords
+
+replace github.com/lariv-in/lago/plugins/p_nirmancampus_students => ../p_nirmancampus_students
