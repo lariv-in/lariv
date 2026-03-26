@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"gorm.io/gorm"
@@ -21,7 +22,10 @@ type AcademicRecord struct {
 
 	Status string `gorm:"type:varchar(50);notnull"`
 
-	Semester uint `gorm:"not null;index;default:1"`
+	// SemesterOrYear holds labels like "Semester 1" or "Year 2" depending on program structure.
+	SemesterOrYear string `gorm:"type:varchar(100);not null;index;default:''"`
+
+	Courses []p_nirmancampus_courses.Course `gorm:"many2many:academic_record_courses;"`
 }
 
 func init() {
@@ -34,7 +38,7 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_academicrecords", lago.AdminPanel[AcademicRecord]{
 		SearchField: "Status",
-		ListFields:  []string{"Status", "Semester", "Program.Name", "Student.StudentNo", "UpdatedAt"},
-		Preload:     []string{"Student.User", "Program"},
+		ListFields:  []string{"Status", "SemesterOrYear", "Program.Name", "Student.StudentNo", "UpdatedAt"},
+		Preload:     []string{"Student.User", "Program", "Courses"},
 	})
 }

@@ -5,34 +5,34 @@ import (
 )
 
 func registerRoutes() {
-	_ = lago.RegistryRoute.Register("semesters.DefaultRoute", lago.Route{
+	_ = lago.RegistryRoute.Register("sessions.DefaultRoute", lago.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("semesters.ListView"),
+		Handler: lago.NewDynamicView("sessions.ListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("semesters.CreateRoute", lago.Route{
+	_ = lago.RegistryRoute.Register("sessions.CreateRoute", lago.Route{
 		Path:    AppUrl + "create/",
-		Handler: lago.NewDynamicView("semesters.CreateView"),
+		Handler: lago.NewDynamicView("sessions.CreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("semesters.DetailRoute", lago.Route{
+	_ = lago.RegistryRoute.Register("sessions.DetailRoute", lago.Route{
 		Path:    AppUrl + "{id}/",
-		Handler: lago.NewDynamicView("semesters.DetailView"),
+		Handler: lago.NewDynamicView("sessions.DetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("semesters.UpdateRoute", lago.Route{
+	_ = lago.RegistryRoute.Register("sessions.UpdateRoute", lago.Route{
 		Path:    AppUrl + "{id}/edit/",
-		Handler: lago.NewDynamicView("semesters.UpdateView"),
+		Handler: lago.NewDynamicView("sessions.UpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("semesters.DeleteRoute", lago.Route{
+	_ = lago.RegistryRoute.Register("sessions.DeleteRoute", lago.Route{
 		Path:    AppUrl + "{id}/delete/",
-		Handler: lago.NewDynamicView("semesters.DeleteView"),
+		Handler: lago.NewDynamicView("sessions.DeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("semesters.SelectRoute", lago.Route{
+	_ = lago.RegistryRoute.Register("sessions.SelectRoute", lago.Route{
 		Path:    AppUrl + "select/",
-		Handler: lago.NewDynamicView("semesters.SelectView"),
+		Handler: lago.NewDynamicView("sessions.SelectView"),
 	})
 }
 

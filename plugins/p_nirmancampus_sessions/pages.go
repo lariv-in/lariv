@@ -22,42 +22,42 @@ func init() {
 // --- Menus ---
 
 func registerMenuPages() {
-	lago.RegistryPage.Register("semesters.SemesterMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Semesters"),
+	lago.RegistryPage.Register("sessions.SemesterMenu", &components.SidebarMenu{
+		Title: getters.GetterStatic("sessions"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to All Apps"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("All Semesters"),
-				Url:   lago.GetterRoutePath("semesters.DefaultRoute", nil),
+				Title: getters.GetterStatic("All sessions"),
+				Url:   lago.GetterRoutePath("sessions.DefaultRoute", nil),
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("semesters.SemesterDetailMenu", &components.SidebarMenu{
+	lago.RegistryPage.Register("sessions.SemesterDetailMenu", &components.SidebarMenu{
 		Title: getters.GetterFormat("Semester: %s", getters.GetterAny(getters.GetterKey[string]("semester.Name"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to all Semesters"),
-			Url:   lago.GetterRoutePath("semesters.DefaultRoute", nil),
+			Title: getters.GetterStatic("Back to all sessions"),
+			Url:   lago.GetterRoutePath("sessions.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.GetterStatic("Semester Detail"),
-				Url: lago.GetterRoutePath("semesters.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.GetterRoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("semester.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.GetterStatic("Edit Semester"),
-				Url: lago.GetterRoutePath("semesters.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.GetterRoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("semester.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.GetterStatic("Delete Semester"),
-				Url: lago.GetterRoutePath("semesters.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.GetterRoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("semester.ID")),
 				}),
 			},
@@ -68,8 +68,8 @@ func registerMenuPages() {
 // --- Filters ---
 
 func registerFilterPages() {
-	lago.RegistryPage.Register("semesters.SemesterFilter", &components.FormComponent[Semester]{
-		Url:    lago.GetterRoutePath("semesters.DefaultRoute", nil),
+	lago.RegistryPage.Register("sessions.SemesterFilter", &components.FormComponent[Semester]{
+		Url:    lago.GetterRoutePath("sessions.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -97,8 +97,8 @@ func registerFilterPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("semesters.SemesterSelectionFilter", &components.FormComponent[Semester]{
-		Url:    lago.GetterRoutePath("semesters.SelectRoute", nil),
+	lago.RegistryPage.Register("sessions.sessionselectionFilter", &components.FormComponent[Semester]{
+		Url:    lago.GetterRoutePath("sessions.SelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -161,7 +161,7 @@ func semesterCodeInputGetter() getters.Getter[string] {
 func semesterFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{
-			Key: "semesters.SemesterFormFieldsBody",
+			Key: "sessions.SemesterFormFieldsBody",
 		},
 		Children: []components.PageInterface{
 			components.ContainerRow{
@@ -235,15 +235,15 @@ func semesterFormFields() components.ContainerColumn {
 // --- Form Pages ---
 
 func registerFormPages() {
-	lago.RegistryPage.Register("semesters.SemesterFormFields", semesterFormFields())
+	lago.RegistryPage.Register("sessions.SemesterFormFields", semesterFormFields())
 
-	lago.RegistryPage.Register("semesters.SemesterCreateForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("sessions.SemesterCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "semesters.SemesterMenu"},
+			lago.DynamicPage{Name: "sessions.SemesterMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Semester]{
-				Url:      lago.GetterRoutePath("semesters.CreateRoute", nil),
+				Url:      lago.GetterRoutePath("sessions.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Semester",
 				Subtitle: "Create a new semester",
@@ -258,14 +258,14 @@ func registerFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("semesters.SemesterUpdateForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("sessions.SemesterUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "semesters.SemesterDetailMenu"},
+			lago.DynamicPage{Name: "sessions.SemesterDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Semester]{
 				Getter: getters.GetterKey[Semester]("semester"),
-				Url: lago.GetterRoutePath("semesters.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.GetterRoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -286,23 +286,23 @@ func registerFormPages() {
 // --- Tables ---
 
 func registerTablePages() {
-	lago.RegistryPage.Register("semesters.SemesterTable", &components.ShellScaffold{
+	lago.RegistryPage.Register("sessions.SemesterTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "semesters.SemesterMenu"},
+			lago.DynamicPage{Name: "sessions.SemesterMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Semester]{
-				Page:      components.Page{Key: "semesters.SemesterTableBody"},
+				Page:      components.Page{Key: "sessions.SemesterTableBody"},
 				UID:       "semester-table",
 				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[Semester]]("semesters"),
-				CreateUrl: lago.GetterRoutePath("semesters.CreateRoute", nil),
+				Data:      getters.GetterKey[components.ObjectList[Semester]]("sessions"),
+				CreateUrl: lago.GetterRoutePath("sessions.CreateRoute", nil),
 				OnClick: getters.GetterNavigateGetter(
-					lago.GetterRoutePath("semesters.DetailRoute", map[string]getters.Getter[any]{
+					lago.GetterRoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 					}),
 				),
-				FilterComponent: lago.DynamicPage{Name: "semesters.SemesterFilter"},
+				FilterComponent: lago.DynamicPage{Name: "sessions.SemesterFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
@@ -348,16 +348,16 @@ func registerTablePages() {
 // --- Detail & Delete ---
 
 func registerDetailPages() {
-	lago.RegistryPage.Register("semesters.SemesterDetail", &components.ShellScaffold{
+	lago.RegistryPage.Register("sessions.SemesterDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "semesters.SemesterDetailMenu"},
+			lago.DynamicPage{Name: "sessions.SemesterDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Semester]{
 				Getter: getters.GetterKey[Semester]("semester"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
-						Page: components.Page{Key: "semesters.SemesterDetailContent"},
+						Page: components.Page{Key: "sessions.SemesterDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
 							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Code")},
@@ -386,15 +386,15 @@ func registerDetailPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("semesters.SemesterDeleteForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("sessions.SemesterDeleteForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "semesters.SemesterDetailMenu"},
+			lago.DynamicPage{Name: "sessions.SemesterDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this semester?",
-				CancelUrl: lago.GetterRoutePath("semesters.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.GetterRoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("semester.ID")),
 				}),
 			},
@@ -405,16 +405,16 @@ func registerDetailPages() {
 // --- Selection Tables ---
 
 func registerSelectionPages() {
-	lago.RegistryPage.Register("semesters.SemesterSelectionTable", &components.Modal{
+	lago.RegistryPage.Register("sessions.sessionselectionTable", &components.Modal{
 		UID:   "semester-selection-modal",
 		Title: "Select Semester",
 		Children: []components.PageInterface{
 			&components.DataTable[Semester]{
-				Page:            components.Page{Key: "semesters.SemesterSelectionTableBody"},
+				Page:            components.Page{Key: "sessions.sessionselectionTableBody"},
 				UID:             "semester-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[Semester]]("semesters"),
+				Data:            getters.GetterKey[components.ObjectList[Semester]]("sessions"),
 				OnClick:         getters.GetterSelect("SemesterID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "semesters.SemesterSelectionFilter"},
+				FilterComponent: lago.DynamicPage{Name: "sessions.sessionselectionFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",

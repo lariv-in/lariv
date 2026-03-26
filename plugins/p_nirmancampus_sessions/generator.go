@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	lago.RegistryGenerator.Register("semesters.Generator", lago.Generator{
+	lago.RegistryGenerator.Register("sessions.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
 			loc := time.UTC
 			now := time.Now().In(loc)
@@ -54,7 +54,7 @@ func init() {
 				}
 			}
 
-			fmt.Printf("Created 3 semesters: previous (id=%d), current (id=%d), upcoming (id=%d)\n",
+			fmt.Printf("Created 3 sessions: previous (id=%d), current (id=%d), upcoming (id=%d)\n",
 				rows[0].ID, rows[1].ID, rows[2].ID)
 			return nil
 		},

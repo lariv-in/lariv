@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
-const AppUrl = "/semesters/"
+const AppUrl = "/sessions/"
 
 func init() {
 	u, err := url.Parse(AppUrl)
@@ -19,10 +19,9 @@ func init() {
 		Type:        lago.PluginTypeApp,
 		Icon:        "calendar",
 		URL:         u,
-		VerboseName: "Semesters",
+		VerboseName: "Sessions",
 	})
 	if err != nil {
 		log.Panic(err)
 	}
 }
-

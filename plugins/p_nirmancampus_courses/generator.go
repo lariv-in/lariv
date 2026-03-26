@@ -2,7 +2,6 @@ package p_nirmancampus_courses
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/lariv-in/lago/lago"
 	"gorm.io/gorm"
@@ -80,9 +79,6 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
-			if err := db.Exec("DELETE FROM course_teachers").Error; err != nil {
-				slog.Error("failed clearing course_teachers join table", "error", err)
-			}
 			return db.Unscoped().Where("1=1").Delete(&Course{}).Error
 		},
 	})

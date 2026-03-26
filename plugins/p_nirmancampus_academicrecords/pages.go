@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 )
@@ -78,10 +79,10 @@ func registerFilterPages() {
 				Name:   "Status",
 				Getter: getters.GetterKey[string]("$get.Status"),
 			},
-			&components.InputNumber{
-				Label:  "Semester",
-				Name:   "Semester",
-				Getter: academicRecordSemesterQueryGetter(),
+			&components.InputText{
+				Label:  "Semester / year",
+				Name:   "SemesterOrYear",
+				Getter: getters.GetterKey[string]("$get.SemesterOrYear"),
 			},
 			&components.InputForeignKey[p_nirmancampus_programs.Program]{
 				Label:       "Program",
@@ -107,18 +108,6 @@ func registerFilterPages() {
 }
 
 // --- Form Fields ---
-
-func academicRecordSemesterQueryGetter() getters.Getter[int] {
-	return func(ctx context.Context) (int, error) {
-		if v, err := getters.GetterKey[int]("$get.Semester")(ctx); err == nil {
-			return v, nil
-		}
-		if v, err := getters.GetterKey[uint]("$get.Semester")(ctx); err == nil {
-			return int(v), nil
-		}
-		return 0, nil
-	}
-}
 
 func academicRecordFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
@@ -178,17 +167,28 @@ func academicRecordFormFields() components.ContainerColumn {
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Semester"),
+						Error: getters.GetterKey[error]("$error.SemesterOrYear"),
 						Children: []components.PageInterface{
-							&components.InputNumber{
-								Label:    "Semester",
-								Name:     "Semester",
+							&components.InputText{
+								Label:    "Semester / year",
+								Name:     "SemesterOrYear",
 								Required: true,
-								Getter: getters.GetterNumberCast[int](
-									getters.GetterKey[uint]("$in.Semester"),
-								),
+								Getter:   getters.GetterKey[string]("$in.SemesterOrYear"),
 							},
 						},
+					},
+				},
+			},
+			&components.ContainerError{
+				Error: getters.GetterKey[error]("$error.Courses"),
+				Children: []components.PageInterface{
+					&components.InputManyToMany[p_nirmancampus_courses.Course]{
+						Label:       "Courses",
+						Name:        "Courses",
+						Getter:      getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.Courses"),
+						Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
+						Display:     getters.GetterKey[string]("$in.Name"),
+						Placeholder: "Select courses...",
 					},
 				},
 			},
@@ -304,12 +304,10 @@ func registerTablePages() {
 						},
 					},
 					{
-						Label: "Semester",
-						Name:  "Semester",
+						Label: "Semester / year",
+						Name:  "SemesterOrYear",
 						Children: []components.PageInterface{
-							&components.FieldText{
-								Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("$row.Semester"))),
-							},
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.SemesterOrYear")},
 						},
 					},
 				},
@@ -347,10 +345,21 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
-								Title: "Semester",
+								Title: "Semester / year",
 								Children: []components.PageInterface{
-									&components.FieldText{
-										Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("$in.Semester"))),
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.SemesterOrYear")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Courses",
+								Children: []components.PageInterface{
+									&components.FieldManyToMany[p_nirmancampus_courses.Course]{
+										Getter:  getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.Courses"),
+										Display: getters.GetterKey[string]("$in.Name"),
+										Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
+											"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+										}),
+										Classes: "w-full",
 									},
 								},
 							},
@@ -389,10 +398,10 @@ func registerSelectionPages() {
 				UID:  "academicrecords-selection-table",
 				Data: getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
 				OnClick: getters.GetterSelect("AcademicRecordID", getters.GetterKey[uint]("$row.ID"), getters.GetterFormat(
-					"%s · %s · sem %d",
+					"%s · %s · %s",
 					getters.GetterAny(getters.GetterKey[string]("$row.Program.Name")),
 					getters.GetterAny(getters.GetterKey[string]("$row.Status")),
-					getters.GetterAny(getters.GetterKey[uint]("$row.Semester")),
+					getters.GetterAny(getters.GetterKey[string]("$row.SemesterOrYear")),
 				)),
 				Columns: []components.TableColumn{
 					{
@@ -417,12 +426,10 @@ func registerSelectionPages() {
 						},
 					},
 					{
-						Label: "Semester",
-						Name:  "Semester",
+						Label: "Semester / year",
+						Name:  "SemesterOrYear",
 						Children: []components.PageInterface{
-							&components.FieldText{
-								Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("$row.Semester"))),
-							},
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.SemesterOrYear")},
 						},
 					},
 				},

@@ -12,12 +12,12 @@ import (
 
 func init() {
 	// List view.
-	lago.RegistryView.Register("semesters.ListView",
-		views.ListView[Semester]("semesters")(
-			lago.GetPageView("semesters.SemesterTable"),
+	lago.RegistryView.Register("sessions.ListView",
+		views.ListView[Semester]("sessions")(
+			lago.GetPageView("sessions.SemesterTable"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("semesters.filter_is_active", func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+			WithQueryPatcher("sessions.filter_is_active", func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 				getMap, ok := r.Context().Value("$get").(map[string]any)
 				if !ok {
 					return query
@@ -44,54 +44,54 @@ func init() {
 			}))
 
 	// Detail view.
-	lago.RegistryView.Register("semesters.DetailView",
+	lago.RegistryView.Register("sessions.DetailView",
 		views.DetailView[Semester]("semester")(
-			lago.GetPageView("semesters.SemesterDetail"),
+			lago.GetPageView("sessions.SemesterDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	// Create view.
-	lago.RegistryView.Register("semesters.CreateView",
+	lago.RegistryView.Register("sessions.CreateView",
 		views.CreateView[Semester](
-			lago.GetterRoutePath("semesters.DetailRoute", map[string]getters.Getter[any]{
+			lago.GetterRoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 				"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 			}),
 		)(
-			lago.GetPageView("semesters.SemesterCreateForm"),
+			lago.GetPageView("sessions.SemesterCreateForm"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	// Update view.
-	lago.RegistryView.Register("semesters.UpdateView",
+	lago.RegistryView.Register("sessions.UpdateView",
 		views.DetailView[Semester]("semester")(
 			views.UpdateView[Semester](
-				lago.GetterRoutePath("semesters.DetailRoute", map[string]getters.Getter[any]{
+				lago.GetterRoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
 			)(
-				lago.GetPageView("semesters.SemesterUpdateForm"),
+				lago.GetPageView("sessions.SemesterUpdateForm"),
 			),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	// Delete view.
-	lago.RegistryView.Register("semesters.DeleteView",
+	lago.RegistryView.Register("sessions.DeleteView",
 		views.DetailView[Semester]("semester")(
 			views.DeleteView[Semester](
-				lago.GetterRoutePath("semesters.DefaultRoute", nil),
+				lago.GetterRoutePath("sessions.DefaultRoute", nil),
 			)(
-				lago.GetPageView("semesters.SemesterDeleteForm"),
+				lago.GetPageView("sessions.SemesterDeleteForm"),
 			),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	// Selection view.
-	lago.RegistryView.Register("semesters.SelectView",
-		views.ListView[Semester]("semesters")(
-			lago.GetPageView("semesters.SemesterSelectionTable"),
+	lago.RegistryView.Register("sessions.SelectView",
+		views.ListView[Semester]("sessions")(
+			lago.GetPageView("sessions.sessionselectionTable"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("semesters.filter_is_active", func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+			WithQueryPatcher("sessions.filter_is_active", func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 				getMap, ok := r.Context().Value("$get").(map[string]any)
 				if !ok {
 					return query
