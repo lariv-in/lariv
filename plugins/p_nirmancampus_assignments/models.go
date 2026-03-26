@@ -1,4 +1,4 @@
-package p_assignments
+package p_nirmancampus_assignments
 
 import (
 	"log"
@@ -29,7 +29,7 @@ func init() {
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_assignments", lago.AdminPanel[Assignment]{
+	lago.RegistryAdmin.Register("p_nirmancampus_assignments", lago.AdminPanel[Assignment]{
 		SearchField: "Name",
 		ListFields: []string{
 			"Name",

@@ -1,18 +1,18 @@
-package p_assignmentresults
+package p_nirmancampus_assignmentresults
 
 import (
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
-	"github.com/lariv-in/lago/plugins/p_assignments"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_assignments"
 	"gorm.io/gorm"
 )
 
 func init() {
 	lago.RegistryGenerator.Register("assignmentresults.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var asg p_assignments.Assignment
+			var asg p_nirmancampus_assignments.Assignment
 			if err := db.Order("id ASC").First(&asg).Error; err != nil {
 				return fmt.Errorf("assignmentresults generator needs at least one assignment: %w", err)
 			}

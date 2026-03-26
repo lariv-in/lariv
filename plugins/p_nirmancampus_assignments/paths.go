@@ -1,4 +1,4 @@
-package p_assignments
+package p_nirmancampus_assignments
 
 import (
 	"github.com/lariv-in/lago/lago"

@@ -1,6 +1,6 @@
-// Package p_assignments registers assignments.Generator for sample assignments (no semester FK).
-// With p_assignments_semesters, list assignments_semesters.Generator after this in GeneratorOrder.
-package p_assignments
+// Package p_nirmancampus_assignments registers assignments.Generator for sample assignments (no semester FK).
+// With p_nirmancampus_assignments_semesters, list assignments_semesters.Generator after this in GeneratorOrder.
+package p_nirmancampus_assignments
 
 import (
 	"fmt"

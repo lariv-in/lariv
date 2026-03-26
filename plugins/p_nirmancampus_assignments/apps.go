@@ -1,4 +1,4 @@
-package p_assignments
+package p_nirmancampus_assignments
 
 import (
 	"log"
@@ -15,7 +15,7 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugin.Register("p_assignments", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_nirmancampus_assignments", lago.Plugin{
 		Type:        lago.PluginTypeApp,
 		Icon:        "document-text",
 		URL:         u,

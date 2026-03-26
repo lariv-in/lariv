@@ -1,4 +1,4 @@
-package p_assignmentresults
+package p_nirmancampus_assignmentresults
 
 import (
 	"log"
@@ -8,7 +8,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
-	"github.com/lariv-in/lago/plugins/p_assignments"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_assignments"
 )
 
 func init() {
@@ -111,14 +111,14 @@ func assignmentResultFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.AssignmentID"),
 						Children: []components.PageInterface{
-							&components.InputForeignKey[p_assignments.Assignment]{
+							&components.InputForeignKey[p_nirmancampus_assignments.Assignment]{
 								Label:       "Assignment",
 								Name:        "AssignmentID",
 								Required:    true,
 								Url:         lago.GetterRoutePath("assignments.SelectRoute", nil),
 								Display:     getters.GetterKey[string]("$in.Name"),
 								Placeholder: "Select an assignment...",
-								Getter: getters.GetterAssociation[p_assignments.Assignment](
+								Getter: getters.GetterAssociation[p_nirmancampus_assignments.Assignment](
 									getters.GetterKey[uint]("$in.AssignmentID"),
 								),
 							},

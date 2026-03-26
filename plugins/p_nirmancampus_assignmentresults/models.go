@@ -1,11 +1,11 @@
-package p_assignmentresults
+package p_nirmancampus_assignmentresults
 
 import (
 	"log"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
-	"github.com/lariv-in/lago/plugins/p_assignments"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_assignments"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +14,7 @@ type AssignmentResult struct {
 	gorm.Model
 
 	AssignmentID uint                     `gorm:"notnull;index;uniqueIndex:idx_assignment_result_pair"`
-	Assignment   p_assignments.Assignment `gorm:"constraint:OnDelete:CASCADE;foreignKey:AssignmentID;references:ID"`
+	Assignment   p_nirmancampus_assignments.Assignment `gorm:"constraint:OnDelete:CASCADE;foreignKey:AssignmentID;references:ID"`
 
 	AcademicRecordID uint                             `gorm:"notnull;index;uniqueIndex:idx_assignment_result_pair"`
 	AcademicRecord   p_nirmancampus_academicrecords.AcademicRecord `gorm:"constraint:OnDelete:CASCADE;foreignKey:AcademicRecordID;references:ID"`
@@ -31,7 +31,7 @@ func init() {
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_assignmentresults", lago.AdminPanel[AssignmentResult]{
+	lago.RegistryAdmin.Register("p_nirmancampus_assignmentresults", lago.AdminPanel[AssignmentResult]{
 		SearchField: "Remarks",
 		ListFields: []string{
 			"Assignment.Name",

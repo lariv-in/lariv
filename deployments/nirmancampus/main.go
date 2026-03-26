@@ -5,8 +5,8 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
-	_ "github.com/lariv-in/lago/plugins/p_assignmentresults"
-	_ "github.com/lariv-in/lago/plugins/p_assignments"
+	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentresults"
+	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_assignments"
 	_ "github.com/lariv-in/lago/plugins/p_dashboard"
 	_ "github.com/lariv-in/lago/plugins/p_filesystem"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_announcements"

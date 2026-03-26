@@ -1,4 +1,4 @@
-package p_assignments
+package p_nirmancampus_assignments
 
 import (
 	"net/http"

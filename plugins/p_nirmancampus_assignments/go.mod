@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/plugins/p_assignments
+module github.com/lariv-in/lago/plugins/p_nirmancampus_assignments
 
 go 1.26.1
 

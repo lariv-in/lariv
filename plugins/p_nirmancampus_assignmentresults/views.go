@@ -1,4 +1,4 @@
-package p_assignmentresults
+package p_nirmancampus_assignmentresults
 
 import (
 	"context"

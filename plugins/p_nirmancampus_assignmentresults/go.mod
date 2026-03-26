@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/plugins/p_assignmentresults
+module github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentresults
 
 go 1.26.1
 
@@ -6,7 +6,6 @@ require (
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
-	github.com/lariv-in/lago/plugins/p_assignments v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords v0.0.0
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
