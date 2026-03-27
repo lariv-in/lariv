@@ -13,6 +13,7 @@ use (
 	./plugins/p_filesystem
 	./plugins/p_nirmancampus_academicrecords
 	./plugins/p_nirmancampus_announcements
+	./plugins/p_nirmancampus_assignmentsubmissions
 	./plugins/p_nirmancampus_courses
 	./plugins/p_nirmancampus_programs
 	./plugins/p_nirmancampus_sessions
