@@ -37,7 +37,16 @@ func registerMenuPages() {
 	})
 
 	lago.RegistryPage.Register("studentapplications.ApplicationDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Application: %s", getters.GetterAny(getters.GetterKey[string]("studentapplication.StudentName"))),
+		Title: getters.GetterFormat(
+			"Application: %s",
+			getters.GetterAny(getters.IfOrElseGetter(
+				getters.GetterKey[string]("studentapplication.StudentName"),
+				getters.IfOrElseGetter(
+					getters.GetterKey[string]("$in.StudentName"),
+					getters.GetterStatic("Application"),
+				),
+			)),
+		),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to all applications"),
 			Url:   lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
@@ -46,21 +55,39 @@ func registerMenuPages() {
 			&components.SidebarMenuItem{
 				Title: getters.GetterStatic("Application detail"),
 				Url: lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("studentapplication.ID")),
+					"id": getters.GetterAny(getters.IfOrElseGetter(
+						getters.GetterKey[uint]("studentapplication.ID"),
+						getters.IfOrElseGetter(
+							getters.GetterKey[uint]("$in.ID"),
+							getters.GetterParseUint(getters.GetterKey[string]("$path.id")),
+						),
+					)),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Edit application"),
 				Url: lago.GetterRoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("studentapplication.ID")),
+					"id": getters.GetterAny(getters.IfOrElseGetter(
+						getters.GetterKey[uint]("studentapplication.ID"),
+						getters.IfOrElseGetter(
+							getters.GetterKey[uint]("$in.ID"),
+							getters.GetterParseUint(getters.GetterKey[string]("$path.id")),
+						),
+					)),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Delete application"),
 				Url: lago.GetterRoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("studentapplication.ID")),
+					"id": getters.GetterAny(getters.IfOrElseGetter(
+						getters.GetterKey[uint]("studentapplication.ID"),
+						getters.IfOrElseGetter(
+							getters.GetterKey[uint]("$in.ID"),
+							getters.GetterParseUint(getters.GetterKey[string]("$path.id")),
+						),
+					)),
 				}),
 			},
 		},
@@ -235,11 +262,23 @@ func applicationFormFields() components.ContainerColumn {
 							&p_filesystem.InputVNode{
 								Label:            "Photo",
 								Name:             "PhotoID",
-								VNode:            getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.PhotoID"))),
+								VNode: func(ctx context.Context) (p_filesystem.VNode, error) {
+									var zero p_filesystem.VNode
+									if id, err := getters.GetterDeref(getters.GetterKey[*uint]("$in.PhotoID"))(ctx); err == nil && id != 0 {
+										return getters.GetterAssociation[p_filesystem.VNode](getters.GetterStatic(id))(ctx)
+									}
+									if id, err := getters.GetterKey[uint]("$in.PhotoID")(ctx); err == nil && id != 0 {
+										return getters.GetterAssociation[p_filesystem.VNode](getters.GetterStatic(id))(ctx)
+									}
+									return zero, nil
+								},
 								AllowedFiletypes: []string{".jpg", ".jpeg", ".png", ".webp"},
 								Path: getters.GetterFormat(
-									"/studentapplications/%s-%u/",
-									getters.GetterAny(getters.GetterKey[string]("$in.StudentName")),
+									"/studentapplications/%s-%d/",
+									getters.GetterAny(getters.IfOrElseGetter(
+										getters.GetterKey[string]("$in.StudentName"),
+										getters.GetterStatic("unknown"),
+									)),
 									getters.GetterAny(getters.GetterKey[int64]("$timestamp")),
 								),
 							},
@@ -251,11 +290,22 @@ func applicationFormFields() components.ContainerColumn {
 							&p_filesystem.InputMultiVNode{
 								Label:            "Documents",
 								Name:             "Documents",
-								VNode:            getters.GetterKey[[]p_filesystem.VNode]("$in.Documents"),
+								VNode: func(ctx context.Context) ([]p_filesystem.VNode, error) {
+									if nodes, err := getters.GetterKey[[]p_filesystem.VNode]("$in.Documents")(ctx); err == nil && len(nodes) > 0 {
+										return nodes, nil
+									}
+									return getters.GetterAssociationList[p_filesystem.VNode](
+										getters.GetterContextAssociationIDs(getters.ContextKeyIn, "Documents"),
+										"",
+									)(ctx)
+								},
 								AllowedFiletypes: []string{".pdf", ".jpg", ".jpeg", ".png", ".webp"},
 								Path: getters.GetterFormat(
-									"/studentapplications/%s-%u/",
-									getters.GetterAny(getters.GetterKey[string]("$in.StudentName")),
+									"/studentapplications/%s-%d/",
+									getters.GetterAny(getters.IfOrElseGetter(
+										getters.GetterKey[string]("$in.StudentName"),
+										getters.GetterStatic("unknown"),
+									)),
 									getters.GetterAny(getters.GetterKey[int64]("$timestamp")),
 								),
 							},
@@ -300,7 +350,15 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
 				Getter:   getters.GetterKey[StudentApplication]("studentapplication"),
-				Url:      lago.GetterRoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Url: lago.GetterRoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.GetterAny(getters.IfOrElseGetter(
+						getters.GetterKey[uint]("studentapplication.ID"),
+						getters.IfOrElseGetter(
+							getters.GetterKey[uint]("$in.ID"),
+							getters.GetterParseUint(getters.GetterKey[string]("$path.id")),
+						),
+					)),
+				}),
 				Method:   http.MethodPost,
 				Title:    "Edit application",
 				Subtitle: "Update application details",
@@ -465,7 +523,15 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:     "Confirm deletion",
 				Message:   "Are you sure you want to delete this application?",
-				CancelUrl: lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("studentapplication.ID"))}),
+				CancelUrl: lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.GetterAny(getters.IfOrElseGetter(
+						getters.GetterKey[uint]("studentapplication.ID"),
+						getters.IfOrElseGetter(
+							getters.GetterKey[uint]("$in.ID"),
+							getters.GetterParseUint(getters.GetterKey[string]("$path.id")),
+						),
+					)),
+				}),
 			},
 		},
 	})

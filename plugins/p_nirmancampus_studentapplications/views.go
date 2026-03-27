@@ -61,6 +61,7 @@ func init() {
 		views.DetailView[StudentApplication]("studentapplication", "id")(
 			lago.GetPageView("studentapplications.ApplicationDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("studentapplications.preload_photo", views.QueryPatcherPreload("Photo")).
@@ -80,6 +81,7 @@ func init() {
 			views.UpdateView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("studentapplications.ApplicationUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
 			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
@@ -93,6 +95,7 @@ func init() {
 			views.DeleteView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DefaultRoute", nil))(
 				lago.GetPageView("studentapplications.ApplicationDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
 			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
