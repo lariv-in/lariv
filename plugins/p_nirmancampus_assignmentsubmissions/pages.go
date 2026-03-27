@@ -278,7 +278,6 @@ func registerTablePages() {
 				CreateUrl:       assignmentSubmissionCreateURLGetter(),
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "assignmentsubmissions.Filter"},
-				DefaultView:     "Grid",
 				Columns: []components.TableColumn{
 					{
 						Label: "Assignment",
