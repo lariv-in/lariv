@@ -191,7 +191,7 @@ func applicationFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.Mobile"),
 						Children: []components.PageInterface{
-							&components.InputText{
+							&components.InputPhone{
 								Label:  "Mobile",
 								Name:   "Mobile",
 								Getter: getters.GetterKey[string]("$in.Mobile"),
@@ -346,7 +346,7 @@ func registerTablePages() {
 						Label: "Mobile",
 						Name:  "Mobile",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Mobile")},
+							&components.FieldPhone{Getter: getters.GetterKey[string]("$row.Mobile")},
 						},
 					},
 				},
@@ -406,7 +406,7 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Mobile",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Mobile")},
+									&components.FieldPhone{Getter: getters.GetterKey[string]("$in.Mobile")},
 								},
 							},
 							&components.LabelInline{

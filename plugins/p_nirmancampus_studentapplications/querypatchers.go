@@ -11,7 +11,7 @@ import (
 )
 
 // Role name from p_users.Role{Name: "unassigned"} (see dashboard_patch.go).
-const roleNameUnassigned = "Unassigned"
+const roleNameUnassigned = "unassigned"
 
 // StudentApplicationScopeByRole restricts application queries:
 //   - superuser, admin: full queryset
