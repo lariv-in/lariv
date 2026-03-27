@@ -14,10 +14,10 @@ import (
 type StudentApplication struct {
 	gorm.Model
 
-	Name            string `gorm:"notnull"`
 	ProgramID       uint   `gorm:"notnull"`
 	Program         p_nirmancampus_programs.Program
 	StudentName     string     `gorm:"notnull"`
+	Email           string
 	DOB             *time.Time `gorm:"type:date"`
 	MotherName      string
 	FatherName      string
@@ -38,11 +38,11 @@ func init() {
 	})
 
 	lago.RegistryAdmin.Register("p_nirmancampus_studentapplications", lago.AdminPanel[StudentApplication]{
-		SearchField: "Name",
+		SearchField: "StudentName",
 		ListFields: []string{
-			"Name",
 			"Program.Name",
 			"StudentName",
+			"Email",
 			"DOB",
 			"MotherName",
 			"FatherName",

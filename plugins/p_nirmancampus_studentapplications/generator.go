@@ -14,8 +14,8 @@ import (
 
 // sampleApplicationRows are seed records; ProgramID is chosen from existing programs at runtime.
 var sampleApplicationRows = []struct {
-	name            string
 	studentName     string
+	email           string
 	dob             time.Time
 	motherName      string
 	fatherName      string
@@ -24,8 +24,8 @@ var sampleApplicationRows = []struct {
 	mobile          string
 }{
 	{
-		name:            "Intake — Riya Sharma",
 		studentName:     "Riya Sharma",
+		email:           "riya.sharma@example.edu",
 		dob:             time.Date(2005, 3, 12, 0, 0, 0, 0, time.UTC),
 		motherName:      "Sunita Sharma",
 		fatherName:      "Rajesh Sharma",
@@ -34,8 +34,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876501234",
 	},
 	{
-		name:            "Intake — Arjun Mehta",
 		studentName:     "Arjun Mehta",
+		email:           "arjun.mehta@example.edu",
 		dob:             time.Date(2004, 7, 22, 0, 0, 0, 0, time.UTC),
 		motherName:      "Neha Mehta",
 		fatherName:      "Vikram Mehta",
@@ -44,8 +44,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876502234",
 	},
 	{
-		name:            "Intake — Ananya Iyer",
 		studentName:     "Ananya Iyer",
+		email:           "ananya.iyer@example.edu",
 		dob:             time.Date(2006, 1, 5, 0, 0, 0, 0, time.UTC),
 		motherName:      "Lakshmi Iyer",
 		fatherName:      "Karthik Iyer",
@@ -54,8 +54,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876503234",
 	},
 	{
-		name:            "Intake — Mohammed Khan",
 		studentName:     "Mohammed Khan",
+		email:           "mohammed.khan@example.edu",
 		dob:             time.Date(2005, 11, 18, 0, 0, 0, 0, time.UTC),
 		motherName:      "Ayesha Khan",
 		fatherName:      "Salim Khan",
@@ -64,8 +64,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876504234",
 	},
 	{
-		name:            "Intake — Priya Nair",
 		studentName:     "Priya Nair",
+		email:           "priya.nair@example.edu",
 		dob:             time.Date(2004, 9, 30, 0, 0, 0, 0, time.UTC),
 		motherName:      "Deepa Nair",
 		fatherName:      "Suresh Nair",
@@ -74,8 +74,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876505234",
 	},
 	{
-		name:            "Intake — Kavya Reddy",
 		studentName:     "Kavya Reddy",
+		email:           "kavya.reddy@example.edu",
 		dob:             time.Date(2005, 4, 8, 0, 0, 0, 0, time.UTC),
 		motherName:      "Padma Reddy",
 		fatherName:      "Srinivas Reddy",
@@ -84,8 +84,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876506234",
 	},
 	{
-		name:            "Intake — Dev Patel",
 		studentName:     "Dev Patel",
+		email:           "dev.patel@example.edu",
 		dob:             time.Date(2006, 2, 14, 0, 0, 0, 0, time.UTC),
 		motherName:      "Kiran Patel",
 		fatherName:      "Nirav Patel",
@@ -94,8 +94,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876507234",
 	},
 	{
-		name:            "Intake — Sneha Deshmukh",
 		studentName:     "Sneha Deshmukh",
+		email:           "sneha.deshmukh@example.edu",
 		dob:             time.Date(2005, 8, 25, 0, 0, 0, 0, time.UTC),
 		motherName:      "Swati Deshmukh",
 		fatherName:      "Amit Deshmukh",
@@ -104,8 +104,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876508234",
 	},
 	{
-		name:            "Intake — Rohan Joshi",
 		studentName:     "Rohan Joshi",
+		email:           "rohan.joshi@example.edu",
 		dob:             time.Date(2004, 12, 3, 0, 0, 0, 0, time.UTC),
 		motherName:      "Meera Joshi",
 		fatherName:      "Manish Joshi",
@@ -114,8 +114,8 @@ var sampleApplicationRows = []struct {
 		mobile:          "9876509234",
 	},
 	{
-		name:            "Intake — Neha Verma",
 		studentName:     "Neha Verma",
+		email:           "neha.verma@example.edu",
 		dob:             time.Date(2005, 6, 19, 0, 0, 0, 0, time.UTC),
 		motherName:      "Rekha Verma",
 		fatherName:      "Pankaj Verma",
@@ -174,9 +174,9 @@ func init() {
 				dob := row.dob
 
 				app := StudentApplication{
-					Name:            row.name,
 					ProgramID:       prog.ID,
 					StudentName:     row.studentName,
+					Email:           row.email,
 					DOB:             &dob,
 					MotherName:      row.motherName,
 					FatherName:      row.fatherName,
@@ -189,7 +189,7 @@ func init() {
 					picked := files[rand.Intn(len(files))]
 					app.PhotoID = &picked.ID
 				} else if node, genErr := p_filesystem.GeneratePhotoFile(db); genErr != nil {
-					return fmt.Errorf("generate photo for application %q: %w", row.name, genErr)
+					return fmt.Errorf("generate photo for application %q: %w", row.studentName, genErr)
 				} else if node != nil {
 					app.PhotoID = &node.ID
 					files, err = loadFileNodes(db)
@@ -199,7 +199,7 @@ func init() {
 				}
 
 				if err := db.Create(&app).Error; err != nil {
-					return fmt.Errorf("failed to create student application %q: %w", row.name, err)
+					return fmt.Errorf("failed to create student application %q: %w", row.studentName, err)
 				}
 
 				nDocs := rand.Intn(4)
@@ -215,7 +215,7 @@ func init() {
 					continue
 				}
 				if err := db.Model(&app).Association("Documents").Append(docs); err != nil {
-					return fmt.Errorf("attach documents for %q: %w", row.name, err)
+					return fmt.Errorf("attach documents for %q: %w", row.studentName, err)
 				}
 			}
 

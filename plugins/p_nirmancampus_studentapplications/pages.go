@@ -35,7 +35,7 @@ func registerMenuPages() {
 	})
 
 	lago.RegistryPage.Register("studentapplications.ApplicationDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Application: %s", getters.GetterAny(getters.GetterKey[string]("studentapplication.Name"))),
+		Title: getters.GetterFormat("Application: %s", getters.GetterAny(getters.GetterKey[string]("studentapplication.StudentName"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.GetterStatic("Back to all applications"),
 			Url:   lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
@@ -69,9 +69,9 @@ func registerFilterPages() {
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
-				Label:  "Name",
-				Name:   "Name",
-				Getter: getters.GetterKey[string]("$get.Name"),
+				Label:  "Email",
+				Name:   "Email",
+				Getter: getters.GetterKey[string]("$get.Email"),
 			},
 			&components.InputText{
 				Label:  "Student name",
@@ -105,17 +105,6 @@ func applicationFormFields() components.ContainerColumn {
 			&components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Name"),
-						Children: []components.PageInterface{
-							&components.InputText{
-								Label:    "Name",
-								Name:     "Name",
-								Required: true,
-								Getter:   getters.GetterKey[string]("$in.Name"),
-							},
-						},
-					},
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.ProgramID"),
 						Children: []components.PageInterface{
@@ -189,6 +178,16 @@ func applicationFormFields() components.ContainerColumn {
 								Label:  "Mobile",
 								Name:   "Mobile",
 								Getter: getters.GetterKey[string]("$in.Mobile"),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.Email"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "Email",
+								Name:   "Email",
+								Getter: getters.GetterKey[string]("$in.Email"),
 							},
 						},
 					},
@@ -286,6 +285,24 @@ func registerFormPages() {
 			},
 		},
 	})
+
+	lago.RegistryPage.Register("studentapplications.ApplicationPublicCreateForm", &components.ShellScaffold{
+		Children: []components.PageInterface{
+			&components.FormComponent[StudentApplication]{
+				Url:      lago.GetterRoutePath("studentapplications.PublicApplyRoute", nil),
+				Method:   http.MethodPost,
+				Title:    "Student application",
+				Subtitle: "Fill this form to apply",
+				Classes:  "@container max-w-4xl mx-auto p-4",
+				ChildrenInput: []components.PageInterface{
+					applicationFormFields(),
+				},
+				ChildrenAction: []components.PageInterface{
+					&components.ButtonSubmit{Label: "Submit application"},
+				},
+			},
+		},
+	})
 }
 
 func registerTablePages() {
@@ -304,10 +321,10 @@ func registerTablePages() {
 				FilterComponent: lago.DynamicPage{Name: "studentapplications.ApplicationFilter"},
 				Columns: []components.TableColumn{
 					{
-						Label: "Name",
-						Name:  "Name",
+						Label: "Email",
+						Name:  "Email",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.Email")},
 						},
 					},
 					{
@@ -350,10 +367,10 @@ func registerDetailPages() {
 						Page: components.Page{Key: "studentapplications.ApplicationDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{
-								Getter: getters.GetterKey[string]("$in.Name"),
+								Getter: getters.GetterKey[string]("$in.StudentName"),
 							},
 							&components.FieldSubtitle{
-								Getter: getters.GetterKey[string]("$in.StudentName"),
+								Getter: getters.GetterKey[string]("$in.Email"),
 							},
 							&components.LabelInline{
 								Title: "Program",
@@ -389,6 +406,12 @@ func registerDetailPages() {
 								Title: "Mobile",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Mobile")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Email",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.Email")},
 								},
 							},
 							&components.LabelInline{
