@@ -117,7 +117,6 @@ func registerFilterPages() {
 			}},
 		},
 	})
-
 }
 
 // --- Form Fields & Forms ---

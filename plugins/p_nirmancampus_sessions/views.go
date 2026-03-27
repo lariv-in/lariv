@@ -45,7 +45,7 @@ func init() {
 
 	// Detail view.
 	lago.RegistryView.Register("sessions.DetailView",
-		views.DetailView[Semester]("semester")(
+		views.DetailView[Semester]("semester", "id")(
 			lago.GetPageView("sessions.SemesterDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
@@ -63,8 +63,8 @@ func init() {
 
 	// Update view.
 	lago.RegistryView.Register("sessions.UpdateView",
-		views.DetailView[Semester]("semester")(
-			views.UpdateView[Semester](
+		views.DetailView[Semester]("semester", "id")(
+			views.UpdateView[Semester]("id",
 				lago.GetterRoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -76,8 +76,8 @@ func init() {
 
 	// Delete view.
 	lago.RegistryView.Register("sessions.DeleteView",
-		views.DetailView[Semester]("semester")(
-			views.DeleteView[Semester](
+		views.DetailView[Semester]("semester", "id")(
+			views.DeleteView[Semester]("id",
 				lago.GetterRoutePath("sessions.DefaultRoute", nil),
 			)(
 				lago.GetPageView("sessions.SemesterDeleteForm"),
@@ -117,4 +117,3 @@ func init() {
 				}
 			}))
 }
-

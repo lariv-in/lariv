@@ -39,4 +39,3 @@ func registerRoutes() {
 func init() {
 	registerRoutes()
 }
-

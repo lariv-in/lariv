@@ -21,7 +21,7 @@ func init() {
 			WithQueryPatcher("student_zone_admin.order", views.QueryPatcherOrderBy("\"order\" ASC")))
 
 	lago.RegistryView.Register("nirmancampus_website.StudentZoneAdminSectionDetailView",
-		views.DetailView[StudentZoneSection]("section")(
+		views.DetailView[StudentZoneSection]("section", "id")(
 			lago.GetPageView("nirmancampus_website.StudentZoneAdminSectionDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
@@ -39,8 +39,8 @@ func init() {
 			WithMiddleware("student_zone_admin.role", studentZoneAdminRoleMiddleware))
 
 	lago.RegistryView.Register("nirmancampus_website.StudentZoneAdminSectionUpdateView",
-		views.DetailView[StudentZoneSection]("section")(
-			views.UpdateView[StudentZoneSection](
+		views.DetailView[StudentZoneSection]("section", "id")(
+			views.UpdateView[StudentZoneSection]("id",
 				lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -52,8 +52,8 @@ func init() {
 			WithMiddleware("student_zone_admin.role", studentZoneAdminRoleMiddleware))
 
 	lago.RegistryView.Register("nirmancampus_website.StudentZoneAdminSectionDeleteView",
-		views.DetailView[StudentZoneSection]("section")(
-			views.DeleteView[StudentZoneSection](lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil))(
+		views.DetailView[StudentZoneSection]("section", "id")(
+			views.DeleteView[StudentZoneSection]("id", lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil))(
 				lago.GetPageView("nirmancampus_website.StudentZoneAdminSectionDeleteForm"),
 			),
 		).
@@ -80,7 +80,7 @@ func init() {
 			WithQueryPatcher("student_zone_admin.preload_file", views.QueryPatcherPreload("File")))
 
 	lago.RegistryView.Register("nirmancampus_website.StudentZoneAdminItemDetailView",
-		views.DetailView[StudentZoneItem]("item")(
+		views.DetailView[StudentZoneItem]("item", "id")(
 			lago.GetPageView("nirmancampus_website.StudentZoneAdminItemDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
@@ -100,8 +100,8 @@ func init() {
 			WithMiddleware("student_zone_admin.role", studentZoneAdminRoleMiddleware))
 
 	lago.RegistryView.Register("nirmancampus_website.StudentZoneAdminItemUpdateView",
-		views.DetailView[StudentZoneItem]("item")(
-			views.UpdateView[StudentZoneItem](
+		views.DetailView[StudentZoneItem]("item", "id")(
+			views.UpdateView[StudentZoneItem]("id",
 				lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -115,12 +115,11 @@ func init() {
 			WithQueryPatcher("student_zone_admin.preload_file", views.QueryPatcherPreload("File")))
 
 	lago.RegistryView.Register("nirmancampus_website.StudentZoneAdminItemDeleteView",
-		views.DetailView[StudentZoneItem]("item")(
-			views.DeleteView[StudentZoneItem](lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil))(
+		views.DetailView[StudentZoneItem]("item", "id")(
+			views.DeleteView[StudentZoneItem]("id", lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil))(
 				lago.GetPageView("nirmancampus_website.StudentZoneAdminItemDeleteForm"),
 			),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("student_zone_admin.role", studentZoneAdminRoleMiddleware))
 }
-

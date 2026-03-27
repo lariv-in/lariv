@@ -13,11 +13,13 @@ import (
 	"gorm.io/gorm"
 )
 
-const homeAnnouncementLimit = 10
-const homeImportantLinksLimit = 6
+const (
+	homeAnnouncementLimit   = 10
+	homeImportantLinksLimit = 6
+)
 
 type homePageData struct {
-	Announcements   []homeAnnouncement
+	Announcements  []homeAnnouncement
 	ImportantLinks []homeImportantLink
 }
 
@@ -41,7 +43,7 @@ func buildHomePageData(ctx context.Context) homePageData {
 	}
 
 	return homePageData{
-		Announcements:   loadHomeAnnouncements(db, time.Now()),
+		Announcements:  loadHomeAnnouncements(db, time.Now()),
 		ImportantLinks: loadHomeImportantLinks(db),
 	}
 }

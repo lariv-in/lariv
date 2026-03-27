@@ -59,7 +59,7 @@ func init() {
 
 	// Detail view.
 	lago.RegistryView.Register("announcements.DetailView",
-		views.DetailView[Announcement]("announcement")(
+		views.DetailView[Announcement]("announcement", "id")(
 			lago.GetPageView("announcements.AnnouncementDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
@@ -81,8 +81,8 @@ func init() {
 
 	// Update view.
 	lago.RegistryView.Register("announcements.UpdateView",
-		views.DetailView[Announcement]("announcement")(
-			views.UpdateView[Announcement](
+		views.DetailView[Announcement]("announcement", "id")(
+			views.UpdateView[Announcement]("id",
 				lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -97,8 +97,8 @@ func init() {
 
 	// Delete view.
 	lago.RegistryView.Register("announcements.DeleteView",
-		views.DetailView[Announcement]("announcement")(
-			views.DeleteView[Announcement](lago.GetterRoutePath("announcements.DefaultRoute", nil))(
+		views.DetailView[Announcement]("announcement", "id")(
+			views.DeleteView[Announcement]("id", lago.GetterRoutePath("announcements.DefaultRoute", nil))(
 				lago.GetPageView("announcements.AnnouncementDeleteForm"),
 			),
 		).

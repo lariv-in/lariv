@@ -65,12 +65,10 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("users.SelectView"),
 	})
 
-
 	_ = lago.RegistryRoute.Register("users.RoleSelectRoute", lago.Route{
 		Path:    RoleUrl + "select/",
 		Handler: lago.NewDynamicView("users.RoleSelectView"),
 	})
-
 
 	_ = lago.RegistryRoute.Register("users.RoleListRoute", lago.Route{
 		Path:    RoleUrl,

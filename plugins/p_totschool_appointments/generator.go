@@ -45,8 +45,8 @@ func GenerateAppointmentsForUser(db *gorm.DB, user p_users.User, count int) {
 	now := time.Now()
 	for range count {
 		// Calculate a random datetime within the next 30 days, between 9 AM and 5 PM
-		daysOffset := rand.Intn(30) + 1 // 1 to 30 days from now
-		hoursOffset := rand.Intn(8) + 9 // 9 AM to 4 PM (inclusive)
+		daysOffset := rand.Intn(30) + 1      // 1 to 30 days from now
+		hoursOffset := rand.Intn(8) + 9      // 9 AM to 4 PM (inclusive)
 		minutesOffset := (rand.Intn(4)) * 15 // 0, 15, 30, 45 minutes
 
 		apptDate := time.Date(now.Year(), now.Month(), now.Day()+daysOffset, hoursOffset, minutesOffset, 0, 0, now.Location())

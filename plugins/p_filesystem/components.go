@@ -15,9 +15,9 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"gorm.io/gorm"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
-	"gorm.io/gorm"
 )
 
 // createComponentVNode creates a VNode for a component-uploaded file, using a
@@ -430,4 +430,3 @@ func (e FieldPhoto) Build(ctx context.Context) Node {
 		Class(e.Classes),
 	)
 }
-

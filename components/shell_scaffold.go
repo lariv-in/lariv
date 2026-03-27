@@ -8,8 +8,8 @@ import (
 
 type ShellScaffold struct {
 	Page
-	Sidebar  []PageInterface
-	Children []PageInterface
+	Sidebar   []PageInterface
+	Children  []PageInterface
 	ExtraHead []PageInterface
 }
 

@@ -3,7 +3,6 @@ package components
 import (
 	"context"
 	"log/slog"
-
 	"reflect"
 
 	"github.com/lariv-in/lago/getters"

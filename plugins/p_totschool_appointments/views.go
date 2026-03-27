@@ -247,7 +247,7 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.DetailView",
-		views.DetailView[Appointment]("appointment")(lago.GetPageView("appointments.AppointmentDetail")).
+		views.DetailView[Appointment]("appointment", "id")(lago.GetPageView("appointments.AppointmentDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("appointments.detail", AppointmentDetailMiddleware),
 	)
@@ -258,14 +258,14 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.UpdateView",
-		views.DetailView[Appointment]("appointment")(
-			views.UpdateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
+		views.DetailView[Appointment]("appointment", "id")(
+			views.UpdateView[Appointment]("id", lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
 			WithFormPatcher("appointments.form", FormCreatedByPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.DeleteView",
-		views.DetailView[Appointment]("appointment")(
-			views.DeleteView[Appointment](lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm")).
+		views.DetailView[Appointment]("appointment", "id")(
+			views.DeleteView[Appointment]("id", lago.GetterRoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm")).
 				WithMiddleware("users.auth", p_users.AuthenticationMiddleware)))
 
 	lago.RegistryView.Register("appointments.GenerateView",

@@ -9,6 +9,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_announcements"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentsubmissions"
+	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_forms"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_sessions"

@@ -108,7 +108,7 @@ func (e *homePage) Build(ctx context.Context) gomponents.Node {
 	}, ctx)
 }
 
-func (e *homePage) GetKey() string   { return e.Key }
+func (e *homePage) GetKey() string     { return e.Key }
 func (e *homePage) GetRoles() []string { return e.Roles }
 
 // rawPage wraps raw HTML string as a PageInterface so it can be a ShellBase child.

@@ -21,7 +21,7 @@ func init() {
 
 	// Detail view
 	lago.RegistryView.Register("courses.DetailView",
-		views.DetailView[Course]("course")(
+		views.DetailView[Course]("course", "id")(
 			lago.GetPageView("courses.CourseDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("courses.scope_by_role", CourseScopeByRole))
@@ -35,8 +35,8 @@ func init() {
 
 	// Update view
 	lago.RegistryView.Register("courses.UpdateView",
-		views.DetailView[Course]("course")(
-			views.UpdateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
+		views.DetailView[Course]("course", "id")(
+			views.UpdateView[Course]("id", lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("courses.CourseUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("courses.admin_role", coursesAdminRoleMiddleware).
@@ -44,8 +44,8 @@ func init() {
 
 	// Delete view
 	lago.RegistryView.Register("courses.DeleteView",
-		views.DetailView[Course]("course")(
-			views.DeleteView[Course](lago.GetterRoutePath("courses.DefaultRoute", nil))(
+		views.DetailView[Course]("course", "id")(
+			views.DeleteView[Course]("id", lago.GetterRoutePath("courses.DefaultRoute", nil))(
 				lago.GetPageView("courses.CourseDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("courses.admin_role", coursesAdminRoleMiddleware).
@@ -63,5 +63,4 @@ func init() {
 			lago.GetPageView("courses.CourseMultiSelectionTable")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("courses.scope_by_role", CourseScopeByRole))
-
 }

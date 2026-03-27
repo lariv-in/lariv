@@ -2,15 +2,11 @@ package views
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"maps"
 	"net/http"
-	"os"
 	"reflect"
-	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -29,6 +25,10 @@ type View struct {
 	QueryPatchers []registry.Pair[string, QueryPatcher]
 	// Middlewares are applied in slice order to preserve insertion order.
 	Middlewares []registry.Pair[string, Middleware]
+	// RenderMiddlewares wrap successful and error renders from CRUD helpers (ListView, DetailView,
+	// JsonImport, Create/Update/Singleton POST, etc.). Applied in the same order as Middlewares
+	// (earliest registered = outermost).
+	RenderMiddlewares []registry.Pair[string, Middleware]
 }
 
 type debugResponseWriter struct {
@@ -50,26 +50,6 @@ func (w *debugResponseWriter) Write(b []byte) (int, error) {
 	w.bytes += n
 	return n, err
 }
-
-// #region agent log
-func debugLogView(runID, hypothesisID, location, message string, data map[string]any) {
-	f, err := os.OpenFile("/home/sandy/source_repos/lago/.cursor/debug-84938a.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	_ = json.NewEncoder(f).Encode(map[string]any{
-		"sessionId":    "84938a",
-		"runId":        runID,
-		"hypothesisId": hypothesisID,
-		"location":     location,
-		"message":      message,
-		"data":         data,
-		"timestamp":    time.Now().UnixMilli(),
-	})
-}
-
-// #endregion
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler, isHandlerPresent := v.Handlers[r.Method]
@@ -93,15 +73,6 @@ func (v *View) GetPage() (components.PageInterface, bool) {
 
 func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 	page, isPagePresent := v.GetPage()
-	// #region agent log
-	debugLogView("initial", "H2", "views/views.go:75", "render page lookup", map[string]any{
-		"pageName":        v.PageName,
-		"isPagePresent":   isPagePresent,
-		"pageType":        fmt.Sprintf("%T", page),
-		"path":            r.URL.Path,
-		"middlewareCount": len(v.Middlewares),
-	})
-	// #endregion
 	if !isPagePresent {
 		http.NotFound(w, r)
 		return
@@ -112,32 +83,39 @@ func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 	if shell, ok := page.(components.Shell); ok {
 		if isBoosted, _ := ctx.Value("isHtmxBoosted").(bool); isBoosted {
 			err := shell.Body(ctx).Render(dw)
-			// #region agent log
-			debugLogView("initial", "H5", "views/views.go:102", "shell body render result", map[string]any{
-				"status":      dw.status,
-				"bytes":       dw.bytes,
-				"contentType": dw.Header().Get("Content-Type"),
-				"error":       fmt.Sprint(err),
-				"isBoosted":   true,
-			})
-			// #endregion
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				slog.Error("Error rendering shell body", "error", err)
+				return
+			}
 			return
 		}
 	}
 
 	err := components.Render(page, ctx).Render(dw)
-	// #region agent log
-	debugLogView("initial", "H5", "views/views.go:117", "page render result", map[string]any{
-		"status":      dw.status,
-		"bytes":       dw.bytes,
-		"contentType": dw.Header().Get("Content-Type"),
-		"error":       fmt.Sprint(err),
-		"isBoosted":   false,
-	})
-	// #endregion
 	if err != nil {
 		panic(err)
 	}
+}
+
+// ServeRenderPage runs RenderPage after applying RenderMiddlewares. Used by GetPageView and DetailView chaining.
+func (v *View) ServeRenderPage(w http.ResponseWriter, r *http.Request) {
+	var h http.Handler = http.HandlerFunc(v.RenderPage)
+	for i := len(v.RenderMiddlewares) - 1; i >= 0; i-- {
+		h = v.RenderMiddlewares[i].Value(h)
+	}
+	h.ServeHTTP(w, r)
+}
+
+// renderWithErrorsWithMiddlewares runs RenderWithErrors wrapped by v.RenderMiddlewares.
+func renderWithErrorsWithMiddlewares(v *View, w http.ResponseWriter, r *http.Request, fieldErrors map[string]error, values map[string]any) {
+	var h http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		v.RenderWithErrors(w, r, fieldErrors, values)
+	})
+	for i := len(v.RenderMiddlewares) - 1; i >= 0; i-- {
+		h = v.RenderMiddlewares[i].Value(h)
+	}
+	h.ServeHTTP(w, r)
 }
 
 func (v *View) WithMethod(method string, viewHandler func(*View) http.Handler) *View {
@@ -234,6 +212,12 @@ func (v *View) WithQueryPatcher(name string, queryPatcher QueryPatcher) *View {
 func (v *View) WithMiddleware(name string, middleware Middleware) *View {
 	// Append middleware; keys are labels only and are not required to be unique.
 	v.Middlewares = append(v.Middlewares, registry.Pair[string, Middleware]{Key: name, Value: middleware})
+	return v
+}
+
+// WithRenderMiddleware appends middleware around RenderPage and RenderWithErrors from CRUD view factories.
+func (v *View) WithRenderMiddleware(name string, middleware Middleware) *View {
+	v.RenderMiddlewares = append(v.RenderMiddlewares, registry.Pair[string, Middleware]{Key: name, Value: middleware})
 	return v
 }
 

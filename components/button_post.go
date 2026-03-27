@@ -53,6 +53,7 @@ func (e ButtonPost) Build(ctx context.Context) Node {
 		// full-page navigation; the response (e.g. updated detail view
 		// showing "Generating..." state) will be swapped in-place.
 		Attr("hx-boost", "true"),
+		Attr("@click.stop", ""),
 		Button(Type("submit"), Class(buttonClasses), content),
 	)
 }

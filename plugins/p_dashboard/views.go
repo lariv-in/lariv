@@ -6,7 +6,6 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-
 func init() {
 	lago.RegistryView.Register("dashboard.AppsView",
 		lago.GetPageView("dashboard.AppsPage").WithMiddleware("users.auth", p_users.AuthenticationMiddleware))

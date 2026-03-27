@@ -39,7 +39,7 @@ func StartServer(config LagoConfig) error {
 		if err != nil {
 			return err
 		}
-		err = os.Chmod(config.UDS, 0777)
+		err = os.Chmod(config.UDS, 0o777)
 		if err != nil {
 			return err
 		}

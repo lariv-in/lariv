@@ -19,7 +19,7 @@ type Timeline[T any] struct {
 	OnClick         getters.Getter[string]        // per-item URL (GetterNavigate)
 	FilterComponent PageInterface                 // optional filter form
 	CreateUrl       getters.Getter[string]
-	Children        []PageInterface               // card content template
+	Children        []PageInterface // card content template
 }
 
 func (e Timeline[T]) Build(ctx context.Context) Node {

@@ -28,9 +28,13 @@ func (e TableGridContent[T]) Build(ctx context.Context) Node {
 	if len(data.Items) == 0 {
 		cards = append(cards, g_html.Div(g_html.Class("col-span-full text-center opacity-50 py-8"), Text("Table is empty")))
 	} else {
-		for _, row := range data.Items {
+		n := len(data.Items)
+		for i, row := range data.Items {
 			rowMap := getters.MapFromStruct(row)
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
+			rowCtx = context.WithValue(rowCtx, "$rowIndex", i)
+			rowCtx = context.WithValue(rowCtx, "$isFirstRow", i == 0)
+			rowCtx = context.WithValue(rowCtx, "$isLastRow", i == n-1)
 
 			var contentNodes []Node
 			// First column is the title

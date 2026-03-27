@@ -275,4 +275,3 @@ type AdminPanelInterface interface {
 }
 
 var RegistryAdmin registry.Registry[AdminPanelInterface] = registry.NewRegistry[AdminPanelInterface]()
-

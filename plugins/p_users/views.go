@@ -289,7 +289,7 @@ func init() {
 
 	// Detail view
 	lago.RegistryView.Register("users.DetailView",
-		views.DetailView[User]("user")(
+		views.DetailView[User]("user", "id")(
 			lago.GetPageView("users.UserDetail")).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
@@ -303,8 +303,8 @@ func init() {
 
 	// Update view
 	lago.RegistryView.Register("users.UpdateView",
-		views.DetailView[User]("user")(
-			views.UpdateView[User](lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
+		views.DetailView[User]("user", "id")(
+			views.UpdateView[User]("id", lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("users.UserUpdateForm"))).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
@@ -334,15 +334,15 @@ func init() {
 
 	// Delete view
 	lago.RegistryView.Register("users.DeleteView",
-		views.DetailView[User]("user")(
-			views.DeleteView[User](lago.GetterRoutePath("users.ListRoute", nil))(
+		views.DetailView[User]("user", "id")(
+			views.DeleteView[User]("id", lago.GetterRoutePath("users.ListRoute", nil))(
 				lago.GetPageView("users.UserDeleteForm"))).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
 
 	// Change password view (user-specific handler)
 	lago.RegistryView.Register("users.ChangePasswordView",
-		views.DetailView[User]("user")(
+		views.DetailView[User]("user", "id")(
 			lago.GetPageView("users.ChangePasswordForm").
 				WithMethod(http.MethodPost, ChangePasswordHandler)).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
@@ -354,7 +354,6 @@ func init() {
 			lago.GetPageView("users.UserSelectionTable")).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
-
 
 	lago.RegistryView.Register("users.RoleSelectView",
 		views.ListView[Role]("roles")(
@@ -370,7 +369,7 @@ func init() {
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
 
 	lago.RegistryView.Register("users.RoleDetailView",
-		views.DetailView[Role]("role")(
+		views.DetailView[Role]("role", "id")(
 			lago.GetPageView("users.RoleDetail")).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
@@ -382,15 +381,15 @@ func init() {
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
 
 	lago.RegistryView.Register("users.RoleUpdateView",
-		views.DetailView[Role]("role")(
-			views.UpdateView[Role](lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
+		views.DetailView[Role]("role", "id")(
+			views.UpdateView[Role]("id", lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("users.RoleUpdateForm"))).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
 
 	lago.RegistryView.Register("users.RoleDeleteView",
-		views.DetailView[Role]("role")(
-			views.DeleteView[Role](lago.GetterRoutePath("users.RoleListRoute", nil))(
+		views.DetailView[Role]("role", "id")(
+			views.DeleteView[Role]("id", lago.GetterRoutePath("users.RoleListRoute", nil))(
 				lago.GetPageView("users.RoleDeleteForm"))).
 			WithMiddleware("users.auth", AuthenticationMiddleware).
 			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))

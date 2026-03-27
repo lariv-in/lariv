@@ -38,8 +38,12 @@ func (e InputText) Build(ctx context.Context) Node {
 			valueNode = Value(value)
 		}
 	}
-	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
+	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
+	if e.Hidden {
+		wrapClass += " hidden"
+	}
+	return Div(Class(wrapClass),
+		If(!e.Hidden, Label(Class("label text-sm font-bold"), Text(e.Label))),
 		Input(If(!e.Hidden, Type("text")), If(e.Hidden, Type("hidden")), Name(e.Name),
 			valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
 	)

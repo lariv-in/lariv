@@ -153,17 +153,23 @@ func ListView[T any](key string) func(*View) *View {
 
 				// Add the object list to the enriched context and render the page.
 				ctx = context.WithValue(r.Context(), key, objectList)
-				innerView.RenderPage(w, r.WithContext(ctx))
+				r = r.WithContext(ctx)
+				innerView.ServeRenderPage(w, r)
 			})
 		})
 	}
 }
 
-func DetailView[T any](key string) func(*View) *View {
+// DetailView loads a record by path {pathParamKey} and stores it in context under key for GET.
+// When the view already has a GET handler (e.g. from GetPageView or an inner DetailView), this layer
+// runs first, then delegates to that handler so multiple DetailViews can be nested (outer path params first).
+// View.RenderMiddlewares apply on the final ServeRenderPage (see WithRenderMiddleware).
+func DetailView[T any](key string, pathParamKey string) func(*View) *View {
 	return func(v *View) *View {
+		prev := v.Handlers[http.MethodGet]
 		return v.WithMethod(http.MethodGet, func(innerView *View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				idStr := r.PathValue("id")
+				idStr := r.PathValue(pathParamKey)
 				id, err := strconv.Atoi(idStr)
 				if err != nil {
 					http.Error(w, "Invalid ID", http.StatusBadRequest)
@@ -186,7 +192,12 @@ func DetailView[T any](key string) func(*View) *View {
 				// can retrieve it without type errors. Components like Detail[T]
 				// will project this into $in as needed.
 				ctx := context.WithValue(r.Context(), key, *instance)
-				innerView.RenderPage(w, r.WithContext(ctx))
+				r = r.WithContext(ctx)
+				if prev != nil {
+					prev(innerView).ServeHTTP(w, r)
+					return
+				}
+				innerView.ServeRenderPage(w, r)
 			})
 		})
 	}
@@ -386,26 +397,26 @@ func JsonImport[T any](fileField string, successURL getters.Getter[string]) func
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				values, fieldErrors, err := innerView.ParseForm(w, r)
 				if err != nil {
-					innerView.RenderWithErrors(w, r, map[string]error{"_form": err}, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, map[string]error{"_form": err}, values)
 					return
 				}
 
 				if innerView.HasErrors(fieldErrors) {
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
 				fileHeader, err := uploadedJSONFile(values, fileField)
 				if err != nil {
 					fieldErrors["_form"] = err
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
 				records, err := decodeJSONArrayFile[T](fileHeader)
 				if err != nil {
 					fieldErrors["_form"] = fmt.Errorf("invalid json import: %w", err)
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
@@ -415,7 +426,7 @@ func JsonImport[T any](fileField string, successURL getters.Getter[string]) func
 						return tx.Create(&records).Error
 					}); err != nil {
 						fieldErrors["_form"] = fmt.Errorf("%v", err)
-						innerView.RenderWithErrors(w, r, fieldErrors, values)
+						renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 						return
 					}
 				}
@@ -438,12 +449,12 @@ func CreateView[T any](successURL getters.Getter[string]) func(*View) *View {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				values, fieldErrors, err := innerView.ParseForm(w, r)
 				if err != nil {
-					innerView.RenderWithErrors(w, r, map[string]error{"_form": err}, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, map[string]error{"_form": err}, values)
 					return
 				}
 
 				if v.HasErrors(fieldErrors) {
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
@@ -462,7 +473,7 @@ func CreateView[T any](successURL getters.Getter[string]) func(*View) *View {
 				})
 				if err != nil {
 					fieldErrors["_form"] = fmt.Errorf("%v", err)
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
@@ -477,9 +488,9 @@ func CreateView[T any](successURL getters.Getter[string]) func(*View) *View {
 
 // --- Update Handler ---
 
-// UpdateView parses the form, validates, updates the record by {id} path param, and redirects.
+// UpdateView parses the form, validates, updates the record by {pathParamKey} path param, and redirects.
 // successUrl is a Getter that receives "$id" in context with the record's ID.
-func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
+func UpdateView[T any](pathParamKey string, successURL getters.Getter[string]) func(*View) *View {
 	return func(v *View) *View {
 		return v.WithMethod(http.MethodPost, func(innerView *View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -490,11 +501,11 @@ func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
 				}
 
 				if innerView.HasErrors(fieldErrors) {
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
-				idStr := r.PathValue("id")
+				idStr := r.PathValue(pathParamKey)
 				id, err := strconv.ParseUint(idStr, 10, 64)
 				if err != nil {
 					http.Error(w, "Invalid ID", http.StatusBadRequest)
@@ -528,7 +539,7 @@ func UpdateView[T any](successURL getters.Getter[string]) func(*View) *View {
 				})
 				if err != nil {
 					fieldErrors["_form"] = err
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
@@ -552,7 +563,8 @@ func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
 				instance := new(T)
 				db.FirstOrCreate(instance)
 				ctx := context.WithValue(r.Context(), getters.ContextKeyIn, getters.MapFromStruct(instance))
-				innerView.RenderPage(w, r.WithContext(ctx))
+				r = r.WithContext(ctx)
+				innerView.ServeRenderPage(w, r)
 			})
 		})
 
@@ -564,7 +576,7 @@ func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
 				}
 
 				if innerView.HasErrors(fieldErrors) {
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
@@ -589,7 +601,7 @@ func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
 				})
 				if err != nil {
 					fieldErrors["_form"] = fmt.Errorf("%v", err)
-					innerView.RenderWithErrors(w, r, fieldErrors, values)
+					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
 					return
 				}
 
@@ -602,12 +614,12 @@ func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
 
 // --- Delete Handler ---
 
-// DeleteView deletes the record by {id} path param and redirects to successUrl.
-func DeleteView[T any](successUrl getters.Getter[string]) func(*View) *View {
+// DeleteView deletes the record by {pathParamKey} path param and redirects to successUrl.
+func DeleteView[T any](pathParamKey string, successUrl getters.Getter[string]) func(*View) *View {
 	return func(v *View) *View {
 		return v.WithMethod(http.MethodPost, func(innerView *View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				idStr := r.PathValue("id")
+				idStr := r.PathValue(pathParamKey)
 				id, err := strconv.Atoi(idStr)
 				if err != nil {
 					http.Error(w, "Invalid ID", http.StatusBadRequest)

@@ -14,9 +14,9 @@ import (
 type StudentApplication struct {
 	gorm.Model
 
-	ProgramID       uint   `gorm:"notnull"`
+	ProgramID       uint `gorm:"notnull"`
 	Program         p_nirmancampus_programs.Program
-	StudentName     string     `gorm:"notnull"`
+	StudentName     string `gorm:"notnull"`
 	Email           string
 	DOB             *time.Time `gorm:"type:date"`
 	MotherName      string

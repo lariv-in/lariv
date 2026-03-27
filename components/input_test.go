@@ -29,6 +29,32 @@ func TestInputImplementations(t *testing.T) {
 	var _ InputInterface = InputPhone{}
 	var _ InputInterface = InputText{}
 	var _ InputInterface = InputSelect[string]{}
+	var _ InputInterface = InputStringList{}
+}
+
+func TestInputStringListParse(t *testing.T) {
+	input := InputStringList{Name: "Options"}
+
+	v, err := input.Parse([]string{`["a","b"]`}, context.Background())
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if v != `["a","b"]` {
+		t.Fatalf("expected json string, got %#v", v)
+	}
+
+	empty, err := input.Parse([]string{""}, context.Background())
+	if err != nil {
+		t.Fatalf("Parse empty: %v", err)
+	}
+	if empty != "[]" {
+		t.Fatalf("expected [] json, got %#v", empty)
+	}
+
+	_, err = input.Parse([]string{`not-json`}, context.Background())
+	if err == nil {
+		t.Fatalf("expected error for invalid json")
+	}
 }
 
 func TestInputSelectParse(t *testing.T) {

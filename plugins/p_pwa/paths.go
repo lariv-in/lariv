@@ -30,4 +30,3 @@ func init() {
 		Handler: lago.NewDynamicView(staticPwaViewKey),
 	})
 }
-

@@ -9,5 +9,4 @@ func init() {
 		plugin.Roles = []string{"superuser", "totschool_admin"}
 		return plugin
 	})
-
 }

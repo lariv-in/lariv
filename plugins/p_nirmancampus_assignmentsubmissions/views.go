@@ -20,7 +20,7 @@ func init() {
 	)
 
 	lago.RegistryView.Register("assignmentsubmissions.DetailView",
-		views.DetailView[AssignmentSubmission]("assignmentsubmission")(
+		views.DetailView[AssignmentSubmission]("assignmentsubmission", "id")(
 			lago.GetPageView("assignmentsubmissions.Detail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
@@ -44,8 +44,8 @@ func init() {
 	)
 
 	lago.RegistryView.Register("assignmentsubmissions.UpdateView",
-		views.DetailView[AssignmentSubmission]("assignmentsubmission")(
-			views.UpdateView[AssignmentSubmission](
+		views.DetailView[AssignmentSubmission]("assignmentsubmission", "id")(
+			views.UpdateView[AssignmentSubmission]("id",
 				lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -63,8 +63,8 @@ func init() {
 	)
 
 	lago.RegistryView.Register("assignmentsubmissions.DeleteView",
-		views.DetailView[AssignmentSubmission]("assignmentsubmission")(
-			views.DeleteView[AssignmentSubmission](
+		views.DetailView[AssignmentSubmission]("assignmentsubmission", "id")(
+			views.DeleteView[AssignmentSubmission]("id",
 				lago.GetterRoutePath("assignmentsubmissions.DefaultRoute", nil),
 			)(
 				lago.GetPageView("assignmentsubmissions.DeleteForm"),
