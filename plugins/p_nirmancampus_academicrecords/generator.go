@@ -84,6 +84,9 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
+			if err := db.Exec("DELETE FROM academic_record_courses").Error; err != nil {
+				return fmt.Errorf("clear academic_record_courses: %w", err)
+			}
 			return db.Unscoped().Where("1=1").Delete(&AcademicRecord{}).Error
 		},
 	})
