@@ -21,7 +21,7 @@ func GetPageView(pageName string) *views.View {
 		Handlers: map[string]func(v *views.View) http.Handler{
 			http.MethodGet: func(v *views.View) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					v.RenderPage(w, r)
+					v.ServeRenderPage(w, r)
 				})
 			},
 		},

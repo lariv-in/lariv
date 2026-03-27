@@ -7,8 +7,10 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
-const AppUrl = "/users/"
-const RoleUrl = "/roles/"
+const (
+	AppUrl  = "/users/"
+	RoleUrl = "/roles/"
+)
 
 func init() {
 	u, err := url.Parse(AppUrl)

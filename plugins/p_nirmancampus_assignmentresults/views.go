@@ -120,7 +120,7 @@ func init() {
 			WithQueryPatcher("assignmentresults.order_id_desc", assignmentResultsOrderIDDesc))
 
 	lago.RegistryView.Register("assignmentresults.DetailView",
-		views.DetailView[AssignmentResult]("assignmentresult")(
+		views.DetailView[AssignmentResult]("assignmentresult", "id")(
 			lago.GetPageView("assignmentresults.AssignmentResultDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
@@ -139,8 +139,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("assignmentresults.UpdateView",
-		views.DetailView[AssignmentResult]("assignmentresult")(
-			views.UpdateView[AssignmentResult](
+		views.DetailView[AssignmentResult]("assignmentresult", "id")(
+			views.UpdateView[AssignmentResult]("id",
 				lago.GetterRoutePath("assignmentresults.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -154,8 +154,8 @@ func init() {
 			WithQueryPatcher("assignmentresults.preload_academic_record_student_user", views.QueryPatcherPreload("AcademicRecord.Student.User")))
 
 	lago.RegistryView.Register("assignmentresults.DeleteView",
-		views.DetailView[AssignmentResult]("assignmentresult")(
-			views.DeleteView[AssignmentResult](
+		views.DetailView[AssignmentResult]("assignmentresult", "id")(
+			views.DeleteView[AssignmentResult]("id",
 				lago.GetterRoutePath("assignmentresults.DefaultRoute", nil),
 			)(
 				lago.GetPageView("assignmentresults.AssignmentResultDeleteForm"),

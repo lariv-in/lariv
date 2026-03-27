@@ -8,7 +8,7 @@ import (
 
 type ShellTopbarScaffold struct {
 	Page
-	Children []PageInterface
+	Children  []PageInterface
 	ExtraHead []PageInterface
 }
 

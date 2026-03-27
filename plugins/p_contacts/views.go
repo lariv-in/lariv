@@ -16,7 +16,7 @@ func init() {
 			WithQueryPatcher("contacts.order_name", views.QueryPatcherOrderBy("name ASC")))
 
 	lago.RegistryView.Register("contacts.DetailView",
-		views.DetailView[Contact]("contact")(
+		views.DetailView[Contact]("contact", "id")(
 			lago.GetPageView("contacts.ContactDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
@@ -32,8 +32,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("contacts.UpdateView",
-		views.DetailView[Contact]("contact")(
-			views.UpdateView[Contact](
+		views.DetailView[Contact]("contact", "id")(
+			views.UpdateView[Contact]("id",
 				lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -44,8 +44,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("contacts.DeleteView",
-		views.DetailView[Contact]("contact")(
-			views.DeleteView[Contact](lago.GetterRoutePath("contacts.DefaultRoute", nil))(
+		views.DetailView[Contact]("contact", "id")(
+			views.DeleteView[Contact]("id", lago.GetterRoutePath("contacts.DefaultRoute", nil))(
 				lago.GetPageView("contacts.ContactDeleteForm"),
 			),
 		).

@@ -63,4 +63,3 @@ func (e InputTextarea) Parse(v any, _ context.Context) (any, error) {
 func (e InputTextarea) GetName() string {
 	return e.Name
 }
-

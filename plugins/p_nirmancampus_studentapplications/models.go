@@ -13,17 +13,17 @@ import (
 type StudentApplication struct {
 	gorm.Model
 
-	Name              string `gorm:"notnull"`
-	ProgramID         uint   `gorm:"notnull"`
-	Program           p_nirmancampus_programs.Program
-	StudentName       string `gorm:"notnull"`
-	FatherName        string
-	Category          string
-	CompleteAddress   string
-	Mobile            string
-	PhotoID           *uint
-	Photo             p_filesystem.VNode
-	Documents         []p_filesystem.VNode `gorm:"many2many:student_application_documents;"`
+	Name            string `gorm:"notnull"`
+	ProgramID       uint   `gorm:"notnull"`
+	Program         p_nirmancampus_programs.Program
+	StudentName     string `gorm:"notnull"`
+	FatherName      string
+	Category        string
+	CompleteAddress string
+	Mobile          string
+	PhotoID         *uint
+	Photo           p_filesystem.VNode
+	Documents       []p_filesystem.VNode `gorm:"many2many:student_application_documents;"`
 }
 
 func init() {

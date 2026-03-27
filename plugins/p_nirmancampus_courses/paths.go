@@ -39,7 +39,6 @@ func registerRoutes() {
 		Path:    AppUrl + "multi-select/",
 		Handler: lago.NewDynamicView("courses.MultiSelectView"),
 	})
-
 }
 
 func init() {

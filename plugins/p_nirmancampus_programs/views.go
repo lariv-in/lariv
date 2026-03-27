@@ -66,7 +66,7 @@ func init() {
 			WithQueryPatcher("nirmancampus_programs.filter_university", univPatcher))
 
 	lago.RegistryView.Register("programs.DetailView",
-		views.DetailView[Program]("program")(
+		views.DetailView[Program]("program", "id")(
 			lago.GetPageView("programs.ProgramDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
@@ -82,8 +82,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("programs.UpdateView",
-		views.DetailView[Program]("program")(
-			views.UpdateView[Program](
+		views.DetailView[Program]("program", "id")(
+			views.UpdateView[Program]("id",
 				lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -94,8 +94,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("programs.DeleteView",
-		views.DetailView[Program]("program")(
-			views.DeleteView[Program](
+		views.DetailView[Program]("program", "id")(
+			views.DeleteView[Program]("id",
 				lago.GetterRoutePath("programs.DefaultRoute", nil),
 			)(
 				lago.GetPageView("programs.ProgramDeleteForm"),

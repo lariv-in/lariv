@@ -2,6 +2,7 @@ package getters
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"golang.org/x/exp/constraints"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -59,6 +61,8 @@ func GetterKey[T any](key string) Getter[T] {
 
 			if v, exists := m[part]; exists {
 				value = v
+			} else {
+				value = nil
 			}
 		}
 		if value == nil {
@@ -108,6 +112,17 @@ func GetterNil[T any]() Getter[T] {
 func GetterAny[T any](g Getter[T]) Getter[any] {
 	return func(ctx context.Context) (any, error) {
 		return g(ctx)
+	}
+}
+
+// GetterBoolNot negates a boolean getter. The result is Getter[any] for use with ShowIf and similar.
+func GetterBoolNot[T ~bool](g Getter[T]) Getter[any] {
+	return func(ctx context.Context) (any, error) {
+		v, err := g(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return !v, nil
 	}
 }
 
@@ -593,5 +608,92 @@ func GetterDeref[T any](g Getter[*T]) Getter[T] {
 			return zero, nil
 		}
 		return *value, nil
+	}
+}
+
+func GetterMap[T, V any](g Getter[T], f func(context.Context, T) (V, error)) Getter[V] {
+	var zero V
+	return func(ctx context.Context) (V, error) {
+		value, err := g(ctx)
+		if err != nil {
+			return zero, err
+		}
+		return f(ctx, value)
+	}
+}
+
+// GetterJsonObj parses JSON from a string getter and returns datatypes.JSON. The top-level value must be a JSON object.
+// Empty or whitespace-only input yields "{}".
+func GetterJsonObj[T any](g Getter[string]) Getter[datatypes.JSON] {
+	return func(ctx context.Context) (datatypes.JSON, error) {
+		s, err := g(ctx)
+		if err != nil {
+			return nil, err
+		}
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return datatypes.JSON("{}"), nil
+		}
+		var m T
+		if err := json.Unmarshal([]byte(s), &m); err != nil {
+			return nil, err
+		}
+		b, err := json.Marshal(m)
+		if err != nil {
+			return nil, err
+		}
+		return datatypes.JSON(b), nil
+	}
+}
+
+// GetterJsonArray parses JSON from a string getter and returns datatypes.JSON. The top-level value must be a JSON array.
+// Empty or whitespace-only input yields "[]".
+func GetterJsonArray[T any](g Getter[string]) Getter[datatypes.JSON] {
+	return func(ctx context.Context) (datatypes.JSON, error) {
+		s, err := g(ctx)
+		if err != nil {
+			return nil, err
+		}
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return datatypes.JSON("[]"), nil
+		}
+		var a []T
+		if err := json.Unmarshal([]byte(s), &a); err != nil {
+			return nil, err
+		}
+		b, err := json.Marshal(a)
+		if err != nil {
+			return nil, err
+		}
+		return datatypes.JSON(b), nil
+	}
+}
+
+func GetterParseUint(g Getter[string]) Getter[uint] {
+	return func(ctx context.Context) (uint, error) {
+		s, err := g(ctx)
+		if err != nil {
+			return 0, err
+		}
+		u, err := strconv.ParseUint(s, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return uint(u), nil
+	}
+}
+
+func GetterParseInt(g Getter[string]) Getter[int] {
+	return func(ctx context.Context) (int, error) {
+		s, err := g(ctx)
+		if err != nil {
+			return 0, err
+		}
+		i, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return int(i), nil
 	}
 }

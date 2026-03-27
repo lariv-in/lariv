@@ -164,7 +164,7 @@ func TestUpdateViewReplacesManyToManyAssociations(t *testing.T) {
 	}
 
 	view := newCrudTestView(createCoursePage())
-	UpdateView[crudTestCourse](getters.GetterStatic("/courses/1/"))(view)
+	UpdateView[crudTestCourse]("id", getters.GetterStatic("/courses/1/"))(view)
 
 	req := httptest.NewRequest(http.MethodPost, "/", stringsReader(url.Values{
 		"Name":     {"Updated"},
@@ -219,7 +219,7 @@ func TestUpdateViewWithPreloadedBelongsToDoesNotDuplicateForeignKeyAssignments(t
 		},
 	})
 	view.WithQueryPatcher("students.preload_user", QueryPatcherPreload("User"))
-	UpdateView[crudTestStudent](getters.GetterStatic("/students/1/"))(view)
+	UpdateView[crudTestStudent]("id", getters.GetterStatic("/students/1/"))(view)
 
 	req := httptest.NewRequest(http.MethodPost, "/", stringsReader(url.Values{
 		"Name":   {"After"},

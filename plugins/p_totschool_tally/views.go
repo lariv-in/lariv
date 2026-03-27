@@ -305,11 +305,11 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("tally.admin", RequireAdmin))
 	lago.RegistryView.Register("tally.TallyUpdateView",
-		views.UpdateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")).
+		views.UpdateView[Tally]("id", lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("tally.admin", RequireAdmin))
 	lago.RegistryView.Register("tally.TallyDeleteView",
-		views.DeleteView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")).
+		views.DeleteView[Tally]("id", lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("tally.admin", RequireAdmin))
 
@@ -317,7 +317,7 @@ func init() {
 	// generic DetailView[Tally] and apply TallyDetailQueryPatcher to enforce
 	// per-user access.
 	lago.RegistryView.Register("tally.TallyDetailView",
-		views.DetailView[Tally]("Tally")(
+		views.DetailView[Tally]("Tally", "id")(
 			lago.GetPageView("tally.TallyDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("tally.detail", TallyDetailQueryPatcher))

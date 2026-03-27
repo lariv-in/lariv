@@ -22,7 +22,7 @@ func init() {
 
 	// --- Detail ---
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksDetailView",
-		views.DetailView[ImportantLink]("link")(
+		views.DetailView[ImportantLink]("link", "id")(
 			lago.GetPageView("nirmancampus_website.ImportantLinksDetail"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
@@ -54,8 +54,8 @@ func init() {
 
 	// --- Update ---
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksUpdateView",
-		views.DetailView[ImportantLink]("link")(
-			views.UpdateView[ImportantLink](
+		views.DetailView[ImportantLink]("link", "id")(
+			views.UpdateView[ImportantLink]("id",
 				lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
@@ -69,12 +69,11 @@ func init() {
 
 	// --- Delete ---
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksDeleteView",
-		views.DetailView[ImportantLink]("link")(
-			views.DeleteView[ImportantLink](lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil))(
+		views.DetailView[ImportantLink]("link", "id")(
+			views.DeleteView[ImportantLink]("id", lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil))(
 				lago.GetPageView("nirmancampus_website.ImportantLinksDeleteForm"),
 			),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("important_links_admin.role", importantLinksAdminRoleMiddleware))
 }
-

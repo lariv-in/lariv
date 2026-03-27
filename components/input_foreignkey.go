@@ -23,6 +23,8 @@ type InputForeignKey[T any] struct {
 	Url         getters.Getter[string]
 	Required    bool
 	Classes     string
+	// Hidden renders only a hidden input (no label or picker). Use for carried IDs.
+	Hidden bool
 }
 
 func (e InputForeignKey[T]) GetKey() string {
@@ -59,6 +61,14 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 				}
 			}
 		}
+	}
+
+	if e.Hidden {
+		wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
+		wrapClass += " hidden"
+		return Div(Class(wrapClass),
+			Input(Type("hidden"), Name(e.Name), Value(valuePk)),
+		)
 	}
 
 	placeholder := e.Placeholder

@@ -36,4 +36,3 @@ func init() {
 		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinksDeleteView"),
 	})
 }
-

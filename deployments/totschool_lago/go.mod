@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/lariv-in/lago/lago v0.5.10
+	github.com/lariv-in/lago/plugins/forms v0.0.0
 	github.com/lariv-in/lago/plugins/p_dashboard v0.5.10
 	github.com/lariv-in/lago/plugins/p_otp v0.5.10
 	github.com/lariv-in/lago/plugins/p_pwa v0.5.10
@@ -108,3 +109,5 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
+
+replace github.com/lariv-in/lago/plugins/forms => ../../plugins/forms

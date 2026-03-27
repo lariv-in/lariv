@@ -67,10 +67,10 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
 	}
 
 	finalInput := Input(
-	Type("hidden"),
-	Name(e.Name),
-	Attr("x-data"),
-	Attr("x-init", fmt.Sprintf(`
+		Type("hidden"),
+		Name(e.Name),
+		Attr("x-data"),
+		Attr("x-init", fmt.Sprintf(`
 	$el.closest('form').addEventListener('submit', (e) => {
 		let form = e.target;
 		let data = [];
@@ -82,7 +82,7 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
             form.querySelectorAll('[name=%sKey], [name=%sValue]').forEach(el => el.disabled = true);
         });
 	`, e.Name, e.Name, e.Name, e.Name)),
-)
+	)
 	return Div(Class(e.Classes), Group(nodes), finalInput)
 }
 

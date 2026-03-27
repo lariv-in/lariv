@@ -8,7 +8,7 @@ import (
 
 type ShellSimpleScaffold struct {
 	Page
-	Children []PageInterface
+	Children  []PageInterface
 	ExtraHead []PageInterface
 }
 

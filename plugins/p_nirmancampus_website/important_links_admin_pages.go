@@ -389,4 +389,3 @@ func registerImportantLinksAdminDetailPages() {
 		},
 	})
 }
-

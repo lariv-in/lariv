@@ -31,7 +31,7 @@ type DataTable[T any] struct {
 	Classes  string
 	// Displays is a map of view name to display component
 	// e.g. "List": TableListContent, "Grid": TableGridContent
-	Displays        map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
+	Displays map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
 	// DefaultView is the initial display mode; must match a key in Displays. Empty means "List".
 	DefaultView     string
 	FilterComponent PageInterface

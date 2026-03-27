@@ -15,7 +15,7 @@ func init() {
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")))
 
 	lago.RegistryView.Register("studentapplications.DetailView",
-		views.DetailView[StudentApplication]("studentapplication")(
+		views.DetailView[StudentApplication]("studentapplication", "id")(
 			lago.GetPageView("studentapplications.ApplicationDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
@@ -28,8 +28,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("studentapplications.UpdateView",
-		views.DetailView[StudentApplication]("studentapplication")(
-			views.UpdateView[StudentApplication](lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
+		views.DetailView[StudentApplication]("studentapplication", "id")(
+			views.UpdateView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("studentapplications.ApplicationUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
@@ -37,8 +37,8 @@ func init() {
 			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")))
 
 	lago.RegistryView.Register("studentapplications.DeleteView",
-		views.DetailView[StudentApplication]("studentapplication")(
-			views.DeleteView[StudentApplication](lago.GetterRoutePath("studentapplications.DefaultRoute", nil))(
+		views.DetailView[StudentApplication]("studentapplication", "id")(
+			views.DeleteView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DefaultRoute", nil))(
 				lago.GetPageView("studentapplications.ApplicationDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")))

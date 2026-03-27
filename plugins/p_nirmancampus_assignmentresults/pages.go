@@ -133,7 +133,7 @@ func assignmentResultFormFields() components.ContainerColumn {
 								Required:    true,
 								Url:         lago.GetterRoutePath("academicrecords.SelectRoute", nil),
 								Placeholder: "Select an academic record...",
-								Display: getters.GetterKey[string]("$in.Student.User.Name"),
+								Display:     getters.GetterKey[string]("$in.Student.User.Name"),
 								Getter: getters.GetterAssociation[p_nirmancampus_academicrecords.AcademicRecord](
 									getters.GetterKey[uint]("$in.AcademicRecordID"),
 								),

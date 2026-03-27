@@ -13,10 +13,10 @@ import (
 type AssignmentResult struct {
 	gorm.Model
 
-	AssignmentID uint                     `gorm:"notnull;index;uniqueIndex:idx_assignment_result_pair"`
+	AssignmentID uint                                  `gorm:"notnull;index;uniqueIndex:idx_assignment_result_pair"`
 	Assignment   p_nirmancampus_assignments.Assignment `gorm:"constraint:OnDelete:CASCADE;foreignKey:AssignmentID;references:ID"`
 
-	AcademicRecordID uint                             `gorm:"notnull;index;uniqueIndex:idx_assignment_result_pair"`
+	AcademicRecordID uint                                          `gorm:"notnull;index;uniqueIndex:idx_assignment_result_pair"`
 	AcademicRecord   p_nirmancampus_academicrecords.AcademicRecord `gorm:"constraint:OnDelete:CASCADE;foreignKey:AcademicRecordID;references:ID"`
 
 	Marks   int    `gorm:"notnull"`
