@@ -1,10 +1,7 @@
 package lago
 
 import (
-	"encoding/json"
 	"net/http"
-	"os"
-	"time"
 
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/registry"
@@ -17,40 +14,12 @@ type DynamicView struct {
 	Key string
 }
 
-// #region agent log
-func debugLogDynamicView(runID, hypothesisID, location, message string, data map[string]any) {
-	f, err := os.OpenFile("/home/sandy/source_repos/lago/.cursor/debug-84938a.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	_ = json.NewEncoder(f).Encode(map[string]any{
-		"sessionId":    "84938a",
-		"runId":        runID,
-		"hypothesisId": hypothesisID,
-		"location":     location,
-		"message":      message,
-		"data":         data,
-		"timestamp":    time.Now().UnixMilli(),
-	})
-}
-
-// #endregion
-
 func NewDynamicView(key string) DynamicView {
 	return DynamicView{Key: key}
 }
 
 func (v DynamicView) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	view, viewPresent := RegistryView.Get(v.Key)
-	// #region agent log
-	debugLogDynamicView("initial", "H1", "lago/registry_views.go:39", "dynamic view lookup", map[string]any{
-		"key":         v.Key,
-		"viewPresent": viewPresent,
-		"path":        r.URL.Path,
-		"method":      r.Method,
-	})
-	// #endregion
 	if !viewPresent {
 		http.NotFound(w, r)
 		return

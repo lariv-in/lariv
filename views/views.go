@@ -2,14 +2,11 @@ package views
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"maps"
 	"net/http"
-	"os"
 	"reflect"
-	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -53,26 +50,6 @@ func (w *debugResponseWriter) Write(b []byte) (int, error) {
 	w.bytes += n
 	return n, err
 }
-
-// #region agent log
-func debugLogView(runID, hypothesisID, location, message string, data map[string]any) {
-	f, err := os.OpenFile("/home/sandy/source_repos/lago/.cursor/debug-84938a.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	_ = json.NewEncoder(f).Encode(map[string]any{
-		"sessionId":    "84938a",
-		"runId":        runID,
-		"hypothesisId": hypothesisID,
-		"location":     location,
-		"message":      message,
-		"data":         data,
-		"timestamp":    time.Now().UnixMilli(),
-	})
-}
-
-// #endregion
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler, isHandlerPresent := v.Handlers[r.Method]
