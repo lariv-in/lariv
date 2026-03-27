@@ -55,11 +55,6 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithFormPatcher("studentapplications.form_dob", applicationDOBFormPatcher))
 
-	lago.RegistryView.Register("studentapplications.PublicApplyView",
-		views.CreateView[StudentApplication](lago.GetterRoutePath("studentapplications.PublicApplyRoute", nil))(
-			lago.GetPageView("studentapplications.ApplicationPublicCreateForm")).
-			WithFormPatcher("studentapplications.form_dob", applicationDOBFormPatcher))
-
 	lago.RegistryView.Register("studentapplications.UpdateView",
 		views.DetailView[StudentApplication]("studentapplication")(
 			views.UpdateView[StudentApplication](lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(

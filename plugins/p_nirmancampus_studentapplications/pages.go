@@ -285,24 +285,6 @@ func registerFormPages() {
 			},
 		},
 	})
-
-	lago.RegistryPage.Register("studentapplications.ApplicationPublicCreateForm", &components.ShellScaffold{
-		Children: []components.PageInterface{
-			&components.FormComponent[StudentApplication]{
-				Url:      lago.GetterRoutePath("studentapplications.PublicApplyRoute", nil),
-				Method:   http.MethodPost,
-				Title:    "Student application",
-				Subtitle: "Fill this form to apply",
-				Classes:  "@container max-w-4xl mx-auto p-4",
-				ChildrenInput: []components.PageInterface{
-					applicationFormFields(),
-				},
-				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Submit application"},
-				},
-			},
-		},
-	})
 }
 
 func registerTablePages() {
