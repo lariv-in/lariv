@@ -90,6 +90,10 @@ github.com/lariv-in/lago/getters v0.5.10 h1:ots+Q55arAAbB2i/FE5MEZr6f3yyNZtDiEcv
 github.com/lariv-in/lago/getters v0.5.10/go.mod h1:6wEjjeBr5CRR1Iwz+rjsIGoZPnpojYrEFIda1T5sZng=
 github.com/lariv-in/lago/lago v0.5.10 h1:0UMnkxbYamlZVtnjTL007IPn5IQaukLWm9xEC/i7fWc=
 github.com/lariv-in/lago/lago v0.5.10/go.mod h1:+zbrjS12vdNOZisvRVn9BHC5pspQPjVf1g6KSU+MMKY=
+github.com/lariv-in/lago/plugins/p_filesystem v0.5.10 h1:yqgauaaduSscsmvMd8sNCb5p+t6swmTkmnQveEluyu8=
+github.com/lariv-in/lago/plugins/p_filesystem v0.5.10/go.mod h1:lzSL1qu5EnNU/14IvYQPbQ5oRFEh1wbFPzcBVp1Ugso=
+github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.5.10 h1:i3Xxq4vx/BxpJiYBtKEbbKYMJBEjWs0w/tTw1nNakqo=
+github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.5.10/go.mod h1:StC+1mWzMbMn3zLYzQLhsqNhaHW8sca6JBWP95vaIgc=
 github.com/lariv-in/lago/plugins/p_users v0.5.10 h1:2ErBYXwImYP0Op/yEvsClGnK2ofNXQBGK9CGYzlzDqs=
 github.com/lariv-in/lago/plugins/p_users v0.5.10/go.mod h1:VgDEjlJVHh1zXYVx0HHN5BvX9WFsEzPIvudCLY+sBlc=
 github.com/lariv-in/lago/registry v0.5.10 h1:JD/CHKsbP8tfTTEc8bIpK5to56RL1Za3Lsi1mJVm5GA=

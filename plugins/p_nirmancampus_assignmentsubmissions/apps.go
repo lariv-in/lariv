@@ -1,4 +1,4 @@
-package p_nirmancampus_announcements
+package p_nirmancampus_assignmentsubmissions
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
-const AppUrl = "/announcements/"
+const AppUrl = "/assignment-submissions/"
 
 func init() {
 	u, err := url.Parse(AppUrl)
@@ -15,11 +15,11 @@ func init() {
 		log.Panic(err)
 	}
 
-	err = lago.RegistryPlugin.Register("p_nirmancampus_announcements", lago.Plugin{
+	err = lago.RegistryPlugin.Register("p_nirmancampus_assignmentsubmissions", lago.Plugin{
 		Type:        lago.PluginTypeApp,
-		Icon:        "megaphone",
+		Icon:        "document-check",
 		URL:         u,
-		VerboseName: "Announcements",
+		VerboseName: "Assignment Submissions",
 		Roles:       []string{"superuser", "admin", "student"},
 	})
 	if err != nil {

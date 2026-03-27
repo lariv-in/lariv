@@ -20,6 +20,7 @@ func init() {
 		Icon:        "calendar",
 		URL:         u,
 		VerboseName: "Sessions",
+		Roles:       []string{"superuser", "admin"},
 	})
 	if err != nil {
 		log.Panic(err)

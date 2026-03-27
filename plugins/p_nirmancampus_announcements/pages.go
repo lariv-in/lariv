@@ -51,12 +51,14 @@ func registerMenuPages() {
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Edit Announcement"),
 				Url: lago.GetterRoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("announcement.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Delete Announcement"),
 				Url: lago.GetterRoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("announcement.ID")),
@@ -205,6 +207,7 @@ func registerFormPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementFormFields", announcementFormFields())
 
 	lago.RegistryPage.Register("announcements.AnnouncementCreateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "announcements.AnnouncementMenu"},
 		},
@@ -226,6 +229,7 @@ func registerFormPages() {
 	})
 
 	lago.RegistryPage.Register("announcements.AnnouncementUpdateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "announcements.AnnouncementDetailMenu"},
 		},
@@ -256,7 +260,7 @@ func announcementCreateUrlGetter() getters.Getter[string] {
 		if err != nil {
 			return "", err
 		}
-		if role == "superuser" {
+		if role == "superuser" || role == "admin" {
 			return lago.GetterRoutePath("announcements.CreateRoute", nil)(ctx)
 		}
 		return "", fmt.Errorf("you do not have permission to do this action")
@@ -366,6 +370,7 @@ func registerDetailPages() {
 	})
 
 	lago.RegistryPage.Register("announcements.AnnouncementDeleteForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "announcements.AnnouncementDetailMenu"},
 		},

@@ -94,6 +94,8 @@ github.com/lariv-in/lago/plugins/p_dashboard v0.5.10 h1:N9msDguhn6WlxtIwlF+XpU4i
 github.com/lariv-in/lago/plugins/p_dashboard v0.5.10/go.mod h1:t0YAJioxFcIJYXZjougWxGTilxC0hB3J2pPUGNbeYSI=
 github.com/lariv-in/lago/plugins/p_filesystem v0.5.10 h1:yqgauaaduSscsmvMd8sNCb5p+t6swmTkmnQveEluyu8=
 github.com/lariv-in/lago/plugins/p_filesystem v0.5.10/go.mod h1:lzSL1qu5EnNU/14IvYQPbQ5oRFEh1wbFPzcBVp1Ugso=
+github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords v0.0.0-20260327045815-340e0b5d9c48 h1:y/60OoFmc8S7Qma6x/i8cARXL09ffd7FKdXr1UVZZog=
+github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords v0.0.0-20260327045815-340e0b5d9c48/go.mod h1:M/xh689IEbJ6fa9Z231wGbSRQpUKlRnNrSTzhvEYbwU=
 github.com/lariv-in/lago/plugins/p_nirmancampus_announcements v0.0.0-20260326081203-a40ac47e777f h1:tdmgR/kEXxKvWuW2J7NQCe6QNGOU2kmcBMcF38HojG0=
 github.com/lariv-in/lago/plugins/p_nirmancampus_announcements v0.0.0-20260326081203-a40ac47e777f/go.mod h1:Q/wuo1j+vmFx10WLKIwmJfAyI2mX0FZ00WRDqVRYH1w=
 github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.10 h1:8aeigE8RpSvS3EmvxouGOiEAtRizysIyaNdlN01tAY4=

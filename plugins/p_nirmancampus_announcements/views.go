@@ -8,17 +8,11 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
-	"gorm.io/gorm"
 )
 
-// announcementsOrderReleaseAtQueryPatcher defaults ordering to release_at ASC
-// when the request didn't specify sort=.
-func announcementsOrderReleaseAtQueryPatcher(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-	if r.URL.Query().Get("sort") != "" {
-		return query
-	}
-	return query.Order("release_at ASC")
-}
+// announcementsAdminRoleMiddleware limits create/update/delete to the admin role;
+// superusers are always allowed (see p_users.RoleAuthorizationMiddleware).
+var announcementsAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
 
 func announcementsFormCreatedByPatcher(_ *views.View, r *http.Request, formData map[string]any) map[string]any {
 	user := r.Context().Value("$user").(p_users.User)
@@ -60,14 +54,16 @@ func init() {
 			lago.GetPageView("announcements.AnnouncementTable"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("announcements.order_release_at", announcementsOrderReleaseAtQueryPatcher))
+			WithQueryPatcher("announcements.order_release_at", announcementsOrderReleaseAtQueryPatcher).
+			WithQueryPatcher("announcements.scope_by_role", AnnouncementScopeByRole))
 
 	// Detail view.
 	lago.RegistryView.Register("announcements.DetailView",
 		views.DetailView[Announcement]("announcement", "id")(
 			lago.GetPageView("announcements.AnnouncementDetail"),
 		).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithQueryPatcher("announcements.scope_by_role", AnnouncementScopeByRole))
 
 	// Create view.
 	lago.RegistryView.Register("announcements.CreateView",
@@ -79,6 +75,7 @@ func init() {
 			lago.GetPageView("announcements.AnnouncementCreateForm"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("announcements.admin_role", announcementsAdminRoleMiddleware).
 			WithFormPatcher("announcements.form", announcementsFormCreatedByPatcher).
 			WithFormPatcher("announcements.form", announcementsFormExpiryAtPointerPatcher))
 
@@ -94,6 +91,8 @@ func init() {
 			),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("announcements.admin_role", announcementsAdminRoleMiddleware).
+			WithQueryPatcher("announcements.scope_by_role", AnnouncementScopeByRole).
 			WithFormPatcher("announcements.form", announcementsFormExpiryAtPointerPatcher))
 
 	// Delete view.
@@ -103,7 +102,9 @@ func init() {
 				lago.GetPageView("announcements.AnnouncementDeleteForm"),
 			),
 		).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("announcements.admin_role", announcementsAdminRoleMiddleware).
+			WithQueryPatcher("announcements.scope_by_role", AnnouncementScopeByRole))
 
 	// Selection view.
 	lago.RegistryView.Register("announcements.SelectView",
@@ -111,5 +112,6 @@ func init() {
 			lago.GetPageView("announcements.AnnouncementSelectionTable"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("announcements.order_release_at", announcementsOrderReleaseAtQueryPatcher))
+			WithQueryPatcher("announcements.order_release_at", announcementsOrderReleaseAtQueryPatcher).
+			WithQueryPatcher("announcements.scope_by_role", AnnouncementScopeByRole))
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -13,88 +14,110 @@ import (
 
 // sampleApplicationRows are seed records; ProgramID is chosen from existing programs at runtime.
 var sampleApplicationRows = []struct {
-	name            string
 	studentName     string
+	email           string
+	dob             time.Time
+	motherName      string
 	fatherName      string
 	category        string
 	completeAddress string
 	mobile          string
 }{
 	{
-		name:            "Intake — Riya Sharma",
 		studentName:     "Riya Sharma",
+		email:           "riya.sharma@example.edu",
+		dob:             time.Date(2005, 3, 12, 0, 0, 0, 0, time.UTC),
+		motherName:      "Sunita Sharma",
 		fatherName:      "Rajesh Sharma",
 		category:        "General",
 		completeAddress: "42, Station Road, Indore, MP 452001",
 		mobile:          "9876501234",
 	},
 	{
-		name:            "Intake — Arjun Mehta",
 		studentName:     "Arjun Mehta",
+		email:           "arjun.mehta@example.edu",
+		dob:             time.Date(2004, 7, 22, 0, 0, 0, 0, time.UTC),
+		motherName:      "Neha Mehta",
 		fatherName:      "Vikram Mehta",
 		category:        "OBC",
 		completeAddress: "18, Lake View Colony, Ujjain, MP 456010",
 		mobile:          "9876502234",
 	},
 	{
-		name:            "Intake — Ananya Iyer",
 		studentName:     "Ananya Iyer",
+		email:           "ananya.iyer@example.edu",
+		dob:             time.Date(2006, 1, 5, 0, 0, 0, 0, time.UTC),
+		motherName:      "Lakshmi Iyer",
 		fatherName:      "Karthik Iyer",
 		category:        "General",
 		completeAddress: "7, Teachers Colony, Bhopal, MP 462003",
 		mobile:          "9876503234",
 	},
 	{
-		name:            "Intake — Mohammed Khan",
 		studentName:     "Mohammed Khan",
+		email:           "mohammed.khan@example.edu",
+		dob:             time.Date(2005, 11, 18, 0, 0, 0, 0, time.UTC),
+		motherName:      "Ayesha Khan",
 		fatherName:      "Salim Khan",
 		category:        "General",
 		completeAddress: "91, Old City, Burhanpur, MP 450331",
 		mobile:          "9876504234",
 	},
 	{
-		name:            "Intake — Priya Nair",
 		studentName:     "Priya Nair",
+		email:           "priya.nair@example.edu",
+		dob:             time.Date(2004, 9, 30, 0, 0, 0, 0, time.UTC),
+		motherName:      "Deepa Nair",
 		fatherName:      "Suresh Nair",
 		category:        "SC",
 		completeAddress: "3B, Riverside Apartments, Jabalpur, MP 482001",
 		mobile:          "9876505234",
 	},
 	{
-		name:            "Intake — Kavya Reddy",
 		studentName:     "Kavya Reddy",
+		email:           "kavya.reddy@example.edu",
+		dob:             time.Date(2005, 4, 8, 0, 0, 0, 0, time.UTC),
+		motherName:      "Padma Reddy",
 		fatherName:      "Srinivas Reddy",
 		category:        "General",
 		completeAddress: "55, MG Road, Gwalior, MP 474001",
 		mobile:          "9876506234",
 	},
 	{
-		name:            "Intake — Dev Patel",
 		studentName:     "Dev Patel",
+		email:           "dev.patel@example.edu",
+		dob:             time.Date(2006, 2, 14, 0, 0, 0, 0, time.UTC),
+		motherName:      "Kiran Patel",
 		fatherName:      "Nirav Patel",
 		category:        "ST",
 		completeAddress: "12, Gandhi Nagar, Ratlam, MP 457001",
 		mobile:          "9876507234",
 	},
 	{
-		name:            "Intake — Sneha Deshmukh",
 		studentName:     "Sneha Deshmukh",
+		email:           "sneha.deshmukh@example.edu",
+		dob:             time.Date(2005, 8, 25, 0, 0, 0, 0, time.UTC),
+		motherName:      "Swati Deshmukh",
 		fatherName:      "Amit Deshmukh",
 		category:        "General",
 		completeAddress: "28, Civil Lines, Sagar, MP 470001",
 		mobile:          "9876508234",
 	},
 	{
-		name:            "Intake — Rohan Joshi",
 		studentName:     "Rohan Joshi",
+		email:           "rohan.joshi@example.edu",
+		dob:             time.Date(2004, 12, 3, 0, 0, 0, 0, time.UTC),
+		motherName:      "Meera Joshi",
 		fatherName:      "Manish Joshi",
 		category:        "EWS",
 		completeAddress: "6, Shanti Niketan, Dewas, MP 455001",
 		mobile:          "9876509234",
 	},
 	{
-		name:            "Intake — Neha Verma",
 		studentName:     "Neha Verma",
+		email:           "neha.verma@example.edu",
+		dob:             time.Date(2005, 6, 19, 0, 0, 0, 0, time.UTC),
+		motherName:      "Rekha Verma",
 		fatherName:      "Pankaj Verma",
 		category:        "OBC",
 		completeAddress: "14, Ring Road, Rewa, MP 486001",
@@ -148,11 +171,14 @@ func init() {
 			for i := range sampleApplicationRows {
 				row := sampleApplicationRows[i]
 				prog := programs[i%len(programs)]
+				dob := row.dob
 
 				app := StudentApplication{
-					Name:            row.name,
 					ProgramID:       prog.ID,
 					StudentName:     row.studentName,
+					Email:           row.email,
+					DOB:             &dob,
+					MotherName:      row.motherName,
 					FatherName:      row.fatherName,
 					Category:        row.category,
 					CompleteAddress: row.completeAddress,
@@ -163,7 +189,7 @@ func init() {
 					picked := files[rand.Intn(len(files))]
 					app.PhotoID = &picked.ID
 				} else if node, genErr := p_filesystem.GeneratePhotoFile(db); genErr != nil {
-					return fmt.Errorf("generate photo for application %q: %w", row.name, genErr)
+					return fmt.Errorf("generate photo for application %q: %w", row.studentName, genErr)
 				} else if node != nil {
 					app.PhotoID = &node.ID
 					files, err = loadFileNodes(db)
@@ -173,7 +199,7 @@ func init() {
 				}
 
 				if err := db.Create(&app).Error; err != nil {
-					return fmt.Errorf("failed to create student application %q: %w", row.name, err)
+					return fmt.Errorf("failed to create student application %q: %w", row.studentName, err)
 				}
 
 				nDocs := rand.Intn(4)
@@ -189,7 +215,7 @@ func init() {
 					continue
 				}
 				if err := db.Model(&app).Association("Documents").Append(docs); err != nil {
-					return fmt.Errorf("attach documents for %q: %w", row.name, err)
+					return fmt.Errorf("attach documents for %q: %w", row.studentName, err)
 				}
 			}
 

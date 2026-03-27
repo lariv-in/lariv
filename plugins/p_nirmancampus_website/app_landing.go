@@ -10,7 +10,7 @@ import (
 	"maragu.dev/gomponents"
 )
 
-var websiteAppRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"nirmancampus_admin"})
+var websiteAppRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
 
 type websiteAppLandingPage struct {
 	components.Page

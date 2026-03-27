@@ -19,6 +19,7 @@ func init() {
 		Icon:        "folder",
 		URL:         u,
 		VerboseName: "Filesystem",
+		Roles:       []string{"superuser", "admin"},
 	})
 	if err != nil {
 		log.Panic(err)

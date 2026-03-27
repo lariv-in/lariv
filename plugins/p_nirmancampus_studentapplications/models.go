@@ -2,6 +2,7 @@ package p_nirmancampus_studentapplications
 
 import (
 	"log"
+	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -13,10 +14,12 @@ import (
 type StudentApplication struct {
 	gorm.Model
 
-	Name            string `gorm:"notnull"`
-	ProgramID       uint   `gorm:"notnull"`
+	ProgramID       uint `gorm:"notnull"`
 	Program         p_nirmancampus_programs.Program
 	StudentName     string `gorm:"notnull"`
+	Email           string
+	DOB             *time.Time `gorm:"type:date"`
+	MotherName      string
 	FatherName      string
 	Category        string
 	CompleteAddress string
@@ -35,11 +38,13 @@ func init() {
 	})
 
 	lago.RegistryAdmin.Register("p_nirmancampus_studentapplications", lago.AdminPanel[StudentApplication]{
-		SearchField: "Name",
+		SearchField: "StudentName",
 		ListFields: []string{
-			"Name",
 			"Program.Name",
 			"StudentName",
+			"Email",
+			"DOB",
+			"MotherName",
 			"FatherName",
 			"Category",
 			"Mobile",

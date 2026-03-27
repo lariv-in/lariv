@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentresults
+module github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentsubmissions
 
 go 1.26.1
 
@@ -6,7 +6,10 @@ require (
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
-	github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords v0.0.0
+	github.com/lariv-in/lago/plugins/p_filesystem v0.5.10
+	github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords v0.0.0-20260327045815-340e0b5d9c48
+	github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.10
+	github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.5.10
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
 	gorm.io/gorm v1.31.1
@@ -44,9 +47,8 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/lariv-in/lago/plugins/p_filesystem v0.5.10 // indirect
-	github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.0.0-00010101000000-000000000000 // indirect
-	github.com/lariv-in/lago/registry v0.5.9 // indirect
+	github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.0.0-00010101000000-000000000000 // indirect
+	github.com/lariv-in/lago/registry v0.5.10 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
 	github.com/mattn/go-sqlite3 v1.14.37 // indirect
@@ -72,4 +74,8 @@ require (
 
 replace github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords => ../p_nirmancampus_academicrecords
 
+replace github.com/lariv-in/lago/plugins/p_nirmancampus_courses => ../p_nirmancampus_courses
+
 replace github.com/lariv-in/lago/plugins/p_nirmancampus_students => ../p_nirmancampus_students
+
+replace github.com/lariv-in/lago/plugins/p_nirmancampus_programs => ../p_nirmancampus_programs

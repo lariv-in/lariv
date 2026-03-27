@@ -7,7 +7,7 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-var importantLinksAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"nirmancampus_admin"})
+var importantLinksAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
 
 func init() {
 	// --- List ---

@@ -25,6 +25,8 @@ type Program struct {
 	Code        string `gorm:"uniqueIndex"`
 	Description string
 	University  string `gorm:"type:varchar(32);not null;default:''"`
+	// ProgramType is one of: certificate, diploma, bachelor, masters (see programTypeChoices in pages).
+	ProgramType string `gorm:"type:varchar(32);not null;default:''"`
 }
 
 func init() {
@@ -37,6 +39,6 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_programs", lago.AdminPanel[Program]{
 		SearchField: "Name",
-		ListFields:  []string{"Name", "Code", "University"},
+		ListFields:  []string{"Name", "Code", "University", "ProgramType"},
 	})
 }

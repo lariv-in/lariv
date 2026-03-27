@@ -2,6 +2,7 @@ package p_nirmancampus_programs
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
@@ -14,6 +15,15 @@ func universityChoices() []registry.Pair[string, string] {
 	return []registry.Pair[string, string]{
 		{Key: "IGNOU", Value: "IGNOU"},
 		{Key: "MRSPTU", Value: "MRSPTU"},
+	}
+}
+
+func programTypeChoices() []registry.Pair[string, string] {
+	return []registry.Pair[string, string]{
+		{Key: "certificate", Value: "Certificate"},
+		{Key: "diploma", Value: "Diploma"},
+		{Key: "bachelor", Value: "Bachelor"},
+		{Key: "masters", Value: "Masters"},
 	}
 }
 
@@ -56,6 +66,55 @@ func universityFormSelect() *components.InputSelect[string] {
 	}
 }
 
+func programTypeFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.GetterKey[string]("$get.ProgramType")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range programTypeChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func programProgramTypePairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.GetterKey[string]("$in.ProgramType")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range programTypeChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func programTypeFilterSelect() *components.InputSelect[string] {
+	return &components.InputSelect[string]{
+		Label:   "Program type",
+		Name:    "ProgramType",
+		Choices: getters.GetterStatic(programTypeChoices()),
+		Getter:  programTypeFilterPairGetter(),
+	}
+}
+
+func programTypeFormSelect() *components.InputSelect[string] {
+	return &components.InputSelect[string]{
+		Label:    "Program type",
+		Name:     "ProgramType",
+		Required: false,
+		Choices:  getters.GetterStatic(programTypeChoices()),
+		Getter:   programProgramTypePairGetter(),
+	}
+}
+
 func init() {
 	registerMenuPages()
 	registerFilterPages()
@@ -94,12 +153,14 @@ func registerMenuPages() {
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Edit Program"),
 				Url: lago.GetterRoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("program.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Delete Program"),
 				Url: lago.GetterRoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("program.ID")),
@@ -125,6 +186,7 @@ func registerFilterPages() {
 				Getter: getters.GetterKey[string]("$get.Code"),
 			},
 			universityFilterSelect(),
+			programTypeFilterSelect(),
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{
@@ -152,6 +214,7 @@ func registerFilterPages() {
 				Getter: getters.GetterKey[string]("$get.Code"),
 			},
 			universityFilterSelect(),
+			programTypeFilterSelect(),
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{
@@ -222,9 +285,28 @@ func programFormFields() components.ContainerColumn {
 							universityFormSelect(),
 						},
 					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.ProgramType"),
+						Children: []components.PageInterface{
+							programTypeFormSelect(),
+						},
+					},
 				},
 			},
 		},
+	}
+}
+
+func programCreateUrlGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		role, err := getters.GetterKey[string]("$role")(ctx)
+		if err != nil {
+			return "", err
+		}
+		if role == "superuser" || role == "admin" {
+			return lago.GetterRoutePath("programs.CreateRoute", nil)(ctx)
+		}
+		return "", fmt.Errorf("you do not have permission to do this action")
 	}
 }
 
@@ -232,6 +314,7 @@ func registerFormPages() {
 	lago.RegistryPage.Register("programs.ProgramFormFields", programFormFields())
 
 	lago.RegistryPage.Register("programs.ProgramCreateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "programs.ProgramMenu"},
 		},
@@ -253,6 +336,7 @@ func registerFormPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramUpdateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
 		},
@@ -288,7 +372,7 @@ func registerTablePages() {
 				UID:       "program-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Program]]("programs"),
-				CreateUrl: lago.GetterRoutePath("programs.CreateRoute", nil),
+				CreateUrl: programCreateUrlGetter(),
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
@@ -315,6 +399,13 @@ func registerTablePages() {
 						Name:  "University",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.University")},
+						},
+					},
+					{
+						Label: "Program type",
+						Name:  "ProgramType",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.ProgramType")},
 						},
 					},
 					{
@@ -352,6 +443,13 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
+								Title:   "Program type",
+								Classes: "mt-2",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.ProgramType")},
+								},
+							},
+							&components.LabelInline{
 								Title:   "Description",
 								Classes: "mt-2",
 								Children: []components.PageInterface{
@@ -366,6 +464,7 @@ func registerDetailPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramDeleteForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
 		},
@@ -412,6 +511,13 @@ func registerSelectionPages() {
 						Name:  "University",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.University")},
+						},
+					},
+					{
+						Label: "Program type",
+						Name:  "ProgramType",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.ProgramType")},
 						},
 					},
 				},
