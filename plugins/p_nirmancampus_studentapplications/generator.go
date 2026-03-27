@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -15,6 +16,8 @@ import (
 var sampleApplicationRows = []struct {
 	name            string
 	studentName     string
+	dob             time.Time
+	motherName      string
 	fatherName      string
 	category        string
 	completeAddress string
@@ -23,6 +26,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Riya Sharma",
 		studentName:     "Riya Sharma",
+		dob:             time.Date(2005, 3, 12, 0, 0, 0, 0, time.UTC),
+		motherName:      "Sunita Sharma",
 		fatherName:      "Rajesh Sharma",
 		category:        "General",
 		completeAddress: "42, Station Road, Indore, MP 452001",
@@ -31,6 +36,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Arjun Mehta",
 		studentName:     "Arjun Mehta",
+		dob:             time.Date(2004, 7, 22, 0, 0, 0, 0, time.UTC),
+		motherName:      "Neha Mehta",
 		fatherName:      "Vikram Mehta",
 		category:        "OBC",
 		completeAddress: "18, Lake View Colony, Ujjain, MP 456010",
@@ -39,6 +46,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Ananya Iyer",
 		studentName:     "Ananya Iyer",
+		dob:             time.Date(2006, 1, 5, 0, 0, 0, 0, time.UTC),
+		motherName:      "Lakshmi Iyer",
 		fatherName:      "Karthik Iyer",
 		category:        "General",
 		completeAddress: "7, Teachers Colony, Bhopal, MP 462003",
@@ -47,6 +56,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Mohammed Khan",
 		studentName:     "Mohammed Khan",
+		dob:             time.Date(2005, 11, 18, 0, 0, 0, 0, time.UTC),
+		motherName:      "Ayesha Khan",
 		fatherName:      "Salim Khan",
 		category:        "General",
 		completeAddress: "91, Old City, Burhanpur, MP 450331",
@@ -55,6 +66,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Priya Nair",
 		studentName:     "Priya Nair",
+		dob:             time.Date(2004, 9, 30, 0, 0, 0, 0, time.UTC),
+		motherName:      "Deepa Nair",
 		fatherName:      "Suresh Nair",
 		category:        "SC",
 		completeAddress: "3B, Riverside Apartments, Jabalpur, MP 482001",
@@ -63,6 +76,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Kavya Reddy",
 		studentName:     "Kavya Reddy",
+		dob:             time.Date(2005, 4, 8, 0, 0, 0, 0, time.UTC),
+		motherName:      "Padma Reddy",
 		fatherName:      "Srinivas Reddy",
 		category:        "General",
 		completeAddress: "55, MG Road, Gwalior, MP 474001",
@@ -71,6 +86,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Dev Patel",
 		studentName:     "Dev Patel",
+		dob:             time.Date(2006, 2, 14, 0, 0, 0, 0, time.UTC),
+		motherName:      "Kiran Patel",
 		fatherName:      "Nirav Patel",
 		category:        "ST",
 		completeAddress: "12, Gandhi Nagar, Ratlam, MP 457001",
@@ -79,6 +96,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Sneha Deshmukh",
 		studentName:     "Sneha Deshmukh",
+		dob:             time.Date(2005, 8, 25, 0, 0, 0, 0, time.UTC),
+		motherName:      "Swati Deshmukh",
 		fatherName:      "Amit Deshmukh",
 		category:        "General",
 		completeAddress: "28, Civil Lines, Sagar, MP 470001",
@@ -87,6 +106,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Rohan Joshi",
 		studentName:     "Rohan Joshi",
+		dob:             time.Date(2004, 12, 3, 0, 0, 0, 0, time.UTC),
+		motherName:      "Meera Joshi",
 		fatherName:      "Manish Joshi",
 		category:        "EWS",
 		completeAddress: "6, Shanti Niketan, Dewas, MP 455001",
@@ -95,6 +116,8 @@ var sampleApplicationRows = []struct {
 	{
 		name:            "Intake — Neha Verma",
 		studentName:     "Neha Verma",
+		dob:             time.Date(2005, 6, 19, 0, 0, 0, 0, time.UTC),
+		motherName:      "Rekha Verma",
 		fatherName:      "Pankaj Verma",
 		category:        "OBC",
 		completeAddress: "14, Ring Road, Rewa, MP 486001",
@@ -148,11 +171,14 @@ func init() {
 			for i := range sampleApplicationRows {
 				row := sampleApplicationRows[i]
 				prog := programs[i%len(programs)]
+				dob := row.dob
 
 				app := StudentApplication{
 					Name:            row.name,
 					ProgramID:       prog.ID,
 					StudentName:     row.studentName,
+					DOB:             &dob,
+					MotherName:      row.motherName,
 					FatherName:      row.fatherName,
 					Category:        row.category,
 					CompleteAddress: row.completeAddress,

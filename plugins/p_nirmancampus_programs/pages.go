@@ -18,6 +18,15 @@ func universityChoices() []registry.Pair[string, string] {
 	}
 }
 
+func programTypeChoices() []registry.Pair[string, string] {
+	return []registry.Pair[string, string]{
+		{Key: "certificate", Value: "Certificate"},
+		{Key: "diploma", Value: "Diploma"},
+		{Key: "bachelor", Value: "Bachelor"},
+		{Key: "masters", Value: "Masters"},
+	}
+}
+
 func universityFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
 	return func(ctx context.Context) (registry.Pair[string, string], error) {
 		s, err := getters.GetterKey[string]("$get.University")(ctx)
@@ -54,6 +63,55 @@ func universityFormSelect() *components.InputSelect[string] {
 		Required: false,
 		Choices:  getters.GetterStatic(universityChoices()),
 		Getter:   programUniversityPairGetter(),
+	}
+}
+
+func programTypeFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.GetterKey[string]("$get.ProgramType")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range programTypeChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func programProgramTypePairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.GetterKey[string]("$in.ProgramType")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range programTypeChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func programTypeFilterSelect() *components.InputSelect[string] {
+	return &components.InputSelect[string]{
+		Label:   "Program type",
+		Name:    "ProgramType",
+		Choices: getters.GetterStatic(programTypeChoices()),
+		Getter:  programTypeFilterPairGetter(),
+	}
+}
+
+func programTypeFormSelect() *components.InputSelect[string] {
+	return &components.InputSelect[string]{
+		Label:    "Program type",
+		Name:     "ProgramType",
+		Required: false,
+		Choices:  getters.GetterStatic(programTypeChoices()),
+		Getter:   programProgramTypePairGetter(),
 	}
 }
 
@@ -128,6 +186,7 @@ func registerFilterPages() {
 				Getter: getters.GetterKey[string]("$get.Code"),
 			},
 			universityFilterSelect(),
+			programTypeFilterSelect(),
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{
@@ -155,6 +214,7 @@ func registerFilterPages() {
 				Getter: getters.GetterKey[string]("$get.Code"),
 			},
 			universityFilterSelect(),
+			programTypeFilterSelect(),
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{
@@ -223,6 +283,12 @@ func programFormFields() components.ContainerColumn {
 						Error: getters.GetterKey[error]("$error.University"),
 						Children: []components.PageInterface{
 							universityFormSelect(),
+						},
+					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.ProgramType"),
+						Children: []components.PageInterface{
+							programTypeFormSelect(),
 						},
 					},
 				},
@@ -336,6 +402,13 @@ func registerTablePages() {
 						},
 					},
 					{
+						Label: "Program type",
+						Name:  "ProgramType",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.ProgramType")},
+						},
+					},
+					{
 						Label: "Description",
 						Name:  "Description",
 						Children: []components.PageInterface{
@@ -367,6 +440,13 @@ func registerDetailPages() {
 								Classes: "mt-2",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.University")},
+								},
+							},
+							&components.LabelInline{
+								Title:   "Program type",
+								Classes: "mt-2",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.ProgramType")},
 								},
 							},
 							&components.LabelInline{
@@ -431,6 +511,13 @@ func registerSelectionPages() {
 						Name:  "University",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.GetterKey[string]("$row.University")},
+						},
+					},
+					{
+						Label: "Program type",
+						Name:  "ProgramType",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.GetterKey[string]("$row.ProgramType")},
 						},
 					},
 				},

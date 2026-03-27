@@ -56,6 +56,35 @@ func queryPatcherUniversity(param string) views.QueryPatcher {
 	}
 }
 
+func queryPatcherProgramType(param string) views.QueryPatcher {
+	return func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+		getMap, ok := r.Context().Value("$get").(map[string]any)
+		if !ok {
+			return query
+		}
+
+		raw, ok := getMap[param]
+		if !ok {
+			return query
+		}
+		value, ok := raw.(string)
+		if !ok {
+			return query
+		}
+		value = strings.TrimSpace(value)
+		if value == "" {
+			return query
+		}
+
+		col, ok := fieldDBName[Program](query, "ProgramType")
+		if !ok {
+			return query
+		}
+
+		return query.Where(col+" = ?", value)
+	}
+}
+
 // ProgramScopeByRole restricts program queries:
 //   - superuser, admin: full queryset
 //   - student: programs referenced by any academic record for this user's student row

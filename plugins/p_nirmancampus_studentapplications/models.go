@@ -2,6 +2,7 @@ package p_nirmancampus_studentapplications
 
 import (
 	"log"
+	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -17,6 +18,8 @@ type StudentApplication struct {
 	ProgramID         uint   `gorm:"notnull"`
 	Program           p_nirmancampus_programs.Program
 	StudentName       string `gorm:"notnull"`
+	DOB               *time.Time
+	MotherName        string
 	FatherName        string
 	Category          string
 	CompleteAddress   string
@@ -40,6 +43,8 @@ func init() {
 			"Name",
 			"Program.Name",
 			"StudentName",
+			"DOB",
+			"MotherName",
 			"FatherName",
 			"Category",
 			"Mobile",

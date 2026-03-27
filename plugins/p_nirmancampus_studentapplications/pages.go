@@ -2,6 +2,7 @@ package p_nirmancampus_studentapplications
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -137,6 +138,27 @@ func applicationFormFields() components.ContainerColumn {
 								Name:     "StudentName",
 								Required: true,
 								Getter:   getters.GetterKey[string]("$in.StudentName"),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.DOB"),
+						Children: []components.PageInterface{
+							&components.InputDatetime{
+								Label:    "Date of birth",
+								Name:     "DOB",
+								Required: false,
+								Getter:   getters.GetterDeref(getters.GetterKey[*time.Time]("$in.DOB")),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.MotherName"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "Mother name",
+								Name:   "MotherName",
+								Getter: getters.GetterKey[string]("$in.MotherName"),
 							},
 						},
 					},
@@ -337,6 +359,18 @@ func registerDetailPages() {
 								Title: "Program",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Program.Name")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Date of birth",
+								Children: []components.PageInterface{
+									&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$in.DOB"))},
+								},
+							},
+							&components.LabelInline{
+								Title: "Mother name",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.MotherName")},
 								},
 							},
 							&components.LabelInline{

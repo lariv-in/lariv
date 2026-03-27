@@ -13,6 +13,7 @@ var programsAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"
 
 func init() {
 	univPatcher := queryPatcherUniversity("University")
+	programTypePatcher := queryPatcherProgramType("ProgramType")
 
 	lago.RegistryView.Register("programs.ListView",
 		views.ListView[Program]("programs")(
@@ -20,6 +21,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("nirmancampus_programs.filter_university", univPatcher).
+			WithQueryPatcher("nirmancampus_programs.filter_program_type", programTypePatcher).
 			WithQueryPatcher("programs.scope_by_role", ProgramScopeByRole))
 
 	lago.RegistryView.Register("programs.DetailView",
@@ -72,5 +74,6 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("nirmancampus_programs.filter_university", univPatcher).
+			WithQueryPatcher("nirmancampus_programs.filter_program_type", programTypePatcher).
 			WithQueryPatcher("programs.scope_by_role", ProgramScopeByRole))
 }

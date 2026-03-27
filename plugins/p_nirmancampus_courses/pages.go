@@ -70,8 +70,7 @@ func registerFilterPages() {
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
 			&components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey[string]("$get.Code")},
-			&components.InputText{Label: "Subject", Name: "Subject", Getter: getters.GetterKey[string]("$get.Subject")},
-			&components.InputText{Label: "Level", Name: "Level", Getter: getters.GetterKey[string]("$get.Level")},
+			&components.InputText{Label: "Type", Name: "CourseType", Getter: getters.GetterKey[string]("$get.CourseType")},
 			&components.InputTernary{
 				Label:      "Active",
 				Name:       "IsActive",
@@ -150,9 +149,9 @@ func courseFormFields() *components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Subject"),
+						Error: getters.GetterKey[error]("$error.CourseType"),
 						Children: []components.PageInterface{
-							&components.InputText{Label: "Subject", Name: "Subject", Getter: getters.GetterKey[string]("$in.Subject")},
+							&components.InputText{Label: "Type", Name: "CourseType", Getter: getters.GetterKey[string]("$in.CourseType")},
 						},
 					},
 				},
@@ -269,8 +268,8 @@ func registerTablePages() {
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
 					}},
-					{Label: "Subject", Name: "Subject", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Subject")},
+					{Label: "Type", Name: "CourseType", Children: []components.PageInterface{
+						&components.FieldText{Getter: getters.GetterKey[string]("$row.CourseType")},
 					}},
 					{Label: "Active", Name: "IsActive", Children: []components.PageInterface{
 						&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsActive")},
@@ -300,10 +299,10 @@ func registerDetailPages() {
 							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
 							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Code")},
 							&components.LabelInline{
-								Title:   "Subject",
+								Title:   "Type",
 								Classes: "mt-2",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Subject")},
+									&components.FieldText{Getter: getters.GetterKey[string]("$in.CourseType")},
 								},
 							},
 							&components.LabelInline{
