@@ -6,7 +6,7 @@ import (
 
 func init() {
 	lago.RegistryPlugin.Patch("p_users", func(plugin lago.Plugin) lago.Plugin {
-		plugin.Roles = []string{"superuser", "nirmancampus_admin"}
+		plugin.Roles = []string{"superuser", "admin"}
 		return plugin
 	})
 }

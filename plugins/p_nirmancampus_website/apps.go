@@ -20,7 +20,7 @@ func init() {
 		Icon:        "globe-alt",
 		URL:         u,
 		VerboseName: "Website",
-		Roles:       []string{"nirmancampus_admin"},
+		Roles:       []string{"admin"},
 	}); err != nil {
 		log.Panic(err)
 	}

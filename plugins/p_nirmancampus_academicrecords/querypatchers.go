@@ -57,6 +57,8 @@ func AcademicRecordScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *
 	switch roleName {
 	case "superuser":
 		return query
+	case "admin":
+		return query
 	case "student":
 		sub := db.Model(&p_nirmancampus_students.Student{}).Select("id").Where("user_id = ?", user.ID)
 		return query.Where("student_id IN (?)", sub)

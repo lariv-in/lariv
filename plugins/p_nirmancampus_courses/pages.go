@@ -1,6 +1,8 @@
 package p_nirmancampus_courses
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
@@ -46,10 +48,12 @@ func registerMenuPages() {
 				Url:   lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Edit Course"),
 				Url:   lago.GetterRoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Delete Course"),
 				Url:   lago.GetterRoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
 			},
@@ -181,10 +185,24 @@ func courseFormFields() *components.ContainerColumn {
 	}
 }
 
+func courseCreateUrlGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		role, err := getters.GetterKey[string]("$role")(ctx)
+		if err != nil {
+			return "", err
+		}
+		if role == "superuser" || role == "admin" {
+			return lago.GetterRoutePath("courses.CreateRoute", nil)(ctx)
+		}
+		return "", fmt.Errorf("you do not have permission to do this action")
+	}
+}
+
 func registerFormPages() {
 	lago.RegistryPage.Register("courses.CourseFormFields", courseFormFields())
 
 	lago.RegistryPage.Register("courses.CourseCreateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "courses.CourseMenu"},
 		},
@@ -206,6 +224,7 @@ func registerFormPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseUpdateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "courses.CourseDetailMenu"},
 		},
@@ -240,7 +259,7 @@ func registerTablePages() {
 				UID:             "course-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				CreateUrl:       lago.GetterRoutePath("courses.CreateRoute", nil),
+				CreateUrl:       courseCreateUrlGetter(),
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseFilter"},
 				Columns: []components.TableColumn{
@@ -307,6 +326,7 @@ func registerDetailPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseDeleteForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "courses.CourseDetailMenu"},
 		},
