@@ -84,7 +84,6 @@ github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
 github.com/jinzhu/now v1.1.5/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
-github.com/lariv-in/lago v0.5.10/go.mod h1:aqRdJT8U3VANvg0IHYhamENhs+fIR9J4mndp7Y2KMKY=
 github.com/lariv-in/lago/components v0.5.10 h1:9NKMOn6Rszh2l4gGPOlW5Fro52hWHKsYDoXi3cwlgHs=
 github.com/lariv-in/lago/components v0.5.10/go.mod h1:X/BNvgQzbl3z6LQd/rHmPwUpr/SwBWZnoW3i7TKcjQw=
 github.com/lariv-in/lago/getters v0.5.10 h1:ots+Q55arAAbB2i/FE5MEZr6f3yyNZtDiEcvBSbNsTY=
