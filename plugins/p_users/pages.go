@@ -471,7 +471,7 @@ func registerDetailPages() {
 func registerAuthPages() {
 	lago.RegistryPage.Register("users.LoginPage", &components.ShellAuthScaffold{
 		Children: []components.PageInterface{
-			&components.ContainerColumn{Classes: "w-80", Children: []components.PageInterface{
+			&components.ContainerColumn{Children: []components.PageInterface{
 				&components.FieldTitle{Getter: getters.GetterStatic("Login")},
 				&components.FormComponent[User]{
 					Page: components.Page{
