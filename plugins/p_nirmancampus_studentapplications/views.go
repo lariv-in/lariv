@@ -25,8 +25,9 @@ func applicationDOBFormPatcher(_ *views.View, _ *http.Request, formData map[stri
 			formData["DOB"] = nil
 			return formData
 		}
-		tmp := typed
-		formData["DOB"] = &tmp
+		// Store calendar date only (matches gorm type:date, like Tally.Date).
+		d := time.Date(typed.Year(), typed.Month(), typed.Day(), 0, 0, 0, 0, typed.Location())
+		formData["DOB"] = &d
 	case *time.Time:
 	default:
 	}

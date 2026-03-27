@@ -144,7 +144,7 @@ func applicationFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.DOB"),
 						Children: []components.PageInterface{
-							&components.InputDatetime{
+							&components.InputDate{
 								Label:    "Date of birth",
 								Name:     "DOB",
 								Required: false,
@@ -364,7 +364,7 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Date of birth",
 								Children: []components.PageInterface{
-									&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$in.DOB"))},
+									&components.FieldDate{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$in.DOB"))},
 								},
 							},
 							&components.LabelInline{
