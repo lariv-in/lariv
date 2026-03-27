@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"gorm.io/gorm"
 )
 
@@ -16,6 +17,8 @@ type StudentApplication struct {
 
 	ProgramID       uint `gorm:"notnull"`
 	Program         p_nirmancampus_programs.Program
+	CreatedByID     *uint
+	CreatedBy       *p_users.User `gorm:"constraint:OnDelete:SET NULL;foreignKey:CreatedByID;references:ID"`
 	StudentName     string `gorm:"notnull"`
 	Email           string
 	DOB             *time.Time `gorm:"type:date"`

@@ -9,6 +9,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"gorm.io/gorm"
 )
 
@@ -168,6 +169,13 @@ func init() {
 				return err
 			}
 
+			var seedCreator p_users.User
+			var seedCreatorID *uint
+			if err := db.First(&seedCreator).Error; err == nil {
+				id := seedCreator.ID
+				seedCreatorID = &id
+			}
+
 			for i := range sampleApplicationRows {
 				row := sampleApplicationRows[i]
 				prog := programs[i%len(programs)]
@@ -175,6 +183,7 @@ func init() {
 
 				app := StudentApplication{
 					ProgramID:       prog.ID,
+					CreatedByID:     seedCreatorID,
 					StudentName:     row.studentName,
 					Email:           row.email,
 					DOB:             &dob,

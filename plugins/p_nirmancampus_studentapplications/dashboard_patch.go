@@ -9,9 +9,6 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
-// Matches p_users.Role{Name: "Unassigned"} (ID 1).
-const roleUnassigned = "Unassigned"
-
 func init() {
 	registerDashboardAppsPagePatch()
 }
@@ -22,7 +19,7 @@ func getterRoleIsUnassigned() getters.Getter[any] {
 		if err != nil {
 			return false, nil
 		}
-		return role == roleUnassigned, nil
+		return role == roleNameUnassigned, nil
 	}
 }
 
@@ -32,7 +29,7 @@ func getterRoleIsNotUnassigned() getters.Getter[any] {
 		if err != nil {
 			return true, nil
 		}
-		return role != roleUnassigned, nil
+		return role != roleNameUnassigned, nil
 	}
 }
 
@@ -52,20 +49,31 @@ func registerDashboardAppsPagePatch() {
 					Page:   components.Page{Key: "studentapplications.DashboardUnassignedActions"},
 					Getter: getterRoleIsUnassigned(),
 					Children: []components.PageInterface{
-						&components.ContainerRow{
-							Classes: "flex-wrap gap-3",
+						components.ContainerColumn{
+							Page:    components.Page{Key: "studentapplications.DashboardUnassignedColumn"},
+							Classes: "gap-4",
 							Children: []components.PageInterface{
-								&components.ButtonLink{
-									Label:   "Create application",
-									Link:    lago.GetterRoutePath("studentapplications.CreateRoute", nil),
-									Icon:    "plus",
-									Classes: "btn-primary",
+								&components.FieldText{
+									Page:    components.Page{Key: "studentapplications.DashboardUnassignedHello"},
+									Getter:  getters.GetterFormat("Hello %s", getters.GetterAny(getters.GetterKey[string]("$user.Name"))),
+									Classes: "text-3xl font-bold mb-8",
 								},
-								&components.ButtonLink{
-									Label:   "View your applications",
-									Link:    lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
-									Icon:    "document-text",
-									Classes: "btn-outline",
+								&components.ContainerRow{
+									Classes: "flex-wrap gap-3",
+									Children: []components.PageInterface{
+										&components.ButtonLink{
+											Label:   "Create application",
+											Link:    lago.GetterRoutePath("studentapplications.CreateRoute", nil),
+											Icon:    "plus",
+											Classes: "btn-primary",
+										},
+										&components.ButtonLink{
+											Label:   "View your applications",
+											Link:    lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
+											Icon:    "document-text",
+											Classes: "btn-outline",
+										},
+									},
 								},
 							},
 						},

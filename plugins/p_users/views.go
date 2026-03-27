@@ -157,7 +157,7 @@ func SignupHandler(v *views.View) http.Handler {
 		}
 
 		var unassignedRole Role
-		unassignedRole.Name = "Unassigned"
+		unassignedRole.Name = "unassigned"
 		if err := db.Where(unassignedRole).Attrs(unassignedRole).FirstOrCreate(&unassignedRole).Error; err == nil {
 			fieldErrors["_form"] = fmt.Errorf("Unknown error with role %e", err)
 		}

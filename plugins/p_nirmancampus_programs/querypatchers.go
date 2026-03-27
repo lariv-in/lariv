@@ -130,7 +130,8 @@ func ProgramScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB
 	}
 
 	switch roleName {
-	case "superuser", "admin":
+	case "superuser", "admin", "unassigned":
+		// Unassigned applicants need the full program list when choosing a program on applications.
 		return query
 	case "student":
 		studentSub := db.Model(&p_nirmancampus_students.Student{}).

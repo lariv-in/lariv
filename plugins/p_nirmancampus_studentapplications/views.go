@@ -10,6 +10,20 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
+// studentApplicationsAccessMiddleware allows only admin, Unassigned, and (via bypass) superuser.
+// Student and other roles cannot use this app.
+var studentApplicationsAccessMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin", roleNameUnassigned})
+
+// studentApplicationsAdminMiddleware allows create/update/delete management (not for Unassigned except create is separate).
+var studentApplicationsAdminMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
+
+func applicationCreatedByFormPatcher(_ *views.View, r *http.Request, formData map[string]any) map[string]any {
+	user := r.Context().Value("$user").(p_users.User)
+	id := user.ID
+	formData["CreatedByID"] = &id
+	return formData
+}
+
 func applicationDOBFormPatcher(_ *views.View, _ *http.Request, formData map[string]any) map[string]any {
 	raw, ok := formData["DOB"]
 	if !ok {
@@ -39,20 +53,26 @@ func init() {
 		views.ListView[StudentApplication]("studentapplications")(
 			lago.GetPageView("studentapplications.ApplicationTable")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")))
+			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
+			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
+			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole))
 
 	lago.RegistryView.Register("studentapplications.DetailView",
 		views.DetailView[StudentApplication]("studentapplication", "id")(
 			lago.GetPageView("studentapplications.ApplicationDetail")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("studentapplications.preload_photo", views.QueryPatcherPreload("Photo")).
-			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")))
+			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")).
+			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole))
 
 	lago.RegistryView.Register("studentapplications.CreateView",
 		views.CreateView[StudentApplication](lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 			lago.GetPageView("studentapplications.ApplicationCreateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
+			WithFormPatcher("studentapplications.form_created_by", applicationCreatedByFormPatcher).
 			WithFormPatcher("studentapplications.form_dob", applicationDOBFormPatcher))
 
 	lago.RegistryView.Register("studentapplications.UpdateView",
@@ -60,9 +80,12 @@ func init() {
 			views.UpdateView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
 				lago.GetPageView("studentapplications.ApplicationUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
+			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
 			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("studentapplications.preload_photo", views.QueryPatcherPreload("Photo")).
 			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")).
+			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole).
 			WithFormPatcher("studentapplications.form_dob", applicationDOBFormPatcher))
 
 	lago.RegistryView.Register("studentapplications.DeleteView",
@@ -70,5 +93,8 @@ func init() {
 			views.DeleteView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DefaultRoute", nil))(
 				lago.GetPageView("studentapplications.ApplicationDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")))
+			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
+			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
+			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
+			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole))
 }
