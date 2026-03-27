@@ -220,6 +220,11 @@ func applicationFormFields() components.ContainerColumn {
 								Name:             "PhotoID",
 								VNode:            getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.PhotoID"))),
 								AllowedFiletypes: []string{".jpg", ".jpeg", ".png", ".webp"},
+								Path: getters.GetterFormat(
+									"/studentapplications/%s-%u/",
+									getters.GetterAny(getters.GetterKey[string]("$in.StudentName")),
+									getters.GetterAny(getters.GetterKey[int64]("$timestamp")),
+								),
 							},
 						},
 					},
@@ -231,6 +236,11 @@ func applicationFormFields() components.ContainerColumn {
 								Name:             "Documents",
 								VNode:            getters.GetterKey[[]p_filesystem.VNode]("$in.Documents"),
 								AllowedFiletypes: []string{".pdf", ".jpg", ".jpeg", ".png", ".webp"},
+								Path: getters.GetterFormat(
+									"/studentapplications/%s-%u/",
+									getters.GetterAny(getters.GetterKey[string]("$in.StudentName")),
+									getters.GetterAny(getters.GetterKey[int64]("$timestamp")),
+								),
 							},
 						},
 					},

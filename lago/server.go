@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/lariv-in/lago/views"
 	_ "gorm.io/driver/sqlite"
 )
 
@@ -15,6 +16,7 @@ func StartServer(config LagoConfig) error {
 		return err
 	}
 
+	RegistryMiddleware.Register("core.AttachRequestMiddleware", views.AttachRequestMiddleware)
 	RegistryMiddleware.Register("core.DbMiddleware", MiddlewareDB(db))
 	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
 	RegistryMiddleware.Register("core.HtmxBoostMiddleware", MiddlewareHtmxBoost)

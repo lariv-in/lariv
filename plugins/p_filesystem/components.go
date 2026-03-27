@@ -22,11 +22,16 @@ import (
 
 // createComponentVNode creates a VNode for a component-uploaded file, using a
 // timestamped name to avoid unique-constraint collisions with other parentless nodes.
-func createComponentVNode(db *gorm.DB, file *multipart.FileHeader) (*VNode, error) {
+func createComponentVNode(db *gorm.DB, basePath string, file *multipart.FileHeader) (*VNode, error) {
 	ext := filepath.Ext(file.Filename)
 	base := strings.TrimSuffix(file.Filename, ext)
 	uniqueName := fmt.Sprintf("%s_%d%s", base, time.Now().UnixMilli(), ext)
-	return CreateVNode(db, uniqueName, false, file, nil)
+	parent, err := EnsureDirectoryPath(db, basePath)
+	if err != nil {
+		slog.Error("failed to ensure directory path for component upload", "error", err, "basePath", basePath)
+		return nil, err
+	}
+	return CreateVNode(db, uniqueName, false, file, parent)
 }
 
 func checkFileType(file *multipart.FileHeader, allowed []string) error {
@@ -52,6 +57,7 @@ type InputVNode struct {
 	Required         bool
 	Classes          string
 	AllowedFiletypes []string
+	Path             getters.Getter[string]
 }
 
 func (e InputVNode) GetKey() string {
@@ -121,7 +127,21 @@ func (e InputVNode) ParseMultipart(files []*multipart.FileHeader, ctx context.Co
 		}
 	}
 
-	node, err := createComponentVNode(db, file)
+	if e.Path == nil {
+		node, err := createComponentVNode(db, "", file)
+		if err != nil {
+			return nil, err
+		}
+
+		return node.ID, nil
+	}
+
+	path, err := e.Path(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get path: %w", err)
+	}
+
+	node, err := createComponentVNode(db, path, file)
 	if err != nil {
 		return nil, err
 	}
@@ -145,6 +165,7 @@ type InputMultiVNode struct {
 	Required         bool
 	Classes          string
 	AllowedFiletypes []string
+	Path             getters.Getter[string]
 }
 
 type multiVNodeItem struct {
@@ -272,7 +293,21 @@ func (e InputMultiVNode) ParseMultipart(uploadedFiles []*multipart.FileHeader, c
 			return components.AssociationIDs{Field: e.Name}, err
 		}
 
-		node, err := createComponentVNode(db, file)
+		if e.Path == nil {
+			node, err := createComponentVNode(db, "", file)
+			if err != nil {
+				return nil, err
+			}
+
+			return node.ID, nil
+		}
+
+		path, err := e.Path(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get path: %w", err)
+		}
+
+		node, err := createComponentVNode(db, path, file)
 		if err != nil {
 			return components.AssociationIDs{Field: e.Name}, err
 		}

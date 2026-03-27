@@ -85,6 +85,52 @@ func GetVNodeByPath(db *gorm.DB, rawPath string) (*VNode, string, error) {
 	return current, "/" + strings.Join(parts, "/"), nil
 }
 
+// EnsureDirectoryPath walks rawPath and returns the VNode for the final segment,
+// creating missing directory nodes as needed. For "" or "/", returns (nil, nil) for
+// uploads at the filesystem root.
+func EnsureDirectoryPath(db *gorm.DB, rawPath string) (*VNode, error) {
+	cleaned := strings.TrimSpace(rawPath)
+	if cleaned == "" || cleaned == "/" {
+		return nil, nil
+	}
+
+	parts := strings.Split(strings.Trim(cleaned, "/"), "/")
+	var current *VNode
+
+	for _, part := range parts {
+		name := sanitizeNodeName(part)
+		if name == "" {
+			return nil, fmt.Errorf("invalid path segment %q", part)
+		}
+
+		query := db.Where("name = ?", name)
+		if current == nil {
+			query = query.Where("parent_id IS NULL")
+		} else {
+			query = query.Where("parent_id = ?", current.ID)
+		}
+
+		var next VNode
+		if err := query.First(&next).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				created, cerr := CreateVNode(db, name, true, nil, current)
+				if cerr != nil {
+					return nil, cerr
+				}
+				current = created
+				continue
+			}
+			return nil, err
+		}
+		if !next.IsDirectory {
+			return nil, fmt.Errorf("%q is not a directory", name)
+		}
+		current = &next
+	}
+
+	return current, nil
+}
+
 func ListChildrenForParent(db *gorm.DB, parentID *uint) *gorm.DB {
 	query := db.Model(&VNode{}).Order("is_directory DESC").Order("name ASC")
 	if parentID == nil {

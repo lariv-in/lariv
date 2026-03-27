@@ -286,14 +286,12 @@ func formPatcherSlugFromTitle() views.FormPatcher {
 
 func init() {
 	auth := "users.auth"
-	mw := "forms.request"
 
 	lago.RegistryView.Register("forms.ListView",
 		views.ListView[Form]("forms")(
 			lago.GetPageView("forms.FormTable"),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithQueryPatcher("forms.order", views.QueryPatcherOrderBy("title ASC")))
 
 	lago.RegistryView.Register("forms.DetailView",
@@ -301,7 +299,6 @@ func init() {
 			lago.GetPageView("forms.FormDetail"),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithRenderMiddleware("forms.fields_object_list", AttachFormFieldsObjectListContext).
 			WithQueryPatcher("forms.detail_preload_fields", queryPatcherPreloadFormFieldsOrdered()))
 
@@ -314,7 +311,6 @@ func init() {
 			lago.GetPageView("forms.FormCreateForm"),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithFormPatcher("forms.slug_from_title", formPatcherSlugFromTitle()))
 
 	lago.RegistryView.Register("forms.UpdateView",
@@ -328,7 +324,6 @@ func init() {
 			),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithFormPatcher("forms.slug_from_title", formPatcherSlugFromTitle()))
 
 	lago.RegistryView.Register("forms.DeleteView",
@@ -337,8 +332,7 @@ func init() {
 				lago.GetPageView("forms.FormDeleteForm"),
 			),
 		).
-			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware))
+			WithMiddleware(auth, p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("forms.FieldCreateView",
 		views.DetailView[Form]("form", "form_id")(
@@ -353,7 +347,6 @@ func init() {
 			),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithMiddleware("forms.path_params", views.PathMiddleware("form_id", "id")).
 			WithMiddleware("forms.form_parent_fields_ctx", AttachFormForParentFieldsPath).
 			WithFormPatcher("forms.coerce_form_field_form_id", formPatcherCoerceFormFieldFormID()).
@@ -370,7 +363,6 @@ func init() {
 			),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithMiddleware("forms.path_params", views.PathMiddleware("form_id", "id")).
 			WithQueryPatcher("forms.field_form_scope", queryPatcherFormFieldScopeByFormPath()).
 			WithFormPatcher("forms.coerce_form_field_form_id", formPatcherCoerceFormFieldFormID()).
@@ -386,7 +378,6 @@ func init() {
 			),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithMiddleware("forms.path_params", views.PathMiddleware("form_id", "id")).
 			WithQueryPatcher("forms.field_form_scope", queryPatcherFormFieldScopeByFormPath()))
 
@@ -398,7 +389,6 @@ func init() {
 			lago.GetPageView("forms.SubmissionTable"),
 		).
 			WithMiddleware(auth, p_users.AuthenticationMiddleware).
-			WithMiddleware(mw, views.AttachRequestMiddleware).
 			WithMiddleware("forms.path_params", views.PathMiddleware("form_id")).
 			WithMiddleware("forms.form_parent_fields_ctx", AttachFormForParentFieldsPath).
 			WithQueryPatcher("forms.submission_scope", queryPatcherScopeByParentFormID()))
@@ -409,7 +399,6 @@ func init() {
 				lago.GetPageView("forms.SubmissionDetail"),
 			).
 				WithMiddleware(auth, p_users.AuthenticationMiddleware).
-				WithMiddleware(mw, views.AttachRequestMiddleware).
 				WithQueryPatcher("forms.submission_form_scope", queryPatcherSubmissionScopeByFormPath()).
 				WithQueryPatcher("forms.submission_detail_preloads", queryPatcherSubmissionDetailPreloads()),
 		),
@@ -478,8 +467,7 @@ func fieldMovePostView(moveUp bool) *views.View {
 		},
 	}
 	return view.
-		WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-		WithMiddleware("forms.request", views.AttachRequestMiddleware)
+		WithMiddleware("users.auth", p_users.AuthenticationMiddleware)
 }
 
 func publicSubmitView() *views.View {
@@ -502,7 +490,6 @@ func publicSubmitView() *views.View {
 					}
 					ctx := r.Context()
 					ctx = context.WithValue(ctx, ContextKeyPublicLoadedForm, &form)
-					ctx = context.WithValue(ctx, "$request", r)
 					q := map[string]any{}
 					for k, vv := range r.URL.Query() {
 						if len(vv) > 0 {
@@ -526,7 +513,6 @@ func publicSubmitView() *views.View {
 					}
 					ctx := r.Context()
 					ctx = context.WithValue(ctx, ContextKeyPublicLoadedForm, &form)
-					ctx = context.WithValue(ctx, "$request", r)
 					q := map[string]any{}
 					for k, vv := range r.URL.Query() {
 						if len(vv) > 0 {

@@ -73,9 +73,8 @@ func ListView[T any](key string) func(*View) *View {
 					}
 				}
 
-				// Attach $request and $get to the context before any query patching.
-				ctx := context.WithValue(r.Context(), "$request", r)
-				ctx = context.WithValue(ctx, "$get", queryMap)
+				// Attach $get to the context before any query patching ($request is set by global middleware).
+				ctx := context.WithValue(r.Context(), "$get", queryMap)
 				r = r.WithContext(ctx)
 
 				// Apply query param filters using a safe, whitelisted set of columns.
