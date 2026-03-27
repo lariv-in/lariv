@@ -270,3 +270,7 @@ func ThankYouRedirectURL(form *Form) string {
 	u := "/forms/public/p/" + url.PathEscape(form.Slug) + "/"
 	return u + "?" + url.Values{"submitted": {"1"}}.Encode()
 }
+
+// PublicSubmitSuccessRedirectURL, if non-nil, is used instead of ThankYouRedirectURL after a successful
+// public form POST. Return "" to fall back to the default thank-you URL.
+var PublicSubmitSuccessRedirectURL func(form *Form) string

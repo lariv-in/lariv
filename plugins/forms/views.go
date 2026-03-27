@@ -558,7 +558,13 @@ func publicSubmitView() *views.View {
 						inner.RenderWithErrors(w, r, fieldErrors, values)
 						return
 					}
-					http.Redirect(w, r, ThankYouRedirectURL(&form), http.StatusSeeOther)
+					loc := ThankYouRedirectURL(&form)
+					if PublicSubmitSuccessRedirectURL != nil {
+						if u := PublicSubmitSuccessRedirectURL(&form); u != "" {
+							loc = u
+						}
+					}
+					http.Redirect(w, r, loc, http.StatusSeeOther)
 				})
 			},
 		},
