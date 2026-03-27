@@ -17,11 +17,14 @@ func init() {
 	})
 	components.RegistryTopbar.Register("dashboard.userDropdown", pcomps.UserDropdown{})
 
-	lago.RegistryPage.Register("dashboard.AppsPage", components.ShellTopbarScaffold{
+	lago.RegistryPage.Register("dashboard.AppsPage", &components.ShellTopbarScaffold{
 		Children: []components.PageInterface{
-			components.LayoutSimple{
+			&components.LayoutSimple{
+				Page: components.Page{Key: "dashboard.AppsPageLayout"},
 				Children: []components.PageInterface{
-					pcomps.AppsGrid{},
+					&pcomps.AppsGrid{
+						Page: components.Page{Key: "dashboard.AppsGrid"},
+					},
 				},
 			},
 		},

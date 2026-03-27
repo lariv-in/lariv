@@ -15,11 +15,6 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("studentapplications.CreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("studentapplications.PublicApplyRoute", lago.Route{
-		Path:    AppUrl + "apply/",
-		Handler: lago.NewDynamicView("studentapplications.PublicApplyView"),
-	})
-
 	_ = lago.RegistryRoute.Register("studentapplications.DetailRoute", lago.Route{
 		Path:    AppUrl + "{id}/",
 		Handler: lago.NewDynamicView("studentapplications.DetailView"),
