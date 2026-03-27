@@ -2,6 +2,7 @@ package p_nirmancampus_programs
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
@@ -94,12 +95,14 @@ func registerMenuPages() {
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Edit Program"),
 				Url: lago.GetterRoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("program.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Delete Program"),
 				Url: lago.GetterRoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("program.ID")),
@@ -228,10 +231,24 @@ func programFormFields() components.ContainerColumn {
 	}
 }
 
+func programCreateUrlGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		role, err := getters.GetterKey[string]("$role")(ctx)
+		if err != nil {
+			return "", err
+		}
+		if role == "superuser" || role == "admin" {
+			return lago.GetterRoutePath("programs.CreateRoute", nil)(ctx)
+		}
+		return "", fmt.Errorf("you do not have permission to do this action")
+	}
+}
+
 func registerFormPages() {
 	lago.RegistryPage.Register("programs.ProgramFormFields", programFormFields())
 
 	lago.RegistryPage.Register("programs.ProgramCreateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "programs.ProgramMenu"},
 		},
@@ -253,6 +270,7 @@ func registerFormPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramUpdateForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
 		},
@@ -288,7 +306,7 @@ func registerTablePages() {
 				UID:       "program-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Program]]("programs"),
-				CreateUrl: lago.GetterRoutePath("programs.CreateRoute", nil),
+				CreateUrl: programCreateUrlGetter(),
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
@@ -366,6 +384,7 @@ func registerDetailPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramDeleteForm", &components.ShellScaffold{
+		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
 		},

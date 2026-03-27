@@ -20,6 +20,7 @@ func init() {
 		Icon:        "academic-cap",
 		URL:         u,
 		VerboseName: "Programs",
+		Roles:       []string{"student", "admin"},
 	})
 	if err != nil {
 		log.Panic(err)
