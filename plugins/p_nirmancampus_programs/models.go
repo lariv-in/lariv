@@ -1,32 +1,87 @@
 package p_nirmancampus_programs
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/lariv-in/lago/lago"
 	"gorm.io/gorm"
 )
 
-// Program is the single programs row for Nirmancampus (replaces p_programs.Program + NirmancampusProgramDetails).
-//
-// If you already had data in nirmancampus_program_details, after AutoMigrate adds programs.university (PostgreSQL):
-//
-//	UPDATE programs AS p
-//	SET university = d.university
-//	FROM nirmancampus_program_details AS d
-//	WHERE d.program_id = p.id AND d.deleted_at IS NULL;
-//	DROP TABLE nirmancampus_program_details;
-//
-// Confirm table/column names in your database before running.
+const (
+	AdmissionSessionJan  = "jan"
+	AdmissionSessionJuly = "july"
+	AdmissionSessionBoth = "both"
+)
+
+const (
+	TermTypeYear     = "year"
+	TermTypeSemester = "semester"
+)
+
+// CompulsoryCourses and OptionalCourseSelectionPool hold Course.Code values from p_nirmancampus_courses.
+type ProgramStructureUnit struct {
+	TermNumber                  int      `json:"term_number"`
+	CompulsoryCourses           []string `json:"compulsory_courses"`
+	OptionalCourseCount         int      `json:"optional_course_count"`
+	OptionalCourseSelectionPool []string `json:"optional_course_selection_pool"`
+}
+
+// ProgramStructure is the JSONB-encoded list of ProgramStructureUnit for a program.
+type ProgramStructure []ProgramStructureUnit
+
+// Scan implements sql.Scanner for reading JSONB into ProgramStructure.
+func (s *ProgramStructure) Scan(value interface{}) error {
+	if value == nil {
+		*s = nil
+		return nil
+	}
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("cannot scan %T into ProgramStructure", value)
+	}
+	if len(bytes) == 0 {
+		*s = ProgramStructure{}
+		return nil
+	}
+	var units []ProgramStructureUnit
+	if err := json.Unmarshal(bytes, &units); err != nil {
+		return err
+	}
+	*s = ProgramStructure(units)
+	return nil
+}
+
+// Value implements driver.Valuer for writing ProgramStructure to JSONB.
+func (s ProgramStructure) Value() (driver.Value, error) {
+	if len(s) == 0 {
+		return []byte("[]"), nil
+	}
+	b, err := json.Marshal([]ProgramStructureUnit(s))
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
 type Program struct {
 	gorm.Model
 
-	Name        string
-	Code        string `gorm:"uniqueIndex"`
-	Description string
-	University  string `gorm:"type:varchar(32);not null;default:''"`
-	// ProgramType is one of: certificate, diploma, bachelor, masters (see programTypeChoices in pages).
-	ProgramType string `gorm:"type:varchar(32);not null;default:''"`
+	Name              string
+	Code              string `gorm:"uniqueIndex"`
+	Description       string
+	University        string           `gorm:"type:varchar(32);not null;default:''"`
+	ProgramType       string           `gorm:"type:varchar(32);not null;default:''"`
+	AdmissionSessions string           `gorm:"type:varchar(32);not null;default:''"`
+	TermType          string           `gorm:"type:varchar(32);not null;default:''"`
+	Structure         ProgramStructure `gorm:"type:jsonb"`
 }
 
 func init() {
