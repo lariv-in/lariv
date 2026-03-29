@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago/plugins/forms
+module github.com/lariv-in/lago/plugins/p_forms
 
 go 1.26.1
 
