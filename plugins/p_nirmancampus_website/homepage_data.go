@@ -13,11 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	homeAnnouncementLimit   = 10
-	homeImportantLinksLimit = 6
-)
-
 type homePageData struct {
 	Announcements  []homeAnnouncement
 	ImportantLinks []homeImportantLink
@@ -62,7 +57,6 @@ func loadHomeAnnouncements(db *gorm.DB, now time.Time) []homeAnnouncement {
 		Where("release_at <= ?", now).
 		Where("expiry_at IS NULL OR expiry_at > ?", now).
 		Order("release_at DESC").
-		Limit(homeAnnouncementLimit).
 		Find(&announcements).Error; err != nil {
 		slog.Error("nirmancampus_website: failed loading announcements", "error", err)
 		return nil
@@ -87,7 +81,7 @@ func loadHomeAnnouncements(db *gorm.DB, now time.Time) []homeAnnouncement {
 
 func loadHomeImportantLinks(db *gorm.DB) []homeImportantLink {
 	var links []ImportantLink
-	if err := db.Order(`"order" ASC`).Limit(homeImportantLinksLimit).Find(&links).Error; err != nil {
+	if err := db.Order(`"order" ASC`).Find(&links).Error; err != nil {
 		slog.Error("nirmancampus_website: failed loading important links", "error", err)
 		return nil
 	}
