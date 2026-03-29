@@ -296,7 +296,11 @@ func registerTablePages() {
 				UID:       "semester-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Semester]]("sessions"),
-				CreateUrl: lago.GetterRoutePath("sessions.CreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("sessions.CreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),

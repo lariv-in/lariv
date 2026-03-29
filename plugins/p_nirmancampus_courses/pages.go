@@ -257,7 +257,11 @@ func registerTablePages() {
 				UID:             "course-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				CreateUrl:       courseCreateUrlGetter(),
+				CreateComponent: &components.ButtonLink{
+					Link:    courseCreateUrlGetter(),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "courses.CourseFilter"},
 				Columns: []components.TableColumn{

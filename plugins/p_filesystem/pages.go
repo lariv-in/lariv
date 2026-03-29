@@ -668,7 +668,11 @@ func registerTables() {
 				Data:            getters.GetterKey[components.ObjectList[VNode]]("vnodes"),
 				Title:           "Filesystem",
 				Subtitle:        "Files and folders",
-				CreateUrl:       listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute"),
+				CreateComponent: &components.ButtonLink{
+					Link:    listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute"),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				FilterComponent: lago.DynamicPage{Name: "filesystem.VNodeFilter"},
 				OnClick:         getters.GetterNavigateGetter(rowOpenRoute()),
 				Columns: []components.TableColumn{

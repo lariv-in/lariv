@@ -398,7 +398,11 @@ func registerStudentZoneAdminTablePages() {
 				UID:       "section-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[StudentZoneSection]]("sections"),
-				CreateUrl: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 				})),
@@ -432,7 +436,11 @@ func registerStudentZoneAdminTablePages() {
 				UID:       "item-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[StudentZoneItem]]("items"),
-				CreateUrl: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 				})),

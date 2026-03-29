@@ -241,7 +241,11 @@ func registerTablePages() {
 				UID:       "contact-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Contact]]("contacts"),
-				CreateUrl: lago.GetterRoutePath("contacts.CreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("contacts.CreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),

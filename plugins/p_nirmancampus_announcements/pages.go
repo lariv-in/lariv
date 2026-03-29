@@ -279,7 +279,11 @@ func registerTablePages() {
 				UID:       "announcement-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
-				CreateUrl: announcementCreateUrlGetter(),
+				CreateComponent: &components.ButtonLink{
+					Link:    announcementCreateUrlGetter(),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 				})),

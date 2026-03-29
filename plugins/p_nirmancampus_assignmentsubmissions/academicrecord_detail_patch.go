@@ -52,11 +52,15 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 		Classes:     "w-full mt-4",
 		Data:        submissionsForCurrentAcademicRecordGetter(),
 		DefaultView: "Grid",
-		CreateUrl: getters.GetterFormat(
-			"%s?AcademicRecordID=%d",
-			getters.GetterAny(lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil)),
-			getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
-		),
+		CreateComponent: &components.ButtonLink{
+			Link: getters.GetterFormat(
+				"%s?AcademicRecordID=%d",
+				getters.GetterAny(lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil)),
+				getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+			),
+			Icon:    "plus",
+			Classes: "btn-square btn-outline btn-sm",
+		},
 		OnClick: getters.GetterNavigateGetter(
 			lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 				"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),

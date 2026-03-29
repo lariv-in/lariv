@@ -265,15 +265,19 @@ func registerTablePages() {
 				UID:     "academicrecords-table",
 				Classes: "w-full",
 				Data:    getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
-				CreateUrl: func(ctx context.Context) (string, error) {
-					role, err := roleGetter(ctx)
-					if err != nil {
-						return "", err
-					}
-					if role != "superuser" && role != "admin" {
-						return "", nil
-					}
-					return createURLGetter(ctx)
+				CreateComponent: &components.ButtonLink{
+					Link: func(ctx context.Context) (string, error) {
+						role, err := roleGetter(ctx)
+						if err != nil {
+							return "", err
+						}
+						if role != "superuser" && role != "admin" {
+							return "", nil
+						}
+						return createURLGetter(ctx)
+					},
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
 				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{

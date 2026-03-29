@@ -100,7 +100,11 @@ func registerFormListPages() {
 				UID:       "forms-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Form]]("forms"),
-				CreateUrl: lago.GetterRoutePath("forms.CreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("forms.CreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 						"form_id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
@@ -157,8 +161,7 @@ func formFieldTableColumns() []components.TableColumn {
 			Name:  "",
 			Children: []components.PageInterface{
 				&components.ContainerRow{
-					Page:    components.Page{Key: "forms.FieldMoveRow"},
-					Classes: "items-center justify-center",
+					Page: components.Page{Key: "forms.FieldMoveRow"},
 					Children: []components.PageInterface{
 						&components.ShowIf{
 							Page:   components.Page{Key: "forms.FieldMoveUp"},
@@ -284,13 +287,16 @@ func registerFormCRUDPages() {
 								Classes: "mt-6",
 							},
 							&components.DataTable[FormField]{
-								Page:    components.Page{Key: "forms.FormDetailFieldsTable"},
-								UID:     "form-detail-fields-table",
-								Classes: "w-full [&_th]:text-center [&_th]:align-middle [&_td]:text-center [&_td]:align-middle",
-								Data:    getters.GetterKey[components.ObjectList[FormField]](FormFieldsObjectListContextKey),
-								CreateUrl: lago.GetterRoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
-									"form_id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
-								}),
+								Page: components.Page{Key: "forms.FormDetailFieldsTable"},
+								UID:  "form-detail-fields-table",
+								Data: getters.GetterKey[components.ObjectList[FormField]](FormFieldsObjectListContextKey),
+								CreateComponent: &components.ButtonLink{
+									Link: lago.GetterRoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
+										"form_id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+									}),
+									Icon:    "plus",
+									Classes: "btn-square btn-outline btn-sm",
+								},
 								OnClick: fieldTableRowNavigateEdit(),
 								Columns: formFieldTableColumns(),
 							},

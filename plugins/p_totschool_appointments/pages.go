@@ -168,7 +168,11 @@ func registerTable() {
 				Data:            getters.GetterKey[components.ObjectList[Appointment]]("appointments"),
 				Title:           "Appointments",
 				Subtitle:        "List of appointments",
-				CreateUrl:       lago.GetterRoutePath("appointments.CreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("appointments.CreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentFilter"},
 				Columns: []components.TableColumn{

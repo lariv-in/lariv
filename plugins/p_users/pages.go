@@ -347,7 +347,11 @@ func registerTablePages() {
 				UID:             "user-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[User]]("users"),
-				CreateUrl:       lago.GetterRoutePath("users.CreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("users.CreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "users.UserFilter"},
 				Columns: []components.TableColumn{
@@ -685,7 +689,11 @@ func registerRolePages() {
 				UID:             "role-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[Role]]("roles"),
-				CreateUrl:       lago.GetterRoutePath("users.RoleCreateRoute", nil),
+				CreateComponent: &components.ButtonLink{
+					Link:    lago.GetterRoutePath("users.RoleCreateRoute", nil),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				FilterComponent: lago.DynamicPage{Name: "users.RoleFilter"},
 				Columns: []components.TableColumn{

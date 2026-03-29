@@ -373,7 +373,11 @@ func registerTablePages() {
 				UID:       "program-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Program]]("programs"),
-				CreateUrl: programCreateUrlGetter(),
+				CreateComponent: &components.ButtonLink{
+					Link:    programCreateUrlGetter(),
+					Icon:    "plus",
+					Classes: "btn-square btn-outline btn-sm",
+				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),

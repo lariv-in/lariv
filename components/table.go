@@ -34,9 +34,9 @@ type DataTable[T any] struct {
 	Displays map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
 	// DefaultView is the initial display mode; must match a key in Displays. Empty means "List".
 	DefaultView     string
-	FilterComponent PageInterface
-	CreateUrl       getters.Getter[string]
-	OnClick         getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
+	FilterComponent  PageInterface
+	CreateComponent  PageInterface // e.g. &ButtonLink{...} or future modal trigger; *ButtonLink hides when Link resolves to ""
+	OnClick          getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
 }
 
 func (e DataTable[T]) Build(ctx context.Context) Node {
@@ -75,16 +75,18 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 		)
 	}
 
-	// Create button
+	// Create control (optional)
 	var createNode Node
-	if e.CreateUrl != nil {
-		createURL, err := e.CreateUrl(ctx)
-		if err == nil && createURL != "" {
-			createNode = Render(ButtonLink{
-				Link:    getters.GetterStatic(createURL),
-				Icon:    "plus",
-				Classes: "btn-square btn-outline btn-sm",
-			}, ctx)
+	if e.CreateComponent != nil {
+		if bl, ok := e.CreateComponent.(*ButtonLink); ok && bl != nil {
+			if bl.Link != nil {
+				createURL, err := bl.Link(ctx)
+				if err == nil && createURL != "" {
+					createNode = Render(bl, ctx)
+				}
+			}
+		} else {
+			createNode = Render(e.CreateComponent, ctx)
 		}
 	}
 
@@ -149,6 +151,9 @@ func (e DataTable[T]) GetChildren() []PageInterface {
 	if e.FilterComponent != nil {
 		children = append(children, e.FilterComponent)
 	}
+	if e.CreateComponent != nil {
+		children = append(children, e.CreateComponent)
+	}
 	for _, col := range e.Columns {
 		children = append(children, col.Children...)
 	}
@@ -157,9 +162,13 @@ func (e DataTable[T]) GetChildren() []PageInterface {
 
 func (e *DataTable[T]) SetChildren(children []PageInterface) {
 	offset := 0
-	if e.FilterComponent != nil && len(children) > 0 {
-		e.FilterComponent = children[0]
-		offset = 1
+	if e.FilterComponent != nil && len(children) > offset {
+		e.FilterComponent = children[offset]
+		offset++
+	}
+	if e.CreateComponent != nil && len(children) > offset {
+		e.CreateComponent = children[offset]
+		offset++
 	}
 	for i := range e.Columns {
 		n := len(e.Columns[i].Children)
