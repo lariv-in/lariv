@@ -10,6 +10,7 @@ require (
 	github.com/lariv-in/lago/plugins/p_nirmancampus_announcements v0.0.0-20260326081203-a40ac47e777f
 	github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentsubmissions v0.0.0-20260327122656-69eb0dae261c
 	github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.10
+	github.com/lariv-in/lago/plugins/p_nirmancampus_forms v0.0.0-20260329030933-2cf45dc07de3
 	github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_sessions v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_studentapplications v0.5.10
@@ -80,5 +81,3 @@ require (
 	gorm.io/gorm v1.31.1 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
-
-replace github.com/lariv-in/lago/plugins/forms => ../../plugins/forms

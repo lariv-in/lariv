@@ -102,6 +102,8 @@ github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentsubmissions v0.0.0-202
 github.com/lariv-in/lago/plugins/p_nirmancampus_assignmentsubmissions v0.0.0-20260327122656-69eb0dae261c/go.mod h1:qX3bjG1PCWi+i/b4ChmBl5fPLiWDHlKGbFPYo+Yy/nk=
 github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.10 h1:8aeigE8RpSvS3EmvxouGOiEAtRizysIyaNdlN01tAY4=
 github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.10/go.mod h1:wrn15SEbOPNoqZF8g70c5w0gz5f2++i69XDaj10bg7Y=
+github.com/lariv-in/lago/plugins/p_nirmancampus_forms v0.0.0-20260329030933-2cf45dc07de3 h1:pR6Um55Z8cgLmtmqRreAMRIlR2/PN1sRQ0TO+WHCR64=
+github.com/lariv-in/lago/plugins/p_nirmancampus_forms v0.0.0-20260329030933-2cf45dc07de3/go.mod h1:hv6bOS9NjPVsAXgPKGE46SMsh3Y+WdIgC1SbK8MDI6A=
 github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.5.10 h1:3mM4ipDeH/9JTd2RHR72oslaOPBui8WhoKSd7V7dewY=
 github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.5.10/go.mod h1:+tRu8GjDdFQVMIsqZN3ArMvDI9nkLxqnuNTnHAw1O4g=
 github.com/lariv-in/lago/plugins/p_nirmancampus_sessions v0.5.10 h1:yingVAJYtKm1pEyZVJbZ5Yx2QjK51MbVkALnVnjdK8g=

@@ -108,5 +108,3 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
-
-replace github.com/lariv-in/lago/plugins/forms => ../../plugins/forms
