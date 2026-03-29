@@ -243,15 +243,13 @@ func registerImportantLinksAdminTablePages() {
 				UID:       "important-links-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[ImportantLink]]("links"),
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksFilter"}},
+					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)},
 				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 				})),
-				FilterComponent: lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",

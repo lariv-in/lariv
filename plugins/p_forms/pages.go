@@ -100,10 +100,10 @@ func registerFormListPages() {
 				UID:       "forms-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Form]]("forms"),
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("forms.CreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonCreate{
+						Link: lago.GetterRoutePath("forms.CreateRoute", nil),
+					},
 				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
@@ -290,12 +290,12 @@ func registerFormCRUDPages() {
 								Page: components.Page{Key: "forms.FormDetailFieldsTable"},
 								UID:  "form-detail-fields-table",
 								Data: getters.GetterKey[components.ObjectList[FormField]](FormFieldsObjectListContextKey),
-								CreateComponent: &components.ButtonLink{
-									Link: lago.GetterRoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
-										"form_id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
-									}),
-									Icon:    "plus",
-									Classes: "btn-square btn-outline btn-sm",
+								Actions: []components.PageInterface{
+									&components.TableButtonCreate{
+										Link: lago.GetterRoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
+											"form_id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+										}),
+									},
 								},
 								OnClick: fieldTableRowNavigateEdit(),
 								Columns: formFieldTableColumns(),

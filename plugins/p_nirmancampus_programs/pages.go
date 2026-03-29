@@ -373,17 +373,15 @@ func registerTablePages() {
 				UID:       "program-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[Program]]("programs"),
-				CreateComponent: &components.ButtonLink{
-					Link:    programCreateUrlGetter(),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "programs.ProgramFilter"}},
+					&components.TableButtonCreate{Link: programCreateUrlGetter()},
 				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 					}),
 				),
-				FilterComponent: lago.DynamicPage{Name: "programs.ProgramFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
@@ -494,8 +492,10 @@ func registerSelectionPages() {
 				Page:            components.Page{Key: "programs.ProgramSelectionTableBody"},
 				UID:             "program-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Program]]("programs"),
-				OnClick:         getters.GetterSelect("ProgramID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "programs.ProgramSelectionFilter"},
+				OnClick: getters.GetterSelect("ProgramID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "programs.ProgramSelectionFilter"}},
+				},
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",

@@ -168,13 +168,11 @@ func registerTable() {
 				Data:            getters.GetterKey[components.ObjectList[Appointment]]("appointments"),
 				Title:           "Appointments",
 				Subtitle:        "List of appointments",
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("appointments.CreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "appointments.AppointmentFilter"}},
+					&components.TableButtonCreate{Link: lago.GetterRoutePath("appointments.CreateRoute", nil)},
 				},
-				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
-				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentFilter"},
+				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
 					{Label: "Location", Name: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Location")}}},
@@ -386,8 +384,10 @@ func registerSelectionPages() {
 			components.DataTable[Appointment]{
 				UID:             "appointment-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Appointment]]("appointments"),
-				OnClick:         getters.GetterSelect("appointment", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentFilter"},
+				OnClick: getters.GetterSelect("appointment", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "appointments.AppointmentFilter"}},
+				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
 					{Label: "Location", Name: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Location")}}},

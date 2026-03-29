@@ -53,14 +53,14 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 		Classes:     "w-full mt-4",
 		Data:        academicRecordsForCurrentStudentGetter(),
 		DefaultView: "Grid",
-		CreateComponent: &components.ButtonLink{
-			Link: getters.GetterFormat(
-				"%s?StudentID=%d",
-				getters.GetterAny(lago.GetterRoutePath("academicrecords.CreateRoute", nil)),
-				getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
-			),
-			Icon:    "plus",
-			Classes: "btn-square btn-outline btn-sm",
+		Actions: []components.PageInterface{
+			&components.TableButtonCreate{
+				Link: getters.GetterFormat(
+					"%s?StudentID=%d",
+					getters.GetterAny(lago.GetterRoutePath("academicrecords.CreateRoute", nil)),
+					getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+				),
+			},
 		},
 		OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),

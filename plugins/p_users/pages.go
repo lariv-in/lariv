@@ -347,13 +347,11 @@ func registerTablePages() {
 				UID:             "user-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[User]]("users"),
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("users.CreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserFilter"}},
+					&components.TableButtonCreate{Link: lago.GetterRoutePath("users.CreateRoute", nil)},
 				},
-				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
-				FilterComponent: lago.DynamicPage{Name: "users.UserFilter"},
+				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
@@ -602,8 +600,10 @@ func registerSelectionPages() {
 			&components.DataTable[User]{
 				UID:             "user-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[User]]("users"),
-				OnClick:         getters.GetterSelect("UserID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "users.UserSelectionFilter"},
+				OnClick: getters.GetterSelect("UserID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserSelectionFilter"}},
+				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
@@ -626,8 +626,10 @@ func registerSelectionPages() {
 			&components.DataTable[Role]{
 				UID:             "role-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Role]]("roles"),
-				OnClick:         getters.GetterSelect("RoleID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "users.RoleSelectionFilter"},
+				OnClick: getters.GetterSelect("RoleID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleSelectionFilter"}},
+				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
@@ -689,13 +691,11 @@ func registerRolePages() {
 				UID:             "role-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[Role]]("roles"),
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("users.RoleCreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleFilter"}},
+					&components.TableButtonCreate{Link: lago.GetterRoutePath("users.RoleCreateRoute", nil)},
 				},
-				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
-				FilterComponent: lago.DynamicPage{Name: "users.RoleFilter"},
+				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},

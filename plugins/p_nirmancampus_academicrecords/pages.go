@@ -265,26 +265,26 @@ func registerTablePages() {
 				UID:     "academicrecords-table",
 				Classes: "w-full",
 				Data:    getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
-				CreateComponent: &components.ButtonLink{
-					Link: func(ctx context.Context) (string, error) {
-						role, err := roleGetter(ctx)
-						if err != nil {
-							return "", err
-						}
-						if role != "superuser" && role != "admin" {
-							return "", nil
-						}
-						return createURLGetter(ctx)
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "academicrecords.AcademicRecordFilter"}},
+					&components.TableButtonCreate{
+						Link: func(ctx context.Context) (string, error) {
+							role, err := roleGetter(ctx)
+							if err != nil {
+								return "", err
+							}
+							if role != "superuser" && role != "admin" {
+								return "", nil
+							}
+							return createURLGetter(ctx)
+						},
 					},
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
 				},
 				OnClick: getters.GetterNavigateGetter(
 					lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 					}),
 				),
-				FilterComponent: lago.DynamicPage{Name: "academicrecords.AcademicRecordFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Student",

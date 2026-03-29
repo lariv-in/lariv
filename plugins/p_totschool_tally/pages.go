@@ -381,11 +381,13 @@ func init() {
 		Children: []components.PageInterface{
 			sessionEnvironment,
 			components.DataTable[Tally]{
-				Title:           "Tallies List",
-				Subtitle:        "All tallies in the system",
-				Data:            getters.GetterKey[components.ObjectList[Tally]]("Tallies"),
-				FilterComponent: tallyFilter,
-				Classes:         "mt-4",
+				Title:    "Tallies List",
+				Subtitle: "All tallies in the system",
+				Data:     getters.GetterKey[components.ObjectList[Tally]]("Tallies"),
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: &tallyFilter},
+				},
+				Classes: "mt-4",
 				Columns: []components.TableColumn{
 					{
 						Label: "Date",

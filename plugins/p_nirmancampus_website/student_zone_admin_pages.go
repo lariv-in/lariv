@@ -398,15 +398,13 @@ func registerStudentZoneAdminTablePages() {
 				UID:       "section-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[StudentZoneSection]]("sections"),
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionFilter"}},
+					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil)},
 				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 				})),
-				FilterComponent: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
@@ -436,15 +434,13 @@ func registerStudentZoneAdminTablePages() {
 				UID:       "item-table",
 				Classes:   "w-full",
 				Data:      getters.GetterKey[components.ObjectList[StudentZoneItem]]("items"),
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminItemFilter"}},
+					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil)},
 				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
 				})),
-				FilterComponent: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminItemFilter"},
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
@@ -595,7 +591,9 @@ func registerStudentZoneAdminSelectionPages() {
 					getters.GetterKey[uint]("$row.ID"),
 					getters.GetterKey[string]("$row.Title"),
 				),
-				FilterComponent: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionSelectionFilter"},
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionSelectionFilter"}},
+				},
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",

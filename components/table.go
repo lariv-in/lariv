@@ -33,10 +33,34 @@ type DataTable[T any] struct {
 	// e.g. "List": TableListContent, "Grid": TableGridContent
 	Displays map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
 	// DefaultView is the initial display mode; must match a key in Displays. Empty means "List".
-	DefaultView     string
-	FilterComponent  PageInterface
-	CreateComponent  PageInterface // e.g. &ButtonLink{...} or future modal trigger; *ButtonLink hides when Link resolves to ""
-	OnClick          getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
+	DefaultView string
+	// Actions are rendered in the toolbar after the view switcher (e.g. &TableButtonFilter{Child: ...}, &TableButtonCreate{Link: ...}).
+	Actions []PageInterface
+	OnClick getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
+}
+
+func renderTableToolbarAction(ctx context.Context, a PageInterface) Node {
+	if a == nil {
+		return nil
+	}
+	switch v := a.(type) {
+	case *ButtonLink:
+		if v != nil && v.Link != nil {
+			if u, err := v.Link(ctx); err == nil && u != "" {
+				return Render(v, ctx)
+			}
+		}
+		return nil
+	case *TableButtonCreate:
+		if v != nil && v.Link != nil {
+			if u, err := v.Link(ctx); err == nil && u != "" {
+				return Render(v, ctx)
+			}
+		}
+		return nil
+	default:
+		return Render(a, ctx)
+	}
 }
 
 func (e DataTable[T]) Build(ctx context.Context) Node {
@@ -64,29 +88,10 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 		options = append(options, Option(Value(name), Text(name)))
 	}
 
-	// Filter dropdown
-	var filterNode Node
-	if e.FilterComponent != nil {
-		filterNode = El("details",
-			Class("dropdown dropdown-end"),
-			Attr("@click.outside", "if(!$event.target.closest('.fk-modal-container')){$el.removeAttribute('open')}"),
-			El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"), Render(Icon{Name: "funnel"}, ctx)),
-			Div(Class("card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-2 bg-base-100"), Render(e.FilterComponent, ctx)),
-		)
-	}
-
-	// Create control (optional)
-	var createNode Node
-	if e.CreateComponent != nil {
-		if bl, ok := e.CreateComponent.(*ButtonLink); ok && bl != nil {
-			if bl.Link != nil {
-				createURL, err := bl.Link(ctx)
-				if err == nil && createURL != "" {
-					createNode = Render(bl, ctx)
-				}
-			}
-		} else {
-			createNode = Render(e.CreateComponent, ctx)
+	var actionBar Group
+	for _, a := range e.Actions {
+		if n := renderTableToolbarAction(ctx, a); n != nil {
+			actionBar = append(actionBar, n)
 		}
 	}
 
@@ -128,8 +133,7 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 					Attr("x-model", "view"),
 					Group(options),
 				),
-				If(filterNode != nil, filterNode),
-				If(createNode != nil, createNode),
+				Group(actionBar),
 			),
 		),
 		Div(Class("relative my-2"),
@@ -147,13 +151,8 @@ func (e DataTable[T]) GetRoles() []string {
 }
 
 func (e DataTable[T]) GetChildren() []PageInterface {
-	var children []PageInterface
-	if e.FilterComponent != nil {
-		children = append(children, e.FilterComponent)
-	}
-	if e.CreateComponent != nil {
-		children = append(children, e.CreateComponent)
-	}
+	children := make([]PageInterface, 0, len(e.Actions))
+	children = append(children, e.Actions...)
 	for _, col := range e.Columns {
 		children = append(children, col.Children...)
 	}
@@ -162,12 +161,11 @@ func (e DataTable[T]) GetChildren() []PageInterface {
 
 func (e *DataTable[T]) SetChildren(children []PageInterface) {
 	offset := 0
-	if e.FilterComponent != nil && len(children) > offset {
-		e.FilterComponent = children[offset]
-		offset++
-	}
-	if e.CreateComponent != nil && len(children) > offset {
-		e.CreateComponent = children[offset]
+	for i := range e.Actions {
+		if offset >= len(children) {
+			return
+		}
+		e.Actions[i] = children[offset]
 		offset++
 	}
 	for i := range e.Columns {

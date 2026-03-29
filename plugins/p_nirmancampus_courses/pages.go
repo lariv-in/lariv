@@ -257,13 +257,11 @@ func registerTablePages() {
 				UID:             "course-table",
 				Classes:         "w-full",
 				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				CreateComponent: &components.ButtonLink{
-					Link:    courseCreateUrlGetter(),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseFilter"}},
+					&components.TableButtonCreate{Link: courseCreateUrlGetter()},
 				},
-				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
-				FilterComponent: lago.DynamicPage{Name: "courses.CourseFilter"},
+				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
@@ -352,8 +350,10 @@ func registerSelectionPages() {
 			&components.DataTable[Course]{
 				UID:             "course-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				OnClick:         getters.GetterSelect("CourseID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "courses.CourseSelectionFilter"},
+				OnClick: getters.GetterSelect("CourseID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseSelectionFilter"}},
+				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
@@ -373,8 +373,10 @@ func registerSelectionPages() {
 			&components.DataTable[Course]{
 				UID:             "course-multi-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				OnClick:         getters.GetterMultiSelect("Courses", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
-				FilterComponent: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"},
+				OnClick: getters.GetterMultiSelect("Courses", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
+				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},

@@ -118,13 +118,11 @@ func registerTable() {
 				Data:            getters.GetterKey[components.ObjectList[Proposal]]("proposals"),
 				Title:           "Proposals",
 				Subtitle:        "List of financial proposals",
-				CreateComponent: &components.ButtonLink{
-					Link:    lago.GetterRoutePath("proposals.CreateRoute", nil),
-					Icon:    "plus",
-					Classes: "btn-square btn-outline btn-sm",
+				Actions: []components.PageInterface{
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "proposals.ProposalFilter"}},
+					&components.TableButtonCreate{Link: lago.GetterRoutePath("proposals.CreateRoute", nil)},
 				},
-				OnClick:         getters.GetterNavigateGetter(lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
-				FilterComponent: lago.DynamicPage{Name: "proposals.ProposalFilter"},
+				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Title", Name: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Title")}}},
 					{Label: "Created At", Name: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.CreatedAt")}}},
