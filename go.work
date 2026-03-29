@@ -30,7 +30,6 @@ use (
 	./plugins/p_totschool_tally
 	./plugins/p_totschool_users
 	./plugins/p_users
-	./plugins/p_whatsapp
 	./registry
 	./views
 )
