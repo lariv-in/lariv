@@ -143,11 +143,10 @@ func announcementFormFields() components.ContainerColumn {
 						Error: getters.GetterKey[error]("$error.Description"),
 						Children: []components.PageInterface{
 							&components.InputTextarea{
-								Label:    "Description",
-								Name:     "Description",
-								Rows:     4,
-								Required: true,
-								Getter:   getters.GetterKey[string]("$in.Description"),
+								Label:  "Description",
+								Name:   "Description",
+								Rows:   4,
+								Getter: getters.GetterKey[string]("$in.Description"),
 							},
 						},
 					},

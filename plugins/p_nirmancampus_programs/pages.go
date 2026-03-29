@@ -252,9 +252,10 @@ func programFormFields() components.ContainerColumn {
 						Error: getters.GetterKey[error]("$error.Code"),
 						Children: []components.PageInterface{
 							&components.InputText{
-								Label:  "Code",
-								Name:   "Code",
-								Getter: getters.GetterKey[string]("$in.Code"),
+								Label:    "Code",
+								Name:     "Code",
+								Required: true,
+								Getter:   getters.GetterKey[string]("$in.Code"),
 							},
 						},
 					},

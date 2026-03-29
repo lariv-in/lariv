@@ -139,7 +139,7 @@ func courseFormFields() *components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.GetterKey[error]("$error.Code"),
 						Children: []components.PageInterface{
-							&components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey[string]("$in.Code")},
+							&components.InputText{Label: "Code", Name: "Code", Required: true, Getter: getters.GetterKey[string]("$in.Code")},
 						},
 					},
 				},
