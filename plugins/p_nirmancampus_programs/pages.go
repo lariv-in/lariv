@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -112,6 +113,84 @@ func programTypeFormSelect() *components.InputSelect[string] {
 		Required: false,
 		Choices:  getters.GetterStatic(programTypeChoices()),
 		Getter:   programProgramTypePairGetter(),
+	}
+}
+
+func admissionSessionChoices() []registry.Pair[string, string] {
+	return []registry.Pair[string, string]{
+		{Key: AdmissionSessionJan, Value: "January"},
+		{Key: AdmissionSessionJuly, Value: "July"},
+		{Key: AdmissionSessionBoth, Value: "January and July"},
+	}
+}
+
+func termTypeChoices() []registry.Pair[string, string] {
+	return []registry.Pair[string, string]{
+		{Key: TermTypeYear, Value: "Year"},
+		{Key: TermTypeSemester, Value: "Semester"},
+	}
+}
+
+func programAdmissionSessionsDisplayGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		s, err := getters.GetterKey[string]("$in.AdmissionSessions")(ctx)
+		if err != nil || s == "" {
+			return "—", nil
+		}
+		for _, p := range admissionSessionChoices() {
+			if p.Key == s {
+				return p.Value, nil
+			}
+		}
+		return s, nil
+	}
+}
+
+func programTermTypeDisplayGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		s, err := getters.GetterKey[string]("$in.TermType")(ctx)
+		if err != nil || s == "" {
+			return "—", nil
+		}
+		for _, p := range termTypeChoices() {
+			if p.Key == s {
+				return p.Value, nil
+			}
+		}
+		return s, nil
+	}
+}
+
+func stringSliceJoinOrDash(g getters.Getter[[]string]) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		sl, err := g(ctx)
+		if err != nil {
+			return "", err
+		}
+		if len(sl) == 0 {
+			return "—", nil
+		}
+		return strings.Join(sl, ", "), nil
+	}
+}
+
+func programStructureRowsGetter() getters.Getter[any] {
+	return func(ctx context.Context) (any, error) {
+		s, err := getters.GetterKey[ProgramStructure]("$in.Structure")(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []ProgramStructureUnit(s), nil
+	}
+}
+
+func programStructureNonEmptyGetter() getters.Getter[any] {
+	return func(ctx context.Context) (any, error) {
+		s, err := getters.GetterKey[ProgramStructure]("$in.Structure")(ctx)
+		if err != nil {
+			return false, err
+		}
+		return len(s) > 0, nil
 	}
 }
 
@@ -369,10 +448,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Program]{
-				Page:      components.Page{Key: "programs.ProgramTableBody"},
-				UID:       "program-table",
-				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[Program]]("programs"),
+				Page:    components.Page{Key: "programs.ProgramTableBody"},
+				UID:     "program-table",
+				Classes: "w-full",
+				Data:    getters.GetterKey[components.ObjectList[Program]]("programs"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "programs.ProgramFilter"}},
 					&components.TableButtonCreate{Link: programCreateUrlGetter()},
@@ -439,24 +518,96 @@ func registerDetailPages() {
 							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
 							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Code")},
 							&components.LabelInline{
-								Title:   "University",
-								Classes: "mt-2",
+								Title: "University",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.University")},
 								},
 							},
 							&components.LabelInline{
-								Title:   "Program type",
-								Classes: "mt-2",
+								Title: "Program type",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.ProgramType")},
 								},
 							},
 							&components.LabelInline{
-								Title:   "Description",
-								Classes: "mt-2",
+								Title: "Admission sessions",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: programAdmissionSessionsDisplayGetter()},
+								},
+							},
+							&components.LabelInline{
+								Title: "Term type",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: programTermTypeDisplayGetter()},
+								},
+							},
+							&components.LabelNewline{
+								Title: "Description",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.GetterKey[string]("$in.Description")},
+								},
+							},
+							&components.LabelNewline{
+								Title: "Program structure",
+								Children: []components.PageInterface{
+									&components.ShowIf{
+										Getter: programStructureNonEmptyGetter(),
+										Children: []components.PageInterface{
+											&components.FieldList{
+												Getter:  programStructureRowsGetter(),
+												Classes: "flex flex-col gap-2",
+												Children: []components.PageInterface{
+													&components.ContainerColumn{
+														Classes: "rounded-box border border-base-300 p-3 gap-2",
+														Children: []components.PageInterface{
+															&components.LabelInline{
+																Title: "Term",
+																Children: []components.PageInterface{
+																	&components.FieldText{
+																		Getter: getters.GetterFormat(
+																			"%d",
+																			getters.GetterAny(getters.GetterKey[int]("$row.TermNumber")),
+																		),
+																	},
+																},
+															},
+															&components.LabelInline{
+																Title: "Compulsory",
+																Children: []components.PageInterface{
+																	&components.FieldText{
+																		Getter: stringSliceJoinOrDash(
+																			getters.GetterKey[[]string]("$row.CompulsoryCourses"),
+																		),
+																	},
+																},
+															},
+															&components.LabelInline{
+																Title: "Optional count",
+																Children: []components.PageInterface{
+																	&components.FieldText{
+																		Getter: getters.GetterFormat(
+																			"%d",
+																			getters.GetterAny(getters.GetterKey[int]("$row.OptionalCourseCount")),
+																		),
+																	},
+																},
+															},
+															&components.LabelInline{
+																Title: "Optional course pool",
+																Children: []components.PageInterface{
+																	&components.FieldText{
+																		Getter: stringSliceJoinOrDash(
+																			getters.GetterKey[[]string]("$row.OptionalCourseSelectionPool"),
+																		),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -489,9 +640,9 @@ func registerSelectionPages() {
 		Title: "Select Program",
 		Children: []components.PageInterface{
 			&components.DataTable[Program]{
-				Page:            components.Page{Key: "programs.ProgramSelectionTableBody"},
-				UID:             "program-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[Program]]("programs"),
+				Page:    components.Page{Key: "programs.ProgramSelectionTableBody"},
+				UID:     "program-selection-table",
+				Data:    getters.GetterKey[components.ObjectList[Program]]("programs"),
 				OnClick: getters.GetterSelect("ProgramID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "programs.ProgramSelectionFilter"}},
