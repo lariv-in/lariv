@@ -77,7 +77,12 @@ func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	ctx := r.Context()
+	v.renderPageResponse(w, r.Context(), page)
+}
+
+// renderPageResponse writes HTML for page using the same rules as a successful GET:
+// for Shell pages and HTMX-boosted requests, only the shell body is rendered.
+func (v *View) renderPageResponse(w http.ResponseWriter, ctx context.Context, page components.PageInterface) {
 	dw := &debugResponseWriter{ResponseWriter: w}
 
 	if shell, ok := page.(components.Shell); ok {
@@ -171,7 +176,11 @@ func (v *View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any
 
 // RenderWithErrors re-renders the view's page with field errors and previously submitted values in context.
 func (v *View) RenderWithErrors(w http.ResponseWriter, r *http.Request, fieldErrors map[string]error, values map[string]any) {
-	page, _ := v.GetPage()
+	page, isPagePresent := v.GetPage()
+	if !isPagePresent {
+		http.NotFound(w, r)
+		return
+	}
 	ctx := r.Context()
 	errorMap := map[string]any{}
 	if existing, ok := ctx.Value(getters.ContextKeyError).(map[string]any); ok {
@@ -186,7 +195,7 @@ func (v *View) RenderWithErrors(w http.ResponseWriter, r *http.Request, fieldErr
 	inMap := map[string]any{}
 	maps.Copy(inMap, values)
 	ctx = context.WithValue(ctx, getters.ContextKeyIn, inMap)
-	components.Render(page, ctx).Render(w)
+	v.renderPageResponse(w, ctx, page)
 }
 
 // HasErrors returns true if any error in the map is non-nil.

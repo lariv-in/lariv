@@ -42,11 +42,13 @@ func (e LayoutSidebar) Build(ctx context.Context) Node {
 				Class("absolute inset-x-0 bottom-0 top-16 bg-black/50 z-20"),
 			),
 
-			// Sidebar
+			// Sidebar — mobile off-screen state uses static max-md classes so HTMX swaps do not
+			// paint the drawer at translateX(0) before Alpine runs (avoids flash + slide-off).
 			Aside(
-				Class("bg-base-100 border-r border-base-300 overflow-hidden"),
-				Attr(":class", "isMobile ? 'absolute left-0 top-16 h-[calc(100vh-4rem)] z-50 shadow-xl transition-transform duration-300' : ''"),
-				Attr(":style", "isMobile ? (showLeft ? 'transform: translateX(0)' : 'transform: translateX(-100%)') : ''"),
+				// Closed state is static (pre-Alpine / HTMX). Open state must override Tailwind v4's
+				// `translate` property — inline `transform:` does not beat `-translate-x-full`.
+				Class("bg-base-100 border-r border-base-300 overflow-hidden max-md:absolute max-md:left-0 max-md:top-16 max-md:z-50 max-md:h-[calc(100vh-4rem)] max-md:shadow-xl max-md:transition-all max-md:duration-300 max-md:-translate-x-full"),
+				Attr(":style", "isMobile && showLeft ? 'translate: none' : ''"),
 				Div(Class("h-full overflow-y-auto w-[250px] bg-base-100 p-2"),
 					sidebarGroup,
 				),
