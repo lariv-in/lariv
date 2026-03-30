@@ -337,10 +337,8 @@ func init() {
 	lago.RegistryView.Register("forms.FieldCreateView",
 		views.DetailView[Form]("form", "form_id")(
 			views.CreateView[FormField](
-				// CreateView sets $id; PathMiddleware sets $path (form_id, id).
-				lago.GetterRoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+				lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.GetterAny(getters.GetterParseUint(getters.GetterKey[string]("$path.form_id"))),
-					"id":      getters.GetterAny(getters.GetterKey[uint]("$id")),
 				}),
 			)(
 				lago.GetPageView("forms.FieldCreateForm"),
