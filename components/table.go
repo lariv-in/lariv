@@ -39,30 +39,6 @@ type DataTable[T any] struct {
 	OnClick getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
 }
 
-func renderTableToolbarAction(ctx context.Context, a PageInterface) Node {
-	if a == nil {
-		return nil
-	}
-	switch v := a.(type) {
-	case *ButtonLink:
-		if v != nil && v.Link != nil {
-			if u, err := v.Link(ctx); err == nil && u != "" {
-				return Render(v, ctx)
-			}
-		}
-		return nil
-	case *TableButtonCreate:
-		if v != nil && v.Link != nil {
-			if u, err := v.Link(ctx); err == nil && u != "" {
-				return Render(v, ctx)
-			}
-		}
-		return nil
-	default:
-		return Render(a, ctx)
-	}
-}
-
 func (e DataTable[T]) Build(ctx context.Context) Node {
 	if e.Displays == nil {
 		e.Displays = map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface{
@@ -90,9 +66,10 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 
 	var actionBar Group
 	for _, a := range e.Actions {
-		if n := renderTableToolbarAction(ctx, a); n != nil {
-			actionBar = append(actionBar, n)
+		if a == nil {
+			continue
 		}
+		actionBar = append(actionBar, Render(a, ctx))
 	}
 
 	uid := e.UID
