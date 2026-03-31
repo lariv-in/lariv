@@ -35,7 +35,7 @@ func (e FieldList) Build(ctx context.Context) Node {
 					for _, child := range e.Children {
 						childrenNodes = append(childrenNodes, Render(child, itemCtx))
 					}
-					listNodes = append(listNodes, Div(Class("list-item"), childrenNodes))
+					listNodes = append(listNodes, Div(Class("list-item ml-4"), childrenNodes))
 				}
 			}
 		}
