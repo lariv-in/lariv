@@ -597,6 +597,30 @@ func GetterMultiSelect[T, D comparable](name string, valueGetter Getter[T], disp
 	}
 }
 
+// GetterMultiSelectNamedByTargetInput uses query / $get "target_input" as the
+// fk-multi-select field name when non-empty; otherwise defaultName. Use with
+// InputManyToMany URLs that append target_input (see components.InputManyToMany.Build)
+// and preserve target_input on filter forms (e.g. hidden input).
+func GetterMultiSelectNamedByTargetInput[T, D comparable](defaultName string, valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
+	var zeroT T
+	var zeroD D
+	return func(ctx context.Context) (string, error) {
+		name := defaultName
+		if s, err := GetterKey[string]("$get.target_input")(ctx); err == nil && s != "" {
+			name = s
+		}
+		value, err := IfOrGetter(valueGetter, ctx, zeroT)
+		if err != nil {
+			return "", err
+		}
+		display, err := IfOrGetter(displayGetter, ctx, zeroD)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("$dispatch('fk-multi-select',{name:'%s',value:'%v',display:'%v'})", name, value, display), nil
+	}
+}
+
 func GetterDeref[T any](g Getter[*T]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {

@@ -107,6 +107,7 @@ func registerFilterPages() {
 		Url:    lago.GetterRoutePath("courses.MultiSelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
+			&components.InputText{Hidden: true, Name: "target_input", Getter: getters.GetterKey[string]("$get.target_input")},
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
 			&components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey[string]("$get.Code")},
 		},
@@ -373,7 +374,7 @@ func registerSelectionPages() {
 			&components.DataTable[Course]{
 				UID:             "course-multi-selection-table",
 				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				OnClick: getters.GetterMultiSelect("Courses", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				OnClick: getters.GetterMultiSelectNamedByTargetInput("Courses", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
 				},

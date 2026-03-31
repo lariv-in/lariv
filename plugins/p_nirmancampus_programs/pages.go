@@ -9,6 +9,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/registry"
 )
 
@@ -174,23 +175,43 @@ func stringSliceJoinOrDash(g getters.Getter[[]string]) getters.Getter[string] {
 	}
 }
 
+func courseListJoinOrDash(g getters.Getter[[]courses.Course]) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		list, err := g(ctx)
+		if err != nil {
+			return "", err
+		}
+		if len(list) == 0 {
+			return "—", nil
+		}
+		codes := make([]string, 0, len(list))
+		for _, c := range list {
+			codes = append(codes, c.Code)
+		}
+		return strings.Join(codes, ", "), nil
+	}
+}
+
 func programStructureRowsGetter() getters.Getter[any] {
 	return func(ctx context.Context) (any, error) {
-		s, err := getters.GetterKey[ProgramStructure]("$in.Structure")(ctx)
+		units, err := getters.GetterKey[[]ProgramStructureUnit]("$in.ProgramStructureUnits")(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return []ProgramStructureUnit(s), nil
+		if units == nil {
+			return []ProgramStructureUnit{}, nil
+		}
+		return units, nil
 	}
 }
 
 func programStructureNonEmptyGetter() getters.Getter[any] {
 	return func(ctx context.Context) (any, error) {
-		s, err := getters.GetterKey[ProgramStructure]("$in.Structure")(ctx)
+		units, err := getters.GetterKey[[]ProgramStructureUnit]("$in.ProgramStructureUnits")(ctx)
 		if err != nil {
 			return false, err
 		}
-		return len(s) > 0, nil
+		return len(units) > 0, nil
 	}
 }
 
@@ -201,6 +222,7 @@ func init() {
 	registerTablePages()
 	registerDetailPages()
 	registerSelectionPages()
+	registerStructurePages()
 }
 
 func registerMenuPages() {
@@ -235,6 +257,13 @@ func registerMenuPages() {
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Edit Program"),
 				Url: lago.GetterRoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.GetterAny(getters.GetterKey[uint]("program.ID")),
+				}),
+			},
+			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
+				Title: getters.GetterStatic("Edit program structure"),
+				Url: lago.GetterRoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("program.ID")),
 				}),
 			},
@@ -558,7 +587,7 @@ func registerDetailPages() {
 												Classes: "flex flex-col gap-2",
 												Children: []components.PageInterface{
 													&components.ContainerColumn{
-														Classes: "rounded-box border border-base-300 p-3 gap-2",
+														Classes: "rounded-box border border-base-300 p-2 card card-body",
 														Children: []components.PageInterface{
 															&components.LabelInline{
 																Title: "Term",
@@ -575,8 +604,8 @@ func registerDetailPages() {
 																Title: "Compulsory",
 																Children: []components.PageInterface{
 																	&components.FieldText{
-																		Getter: stringSliceJoinOrDash(
-																			getters.GetterKey[[]string]("$row.CompulsoryCourses"),
+																		Getter: courseListJoinOrDash(
+																			getters.GetterKey[[]courses.Course]("$row.CompulsoryCourses"),
 																		),
 																	},
 																},
@@ -596,8 +625,8 @@ func registerDetailPages() {
 																Title: "Optional course pool",
 																Children: []components.PageInterface{
 																	&components.FieldText{
-																		Getter: stringSliceJoinOrDash(
-																			getters.GetterKey[[]string]("$row.OptionalCourseSelectionPool"),
+																		Getter: courseListJoinOrDash(
+																			getters.GetterKey[[]courses.Course]("$row.OptionalCourseSelectionPool"),
 																		),
 																	},
 																},

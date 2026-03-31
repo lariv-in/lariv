@@ -6,11 +6,14 @@ require (
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
+	github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.5.10
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/registry v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
+	gorm.io/datatypes v1.2.7
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.2.0
 )
 
 require (
@@ -64,9 +67,7 @@ require (
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	gorm.io/datatypes v1.2.7 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.2.0 // indirect
 )

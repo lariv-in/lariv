@@ -94,7 +94,13 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 			backUrl = u
 		}
 		items = append(items, Li(
-			A(Href(backUrl), Class("btn btn-sm mb-2"), Render(Icon{Name: "arrow-left"}, ctx), Text(backTitle)),
+			Render(ButtonLink{
+				Page:    e.Back.Page,
+				Label:   backTitle,
+				Link:    getters.GetterStatic(backUrl),
+				Icon:    "arrow-left",
+				Classes: "btn-sm mb-2",
+			}, ctx),
 		))
 	}
 

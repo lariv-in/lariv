@@ -1,12 +1,10 @@
 package p_nirmancampus_programs
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/lariv-in/lago/lago"
+	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"gorm.io/gorm"
 )
 
@@ -21,54 +19,18 @@ const (
 	TermTypeSemester = "semester"
 )
 
-// CompulsoryCourses and OptionalCourseSelectionPool hold Course.Code values from p_nirmancampus_courses.
+// ProgramStructureUnit is one term of a program's structure.
+// CompulsoryCourses and OptionalCourseSelectionPool are many-to-many relations to Course.
 type ProgramStructureUnit struct {
-	TermNumber                  int      `json:"term_number"`
-	CompulsoryCourses           []string `json:"compulsory_courses"`
-	OptionalCourseCount         int      `json:"optional_course_count"`
-	OptionalCourseSelectionPool []string `json:"optional_course_selection_pool"`
-}
+	gorm.Model
 
-// ProgramStructure is the JSONB-encoded list of ProgramStructureUnit for a program.
-type ProgramStructure []ProgramStructureUnit
+	ProgramID                   uint `gorm:"not null;uniqueIndex:idx_psu_program_term"`
+	TermNumber                  int  `gorm:"not null;uniqueIndex:idx_psu_program_term"`
+	CompulsoryCourses           []courses.Course `gorm:"many2many:program_structure_unit_compulsory_courses;"`
+	OptionalCourseCount         int
+	OptionalCourseSelectionPool []courses.Course `gorm:"many2many:program_structure_unit_optional_courses;"`
 
-// Scan implements sql.Scanner for reading JSONB into ProgramStructure.
-func (s *ProgramStructure) Scan(value interface{}) error {
-	if value == nil {
-		*s = nil
-		return nil
-	}
-	var bytes []byte
-	switch v := value.(type) {
-	case []byte:
-		bytes = v
-	case string:
-		bytes = []byte(v)
-	default:
-		return fmt.Errorf("cannot scan %T into ProgramStructure", value)
-	}
-	if len(bytes) == 0 {
-		*s = ProgramStructure{}
-		return nil
-	}
-	var units []ProgramStructureUnit
-	if err := json.Unmarshal(bytes, &units); err != nil {
-		return err
-	}
-	*s = ProgramStructure(units)
-	return nil
-}
-
-// Value implements driver.Valuer for writing ProgramStructure to JSONB.
-func (s ProgramStructure) Value() (driver.Value, error) {
-	if len(s) == 0 {
-		return []byte("[]"), nil
-	}
-	b, err := json.Marshal([]ProgramStructureUnit(s))
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
+	Program Program `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 type Program struct {
@@ -77,17 +39,18 @@ type Program struct {
 	Name              string
 	Code              string `gorm:"uniqueIndex"`
 	Description       string
-	University        string           `gorm:"type:varchar(32);not null;default:''"`
-	ProgramType       string           `gorm:"type:varchar(32);not null;default:''"`
-	AdmissionSessions string           `gorm:"type:varchar(32);not null;default:''"`
-	TermType          string           `gorm:"type:varchar(32);not null;default:''"`
-	Structure         ProgramStructure `gorm:"type:jsonb"`
+	University        string `gorm:"type:varchar(32);not null;default:''"`
+	ProgramType       string `gorm:"type:varchar(32);not null;default:''"`
+	AdmissionSessions string `gorm:"type:varchar(32);not null;default:''"`
+	TermType          string `gorm:"type:varchar(32);not null;default:''"`
+
+	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
 }
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Program{}); err != nil {
-			log.Panicf("failed to migrate Program: %v", err)
+		if err := d.AutoMigrate(&Program{}, &ProgramStructureUnit{}); err != nil {
+			log.Panicf("failed to migrate Program / ProgramStructureUnit: %v", err)
 		}
 		return d
 	})

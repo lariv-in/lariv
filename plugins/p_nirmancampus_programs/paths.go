@@ -34,6 +34,31 @@ func registerRoutes() {
 		Path:    AppUrl + "select/",
 		Handler: lago.NewDynamicView("programs.SelectView"),
 	})
+
+	_ = lago.RegistryRoute.Register("programs.StructureEditRoute", lago.Route{
+		Path:    AppUrl + "{id}/structure/edit/",
+		Handler: lago.NewDynamicView("programs.StructureEditView"),
+	})
+
+	_ = lago.RegistryRoute.Register("programs.StructureUnitCreateModalRoute", lago.Route{
+		Path:    AppUrl + "{id}/structure/units/new/",
+		Handler: lago.NewDynamicView("programs.StructureUnitCreateModalView"),
+	})
+
+	_ = lago.RegistryRoute.Register("programs.StructureUnitCreateRoute", lago.Route{
+		Path:    AppUrl + "{id}/structure/units/",
+		Handler: lago.NewDynamicView("programs.StructureUnitCreateView"),
+	})
+
+	_ = lago.RegistryRoute.Register("programs.StructureUnitEditModalRoute", lago.Route{
+		Path:    AppUrl + "{id}/structure/units/{unitId}/edit/",
+		Handler: lago.NewDynamicView("programs.StructureUnitEditModalView"),
+	})
+
+	_ = lago.RegistryRoute.Register("programs.StructureUnitUpdateRoute", lago.Route{
+		Path:    AppUrl + "{id}/structure/units/{unitId}/",
+		Handler: lago.NewDynamicView("programs.StructureUnitUpdateView"),
+	})
 }
 
 func init() {

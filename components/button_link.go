@@ -50,7 +50,7 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 
 	classes := "btn " + e.Classes
 	if e.Icon != "" && label != "" {
-		classes += " inline-flex items-center gap-2"
+		classes += " flex items-center gap-2"
 	}
 	return html.A(html.Href(link), html.Class(classes), content)
 }

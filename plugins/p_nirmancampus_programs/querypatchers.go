@@ -85,6 +85,26 @@ func queryPatcherProgramType(param string) views.QueryPatcher {
 	}
 }
 
+func preloadProgramStructureUnitCourseAssociations(db *gorm.DB) *gorm.DB {
+	return db.Order("term_number ASC").
+		Preload("CompulsoryCourses").
+		Preload("OptionalCourseSelectionPool")
+}
+
+// queryPatcherPreloadProgramStructureUnits loads structure units ordered by term for program detail/update.
+func queryPatcherPreloadProgramStructureUnits() views.QueryPatcher {
+	return func(_ *views.View, _ *http.Request, query *gorm.DB) *gorm.DB {
+		return query.Preload("ProgramStructureUnits", preloadProgramStructureUnitCourseAssociations)
+	}
+}
+
+// queryPatcherPreloadStructureUnitCourseAssociations preloads m2m courses on a single structure unit (edit modal).
+func queryPatcherPreloadStructureUnitCourseAssociations() views.QueryPatcher {
+	return func(_ *views.View, _ *http.Request, query *gorm.DB) *gorm.DB {
+		return query.Preload("CompulsoryCourses").Preload("OptionalCourseSelectionPool")
+	}
+}
+
 // ProgramScopeByRole restricts program queries:
 //   - superuser, admin: full queryset
 //   - student: programs referenced by any academic record for this user's student row
