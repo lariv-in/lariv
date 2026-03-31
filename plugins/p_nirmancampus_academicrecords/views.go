@@ -7,6 +7,10 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
+// academicRecordsAdminRoleMiddleware restricts create/update/delete to admin;
+// superusers are always allowed (see p_users.RoleAuthorizationMiddleware).
+var academicRecordsAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
+
 func init() {
 	// List view
 	lago.RegistryView.Register("academicrecords.ListView",
@@ -42,6 +46,7 @@ func init() {
 			lago.GetPageView("academicrecords.AcademicRecordCreateForm"),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
 			WithFormPatcher("academicrecords.create_from_program_structure", formPatcherAcademicRecordCreateFromProgramStructure),
 	)
 
@@ -57,6 +62,7 @@ func init() {
 			),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
 			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).
@@ -75,6 +81,7 @@ func init() {
 			),
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
 			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
 			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).

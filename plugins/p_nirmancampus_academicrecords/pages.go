@@ -58,12 +58,14 @@ func registerMenuPages() {
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Edit Academic Record"),
 				Url: lago.GetterRoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("academicrecord.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
+				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.GetterStatic("Delete Academic Record"),
 				Url: lago.GetterRoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("academicrecord.ID")),
@@ -533,7 +535,6 @@ func registerFormPages() {
 
 func registerTablePages() {
 	createURLGetter := lago.GetterRoutePath("academicrecords.CreateRoute", nil)
-	roleGetter := getters.GetterKey[string]("$role")
 
 	lago.RegistryPage.Register("academicrecords.AcademicRecordTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -546,18 +547,13 @@ func registerTablePages() {
 				Classes: "w-full",
 				Data:    getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
 				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "academicrecords.AcademicRecordFilter"}},
+					&components.TableButtonFilter{
+						Child: lago.DynamicPage{Name: "academicrecords.AcademicRecordFilter"},
+						Page:  components.Page{Roles: []string{"admin", "superuser"}},
+					},
 					&components.TableButtonCreate{
-						Link: func(ctx context.Context) (string, error) {
-							role, err := roleGetter(ctx)
-							if err != nil {
-								return "", err
-							}
-							if role != "superuser" && role != "admin" {
-								return "", nil
-							}
-							return createURLGetter(ctx)
-						},
+						Link: createURLGetter,
+						Page: components.Page{Roles: []string{"admin", "superuser"}},
 					},
 				},
 				OnClick: getters.GetterNavigateGetter(

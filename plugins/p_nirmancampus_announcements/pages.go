@@ -275,13 +275,18 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Announcement]{
-				Page:      components.Page{Key: "announcements.AnnouncementTableBody"},
-				UID:       "announcement-table",
-				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
+				Page:    components.Page{Key: "announcements.AnnouncementTableBody"},
+				UID:     "announcement-table",
+				Classes: "w-full",
+				Data:    getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
 				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "announcements.AnnouncementFilter"}},
-					&components.TableButtonCreate{Link: announcementCreateUrlGetter()},
+					&components.TableButtonFilter{
+						Child: lago.DynamicPage{Name: "announcements.AnnouncementFilter"},
+					},
+					&components.TableButtonCreate{
+						Link: announcementCreateUrlGetter(),
+						Page: components.Page{Roles: []string{"admin", "superuser"}},
+					},
 				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
@@ -403,7 +408,10 @@ func registerSelectionPages() {
 					getters.GetterKey[string]("$row.Title"),
 				),
 				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "announcements.AnnouncementSelectionFilter"}},
+					&components.TableButtonFilter{
+						Child: lago.DynamicPage{Name: "announcements.AnnouncementSelectionFilter"},
+						Page:  components.Page{Roles: []string{"admin", "superuser"}},
+					},
 				},
 				Columns: []components.TableColumn{
 					{

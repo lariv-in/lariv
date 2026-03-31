@@ -320,13 +320,13 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Student]{
-				Page:            components.Page{Key: "students.StudentTableBody"},
-				UID:             "student-table",
-				Classes:         "w-full",
-				Data:            getters.GetterKey[components.ObjectList[Student]]("students"),
+				Page:    components.Page{Key: "students.StudentTableBody"},
+				UID:     "student-table",
+				Classes: "w-full",
+				Data:    getters.GetterKey[components.ObjectList[Student]]("students"),
 				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentFilter"}},
-					&components.TableButtonCreate{Link: studentCreateUrlGetter()},
+					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentFilter"}, Page: components.Page{Roles: []string{"admin", "superuser"}}},
+					&components.TableButtonCreate{Link: studentCreateUrlGetter(), Page: components.Page{Roles: []string{"admin", "superuser"}}},
 				},
 				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
@@ -475,9 +475,9 @@ func registerSelectionPages() {
 		Title: "Select Student",
 		Children: []components.PageInterface{
 			&components.DataTable[Student]{
-				Page:            components.Page{Key: "students.StudentSelectionTableBody"},
-				UID:             "student-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[Student]]("students"),
+				Page:    components.Page{Key: "students.StudentSelectionTableBody"},
+				UID:     "student-selection-table",
+				Data:    getters.GetterKey[components.ObjectList[Student]]("students"),
 				OnClick: getters.GetterSelect("StudentID", getters.GetterKey[uint]("$row.ID"), getters.GetterForeignKey[Student, uint, string](getters.GetterKey[uint]("$row.ID"), "StudentNo")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentSelectionFilter"}},

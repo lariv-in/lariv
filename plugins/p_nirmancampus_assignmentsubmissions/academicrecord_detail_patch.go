@@ -54,6 +54,7 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
 			&components.TableButtonCreate{
+				Page: components.Page{Roles: []string{"admin", "superuser"}},
 				Link: getters.GetterFormat(
 					"%s?AcademicRecordID=%d",
 					getters.GetterAny(lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil)),

@@ -12,9 +12,9 @@ import (
 )
 
 // AcademicRecordScopeByRole restricts academic record queries:
-// - superuser ($role "superuser"): full queryset
-// - student: filtered to AcademicRecords for this user's Student row
-// - default (any other role): empty queryset — extend with new cases when needed
+// - superuser, admin: full queryset
+// - student: only academic records for the logged-in user's Student row (read via list/detail/select)
+// - default (any other role): empty queryset
 func AcademicRecordScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	ctx := r.Context()
 
