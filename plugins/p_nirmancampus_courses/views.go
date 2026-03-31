@@ -62,5 +62,6 @@ func init() {
 		views.ListView[Course]("courses")(
 			lago.GetPageView("courses.CourseMultiSelectionTable")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("courses.scope_by_role", CourseScopeByRole))
+			WithQueryPatcher("courses.scope_by_role", CourseScopeByRole).
+			WithQueryPatcher("courses.multiselect_pool_course_ids", QueryPatcherMultiSelectPoolCourseIDs))
 }

@@ -18,6 +18,8 @@ type InputNumber struct {
 	Getter   getters.Getter[int]
 	Required bool
 	Classes  string
+	// Hidden renders only a hidden input (no label). Parsed value is still int.
+	Hidden bool
 }
 
 func (e InputNumber) GetKey() string {
@@ -38,7 +40,14 @@ func (e InputNumber) Build(ctx context.Context) Node {
 			valueNode = Value(fmt.Sprintf("%d", valueInt))
 		}
 	}
-	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
+	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
+	if e.Hidden {
+		wrapClass += " hidden"
+		return Div(Class(wrapClass),
+			Input(Type("hidden"), Name(e.Name), valueNode),
+		)
+	}
+	return Div(Class(wrapClass),
 		Label(Class("label text-sm font-bold"), Text(e.Label)),
 		Input(Type("number"), Name(e.Name), valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
 	)

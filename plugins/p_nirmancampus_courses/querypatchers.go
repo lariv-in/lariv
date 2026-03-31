@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -13,11 +15,11 @@ import (
 
 // CourseScopeByRole restricts course queries:
 //   - superuser, admin: full queryset
-//   - student: courses linked to any of this user's academic records (via academic_record_courses)
+//   - student: courses linked to any of this user's academic records (compulsory or optional join tables)
 //   - any other role: empty queryset
 //
-// Table/column names match GORM defaults for AcademicRecord many2many on courses; the academicrecords
-// plugin is not imported here to avoid a module import cycle (academicrecords → courses).
+// Join table names match GORM tags on AcademicRecord; the academicrecords plugin is not imported here
+// to avoid a module import cycle (academicrecords → courses).
 func CourseScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
 	ctx := r.Context()
 
@@ -63,12 +65,48 @@ func CourseScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB 
 		studentSub := db.Model(&p_nirmancampus_students.Student{}).
 			Select("id").
 			Where("user_id = ?", user.ID)
-		courseSub := db.Table("academic_record_courses").
-			Select("academic_record_courses.course_id").
-			Joins("JOIN academic_records ON academic_records.id = academic_record_courses.academic_record_id AND academic_records.deleted_at IS NULL").
+		compulsorySub := db.Table("academic_record_compulsory_courses").
+			Select("academic_record_compulsory_courses.course_id").
+			Joins("JOIN academic_records ON academic_records.id = academic_record_compulsory_courses.academic_record_id AND academic_records.deleted_at IS NULL").
 			Where("academic_records.student_id IN (?)", studentSub)
-		return query.Where("courses.id IN (?)", courseSub)
+		optionalSub := db.Table("academic_record_optional_courses").
+			Select("academic_record_optional_courses.course_id").
+			Joins("JOIN academic_records ON academic_records.id = academic_record_optional_courses.academic_record_id AND academic_records.deleted_at IS NULL").
+			Where("academic_records.student_id IN (?)", studentSub)
+		return query.Where("(courses.id IN (?) OR courses.id IN (?))", compulsorySub, optionalSub)
 	default:
 		return query.Where("1 = 0")
 	}
+}
+
+// QueryPatcherMultiSelectPoolCourseIDs restricts the multi-select course list when the request includes
+// pool_course_ids (comma-separated course IDs). Used by academic record optional-course pickers. If the
+// parameter is present with an empty value, the list is empty. If the parameter is absent, no extra filter applies.
+func QueryPatcherMultiSelectPoolCourseIDs(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+	raw, ok := r.URL.Query()["pool_course_ids"]
+	if !ok || len(raw) == 0 {
+		return query
+	}
+	s := strings.TrimSpace(raw[0])
+	if s == "" {
+		return query.Where("1 = 0")
+	}
+	parts := strings.Split(s, ",")
+	ids := make([]uint, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		n, err := strconv.ParseUint(p, 10, 64)
+		if err != nil {
+			slog.Error("QueryPatcherMultiSelectPoolCourseIDs: invalid course id segment", "segment", p, "error", err)
+			return query.Where("1 = 0")
+		}
+		ids = append(ids, uint(n))
+	}
+	if len(ids) == 0 {
+		return query.Where("1 = 0")
+	}
+	return query.Where("courses.id IN ?", ids)
 }

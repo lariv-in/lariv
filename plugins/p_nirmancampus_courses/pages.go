@@ -108,6 +108,7 @@ func registerFilterPages() {
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Hidden: true, Name: "target_input", Getter: getters.GetterKey[string]("$get.target_input")},
+			&components.InputText{Hidden: true, Name: "pool_course_ids", Getter: getters.GetterKey[string]("$get.pool_course_ids")},
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
 			&components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey[string]("$get.Code")},
 		},

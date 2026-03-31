@@ -29,7 +29,8 @@ func academicRecordsForCurrentStudentGetter() getters.Getter[components.ObjectLi
 		var rows []AcademicRecord
 		if err := db.Model(&AcademicRecord{}).
 			Preload("Program").
-			Preload("Courses").
+			Preload("CompulsoryCourses").
+			Preload("OptionalCourses").
 			Where("student_id = ?", studentID).
 			Order("id ASC").
 			Find(&rows).Error; err != nil {
@@ -81,10 +82,12 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 				},
 			},
 			{
-				Label: "Semester / year",
-				Name:  "SemesterOrYear",
+				Label: "Term",
+				Name:  "Term",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.GetterKey[string]("$row.SemesterOrYear")},
+					&components.FieldText{
+						Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$row.Term"))),
+					},
 				},
 			},
 		},

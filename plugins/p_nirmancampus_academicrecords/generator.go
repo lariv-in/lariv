@@ -18,16 +18,7 @@ var sampleStatuses = []string{
 	"Withdrawn",
 }
 
-var sampleSemesterOrYear = []string{
-	"Semester 1",
-	"Semester 2",
-	"Year 1",
-	"Year 2",
-	"Semester 1",
-	"Year 2",
-	"Semester 3",
-	"Year 3",
-}
+var sampleTerms = []int{1, 2, 1, 3, 2, 1, 2, 3}
 
 func init() {
 	lago.RegistryGenerator.Register("academicrecords.Generator", lago.Generator{
@@ -59,22 +50,28 @@ func init() {
 			n := 0
 			for k, st := range students {
 				rec := AcademicRecord{
-					StudentID:      st.ID,
-					ProgramID:      programs[k%len(programs)].ID,
-					Status:         sampleStatuses[k%len(sampleStatuses)],
-					SemesterOrYear: sampleSemesterOrYear[k%len(sampleSemesterOrYear)],
+					StudentID: st.ID,
+					ProgramID: programs[k%len(programs)].ID,
+					Term:      sampleTerms[k%len(sampleTerms)],
+					Status:    sampleStatuses[k%len(sampleStatuses)],
 				}
 				if err := db.Create(&rec).Error; err != nil {
 					return fmt.Errorf("failed to create academic record (student_id=%d): %w", st.ID, err)
 				}
 
 				primary := courses[k%len(courses)]
-				toAttach := []p_nirmancampus_courses.Course{primary}
+				compulsory := []p_nirmancampus_courses.Course{primary}
+				var optional []p_nirmancampus_courses.Course
 				if len(courses) > 1 {
-					toAttach = append(toAttach, courses[(k+1)%len(courses)])
+					optional = append(optional, courses[(k+1)%len(courses)])
 				}
-				if err := db.Model(&rec).Association("Courses").Append(toAttach); err != nil {
-					return fmt.Errorf("failed to attach courses to academic record (id=%d): %w", rec.ID, err)
+				if err := db.Model(&rec).Association("CompulsoryCourses").Append(compulsory); err != nil {
+					return fmt.Errorf("failed to attach compulsory courses to academic record (id=%d): %w", rec.ID, err)
+				}
+				if len(optional) > 0 {
+					if err := db.Model(&rec).Association("OptionalCourses").Append(optional); err != nil {
+						return fmt.Errorf("failed to attach optional courses to academic record (id=%d): %w", rec.ID, err)
+					}
 				}
 
 				n++
@@ -84,9 +81,14 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
-			if err := db.Exec("DELETE FROM academic_record_courses").Error; err != nil {
-				return fmt.Errorf("clear academic_record_courses: %w", err)
+			if err := db.Exec("DELETE FROM academic_record_compulsory_courses").Error; err != nil {
+				return fmt.Errorf("clear academic_record_compulsory_courses: %w", err)
 			}
+			if err := db.Exec("DELETE FROM academic_record_optional_courses").Error; err != nil {
+				return fmt.Errorf("clear academic_record_optional_courses: %w", err)
+			}
+			// Legacy join table from the previous single Courses association (safe if absent).
+			_ = db.Exec("DELETE FROM academic_record_courses").Error
 			return db.Unscoped().Where("1=1").Delete(&AcademicRecord{}).Error
 		},
 	})

@@ -2,7 +2,11 @@ package p_nirmancampus_academicrecords
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -10,6 +14,8 @@ import (
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
+	"github.com/lariv-in/lago/registry"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -74,15 +80,17 @@ func registerFilterPages() {
 		Url:    lago.GetterRoutePath("academicrecords.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			&components.InputText{
-				Label:  "Status",
-				Name:   "Status",
-				Getter: getters.GetterKey[string]("$get.Status"),
+			&components.InputSelect[string]{
+				Label:    "Status",
+				Name:     "Status",
+				Required: false,
+				Choices:  getters.GetterStatic(AcademicRecordStatusChoices()),
+				Getter:   academicRecordStatusFilterPairGetter(),
 			},
 			&components.InputText{
-				Label:  "Semester / year",
-				Name:   "SemesterOrYear",
-				Getter: getters.GetterKey[string]("$get.SemesterOrYear"),
+				Label:  "Term",
+				Name:   "Term",
+				Getter: getters.GetterKey[string]("$get.Term"),
 			},
 			&components.InputForeignKey[p_nirmancampus_programs.Program]{
 				Label:       "Program",
@@ -107,12 +115,195 @@ func registerFilterPages() {
 	})
 }
 
+func academicRecordStatusFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.GetterKey[string]("$get.Status")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range AcademicRecordStatusChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func academicRecordStatusPairFromInGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.GetterKey[string]("$in.Status")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range AcademicRecordStatusChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func academicRecordStatusPairCreateGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.GetterKey[string]("$in.Status")(ctx)
+		if err != nil || s == "" {
+			choices := AcademicRecordStatusChoices()
+			if len(choices) > 0 {
+				return choices[0], nil
+			}
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range AcademicRecordStatusChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func academicRecordStatusInputSelect(forCreate bool) *components.InputSelect[string] {
+	var g getters.Getter[registry.Pair[string, string]]
+	if forCreate {
+		g = academicRecordStatusPairCreateGetter()
+	} else {
+		g = academicRecordStatusPairFromInGetter()
+	}
+	return &components.InputSelect[string]{
+		Label:    "Status",
+		Name:     "Status",
+		Required: true,
+		Choices:  getters.GetterStatic(AcademicRecordStatusChoices()),
+		Getter:   g,
+	}
+}
+
+func academicRecordEditStudentDisplayGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		sid, err := getters.GetterKey[uint]("$in.StudentID")(ctx)
+		if err != nil || sid == 0 {
+			return "—", nil
+		}
+		dbVal := ctx.Value("$db")
+		db, ok := dbVal.(*gorm.DB)
+		if !ok || db == nil {
+			return fmt.Sprintf("Student #%d", sid), nil
+		}
+		var st p_nirmancampus_students.Student
+		if err := db.Preload("User").First(&st, sid).Error; err != nil {
+			return fmt.Sprintf("Student #%d", sid), nil
+		}
+		name := ""
+		if st.User.Name != "" {
+			name = st.User.Name
+		}
+		if name == "" {
+			return st.StudentNo, nil
+		}
+		return fmt.Sprintf("%s · %s", st.StudentNo, name), nil
+	}
+}
+
+func academicRecordEditTermDisplayGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		if t, err := getters.GetterKey[int]("$in.Term")(ctx); err == nil {
+			return fmt.Sprintf("%d", t), nil
+		}
+		if s, err := getters.GetterKey[string]("$in.Term")(ctx); err == nil && s != "" {
+			return s, nil
+		}
+		return "—", nil
+	}
+}
+
+func academicRecordTermHiddenIntGetter() getters.Getter[int] {
+	return func(ctx context.Context) (int, error) {
+		if t, err := getters.GetterKey[int]("$in.Term")(ctx); err == nil {
+			return t, nil
+		}
+		if s, err := getters.GetterKey[string]("$in.Term")(ctx); err == nil && s != "" {
+			n, err := strconv.Atoi(s)
+			if err != nil {
+				return 0, nil
+			}
+			return n, nil
+		}
+		return 0, nil
+	}
+}
+
+// programStructureUnitForAcademicIn loads the ProgramStructureUnit for $in.ProgramID and $in.Term.
+// When preloadOptionalPool is true, OptionalCourseSelectionPool is preloaded (for multi-select URLs).
+func programStructureUnitForAcademicIn(ctx context.Context, preloadOptionalPool bool) (p_nirmancampus_programs.ProgramStructureUnit, error) {
+	var psu p_nirmancampus_programs.ProgramStructureUnit
+	programID, err := getters.GetterKey[uint]("$in.ProgramID")(ctx)
+	if err != nil || programID == 0 {
+		return psu, err
+	}
+	term, err := academicRecordTermHiddenIntGetter()(ctx)
+	if err != nil {
+		return psu, err
+	}
+	dbVal := ctx.Value("$db")
+	db, ok := dbVal.(*gorm.DB)
+	if !ok || db == nil {
+		return psu, fmt.Errorf("no db in context")
+	}
+	q := db.Where("program_id = ? AND term_number = ?", programID, term)
+	if preloadOptionalPool {
+		err = q.Preload("OptionalCourseSelectionPool").First(&psu).Error
+	} else {
+		err = q.Select("optional_course_count").First(&psu).Error
+	}
+	return psu, err
+}
+
+func academicRecordOptionalCourseCountDisplayGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		psu, err := programStructureUnitForAcademicIn(ctx, false)
+		if err != nil {
+			return "—", nil
+		}
+		return strconv.Itoa(psu.OptionalCourseCount), nil
+	}
+}
+
+func academicRecordOptionalCoursesMultiSelectURLGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		base, err := lago.GetterRoutePath("courses.MultiSelectRoute", nil)(ctx)
+		if err != nil {
+			return "", err
+		}
+		u, errParse := url.Parse(base)
+		if errParse != nil {
+			return base, nil
+		}
+		psu, err := programStructureUnitForAcademicIn(ctx, true)
+		q := u.Query()
+		if err != nil || len(psu.OptionalCourseSelectionPool) == 0 {
+			q.Set("pool_course_ids", "")
+		} else {
+			parts := make([]string, 0, len(psu.OptionalCourseSelectionPool))
+			for _, c := range psu.OptionalCourseSelectionPool {
+				parts = append(parts, strconv.FormatUint(uint64(c.ID), 10))
+			}
+			q.Set("pool_course_ids", strings.Join(parts, ","))
+		}
+		u.RawQuery = q.Encode()
+		return u.String(), nil
+	}
+}
+
 // --- Form Fields ---
 
-func academicRecordFormFields() components.ContainerColumn {
+// academicRecordCreateFormFields is used on create only: Student, Program, Term, Status.
+// Compulsory courses are filled server-side from the matching ProgramStructureUnit.
+func academicRecordCreateFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{
-			Key: "academicrecords.AcademicRecordFormFieldsBody",
+			Key: "academicrecords.AcademicRecordCreateFormFieldsBody",
 		},
 		Children: []components.PageInterface{
 			&components.ContainerRow{
@@ -153,42 +344,132 @@ func academicRecordFormFields() components.ContainerColumn {
 				},
 			},
 			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Status"),
+						Error: getters.GetterKey[error]("$error.Term"),
 						Children: []components.PageInterface{
-							&components.InputText{
-								Label:    "Status",
-								Name:     "Status",
+							&components.InputNumber{
+								Label:    "Term",
+								Name:     "Term",
 								Required: true,
-								Getter:   getters.GetterKey[string]("$in.Status"),
-							},
-						},
-					},
-					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.SemesterOrYear"),
-						Children: []components.PageInterface{
-							&components.InputText{
-								Label:    "Semester / year",
-								Name:     "SemesterOrYear",
-								Required: true,
-								Getter:   getters.GetterKey[string]("$in.SemesterOrYear"),
+								Getter:   getters.GetterKey[int]("$in.Term"),
 							},
 						},
 					},
 				},
 			},
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.Status"),
+						Children: []components.PageInterface{
+							academicRecordStatusInputSelect(true),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func academicRecordFormFields() components.ContainerColumn {
+	return components.ContainerColumn{
+		Page: components.Page{
+			Key: "academicrecords.AcademicRecordFormFieldsBody",
+		},
+		Children: []components.PageInterface{
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 mt-4",
+				Children: []components.PageInterface{
+					&components.LabelInline{
+						Title: "Student",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: academicRecordEditStudentDisplayGetter()},
+						},
+					},
+					&components.LabelInline{
+						Title: "Program",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.GetterForeignKey[p_nirmancampus_programs.Program, uint, string](
+									getters.GetterKey[uint]("$in.ProgramID"),
+									"Name",
+								),
+							},
+						},
+					},
+					&components.LabelInline{
+						Title: "Term",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: academicRecordEditTermDisplayGetter()},
+						},
+					},
+				},
+			},
+			&components.InputForeignKey[p_nirmancampus_students.Student]{
+				Hidden: true,
+				Name:   "StudentID",
+				Getter: getters.GetterAssociation[p_nirmancampus_students.Student](
+					getters.GetterKey[uint]("$in.StudentID"),
+				),
+			},
+			&components.InputForeignKey[p_nirmancampus_programs.Program]{
+				Hidden: true,
+				Name:   "ProgramID",
+				Getter: getters.GetterAssociation[p_nirmancampus_programs.Program](
+					getters.GetterKey[uint]("$in.ProgramID"),
+				),
+			},
+			&components.InputNumber{
+				Hidden:   true,
+				Name:     "Term",
+				Getter:   academicRecordTermHiddenIntGetter(),
+				Required: true,
+			},
+			&components.LabelNewline{
+				Title: "Compulsory courses",
+				Children: []components.PageInterface{
+					&components.FieldManyToMany[p_nirmancampus_courses.Course]{
+						Getter:  getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.CompulsoryCourses"),
+						Display: getters.GetterKey[string]("$in.Name"),
+						Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
+							"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+						}),
+						Classes: "w-full",
+					},
+				},
+			},
+			&components.LabelInline{
+				Title: "Optional course count",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: academicRecordOptionalCourseCountDisplayGetter()},
+				},
+			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Courses"),
+				Error: getters.GetterKey[error]("$error.OptionalCourses"),
 				Children: []components.PageInterface{
 					&components.InputManyToMany[p_nirmancampus_courses.Course]{
-						Label:       "Courses",
-						Name:        "Courses",
-						Getter:      getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.Courses"),
-						Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
+						Label:       "Optional courses",
+						Name:        "OptionalCourses",
+						Required:    false,
+						Getter:      getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.OptionalCourses"),
+						Url:         academicRecordOptionalCoursesMultiSelectURLGetter(),
 						Display:     getters.GetterKey[string]("$in.Name"),
-						Placeholder: "Select courses...",
+						Placeholder: "Select optional courses from the program pool…",
+						Classes:     "w-full",
+					},
+				},
+			},
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.GetterKey[error]("$error.Status"),
+						Children: []components.PageInterface{
+							academicRecordStatusInputSelect(false),
+						},
 					},
 				},
 			},
@@ -200,6 +481,7 @@ func academicRecordFormFields() components.ContainerColumn {
 
 func registerFormPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordFormFields", academicRecordFormFields())
+	lago.RegistryPage.Register("academicrecords.AcademicRecordCreateFormFields", academicRecordCreateFormFields())
 
 	lago.RegistryPage.Register("academicrecords.AcademicRecordCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -207,15 +489,13 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
-				Url:    lago.GetterRoutePath("academicrecords.CreateRoute", nil),
-				Method: http.MethodPost,
-				Title:  "Create Academic Record",
-				// Keep subtitle aligned with other apps.
-				Subtitle: "Create a new academic record",
+				Url:      lago.GetterRoutePath("academicrecords.CreateRoute", nil),
+				Method:   http.MethodPost,
+				Title:    "Create Academic Record",
+				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
-					// Embed directly so the companion plugin can patch by Page.Key.
-					academicRecordFormFields(),
+					academicRecordCreateFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Academic Record"},
@@ -236,7 +516,7 @@ func registerFormPages() {
 				}),
 				Method:   http.MethodPost,
 				Title:    "Edit Academic Record",
-				Subtitle: "Update academic record details",
+				Subtitle: "Update status or course selections. Student, program, and term cannot be changed here.",
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
 					academicRecordFormFields(),
@@ -308,10 +588,12 @@ func registerTablePages() {
 						},
 					},
 					{
-						Label: "Semester / year",
-						Name:  "SemesterOrYear",
+						Label: "Term",
+						Name:  "Term",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.SemesterOrYear")},
+							&components.FieldText{
+								Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$row.Term"))),
+							},
 						},
 					},
 				},
@@ -349,16 +631,31 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
-								Title: "Semester / year",
+								Title: "Term",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.SemesterOrYear")},
+									&components.FieldText{
+										Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$in.Term"))),
+									},
 								},
 							},
-							&components.LabelInline{
-								Title: "Courses",
+							&components.LabelNewline{
+								Title: "Compulsory courses",
 								Children: []components.PageInterface{
 									&components.FieldManyToMany[p_nirmancampus_courses.Course]{
-										Getter:  getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.Courses"),
+										Getter:  getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.CompulsoryCourses"),
+										Display: getters.GetterKey[string]("$in.Name"),
+										Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
+											"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+										}),
+										Classes: "w-full",
+									},
+								},
+							},
+							&components.LabelNewline{
+								Title: "Optional courses",
+								Children: []components.PageInterface{
+									&components.FieldManyToMany[p_nirmancampus_courses.Course]{
+										Getter:  getters.GetterKey[[]p_nirmancampus_courses.Course]("$in.OptionalCourses"),
 										Display: getters.GetterKey[string]("$in.Name"),
 										Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
 											"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
@@ -402,10 +699,10 @@ func registerSelectionPages() {
 				UID:  "academicrecords-selection-table",
 				Data: getters.GetterKey[components.ObjectList[AcademicRecord]]("academicrecords"),
 				OnClick: getters.GetterSelect("AcademicRecordID", getters.GetterKey[uint]("$row.ID"), getters.GetterFormat(
-					"%s · %s · %s",
+					"%s · %s · term %d",
 					getters.GetterAny(getters.GetterKey[string]("$row.Program.Name")),
 					getters.GetterAny(getters.GetterKey[string]("$row.Status")),
-					getters.GetterAny(getters.GetterKey[string]("$row.SemesterOrYear")),
+					getters.GetterAny(getters.GetterKey[int]("$row.Term")),
 				)),
 				Columns: []components.TableColumn{
 					{
@@ -430,10 +727,12 @@ func registerSelectionPages() {
 						},
 					},
 					{
-						Label: "Semester / year",
-						Name:  "SemesterOrYear",
+						Label: "Term",
+						Name:  "Term",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.SemesterOrYear")},
+							&components.FieldText{
+								Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$row.Term"))),
+							},
 						},
 					},
 				},

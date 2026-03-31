@@ -159,41 +159,78 @@ func ListView[T any](key string) func(*View) *View {
 	}
 }
 
-// DetailView loads a record by path {pathParamKey} and stores it in context under key for GET.
-// When the view already has a GET handler (e.g. from GetPageView or an inner DetailView), this layer
-// runs first, then delegates to that handler so multiple DetailViews can be nested (outer path params first).
+// preloadDetailOrRespond loads T by pathParamKey, applies v.QueryPatchers, stores *instance in context
+// under key, and returns the updated request. On failure it writes the HTTP response and returns ok=false.
+func preloadDetailOrRespond[T any](v *View, w http.ResponseWriter, r *http.Request, key, pathParamKey string) (*http.Request, bool) {
+	idStr := r.PathValue(pathParamKey)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return nil, false
+	}
+
+	db := r.Context().Value("$db").(*gorm.DB)
+	query := db.Model(new(T))
+	instance := new(T)
+	for _, queryPatcher := range v.QueryPatchers {
+		query = queryPatcher.Value(v, r, query)
+	}
+	if err := query.First(instance, id).Error; err != nil {
+		http.NotFound(w, r)
+		return nil, false
+	}
+
+	ctx := context.WithValue(r.Context(), key, *instance)
+	return r.WithContext(ctx), true
+}
+
+// detailViewWrapNonGETHandler runs preloadDetailOrRespond before the previous handler (e.g. Update POST).
+func detailViewWrapNonGETHandler[T any](key, pathParamKey string, old func(*View) http.Handler) func(*View) http.Handler {
+	return func(recv *View) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r2, ok := preloadDetailOrRespond[T](recv, w, r, key, pathParamKey)
+			if !ok {
+				return
+			}
+			old(recv).ServeHTTP(w, r2)
+		})
+	}
+}
+
+// DetailView loads a record by path {pathParamKey} and stores it in context under key.
+// It runs preload on GET (then the previous GET handler or ServeRenderPage) and on every other
+// registered method (e.g. POST for UpdateView) so sidebar/detail getters still resolve on
+// validation error re-renders.
+// When the view already has a GET handler (e.g. from GetPageView or an inner DetailView), GET runs
+// preload first, then delegates to that handler so multiple DetailViews can be nested (outer path params first).
 // View.RenderMiddlewares apply on the final ServeRenderPage (see WithRenderMiddleware).
 func DetailView[T any](key string, pathParamKey string) func(*View) *View {
 	return func(v *View) *View {
-		prev := v.Handlers[http.MethodGet]
+		prevGET := v.Handlers[http.MethodGet]
+
+		var otherMethods []string
+		for m := range v.Handlers {
+			if m != http.MethodGet {
+				otherMethods = append(otherMethods, m)
+			}
+		}
+		for _, method := range otherMethods {
+			old := v.Handlers[method]
+			if old == nil {
+				continue
+			}
+			v.Handlers[method] = detailViewWrapNonGETHandler[T](key, pathParamKey, old)
+		}
+
 		return v.WithMethod(http.MethodGet, func(innerView *View) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				idStr := r.PathValue(pathParamKey)
-				id, err := strconv.Atoi(idStr)
-				if err != nil {
-					http.Error(w, "Invalid ID", http.StatusBadRequest)
+				r2, ok := preloadDetailOrRespond[T](innerView, w, r, key, pathParamKey)
+				if !ok {
 					return
 				}
-
-				db := r.Context().Value("$db").(*gorm.DB)
-				query := db.Model(new(T))
-				instance := new(T)
-				for _, queryPatcher := range v.QueryPatchers {
-					query = queryPatcher.Value(v, r, query)
-				}
-				err = query.First(instance, id).Error
-				if err != nil {
-					http.NotFound(w, r)
-					return
-				}
-
-				// Store the concrete instance under the key so typed GetterKey[T](key)
-				// can retrieve it without type errors. Components like Detail[T]
-				// will project this into $in as needed.
-				ctx := context.WithValue(r.Context(), key, *instance)
-				r = r.WithContext(ctx)
-				if prev != nil {
-					prev(innerView).ServeHTTP(w, r)
+				r = r2
+				if prevGET != nil {
+					prevGET(innerView).ServeHTTP(w, r)
 					return
 				}
 				innerView.ServeRenderPage(w, r)

@@ -27,7 +27,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
 			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
-			WithQueryPatcher("academicrecords.preload_courses", views.QueryPatcherPreload("Courses")).
+			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).
+			WithQueryPatcher("academicrecords.preload_optional_courses", views.QueryPatcherPreload("OptionalCourses")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
@@ -40,7 +41,8 @@ func init() {
 		)(
 			lago.GetPageView("academicrecords.AcademicRecordCreateForm"),
 		).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware),
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+			WithFormPatcher("academicrecords.create_from_program_structure", formPatcherAcademicRecordCreateFromProgramStructure),
 	)
 
 	// Update view
@@ -57,8 +59,10 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
 			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
-			WithQueryPatcher("academicrecords.preload_courses", views.QueryPatcherPreload("Courses")).
-			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
+			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).
+			WithQueryPatcher("academicrecords.preload_optional_courses", views.QueryPatcherPreload("OptionalCourses")).
+			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole).
+			WithFormValidator("academicrecords.optional_course_count", formValidatorAcademicRecordOptionalCourseCount),
 	)
 
 	// Delete view
@@ -73,7 +77,8 @@ func init() {
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithQueryPatcher("academicrecords.preload_student_user", views.QueryPatcherPreload("Student.User")).
 			WithQueryPatcher("academicrecords.preload_program", views.QueryPatcherPreload("Program")).
-			WithQueryPatcher("academicrecords.preload_courses", views.QueryPatcherPreload("Courses")).
+			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).
+			WithQueryPatcher("academicrecords.preload_optional_courses", views.QueryPatcherPreload("OptionalCourses")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole),
 	)
 
