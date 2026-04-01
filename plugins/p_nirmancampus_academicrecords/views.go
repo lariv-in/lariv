@@ -68,7 +68,7 @@ func init() {
 			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).
 			WithQueryPatcher("academicrecords.preload_optional_courses", views.QueryPatcherPreload("OptionalCourses")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole).
-			WithFormValidator("academicrecords.optional_course_count", formValidatorAcademicRecordOptionalCourseCount),
+			WithFormPatcher("academicrecords.optional_course_count", formPatcherAcademicRecordOptionalCourseCount),
 	)
 
 	// Delete view

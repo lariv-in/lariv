@@ -13,21 +13,16 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-type FormPatcher = func(view *View, r *http.Request, formData map[string]any) map[string]any
-
-// FormValidator runs after input parse and FormPatchers during ParseForm. Returned errors are merged
-// into field errors (non-nil entries only).
-type FormValidator = func(view *View, r *http.Request, formData map[string]any) map[string]error
+type FormPatcher = func(view *View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error)
 
 type Middleware = func(http.Handler) http.Handler
 
 type View struct {
-	PageName       string
-	PageLookup     func(name string) (components.PageInterface, bool)
-	Handlers       map[string]func(*View) http.Handler
-	FormPatchers   []registry.Pair[string, FormPatcher]
-	FormValidators []registry.Pair[string, FormValidator]
-	QueryPatchers  []registry.Pair[string, QueryPatcher]
+	PageName      string
+	PageLookup    func(name string) (components.PageInterface, bool)
+	Handlers      map[string]func(*View) http.Handler
+	FormPatchers  []registry.Pair[string, FormPatcher]
+	QueryPatchers []registry.Pair[string, QueryPatcher]
 	// Middlewares are applied in slice order to preserve insertion order.
 	Middlewares []registry.Pair[string, Middleware]
 	// RenderMiddlewares wrap successful and error renders from CRUD helpers (ListView, DetailView,
@@ -173,17 +168,11 @@ func (v *View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return nil, nil, err
 	}
-	for _, formPatcher := range v.FormPatchers {
-		values = formPatcher.Value(v, r, values)
+	if fieldErrors == nil {
+		fieldErrors = make(map[string]error)
 	}
-	for _, formValidator := range v.FormValidators {
-		if errs := formValidator.Value(v, r, values); len(errs) > 0 {
-			for k, e := range errs {
-				if e != nil {
-					fieldErrors[k] = e
-				}
-			}
-		}
+	for _, formPatcher := range v.FormPatchers {
+		values, fieldErrors = formPatcher.Value(v, r, values, fieldErrors)
 	}
 	return values, fieldErrors, nil
 }
@@ -224,11 +213,6 @@ func (v *View) HasErrors(errs map[string]error) bool {
 
 func (v *View) WithFormPatcher(name string, formPatcher FormPatcher) *View {
 	v.FormPatchers = append(v.FormPatchers, registry.Pair[string, FormPatcher]{Key: name, Value: formPatcher})
-	return v
-}
-
-func (v *View) WithFormValidator(name string, formValidator FormValidator) *View {
-	v.FormValidators = append(v.FormValidators, registry.Pair[string, FormValidator]{Key: name, Value: formValidator})
 	return v
 }
 

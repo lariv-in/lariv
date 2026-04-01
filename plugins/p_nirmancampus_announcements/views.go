@@ -14,28 +14,28 @@ import (
 // superusers are always allowed (see p_users.RoleAuthorizationMiddleware).
 var announcementsAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
 
-func announcementsFormCreatedByPatcher(_ *views.View, r *http.Request, formData map[string]any) map[string]any {
+func announcementsFormCreatedByPatcher(_ *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	user := r.Context().Value("$user").(p_users.User)
 	id := user.ID
 	formData["CreatedByID"] = &id
-	return formData
+	return formData, formErrors
 }
 
-func announcementsFormExpiryAtPointerPatcher(_ *views.View, _ *http.Request, formData map[string]any) map[string]any {
+func announcementsFormExpiryAtPointerPatcher(_ *views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	raw, ok := formData["ExpiryAt"]
 	if !ok {
-		return formData
+		return formData, formErrors
 	}
 	if raw == nil {
 		formData["ExpiryAt"] = nil
-		return formData
+		return formData, formErrors
 	}
 
 	switch typed := raw.(type) {
 	case time.Time:
 		if typed.IsZero() {
 			formData["ExpiryAt"] = nil
-			return formData
+			return formData, formErrors
 		}
 		tmp := typed
 		formData["ExpiryAt"] = &tmp
@@ -44,7 +44,7 @@ func announcementsFormExpiryAtPointerPatcher(_ *views.View, _ *http.Request, for
 	default:
 		// Leave unknown types alone; decoding will surface errors if needed.
 	}
-	return formData
+	return formData, formErrors
 }
 
 func init() {

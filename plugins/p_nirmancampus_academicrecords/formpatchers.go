@@ -13,18 +13,18 @@ import (
 
 // formPatcherAcademicRecordCreateFromProgramStructure sets Status (default) and CompulsoryCourses
 // from the program's ProgramStructureUnit for the submitted Term (TermNumber).
-func formPatcherAcademicRecordCreateFromProgramStructure(_ *views.View, r *http.Request, values map[string]any) map[string]any {
+func formPatcherAcademicRecordCreateFromProgramStructure(_ *views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	dbVal := r.Context().Value("$db")
 	db, ok := dbVal.(*gorm.DB)
 	if !ok || db == nil {
 		slog.Error("formPatcherAcademicRecordCreateFromProgramStructure: missing $db in context")
-		return values
+		return values, formErrors
 	}
 
 	programID, okPID := uintFromFormValue(values["ProgramID"])
 	term, okTerm := intFromFormValue(values["Term"])
 	if !okPID || !okTerm {
-		return values
+		return values, formErrors
 	}
 
 	if s, ok := values["Status"].(string); !ok || s == "" {
@@ -43,7 +43,7 @@ func formPatcherAcademicRecordCreateFromProgramStructure(_ *views.View, r *http.
 			slog.Error("academic record create: load program structure unit", "error", err)
 		}
 		values["CompulsoryCourses"] = components.AssociationIDs{Field: "CompulsoryCourses", IDs: nil}
-		return values
+		return values, formErrors
 	}
 
 	ids := make([]uint, 0, len(psu.CompulsoryCourses))
@@ -51,7 +51,7 @@ func formPatcherAcademicRecordCreateFromProgramStructure(_ *views.View, r *http.
 		ids = append(ids, c.ID)
 	}
 	values["CompulsoryCourses"] = components.AssociationIDs{Field: "CompulsoryCourses", IDs: ids}
-	return values
+	return values, formErrors
 }
 
 func uintFromFormValue(v any) (uint, bool) {

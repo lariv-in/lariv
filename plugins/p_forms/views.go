@@ -125,14 +125,14 @@ func queryPatcherPreloadFormFieldsOrdered() views.QueryPatcher {
 
 // formPatcherCoerceFormFieldFormID converts FormID from hidden text inputs (string) to uint for PopulateFromMap.
 func formPatcherCoerceFormFieldFormID() views.FormPatcher {
-	return func(v *views.View, r *http.Request, formData map[string]any) map[string]any {
+	return func(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 		raw, ok := formData["FormID"]
 		if !ok || raw == nil {
-			return formData
+			return formData, formErrors
 		}
 		switch x := raw.(type) {
 		case uint:
-			return formData
+			return formData, formErrors
 		case string:
 			if u, err := strconv.ParseUint(strings.TrimSpace(x), 10, 64); err == nil {
 				formData["FormID"] = uint(u)
@@ -144,13 +144,13 @@ func formPatcherCoerceFormFieldFormID() views.FormPatcher {
 		case float64:
 			formData["FormID"] = uint(x)
 		}
-		return formData
+		return formData, formErrors
 	}
 }
 
 // formPatcherNextSortOrderOnFieldCreate sets SortOrder to one greater than the current max for this form.
 func formPatcherNextSortOrderOnFieldCreate() views.FormPatcher {
-	return func(v *views.View, r *http.Request, formData map[string]any) map[string]any {
+	return func(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 		var formID uint
 		switch x := formData["FormID"].(type) {
 		case uint:
@@ -166,11 +166,11 @@ func formPatcherNextSortOrderOnFieldCreate() views.FormPatcher {
 			}
 		}
 		if formID == 0 {
-			return formData
+			return formData, formErrors
 		}
 		db, ok := r.Context().Value("$db").(*gorm.DB)
 		if !ok || db == nil {
-			return formData
+			return formData, formErrors
 		}
 		var rows []FormField
 		db.Where("form_id = ?", formID).Order("sort_order DESC").Limit(1).Find(&rows)
@@ -179,13 +179,13 @@ func formPatcherNextSortOrderOnFieldCreate() views.FormPatcher {
 			next = rows[0].SortOrder + 1
 		}
 		formData["SortOrder"] = next
-		return formData
+		return formData, formErrors
 	}
 }
 
 // formPatcherFieldNameFromLabel sets Name from Label (HTML-safe slug) so admins only edit the label.
 func formPatcherFieldNameFromLabel() views.FormPatcher {
-	return func(v *views.View, r *http.Request, formData map[string]any) map[string]any {
+	return func(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 		var label string
 		switch x := formData["Label"].(type) {
 		case string:
@@ -196,19 +196,19 @@ func formPatcherFieldNameFromLabel() views.FormPatcher {
 			}
 		}
 		formData["Name"] = getters.LabelToHTMLName(label)
-		return formData
+		return formData, formErrors
 	}
 }
 
 // formPatcherClearOptionsUnlessSelect drops Options when FieldType is not select (the field may
 // still be posted while hidden in the DOM).
 func formPatcherClearOptionsUnlessSelect() views.FormPatcher {
-	return func(v *views.View, r *http.Request, formData map[string]any) map[string]any {
+	return func(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 		ft, _ := formData["FieldType"].(string)
 		if ft != FieldTypeSelect {
 			formData["Options"] = "[]"
 		}
-		return formData
+		return formData, formErrors
 	}
 }
 
@@ -257,7 +257,7 @@ func ensureUniqueFormSlug(db *gorm.DB, base string, excludeID uint) string {
 
 // formPatcherSlugFromTitle sets Slug from Title (URL-safe, unique in the database).
 func formPatcherSlugFromTitle() views.FormPatcher {
-	return func(v *views.View, r *http.Request, formData map[string]any) map[string]any {
+	return func(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 		var title string
 		switch x := formData["Title"].(type) {
 		case string:
@@ -271,7 +271,7 @@ func formPatcherSlugFromTitle() views.FormPatcher {
 		db, ok := r.Context().Value("$db").(*gorm.DB)
 		if !ok || db == nil {
 			formData["Slug"] = base
-			return formData
+			return formData, formErrors
 		}
 		var excludeID uint
 		if s := r.PathValue("form_id"); s != "" {
@@ -280,7 +280,7 @@ func formPatcherSlugFromTitle() views.FormPatcher {
 			}
 		}
 		formData["Slug"] = ensureUniqueFormSlug(db, base, excludeID)
-		return formData
+		return formData, formErrors
 	}
 }
 

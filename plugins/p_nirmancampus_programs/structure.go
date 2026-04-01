@@ -75,13 +75,13 @@ func structureEditRedirectURL(ctx context.Context) (string, error) {
 }
 
 // formPatcherStructureUnitProgramIDFromPath forces ProgramID from the program path param (do not trust the client).
-func formPatcherStructureUnitProgramIDFromPath(_ *views.View, r *http.Request, m map[string]any) map[string]any {
+func formPatcherStructureUnitProgramIDFromPath(_ *views.View, r *http.Request, m map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err == nil {
 		m["ProgramID"] = uint(id)
 	}
-	return m
+	return m, formErrors
 }
 
 func splitStructureUnitFormValues(values map[string]any) (map[string]any, map[string]components.AssociationIDs) {

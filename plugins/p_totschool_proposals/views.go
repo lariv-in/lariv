@@ -79,19 +79,19 @@ func proposalDetailMiddleware(next http.Handler) http.Handler {
 // ProposalFormPatcher enriches form data for CRUD handlers:
 // - sets CreatedByID from the authenticated user
 // - flattens questionnaire answers into the Answers JSON field
-func ProposalFormPatcher(v *views.View, r *http.Request, formData map[string]any) map[string]any {
+func ProposalFormPatcher(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	rawUser := r.Context().Value("$user")
 	user, ok := rawUser.(p_users.User)
 	if !ok {
 		slog.Error("ProposalFormPatcher: missing or invalid $user in context",
 			"pageName", v.PageName,
 			"userType", fmt.Sprintf("%T", rawUser))
-		return formData
+		return formData, formErrors
 	}
 	formData["CreatedByID"] = user.ID
 	// Answers are now posted as JSON via InputKeyValue directly into the
 	// Answers field; no additional transformation required here.
-	return formData
+	return formData, formErrors
 }
 
 func generateHandler(v *views.View) http.Handler {

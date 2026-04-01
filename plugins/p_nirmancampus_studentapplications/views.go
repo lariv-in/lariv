@@ -17,27 +17,27 @@ var studentApplicationsAccessMiddleware = p_users.RoleAuthorizationMiddleware([]
 // studentApplicationsAdminMiddleware allows create/update/delete management (not for Unassigned except create is separate).
 var studentApplicationsAdminMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
 
-func applicationCreatedByFormPatcher(_ *views.View, r *http.Request, formData map[string]any) map[string]any {
+func applicationCreatedByFormPatcher(_ *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	user := r.Context().Value("$user").(p_users.User)
 	id := user.ID
 	formData["CreatedByID"] = &id
-	return formData
+	return formData, formErrors
 }
 
-func applicationDOBFormPatcher(_ *views.View, _ *http.Request, formData map[string]any) map[string]any {
+func applicationDOBFormPatcher(_ *views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	raw, ok := formData["DOB"]
 	if !ok {
-		return formData
+		return formData, formErrors
 	}
 	if raw == nil {
 		formData["DOB"] = nil
-		return formData
+		return formData, formErrors
 	}
 	switch typed := raw.(type) {
 	case time.Time:
 		if typed.IsZero() {
 			formData["DOB"] = nil
-			return formData
+			return formData, formErrors
 		}
 		// Store calendar date only (matches gorm type:date, like Tally.Date).
 		d := time.Date(typed.Year(), typed.Month(), typed.Day(), 0, 0, 0, 0, typed.Location())
@@ -45,7 +45,7 @@ func applicationDOBFormPatcher(_ *views.View, _ *http.Request, formData map[stri
 	case *time.Time:
 	default:
 	}
-	return formData
+	return formData, formErrors
 }
 
 func init() {

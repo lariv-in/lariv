@@ -157,10 +157,10 @@ func aiEditHandler(v *views.View) http.Handler {
 	})
 }
 
-func FormCreatedByPatcher(v *views.View, r *http.Request, formData map[string]any) map[string]any {
+func FormCreatedByPatcher(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	user := r.Context().Value("$user").(p_users.User)
 	formData["CreatedByID"] = user.ID
-	return formData
+	return formData, formErrors
 }
 
 // scopeAppointmentsQueryToCurrentUser restricts the query to appointments created by
