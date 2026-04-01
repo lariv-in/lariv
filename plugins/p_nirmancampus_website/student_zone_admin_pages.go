@@ -197,7 +197,7 @@ func studentZoneAdminSectionFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Order"),
 						Children: []components.PageInterface{
-							&components.InputNumber{
+							&components.InputNumber[int]{
 								Label:  "Order",
 								Name:   "Order",
 								Getter: getters.Key[int]("$in.Order"),
@@ -395,9 +395,9 @@ func registerStudentZoneAdminTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[StudentZoneSection]{
-				UID:       "section-table",
-				Classes:   "w-full",
-				Data:      getters.Key[components.ObjectList[StudentZoneSection]]("sections"),
+				UID:     "section-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[StudentZoneSection]]("sections"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil)},
@@ -431,9 +431,9 @@ func registerStudentZoneAdminTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[StudentZoneItem]{
-				UID:       "item-table",
-				Classes:   "w-full",
-				Data:      getters.Key[components.ObjectList[StudentZoneItem]]("items"),
+				UID:     "item-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[StudentZoneItem]]("items"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminItemFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil)},

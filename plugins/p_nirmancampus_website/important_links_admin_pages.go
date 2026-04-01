@@ -81,7 +81,7 @@ func importantLinksFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Order"),
 						Children: []components.PageInterface{
-							&components.InputNumber{
+							&components.InputNumber[int]{
 								Label:  "Order",
 								Name:   "Order",
 								Getter: getters.Key[int]("$in.Order"),
@@ -240,9 +240,9 @@ func registerImportantLinksAdminTablePages() {
 				},
 			},
 			&components.DataTable[ImportantLink]{
-				UID:       "important-links-table",
-				Classes:   "w-full",
-				Data:      getters.Key[components.ObjectList[ImportantLink]]("links"),
+				UID:     "important-links-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[ImportantLink]]("links"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)},

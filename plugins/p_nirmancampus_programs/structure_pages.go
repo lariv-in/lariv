@@ -109,7 +109,7 @@ func registerStructurePages() {
 				&components.ContainerError{
 					Error: getters.Key[error]("$error.TermNumber"),
 					Children: []components.PageInterface{
-						&components.InputNumber{
+						&components.InputNumber[int]{
 							Label:    "Term number",
 							Name:     "TermNumber",
 							Required: true,
@@ -134,7 +134,7 @@ func registerStructurePages() {
 				&components.ContainerError{
 					Error: getters.Key[error]("$error.OptionalCourseCount"),
 					Children: []components.PageInterface{
-						&components.InputNumber{
+						&components.InputNumber[int]{
 							Label:    "Optional course count",
 							Name:     "OptionalCourseCount",
 							Required: false,
@@ -167,7 +167,7 @@ func registerStructurePages() {
 				&components.ContainerError{
 					Error: getters.Key[error]("$error.TermNumber"),
 					Children: []components.PageInterface{
-						&components.InputNumber{
+						&components.InputNumber[int]{
 							Label:    "Term number",
 							Name:     "TermNumber",
 							Required: true,
@@ -192,7 +192,7 @@ func registerStructurePages() {
 				&components.ContainerError{
 					Error: getters.Key[error]("$error.OptionalCourseCount"),
 					Children: []components.PageInterface{
-						&components.InputNumber{
+						&components.InputNumber[int]{
 							Label:    "Optional course count",
 							Name:     "OptionalCourseCount",
 							Required: false,

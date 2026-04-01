@@ -47,7 +47,7 @@ func init() {
 		).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
-			WithFormPatcher("academicrecords.create_from_program_structure", formPatcherAcademicRecordCreateFromProgramStructure),
+			WithFormPatcher("academicrecords.create_from_program_structure", formPatcherAcademicRecordCreate),
 	)
 
 	// Update view
@@ -68,7 +68,7 @@ func init() {
 			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).
 			WithQueryPatcher("academicrecords.preload_optional_courses", views.QueryPatcherPreload("OptionalCourses")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole).
-			WithFormPatcher("academicrecords.optional_course_count", formPatcherAcademicRecordOptionalCourseCount),
+			WithFormPatcher("academicrecords.optional_course_count", formPatcherAcademicRecordUpdate),
 	)
 
 	// Delete view

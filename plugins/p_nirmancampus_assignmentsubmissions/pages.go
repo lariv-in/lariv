@@ -127,7 +127,7 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.MaxMarks"),
 						Children: []components.PageInterface{
-							&components.InputNumber{
+							&components.InputNumber[int]{
 								Label:    "Max marks",
 								Name:     "MaxMarks",
 								Required: true,
@@ -138,7 +138,7 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Marks"),
 						Children: []components.PageInterface{
-							&components.InputNumber{
+							&components.InputNumber[int]{
 								Label:    "Marks",
 								Name:     "Marks",
 								Required: true,
@@ -271,10 +271,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[AssignmentSubmission]{
-				Page:            components.Page{Key: "assignmentsubmissions.TableBody"},
-				UID:             "assignment-submissions-table",
-				Classes:         "w-full",
-				Data:            getters.Key[components.ObjectList[AssignmentSubmission]]("assignmentsubmissions"),
+				Page:    components.Page{Key: "assignmentsubmissions.TableBody"},
+				UID:     "assignment-submissions-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[AssignmentSubmission]]("assignmentsubmissions"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "assignmentsubmissions.Filter"}},
 					&components.TableButtonCreate{Link: assignmentSubmissionCreateURLGetter()},
