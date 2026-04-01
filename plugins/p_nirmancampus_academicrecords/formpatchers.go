@@ -2,6 +2,7 @@ package p_nirmancampus_academicrecords
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -20,10 +21,18 @@ func formPatcherAcademicRecordCreateFromProgramStructure(_ *views.View, r *http.
 		slog.Error("formPatcherAcademicRecordCreateFromProgramStructure: missing $db in context")
 		return values, formErrors
 	}
+	if formErrors == nil {
+		formErrors = map[string]error{}
+	}
 
-	programID, okPID := uintFromFormValue(values["ProgramID"])
-	term, okTerm := intFromFormValue(values["Term"])
-	if !okPID || !okTerm {
+	programID, okPID := values["ProgramID"].(uint)
+	if !okPID || programID == 0 {
+		formErrors["ProgramID"] = fmt.Errorf("select a program")
+		return values, formErrors
+	}
+	term, okTerm := values["Term"].(int)
+	if !okTerm {
+		formErrors["Term"] = fmt.Errorf("enter a valid term")
 		return values, formErrors
 	}
 
@@ -52,53 +61,4 @@ func formPatcherAcademicRecordCreateFromProgramStructure(_ *views.View, r *http.
 	}
 	values["CompulsoryCourses"] = components.AssociationIDs{Field: "CompulsoryCourses", IDs: ids}
 	return values, formErrors
-}
-
-func uintFromFormValue(v any) (uint, bool) {
-	switch x := v.(type) {
-	case uint:
-		return x, x > 0
-	case uint32:
-		return uint(x), x > 0
-	case uint64:
-		return uint(x), x > 0
-	case int:
-		return uint(x), x > 0
-	case int32:
-		return uint(x), x > 0
-	case int64:
-		return uint(x), x > 0
-	case float64:
-		if x < 0 || x != float64(uint(x)) {
-			return 0, false
-		}
-		u := uint(x)
-		return u, u > 0
-	default:
-		return 0, false
-	}
-}
-
-func intFromFormValue(v any) (int, bool) {
-	switch x := v.(type) {
-	case int:
-		return x, true
-	case int32:
-		return int(x), true
-	case int64:
-		return int(x), true
-	case uint:
-		return int(x), true
-	case uint32:
-		return int(x), true
-	case uint64:
-		return int(x), true
-	case float64:
-		if x != float64(int(x)) {
-			return 0, false
-		}
-		return int(x), true
-	default:
-		return 0, false
-	}
 }

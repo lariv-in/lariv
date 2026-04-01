@@ -658,7 +658,7 @@ func DeleteView[T any](pathParamKey string, successUrl getters.Getter[string]) f
 				idStr := r.PathValue(pathParamKey)
 				id, err := strconv.Atoi(idStr)
 				if err != nil {
-					http.Error(w, "Invalid ID", http.StatusBadRequest)
+					renderWithErrorsWithMiddlewares(innerView, w, r, map[string]error{"_form": fmt.Errorf("invalid ID")}, nil)
 					return
 				}
 
@@ -668,7 +668,7 @@ func DeleteView[T any](pathParamKey string, successUrl getters.Getter[string]) f
 				}
 				err = query.Delete(new(T), id).Error
 				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
+					renderWithErrorsWithMiddlewares(innerView, w, r, map[string]error{"_form": err}, nil)
 					return
 				}
 
