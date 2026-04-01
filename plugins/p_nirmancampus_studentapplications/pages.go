@@ -260,8 +260,8 @@ func applicationFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.PhotoID"),
 						Children: []components.PageInterface{
 							&p_filesystem.InputVNode{
-								Label:            "Photo",
-								Name:             "PhotoID",
+								Label: "Photo",
+								Name:  "PhotoID",
 								VNode: func(ctx context.Context) (p_filesystem.VNode, error) {
 									var zero p_filesystem.VNode
 									if id, err := getters.Deref(getters.Key[*uint]("$in.PhotoID"))(ctx); err == nil && id != 0 {
@@ -288,8 +288,8 @@ func applicationFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.Documents"),
 						Children: []components.PageInterface{
 							&p_filesystem.InputMultiVNode{
-								Label:            "Documents",
-								Name:             "Documents",
+								Label: "Documents",
+								Name:  "Documents",
 								VNode: func(ctx context.Context) ([]p_filesystem.VNode, error) {
 									if nodes, err := getters.Key[[]p_filesystem.VNode]("$in.Documents")(ctx); err == nil && len(nodes) > 0 {
 										return nodes, nil
@@ -349,7 +349,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
-				Getter:   getters.Key[StudentApplication]("studentapplication"),
+				Getter: getters.Key[StudentApplication]("studentapplication"),
 				Url: lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
@@ -381,10 +381,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[StudentApplication]{
-				Page:            components.Page{Key: "studentapplications.ApplicationTableBody"},
-				UID:             "student-application-table",
-				Classes:         "w-full",
-				Data:            getters.Key[components.ObjectList[StudentApplication]]("studentapplications"),
+				Page:    components.Page{Key: "studentapplications.ApplicationTableBody"},
+				UID:     "student-application-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[StudentApplication]]("studentapplications"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "studentapplications.ApplicationFilter"}},
 					&components.TableButtonCreate{Link: applicationCreateUrlGetter()},
@@ -523,8 +523,8 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
-				Title:     "Confirm deletion",
-				Message:   "Are you sure you want to delete this application?",
+				Title:   "Confirm deletion",
+				Message: "Are you sure you want to delete this application?",
 				CancelUrl: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),

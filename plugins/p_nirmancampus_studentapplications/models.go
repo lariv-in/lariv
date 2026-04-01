@@ -19,7 +19,7 @@ type StudentApplication struct {
 	Program         p_nirmancampus_programs.Program
 	CreatedByID     *uint
 	CreatedBy       *p_users.User `gorm:"constraint:OnDelete:SET NULL;foreignKey:CreatedByID;references:ID"`
-	StudentName     string `gorm:"notnull"`
+	StudentName     string        `gorm:"notnull"`
 	Email           string
 	DOB             *time.Time `gorm:"type:date"`
 	MotherName      string

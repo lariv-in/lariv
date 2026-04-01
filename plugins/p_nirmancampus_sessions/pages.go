@@ -292,10 +292,10 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Semester]{
-				Page:      components.Page{Key: "sessions.SemesterTableBody"},
-				UID:       "semester-table",
-				Classes:   "w-full",
-				Data:      getters.Key[components.ObjectList[Semester]]("sessions"),
+				Page:    components.Page{Key: "sessions.SemesterTableBody"},
+				UID:     "semester-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[Semester]]("sessions"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "sessions.SemesterFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("sessions.CreateRoute", nil)},
@@ -412,9 +412,9 @@ func registerSelectionPages() {
 		Title: "Select Semester",
 		Children: []components.PageInterface{
 			&components.DataTable[Semester]{
-				Page:            components.Page{Key: "sessions.sessionselectionTableBody"},
-				UID:             "semester-selection-table",
-				Data:            getters.Key[components.ObjectList[Semester]]("sessions"),
+				Page:    components.Page{Key: "sessions.sessionselectionTableBody"},
+				UID:     "semester-selection-table",
+				Data:    getters.Key[components.ObjectList[Semester]]("sessions"),
 				OnClick: getters.Select("SemesterID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "sessions.sessionselectionFilter"}},

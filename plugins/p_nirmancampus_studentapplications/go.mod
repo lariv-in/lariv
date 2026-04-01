@@ -7,6 +7,7 @@ require (
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.10
+	github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.5.10
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
 	gorm.io/gorm v1.31.1

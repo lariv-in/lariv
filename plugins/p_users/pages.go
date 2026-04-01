@@ -344,9 +344,9 @@ func registerTablePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[User]{
-				UID:             "user-table",
-				Classes:         "w-full",
-				Data:            getters.Key[components.ObjectList[User]]("users"),
+				UID:     "user-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[User]]("users"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("users.CreateRoute", nil)},
@@ -598,8 +598,8 @@ func registerSelectionPages() {
 		Title: "Select User",
 		Children: []components.PageInterface{
 			&components.DataTable[User]{
-				UID:             "user-selection-table",
-				Data:            getters.Key[components.ObjectList[User]]("users"),
+				UID:     "user-selection-table",
+				Data:    getters.Key[components.ObjectList[User]]("users"),
 				OnClick: getters.Select("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserSelectionFilter"}},
@@ -624,8 +624,8 @@ func registerSelectionPages() {
 		Title: "Select Role",
 		Children: []components.PageInterface{
 			&components.DataTable[Role]{
-				UID:             "role-selection-table",
-				Data:            getters.Key[components.ObjectList[Role]]("roles"),
+				UID:     "role-selection-table",
+				Data:    getters.Key[components.ObjectList[Role]]("roles"),
 				OnClick: getters.Select("RoleID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleSelectionFilter"}},
@@ -688,9 +688,9 @@ func registerRolePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Role]{
-				UID:             "role-table",
-				Classes:         "w-full",
-				Data:            getters.Key[components.ObjectList[Role]]("roles"),
+				UID:     "role-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[Role]]("roles"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("users.RoleCreateRoute", nil)},

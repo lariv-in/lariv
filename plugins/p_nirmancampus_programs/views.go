@@ -102,7 +102,7 @@ func init() {
 	}
 
 	structureEditView := &views.View{
-		PageName: "programs.ProgramStructureEditPage",
+		PageName:   "programs.ProgramStructureEditPage",
 		PageLookup: programPageLookup,
 		Handlers: map[string]func(*views.View) http.Handler{
 			http.MethodGet: func(v *views.View) http.Handler {

@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/lariv-in/lago/lago v0.5.10
+	github.com/lariv-in/lago/plugins/p_forms v0.0.0-20260401130532-4f6265f15b41
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
 )

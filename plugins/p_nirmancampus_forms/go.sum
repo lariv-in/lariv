@@ -90,6 +90,8 @@ github.com/lariv-in/lago/getters v0.5.10 h1:ots+Q55arAAbB2i/FE5MEZr6f3yyNZtDiEcv
 github.com/lariv-in/lago/getters v0.5.10/go.mod h1:6wEjjeBr5CRR1Iwz+rjsIGoZPnpojYrEFIda1T5sZng=
 github.com/lariv-in/lago/lago v0.5.10 h1:0UMnkxbYamlZVtnjTL007IPn5IQaukLWm9xEC/i7fWc=
 github.com/lariv-in/lago/lago v0.5.10/go.mod h1:+zbrjS12vdNOZisvRVn9BHC5pspQPjVf1g6KSU+MMKY=
+github.com/lariv-in/lago/plugins/p_forms v0.0.0-20260401130532-4f6265f15b41 h1:4nmFdD9aZLbW0toiHnjL2QTXTwhvhAqVTTuic3EL3JQ=
+github.com/lariv-in/lago/plugins/p_forms v0.0.0-20260401130532-4f6265f15b41/go.mod h1:t4FItFG33CQoB8hj0xkG43W4ItcT2DTEJQmuN6lolnM=
 github.com/lariv-in/lago/plugins/p_users v0.5.10 h1:2ErBYXwImYP0Op/yEvsClGnK2ofNXQBGK9CGYzlzDqs=
 github.com/lariv-in/lago/plugins/p_users v0.5.10/go.mod h1:VgDEjlJVHh1zXYVx0HHN5BvX9WFsEzPIvudCLY+sBlc=
 github.com/lariv-in/lago/registry v0.5.10 h1:JD/CHKsbP8tfTTEc8bIpK5to56RL1Za3Lsi1mJVm5GA=

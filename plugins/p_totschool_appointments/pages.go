@@ -164,10 +164,10 @@ func registerTable() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
 		Children: []components.PageInterface{
 			components.DataTable[Appointment]{
-				UID:             "appointment-table",
-				Data:            getters.Key[components.ObjectList[Appointment]]("appointments"),
-				Title:           "Appointments",
-				Subtitle:        "List of appointments",
+				UID:      "appointment-table",
+				Data:     getters.Key[components.ObjectList[Appointment]]("appointments"),
+				Title:    "Appointments",
+				Subtitle: "List of appointments",
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "appointments.AppointmentFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("appointments.CreateRoute", nil)},
@@ -382,8 +382,8 @@ func registerSelectionPages() {
 		Title: "Select Appointment",
 		Children: []components.PageInterface{
 			components.DataTable[Appointment]{
-				UID:             "appointment-selection-table",
-				Data:            getters.Key[components.ObjectList[Appointment]]("appointments"),
+				UID:     "appointment-selection-table",
+				Data:    getters.Key[components.ObjectList[Appointment]]("appointments"),
 				OnClick: getters.Select("appointment", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "appointments.AppointmentFilter"}},

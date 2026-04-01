@@ -96,10 +96,10 @@ func registerFormListPages() {
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Form]{
-				Page:      components.Page{Key: "forms.FormTableBody"},
-				UID:       "forms-table",
-				Classes:   "w-full",
-				Data:      getters.Key[components.ObjectList[Form]]("forms"),
+				Page:    components.Page{Key: "forms.FormTableBody"},
+				UID:     "forms-table",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[Form]]("forms"),
 				Actions: []components.PageInterface{
 					&components.TableButtonCreate{
 						Link: lago.RoutePath("forms.CreateRoute", nil),

@@ -114,10 +114,10 @@ func registerTable() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalMenu"}},
 		Children: []components.PageInterface{
 			components.DataTable[Proposal]{
-				UID:             "proposal-table",
-				Data:            getters.Key[components.ObjectList[Proposal]]("proposals"),
-				Title:           "Proposals",
-				Subtitle:        "List of financial proposals",
+				UID:      "proposal-table",
+				Data:     getters.Key[components.ObjectList[Proposal]]("proposals"),
+				Title:    "Proposals",
+				Subtitle: "List of financial proposals",
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "proposals.ProposalFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("proposals.CreateRoute", nil)},
