@@ -18,7 +18,7 @@ const (
 )
 
 // downloadPhoto fetches a random JPEG from picsum.photos and saves it via
-// the LocalFilestore, returning the stored file path on disk and a display name.
+// the configured Filestore, returning the stored path and a display name.
 func downloadPhoto(index int) (storedPath string, fileName string, err error) {
 	client := &http.Client{Timeout: httpTimeout}
 	resp, err := client.Get(picsumURL)
@@ -31,13 +31,8 @@ func downloadPhoto(index int) (storedPath string, fileName string, err error) {
 		return "", "", fmt.Errorf("picsum returned status %d", resp.StatusCode)
 	}
 
-	localStore, ok := Store.(*LocalFilestore)
-	if !ok {
-		return "", "", fmt.Errorf("generator only supports LocalFilestore backend")
-	}
-
 	fileName = fmt.Sprintf("photo_%04d.jpg", index)
-	storedPath, err = localStore.SaveFromReader(resp.Body, ".jpg")
+	storedPath, err = Store.SaveFromReader(resp.Body, ".jpg")
 	if err != nil {
 		return "", "", fmt.Errorf("failed saving downloaded photo: %w", err)
 	}

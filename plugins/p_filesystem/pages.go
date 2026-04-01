@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -287,14 +286,14 @@ func vnodeSizeForKey(key string) getters.Getter[string] {
 		if path == "" {
 			return "-", nil
 		}
-		info, err := os.Stat(path)
+		size, err := Store.StoredSize(path)
 		if err != nil {
-			if os.IsNotExist(err) {
+			if IsStoredFileMissing(err) {
 				return "Missing", nil
 			}
 			return "Error", nil
 		}
-		return humanReadableSize(info.Size()), nil
+		return humanReadableSize(size), nil
 	}
 }
 

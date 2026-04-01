@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"mime/multipart"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -292,15 +291,15 @@ func (n *VNode) GetFileSize() string {
 	if n.IsDirectory || n.FilePath == "" {
 		return "-"
 	}
-	info, err := os.Stat(n.FilePath)
+	size, err := Store.StoredSize(n.FilePath)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if IsStoredFileMissing(err) {
 			return "Missing"
 		}
 		slog.Error("failed to stat stored file", "path", n.FilePath, "error", err)
 		return "Error"
 	}
-	return humanReadableSize(info.Size())
+	return humanReadableSize(size)
 }
 
 func (n *VNode) GetChildrenCount(db *gorm.DB) string {
