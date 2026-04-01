@@ -26,12 +26,12 @@ func registerMenuPages() {
 		Title: getters.Static("Student applications"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All applications"),
-				Url:   lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
+				Url:   lago.RoutePath("studentapplications.DefaultRoute", nil),
 			},
 		},
 	})
@@ -49,12 +49,12 @@ func registerMenuPages() {
 		),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all applications"),
-			Url:   lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
+			Url:   lago.RoutePath("studentapplications.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Application detail"),
-				Url: lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(
@@ -67,7 +67,7 @@ func registerMenuPages() {
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Edit application"),
-				Url: lago.GetterRoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(
@@ -80,7 +80,7 @@ func registerMenuPages() {
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Delete application"),
-				Url: lago.GetterRoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(
@@ -96,7 +96,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("studentapplications.ApplicationFilter", &components.FormComponent[StudentApplication]{
-		Url:    lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
+		Url:    lago.RoutePath("studentapplications.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -134,7 +134,7 @@ func applicationCreateUrlGetter() getters.Getter[string] {
 			return "", err
 		}
 		if role == "superuser" || role == "admin" || role == roleNameUnassigned {
-			return lago.GetterRoutePath("studentapplications.CreateRoute", nil)(ctx)
+			return lago.RoutePath("studentapplications.CreateRoute", nil)(ctx)
 		}
 		return "", fmt.Errorf("you do not have permission to do this action")
 	}
@@ -157,7 +157,7 @@ func applicationFormFields() components.ContainerColumn {
 								Name:        "ProgramID",
 								Required:    true,
 								Getter:      getters.Association[p_nirmancampus_programs.Program](getters.Key[uint]("$in.ProgramID")),
-								Url:         lago.GetterRoutePath("programs.SelectRoute", nil),
+								Url:         lago.RoutePath("programs.SelectRoute", nil),
 								Display:     getters.Key[string]("$in.Name"),
 								Placeholder: "Select a program...",
 							},
@@ -327,7 +327,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
-				Url:      lago.GetterRoutePath("studentapplications.CreateRoute", nil),
+				Url:      lago.RoutePath("studentapplications.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create application",
 				Subtitle: "Record a new student application",
@@ -350,7 +350,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
 				Getter:   getters.Key[StudentApplication]("studentapplication"),
-				Url: lago.GetterRoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(
@@ -389,7 +389,7 @@ func registerTablePages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "studentapplications.ApplicationFilter"}},
 					&components.TableButtonCreate{Link: applicationCreateUrlGetter()},
 				},
-				OnClick: getters.NavigateGetter(lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				OnClick: getters.NavigateGetter(lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Email",
@@ -525,7 +525,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:     "Confirm deletion",
 				Message:   "Are you sure you want to delete this application?",
-				CancelUrl: lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(

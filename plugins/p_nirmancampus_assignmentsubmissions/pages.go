@@ -26,12 +26,12 @@ func registerMenuPages() {
 		Title: getters.Static("Assignment Submissions"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Submissions"),
-				Url:   lago.GetterRoutePath("assignmentsubmissions.DefaultRoute", nil),
+				Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
 			},
 		},
 	})
@@ -40,26 +40,26 @@ func registerMenuPages() {
 		Title: getters.Format("Submission: %s", getters.Any(getters.Key[string]("assignmentsubmission.AssignmentTitle"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all submissions"),
-			Url:   lago.GetterRoutePath("assignmentsubmissions.DefaultRoute", nil),
+			Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Submission detail"),
-				Url: lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Edit submission"),
-				Url: lago.GetterRoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Delete submission"),
-				Url: lago.GetterRoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}),
 			},
@@ -69,7 +69,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.Filter", &components.FormComponent[AssignmentSubmission]{
-		Url:    lago.GetterRoutePath("assignmentsubmissions.DefaultRoute", nil),
+		Url:    lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -158,7 +158,7 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 								Label:       "Course",
 								Name:        "CourseID",
 								Required:    true,
-								Url:         lago.GetterRoutePath("courses.SelectRoute", nil),
+								Url:         lago.RoutePath("courses.SelectRoute", nil),
 								Display:     getters.Key[string]("$in.Name"),
 								Placeholder: "Select a course...",
 								Getter: getters.Association[p_nirmancampus_courses.Course](
@@ -174,7 +174,7 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 								Label:       "Academic record",
 								Name:        "AcademicRecordID",
 								Required:    true,
-								Url:         lago.GetterRoutePath("academicrecords.SelectRoute", nil),
+								Url:         lago.RoutePath("academicrecords.SelectRoute", nil),
 								Display:     getters.Key[string]("$in.Student.StudentNo"),
 								Placeholder: "Select an academic record...",
 								Getter: getters.Association[p_nirmancampus_academicrecords.AcademicRecord](
@@ -207,7 +207,7 @@ func assignmentSubmissionCreateURLGetter() getters.Getter[string] {
 			return "", err
 		}
 		if role == "superuser" || role == "admin" {
-			return lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil)(ctx)
+			return lago.RoutePath("assignmentsubmissions.CreateRoute", nil)(ctx)
 		}
 		return "", fmt.Errorf("you do not have permission to do this action")
 	}
@@ -223,7 +223,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
-				Url:      lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil),
+				Url:      lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create submission",
 				Subtitle: "Create a new assignment submission",
@@ -246,7 +246,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
 				Getter: getters.Key[AssignmentSubmission]("assignmentsubmission"),
-				Url: lago.GetterRoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -279,7 +279,7 @@ func registerTablePages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "assignmentsubmissions.Filter"}},
 					&components.TableButtonCreate{Link: assignmentSubmissionCreateURLGetter()},
 				},
-				OnClick: getters.NavigateGetter(lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				OnClick: getters.NavigateGetter(lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Assignment",
@@ -363,7 +363,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm deletion",
 				Message: "Are you sure you want to delete this submission?",
-				CancelUrl: lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}),
 			},

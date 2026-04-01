@@ -541,19 +541,19 @@ func init() {
 			WithMiddleware("proposals.detail", proposalDetailMiddleware))
 
 	lago.RegistryView.Register("proposals.CreateView",
-		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("proposals.ProposalCreateForm")).
+		views.CreateView[Proposal](lago.RoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("proposals.ProposalCreateForm")).
 			WithFormPatcher("proposals.form", ProposalFormPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.UpdateView",
 		views.DetailView[Proposal]("proposal", "id")(
-			views.UpdateView[Proposal]("id", lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("proposals.ProposalUpdateForm"))).
+			views.UpdateView[Proposal]("id", lago.RoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("proposals.ProposalUpdateForm"))).
 			WithFormPatcher("proposals.form", ProposalFormPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.DeleteView",
 		views.DetailView[Proposal]("proposal", "id")(
-			views.DeleteView[Proposal]("id", lago.GetterRoutePath("proposals.ListRoute", nil))(
+			views.DeleteView[Proposal]("id", lago.RoutePath("proposals.ListRoute", nil))(
 				lago.GetPageView("proposals.ProposalDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 

@@ -304,7 +304,7 @@ func init() {
 
 	lago.RegistryView.Register("forms.CreateView",
 		views.CreateView[Form](
-			lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+			lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 				"form_id": getters.Any(getters.Key[uint]("$id")),
 			}),
 		)(
@@ -316,7 +316,7 @@ func init() {
 	lago.RegistryView.Register("forms.UpdateView",
 		views.DetailView[Form]("form", "form_id")(
 			views.UpdateView[Form]("form_id",
-				lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+				lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			)(
@@ -328,7 +328,7 @@ func init() {
 
 	lago.RegistryView.Register("forms.DeleteView",
 		views.DetailView[Form]("form", "form_id")(
-			views.DeleteView[Form]("form_id", lago.GetterRoutePath("forms.DefaultRoute", nil))(
+			views.DeleteView[Form]("form_id", lago.RoutePath("forms.DefaultRoute", nil))(
 				lago.GetPageView("forms.FormDeleteForm"),
 			),
 		).
@@ -337,7 +337,7 @@ func init() {
 	lago.RegistryView.Register("forms.FieldCreateView",
 		views.DetailView[Form]("form", "form_id")(
 			views.CreateView[FormField](
-				lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+				lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.ParseUint(getters.Key[string]("$path.form_id"))),
 				}),
 			)(
@@ -354,7 +354,7 @@ func init() {
 
 	lago.RegistryView.Register("forms.FieldUpdateView",
 		views.DetailView[FormField]("form_field", "id")(
-			views.UpdateView[FormField]("id", lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+			views.UpdateView[FormField]("id", lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 				"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 			}))(
 				lago.GetPageView("forms.FieldUpdateForm"),
@@ -369,7 +369,7 @@ func init() {
 
 	lago.RegistryView.Register("forms.FieldDeleteView",
 		views.DetailView[FormField]("form_field", "id")(
-			views.DeleteView[FormField]("id", lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+			views.DeleteView[FormField]("id", lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 				"form_id": getters.Any(getters.ParseUint(getters.Key[string]("$path.form_id"))),
 			}))(
 				lago.GetPageView("forms.FieldDeleteForm"),
@@ -407,7 +407,7 @@ func init() {
 
 func redirectAfterFieldMove(w http.ResponseWriter, r *http.Request, formID uint) {
 	ctx := r.Context()
-	u, err := lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+	u, err := lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 		"form_id": getters.Any(getters.Static(formID)),
 	})(ctx)
 	if err != nil || u == "" {

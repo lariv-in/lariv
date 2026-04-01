@@ -63,13 +63,13 @@ func registerDashboardAppsPagePatch() {
 									Children: []components.PageInterface{
 										&components.ButtonLink{
 											Label:   "Create application",
-											Link:    lago.GetterRoutePath("studentapplications.CreateRoute", nil),
+											Link:    lago.RoutePath("studentapplications.CreateRoute", nil),
 											Icon:    "plus",
 											Classes: "btn-primary",
 										},
 										&components.ButtonLink{
 											Label:   "View your applications",
-											Link:    lago.GetterRoutePath("studentapplications.DefaultRoute", nil),
+											Link:    lago.RoutePath("studentapplications.DefaultRoute", nil),
 											Icon:    "document-text",
 											Classes: "btn-outline",
 										},

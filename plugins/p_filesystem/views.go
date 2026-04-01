@@ -100,11 +100,11 @@ func optionalNodeFromValue(db *gorm.DB, value any, fallback *VNode) (*VNode, err
 
 func parentRedirect(ctx context.Context, node *VNode) (string, error) {
 	if node != nil && node.ParentID != nil {
-		return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+		return lago.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
 			"parent_id": getters.Any(getters.Static(*node.ParentID)),
 		})(ctx)
 	}
-	return lago.GetterRoutePath("filesystem.ListRoute", nil)(ctx)
+	return lago.RoutePath("filesystem.ListRoute", nil)(ctx)
 }
 
 func rootVNodeQuery(_ *views.View, _ *http.Request, query *gorm.DB) *gorm.DB {
@@ -219,7 +219,7 @@ func updateHandler(v *views.View) http.Handler {
 			return
 		}
 
-		redirectURL, err := lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+		redirectURL, err := lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(node.ID)),
 		})(r.Context())
 		if err != nil {

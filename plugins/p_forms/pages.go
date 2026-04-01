@@ -25,12 +25,12 @@ func registerMenus() {
 		Title: getters.Static("Forms"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All forms"),
-				Url:   lago.GetterRoutePath("forms.DefaultRoute", nil),
+				Url:   lago.RoutePath("forms.DefaultRoute", nil),
 			},
 		},
 	})
@@ -39,30 +39,30 @@ func registerMenus() {
 		Title: getters.Format("Form: %s", getters.Any(getters.Key[string]("form.Title"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all forms"),
-			Url:   lago.GetterRoutePath("forms.DefaultRoute", nil),
+			Url:   lago.RoutePath("forms.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url: lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lago.GetterRoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Submissions"),
-				Url: lago.GetterRoutePath("forms.SubmissionsListRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.SubmissionsListRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Delete"),
-				Url: lago.GetterRoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 			},
@@ -73,14 +73,14 @@ func registerMenus() {
 		Title: getters.Static("Field"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to form"),
-			Url: lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+			Url: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 				"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 			}),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit field"),
-				Url: lago.GetterRoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
 				}),
@@ -102,11 +102,11 @@ func registerFormListPages() {
 				Data:      getters.Key[components.ObjectList[Form]]("forms"),
 				Actions: []components.PageInterface{
 					&components.TableButtonCreate{
-						Link: lago.GetterRoutePath("forms.CreateRoute", nil),
+						Link: lago.RoutePath("forms.CreateRoute", nil),
 					},
 				},
 				OnClick: getters.NavigateGetter(
-					lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+					lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 						"form_id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -133,7 +133,7 @@ func registerFormListPages() {
 
 func fieldTableRowNavigateEdit() getters.Getter[string] {
 	return getters.NavigateGetter(
-		lago.GetterRoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+		lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 			"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
 			"id":      getters.Any(getters.Key[uint]("$row.ID")),
 		}),
@@ -172,7 +172,7 @@ func formFieldTableColumns() []components.TableColumn {
 									Label:       "",
 									Icon:        "arrow-up",
 									IconClasses: "w-4 h-4",
-									URL: lago.GetterRoutePath("forms.FieldMoveUpRoute", map[string]getters.Getter[any]{
+									URL: lago.RoutePath("forms.FieldMoveUpRoute", map[string]getters.Getter[any]{
 										"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
 										"id":      getters.Any(getters.Key[uint]("$row.ID")),
 									}),
@@ -189,7 +189,7 @@ func formFieldTableColumns() []components.TableColumn {
 									Label:       "",
 									Icon:        "arrow-down",
 									IconClasses: "w-4 h-4",
-									URL: lago.GetterRoutePath("forms.FieldMoveDownRoute", map[string]getters.Getter[any]{
+									URL: lago.RoutePath("forms.FieldMoveDownRoute", map[string]getters.Getter[any]{
 										"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
 										"id":      getters.Any(getters.Key[uint]("$row.ID")),
 									}),
@@ -231,7 +231,7 @@ func registerFormCRUDPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Form]{
-				Url:      lago.GetterRoutePath("forms.CreateRoute", nil),
+				Url:      lago.RoutePath("forms.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create form",
 				Subtitle: "The public URL slug is generated from the title",
@@ -267,7 +267,7 @@ func registerFormCRUDPages() {
 								Children: []components.PageInterface{
 									&components.FieldLink{
 										Page:    components.Page{Key: "forms.FormDetailPublicURL"},
-										Href:    lago.GetterRoutePath("forms.PublicFormRoute", map[string]getters.Getter[any]{"slug": getters.Any(getters.Key[string]("$in.Slug"))}),
+										Href:    lago.RoutePath("forms.PublicFormRoute", map[string]getters.Getter[any]{"slug": getters.Any(getters.Key[string]("$in.Slug"))}),
 										Classes: "link link-primary link-hover break-all",
 									},
 								},
@@ -292,7 +292,7 @@ func registerFormCRUDPages() {
 								Data: getters.Key[components.ObjectList[FormField]](FormFieldsObjectListContextKey),
 								Actions: []components.PageInterface{
 									&components.TableButtonCreate{
-										Link: lago.GetterRoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
+										Link: lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
 											"form_id": getters.Any(getters.Key[uint]("$in.ID")),
 										}),
 									},
@@ -314,7 +314,7 @@ func registerFormCRUDPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Form]{
 				Getter: getters.Key[Form]("form"),
-				Url: lago.GetterRoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method: http.MethodPost,
@@ -337,7 +337,7 @@ func registerFormCRUDPages() {
 			&components.DeleteConfirmation{
 				Title:   "Delete form",
 				Message: "This will delete the form, its field definitions, and stored submissions.",
-				CancelUrl: lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 			},
@@ -413,7 +413,7 @@ func registerFieldPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[FormField]{
-				Url: lago.GetterRoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -436,7 +436,7 @@ func registerFieldPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[FormField]{
 				Getter: getters.Key[FormField]("form_field"),
-				Url: lago.GetterRoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
 				}),
@@ -460,7 +460,7 @@ func registerFieldPages() {
 			&components.DeleteConfirmation{
 				Title:   "Delete field",
 				Message: "Remove this field from the form?",
-				CancelUrl: lago.GetterRoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 				}),
 			},
@@ -480,7 +480,7 @@ func registerSubmissionPages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[FormSubmission]]("form_submissions"),
 				OnClick: getters.NavigateGetter(
-					lago.GetterRoutePath("forms.SubmissionDetailRoute", map[string]getters.Getter[any]{
+					lago.RoutePath("forms.SubmissionDetailRoute", map[string]getters.Getter[any]{
 						"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
 						"id":      getters.Any(getters.Key[uint]("$row.ID")),
 					}),
@@ -534,7 +534,7 @@ func registerPublicPage() {
 				Children: []components.PageInterface{
 					&PublicSubmitForm{
 						Page:      components.Page{Key: "forms.PublicSubmitFormBody"},
-						ActionURL: lago.GetterRoutePath("forms.PublicFormRoute", map[string]getters.Getter[any]{"slug": getters.Any(getters.Key[string](ContextKeyPublicLoadedForm + ".Slug"))}),
+						ActionURL: lago.RoutePath("forms.PublicFormRoute", map[string]getters.Getter[any]{"slug": getters.Any(getters.Key[string](ContextKeyPublicLoadedForm + ".Slug"))}),
 					},
 				},
 			},

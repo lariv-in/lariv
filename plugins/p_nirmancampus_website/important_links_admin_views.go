@@ -32,7 +32,7 @@ func init() {
 	// --- Create ---
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksCreateView",
 		views.CreateView[ImportantLink](
-			lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
+			lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Key[uint]("$id")),
 			}),
 		)(
@@ -45,7 +45,7 @@ func init() {
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksImportView",
 		views.JsonImport[ImportantLink](
 			"ImportFile",
-			lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+			lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
 		)(
 			lago.GetPageView("nirmancampus_website.ImportantLinksImportForm"),
 		).
@@ -56,7 +56,7 @@ func init() {
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksUpdateView",
 		views.DetailView[ImportantLink]("link", "id")(
 			views.UpdateView[ImportantLink]("id",
-				lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
+				lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			)(
@@ -70,7 +70,7 @@ func init() {
 	// --- Delete ---
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksDeleteView",
 		views.DetailView[ImportantLink]("link", "id")(
-			views.DeleteView[ImportantLink]("id", lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil))(
+			views.DeleteView[ImportantLink]("id", lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil))(
 				lago.GetPageView("nirmancampus_website.ImportantLinksDeleteForm"),
 			),
 		).

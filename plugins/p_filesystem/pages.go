@@ -110,61 +110,61 @@ func currentVNodeBackRoute() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		node, err := mustCurrentVNode(ctx)
 		if err != nil {
-			return lago.GetterRoutePath("filesystem.ListRoute", nil)(ctx)
+			return lago.RoutePath("filesystem.ListRoute", nil)(ctx)
 		}
 		if node.ParentID == nil {
-			return lago.GetterRoutePath("filesystem.ListRoute", nil)(ctx)
+			return lago.RoutePath("filesystem.ListRoute", nil)(ctx)
 		}
-		return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+		return lago.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
 			"parent_id": getters.Any(getters.Static(*node.ParentID)),
 		})(ctx)
 	}
 }
 
 func currentVNodeDetailRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeEditRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.UpdateRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.UpdateRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeDeleteRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeMoveRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.MoveRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.MoveRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeBrowseRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
 		"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeCreateChildRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.CreateChildRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.CreateChildRoute", map[string]getters.Getter[any]{
 		"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeUploadChildRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.MultiUploadChildRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.MultiUploadChildRoute", map[string]getters.Getter[any]{
 		"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeDownloadRoute() getters.Getter[string] {
-	return lago.GetterRoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
@@ -173,9 +173,9 @@ func listOrBrowseRoute(listRoute, browseRoute string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		node, err := mustCurrentVNode(ctx)
 		if err != nil {
-			return lago.GetterRoutePath(listRoute, nil)(ctx)
+			return lago.RoutePath(listRoute, nil)(ctx)
 		}
-		return lago.GetterRoutePath(browseRoute, map[string]getters.Getter[any]{
+		return lago.RoutePath(browseRoute, map[string]getters.Getter[any]{
 			"parent_id": getters.Any(getters.Static(node.ID)),
 		})(ctx)
 	}
@@ -220,7 +220,7 @@ func selectionTargetInput(defaultName string) getters.Getter[string] {
 }
 
 func selectionBrowseRouteGetter(childRoute string) getters.Getter[string] {
-	return withSelectionTarget(lago.GetterRoutePath(childRoute, map[string]getters.Getter[any]{
+	return withSelectionTarget(lago.RoutePath(childRoute, map[string]getters.Getter[any]{
 		"parent_id": getters.Any(getters.Key[uint]("$row.ID")),
 	}))
 }
@@ -331,11 +331,11 @@ func rowOpenRoute() getters.Getter[string] {
 			return "", err
 		}
 		if isDirectory {
-			return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+			return lago.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
 				"parent_id": getters.Any(getters.Static(id)),
 			})(ctx)
 		}
-		return lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+		return lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(id)),
 		})(ctx)
 	}
@@ -467,12 +467,12 @@ func registerMenus() {
 		Title: getters.Static("Filesystem"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
-			&components.SidebarMenuItem{Title: getters.Static("All Files"), Url: lago.GetterRoutePath("filesystem.ListRoute", nil), Icon: "folder-open"},
-			&components.SidebarMenuItem{Title: getters.Static("Create Item"), Url: lago.GetterRoutePath("filesystem.CreateRoute", nil), Icon: "plus"},
-			&components.SidebarMenuItem{Title: getters.Static("Bulk Upload"), Url: lago.GetterRoutePath("filesystem.MultiUploadRoute", nil), Icon: "arrow-up-tray"},
+			&components.SidebarMenuItem{Title: getters.Static("All Files"), Url: lago.RoutePath("filesystem.ListRoute", nil), Icon: "folder-open"},
+			&components.SidebarMenuItem{Title: getters.Static("Create Item"), Url: lago.RoutePath("filesystem.CreateRoute", nil), Icon: "plus"},
+			&components.SidebarMenuItem{Title: getters.Static("Bulk Upload"), Url: lago.RoutePath("filesystem.MultiUploadRoute", nil), Icon: "arrow-up-tray"},
 		},
 	})
 
@@ -619,7 +619,7 @@ func registerForms() {
 								Label:       "Destination Directory",
 								Name:        "DestinationID",
 								Getter:      parentOfCurrentVNodeGetter(),
-								Url:         lago.GetterRoutePath("filesystem.MoveSelectRoute", nil),
+								Url:         lago.RoutePath("filesystem.MoveSelectRoute", nil),
 								Display:     getters.Key[string]("$in.Name"),
 								Placeholder: "Root (move to top level)",
 							},
@@ -710,7 +710,7 @@ func registerDetail() {
 								return !isDirectory, nil
 							}),
 							Children: []components.PageInterface{
-								&components.ButtonDownload{Label: "Download", Link: lago.GetterRoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
+								&components.ButtonDownload{Label: "Download", Link: lago.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
 									"id": getters.Any(getters.Key[uint]("$in.ID")),
 								}), Icon: "arrow-down-tray", Classes: "btn-primary mt-4"},
 							},
@@ -770,7 +770,7 @@ func registerDelete() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item? Deleting directories will remove all nested contents.",
-				CancelUrl: lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("vnode.ID")),
 				}),
 			},

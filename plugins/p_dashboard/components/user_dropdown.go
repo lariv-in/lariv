@@ -49,7 +49,7 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		),
 	}
 	if _, ok := userObj.(p_users.User); ok {
-		selfDetailHref, err := getters.IfOr(lago.GetterRoutePath("users.SelfDetailRoute", nil), ctx, "")
+		selfDetailHref, err := getters.IfOr(lago.RoutePath("users.SelfDetailRoute", nil), ctx, "")
 		if err != nil {
 			slog.Error("user dropdown: resolve self detail route", "error", err)
 		}
@@ -63,7 +63,7 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 			components.Render(components.ButtonPost{
 				Label:   "Logout",
 				Icon:    "arrow-right-start-on-rectangle",
-				URL:     lago.GetterRoutePath("users.LogoutRoute", nil),
+				URL:     lago.RoutePath("users.LogoutRoute", nil),
 				Classes: "btn btn-error justify-start w-full",
 			}, ctx),
 		))

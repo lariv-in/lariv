@@ -9,7 +9,7 @@ import (
 func init() {
 	components.RegistryTopbar.Register("dashboard.appsPageButton", components.ButtonLink{
 		Icon:    "squares-2x2",
-		Link:    lago.GetterRoutePath("dashboard.AppsPage", nil),
+		Link:    lago.RoutePath("dashboard.AppsPage", nil),
 		Classes: "btn-sm btn-square btn-neutral",
 	})
 	components.RegistryTopbar.Register("dashboard.themeButton", pcomps.ThemeButton{

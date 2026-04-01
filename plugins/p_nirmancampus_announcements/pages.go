@@ -27,12 +27,12 @@ func registerMenuPages() {
 		Title: getters.Static("Announcements"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Announcements"),
-				Url:   lago.GetterRoutePath("announcements.DefaultRoute", nil),
+				Url:   lago.RoutePath("announcements.DefaultRoute", nil),
 			},
 		},
 	})
@@ -41,26 +41,26 @@ func registerMenuPages() {
 		Title: getters.Format("Announcement: %s", getters.Any(getters.Key[string]("announcement.Title"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Announcements"),
-			Url:   lago.GetterRoutePath("announcements.DefaultRoute", nil),
+			Url:   lago.RoutePath("announcements.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Announcement Detail"),
-				Url: lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Edit Announcement"),
-				Url: lago.GetterRoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Delete Announcement"),
-				Url: lago.GetterRoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},
@@ -72,7 +72,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementFilter", &components.FormComponent[Announcement]{
-		Url:    lago.GetterRoutePath("announcements.DefaultRoute", nil),
+		Url:    lago.RoutePath("announcements.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -98,7 +98,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("announcements.AnnouncementSelectionFilter", &components.FormComponent[Announcement]{
-		Url:    lago.GetterRoutePath("announcements.SelectRoute", nil),
+		Url:    lago.RoutePath("announcements.SelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -212,7 +212,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Announcement]{
-				Url:      lago.GetterRoutePath("announcements.CreateRoute", nil),
+				Url:      lago.RoutePath("announcements.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Announcement",
 				Subtitle: "Create a new announcement",
@@ -235,7 +235,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Announcement]{
 				Getter: getters.Key[Announcement]("announcement"),
-				Url: lago.GetterRoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -260,7 +260,7 @@ func announcementCreateUrlGetter() getters.Getter[string] {
 			return "", err
 		}
 		if role == "superuser" || role == "admin" {
-			return lago.GetterRoutePath("announcements.CreateRoute", nil)(ctx)
+			return lago.RoutePath("announcements.CreateRoute", nil)(ctx)
 		}
 		return "", fmt.Errorf("you do not have permission to do this action")
 	}
@@ -288,7 +288,7 @@ func registerTablePages() {
 						Page: components.Page{Roles: []string{"admin", "superuser"}},
 					},
 				},
-				OnClick: getters.NavigateGetter(lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
+				OnClick: getters.NavigateGetter(lago.RoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
@@ -384,7 +384,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this announcement?",
-				CancelUrl: lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},

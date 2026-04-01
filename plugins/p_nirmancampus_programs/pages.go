@@ -230,12 +230,12 @@ func registerMenuPages() {
 		Title: getters.Static("Programs"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Programs"),
-				Url:   lago.GetterRoutePath("programs.DefaultRoute", nil),
+				Url:   lago.RoutePath("programs.DefaultRoute", nil),
 			},
 		},
 	})
@@ -244,33 +244,33 @@ func registerMenuPages() {
 		Title: getters.Format("Program: %s", getters.Any(getters.Key[string]("program.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Programs"),
-			Url:   lago.GetterRoutePath("programs.DefaultRoute", nil),
+			Url:   lago.RoutePath("programs.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Program Detail"),
-				Url: lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Edit Program"),
-				Url: lago.GetterRoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Edit program structure"),
-				Url: lago.GetterRoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Delete Program"),
-				Url: lago.GetterRoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
 				}),
 			},
@@ -280,7 +280,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("programs.ProgramFilter", &components.FormComponent[Program]{
-		Url:    lago.GetterRoutePath("programs.DefaultRoute", nil),
+		Url:    lago.RoutePath("programs.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -308,7 +308,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramSelectionFilter", &components.FormComponent[Program]{
-		Url:    lago.GetterRoutePath("programs.SelectRoute", nil),
+		Url:    lago.RoutePath("programs.SelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -413,7 +413,7 @@ func programCreateUrlGetter() getters.Getter[string] {
 			return "", err
 		}
 		if role == "superuser" || role == "admin" {
-			return lago.GetterRoutePath("programs.CreateRoute", nil)(ctx)
+			return lago.RoutePath("programs.CreateRoute", nil)(ctx)
 		}
 		return "", fmt.Errorf("you do not have permission to do this action")
 	}
@@ -429,7 +429,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Program]{
-				Url:      lago.GetterRoutePath("programs.CreateRoute", nil),
+				Url:      lago.RoutePath("programs.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Program",
 				Subtitle: "Create a new program",
@@ -452,7 +452,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Program]{
 				Getter: getters.Key[Program]("program"),
-				Url: lago.GetterRoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -486,7 +486,7 @@ func registerTablePages() {
 					&components.TableButtonCreate{Link: programCreateUrlGetter()},
 				},
 				OnClick: getters.NavigateGetter(
-					lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
+					lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -655,7 +655,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this program?",
-				CancelUrl: lago.GetterRoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
 				}),
 			},

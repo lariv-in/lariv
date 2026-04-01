@@ -53,24 +53,24 @@ func init() {
 		Title: getters.Static("Website"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Home"),
-				Url:   lago.GetterRoutePath("nirmancampus_website.AppLandingRoute", nil),
+				Url:   lago.RoutePath("nirmancampus_website.AppLandingRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Student Zone Sections"),
-				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
+				Url:   lago.RoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Student Zone Items"),
-				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
+				Url:   lago.RoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Important Links"),
-				Url:   lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+				Url:   lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
 			},
 		},
 	})

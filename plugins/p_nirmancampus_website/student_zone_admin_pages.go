@@ -36,16 +36,16 @@ func registerStudentZoneAdminMenuPages() {
 		Title: getters.Static("Student Zone"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to Website"),
-			Url:   lago.GetterRoutePath("nirmancampus_website.AppLandingRoute", nil),
+			Url:   lago.RoutePath("nirmancampus_website.AppLandingRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Sections"),
-				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
+				Url:   lago.RoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Items"),
-				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
+				Url:   lago.RoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 			},
 		},
 	})
@@ -54,24 +54,24 @@ func registerStudentZoneAdminMenuPages() {
 		Title: getters.Format("Section: %s", getters.Any(getters.Key[string]("section.Title"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Sections"),
-			Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
+			Url:   lago.RoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Section Detail"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit Section"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Delete Section"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
@@ -82,24 +82,24 @@ func registerStudentZoneAdminMenuPages() {
 		Title: getters.Format("Item: %s", getters.Any(getters.Key[string]("item.Title"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Items"),
-			Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
+			Url:   lago.RoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Item Detail"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit Item"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Delete Item"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
@@ -111,7 +111,7 @@ func registerStudentZoneAdminMenuPages() {
 
 func registerStudentZoneAdminFilterPages() {
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionFilter", &components.FormComponent[StudentZoneSection]{
-		Url:    lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
+		Url:    lago.RoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -132,7 +132,7 @@ func registerStudentZoneAdminFilterPages() {
 	})
 
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionSelectionFilter", &components.FormComponent[StudentZoneSection]{
-		Url:    lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionSelectRoute", nil),
+		Url:    lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionSelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -153,7 +153,7 @@ func registerStudentZoneAdminFilterPages() {
 	})
 
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminItemFilter", &components.FormComponent[StudentZoneItem]{
-		Url:    lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
+		Url:    lago.RoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -234,7 +234,7 @@ func studentZoneAdminItemFormFields() components.ContainerColumn {
 						Name:        "StudentZoneSectionID",
 						Required:    true,
 						Getter:      getters.Association[StudentZoneSection](getters.Key[uint]("$in.StudentZoneSectionID")),
-						Url:         lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionSelectRoute", nil),
+						Url:         lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Title"),
 						Placeholder: "Select a section...",
 					},
@@ -301,7 +301,7 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneSection]{
-				Url:      lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil),
+				Url:      lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Section",
 				Subtitle: "Create a new student zone section",
@@ -323,7 +323,7 @@ func registerStudentZoneAdminFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneSection]{
 				Getter: getters.Key[StudentZoneSection]("section"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -346,7 +346,7 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneItem]{
-				Url:      lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil),
+				Url:      lago.RoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Item",
 				Subtitle: "Create a new student zone item",
@@ -368,7 +368,7 @@ func registerStudentZoneAdminFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneItem]{
 				Getter: getters.Key[StudentZoneItem]("item"),
-				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -400,9 +400,9 @@ func registerStudentZoneAdminTablePages() {
 				Data:      getters.Key[components.ObjectList[StudentZoneSection]]("sections"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionFilter"}},
-					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
+				OnClick: getters.NavigateGetter(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
@@ -436,9 +436,9 @@ func registerStudentZoneAdminTablePages() {
 				Data:      getters.Key[components.ObjectList[StudentZoneItem]]("items"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminItemFilter"}},
-					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
+				OnClick: getters.NavigateGetter(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
@@ -505,7 +505,7 @@ func registerStudentZoneAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this section? All items in this section will also be deleted.",
-				CancelUrl: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
@@ -569,7 +569,7 @@ func registerStudentZoneAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item?",
-				CancelUrl: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},

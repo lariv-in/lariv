@@ -39,7 +39,7 @@ func init() {
 	// Create view
 	lago.RegistryView.Register("academicrecords.CreateView",
 		views.CreateView[AcademicRecord](
-			lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+			lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Key[uint]("$id")),
 			}),
 		)(
@@ -54,7 +54,7 @@ func init() {
 	lago.RegistryView.Register("academicrecords.UpdateView",
 		views.DetailView[AcademicRecord]("academicrecord", "id")(
 			views.UpdateView[AcademicRecord]("id",
-				lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+				lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			)(
@@ -75,7 +75,7 @@ func init() {
 	lago.RegistryView.Register("academicrecords.DeleteView",
 		views.DetailView[AcademicRecord]("academicrecord", "id")(
 			views.DeleteView[AcademicRecord]("id",
-				lago.GetterRoutePath("academicrecords.DefaultRoute", nil),
+				lago.RoutePath("academicrecords.DefaultRoute", nil),
 			)(
 				lago.GetPageView("academicrecords.AcademicRecordDeleteForm"),
 			),

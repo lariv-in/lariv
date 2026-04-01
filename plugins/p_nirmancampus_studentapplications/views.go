@@ -69,7 +69,7 @@ func init() {
 			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole))
 
 	lago.RegistryView.Register("studentapplications.CreateView",
-		views.CreateView[StudentApplication](lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
+		views.CreateView[StudentApplication](lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
 			lago.GetPageView("studentapplications.ApplicationCreateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
@@ -78,7 +78,7 @@ func init() {
 
 	lago.RegistryView.Register("studentapplications.UpdateView",
 		views.DetailView[StudentApplication]("studentapplication", "id")(
-			views.UpdateView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
+			views.UpdateView[StudentApplication]("id", lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
 				lago.GetPageView("studentapplications.ApplicationUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).
@@ -92,7 +92,7 @@ func init() {
 
 	lago.RegistryView.Register("studentapplications.DeleteView",
 		views.DetailView[StudentApplication]("studentapplication", "id")(
-			views.DeleteView[StudentApplication]("id", lago.GetterRoutePath("studentapplications.DefaultRoute", nil))(
+			views.DeleteView[StudentApplication]("id", lago.RoutePath("studentapplications.DefaultRoute", nil))(
 				lago.GetPageView("studentapplications.ApplicationDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).

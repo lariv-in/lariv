@@ -446,7 +446,7 @@ func (e FieldPhoto) Build(ctx context.Context) Node {
 		return nil
 	}
 
-	downloadURL, err := lago.GetterRoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
+	downloadURL, err := lago.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(v.ID)),
 	})(ctx)
 	if err != nil {

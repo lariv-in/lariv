@@ -39,7 +39,7 @@ func init() {
 
 func registerImportantLinksAdminFilterPages() {
 	lago.RegistryPage.Register("nirmancampus_website.ImportantLinksFilter", &components.FormComponent[ImportantLink]{
-		Url:    lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+		Url:    lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -146,7 +146,7 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[ImportantLink]{
-				Url:      lago.GetterRoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil),
+				Url:      lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Important Link",
 				Subtitle: "Create a new important link entry",
@@ -167,7 +167,7 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[map[string]any]{
-				Url:      lago.GetterRoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
+				Url:      lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Import Important Links",
 				Subtitle: "Upload a .json file containing an array of important link objects.",
@@ -187,7 +187,7 @@ func registerImportantLinksAdminFormPages() {
 							&components.ButtonSubmit{Label: "Import"},
 							&components.ButtonLink{
 								Label:   "Cancel",
-								Link:    lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+								Link:    lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
 								Classes: "btn-outline",
 							},
 						},
@@ -204,7 +204,7 @@ func registerImportantLinksAdminFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ImportantLink]{
 				Getter: getters.Key[ImportantLink]("link"),
-				Url: lago.GetterRoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -233,7 +233,7 @@ func registerImportantLinksAdminTablePages() {
 				Children: []components.PageInterface{
 					&components.ButtonLink{
 						Label:   "Import JSON",
-						Link:    lago.GetterRoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
+						Link:    lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
 						Icon:    "arrow-up-tray",
 						Classes: "btn-outline btn-sm",
 					},
@@ -245,9 +245,9 @@ func registerImportantLinksAdminTablePages() {
 				Data:      getters.Key[components.ObjectList[ImportantLink]]("links"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksFilter"}},
-					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
+				OnClick: getters.NavigateGetter(lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
@@ -303,18 +303,18 @@ func registerImportantLinksAdminDetailPages() {
 		Title: getters.Static("Important Links"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to Important Links"),
-			Url:   lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+			Url:   lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lago.GetterRoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Delete"),
-				Url: lago.GetterRoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 			},
@@ -384,7 +384,7 @@ func registerImportantLinksAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this important link?",
-				CancelUrl: lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 			},

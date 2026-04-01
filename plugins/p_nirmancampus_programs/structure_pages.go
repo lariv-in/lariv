@@ -44,7 +44,7 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 	var nodes []Node
 	for i := range units {
 		u := units[i]
-		editURL, err := lago.GetterRoutePath("programs.StructureUnitEditModalRoute", map[string]getters.Getter[any]{
+		editURL, err := lago.RoutePath("programs.StructureUnitEditModalRoute", map[string]getters.Getter[any]{
 			"id":     getters.Any(getters.Key[uint]("program.ID")),
 			"unitId": getters.Any(getters.Static[uint](u.ID)),
 		})(ctx)
@@ -94,7 +94,7 @@ func registerStructurePages() {
 					programStructureUnitCards{},
 					&components.ButtonModal{
 						Label:   "Add new unit",
-						Url:     lago.GetterRoutePath("programs.StructureUnitCreateModalRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
+						Url:     lago.RoutePath("programs.StructureUnitCreateModalRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 						Classes: "btn-primary",
 					},
 				},
@@ -124,7 +124,7 @@ func registerStructurePages() {
 							Label:       "Compulsory courses",
 							Name:        "CompulsoryCourses",
 							Getter:      getters.Key[[]courses.Course]("$in.CompulsoryCourses"),
-							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
+							Url:         lago.RoutePath("courses.MultiSelectRoute", nil),
 							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select compulsory courses…",
 							Classes:     "w-full",
@@ -149,7 +149,7 @@ func registerStructurePages() {
 							Label:       "Optional course pool",
 							Name:        "OptionalCourseSelectionPool",
 							Getter:      getters.Key[[]courses.Course]("$in.OptionalCourseSelectionPool"),
-							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
+							Url:         lago.RoutePath("courses.MultiSelectRoute", nil),
 							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select optional pool courses…",
 							Classes:     "w-full",
@@ -182,7 +182,7 @@ func registerStructurePages() {
 							Label:       "Compulsory courses",
 							Name:        "CompulsoryCourses",
 							Getter:      getters.Key[[]courses.Course]("$in.CompulsoryCourses"),
-							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
+							Url:         lago.RoutePath("courses.MultiSelectRoute", nil),
 							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select compulsory courses…",
 							Classes:     "w-full",
@@ -207,7 +207,7 @@ func registerStructurePages() {
 							Label:       "Optional course pool",
 							Name:        "OptionalCourseSelectionPool",
 							Getter:      getters.Key[[]courses.Course]("$in.OptionalCourseSelectionPool"),
-							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
+							Url:         lago.RoutePath("courses.MultiSelectRoute", nil),
 							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select optional pool courses…",
 							Classes:     "w-full",
@@ -223,7 +223,7 @@ func registerStructurePages() {
 		Title: "Add structure unit",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
-				Url:    lago.GetterRoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
+				Url:    lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 				Method: http.MethodPost,
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
@@ -251,7 +251,7 @@ func registerStructurePages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
 				Getter: getters.Key[ProgramStructureUnit]("unit"),
-				Url: lago.GetterRoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
 					"id":     getters.Any(getters.Key[uint]("program.ID")),
 					"unitId": getters.Any(getters.Key[uint]("unit.ID")),
 				}),

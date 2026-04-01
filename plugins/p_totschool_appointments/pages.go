@@ -28,12 +28,12 @@ func registerMenus() {
 		Title: getters.Static("Appointments"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
-			components.SidebarMenuItem{Title: getters.Static("All Appointments"), Url: lago.GetterRoutePath("appointments.ListRoute", nil)},
-			components.SidebarMenuItem{Title: getters.Static("Appointments Timeline"), Url: lago.GetterRoutePath("appointments.CardTimelineRoute", nil)},
-			components.SidebarMenuItem{Title: getters.Static("Create Appointment"), Url: lago.GetterRoutePath("appointments.CreateRoute", nil)},
+			components.SidebarMenuItem{Title: getters.Static("All Appointments"), Url: lago.RoutePath("appointments.ListRoute", nil)},
+			components.SidebarMenuItem{Title: getters.Static("Appointments Timeline"), Url: lago.RoutePath("appointments.CardTimelineRoute", nil)},
+			components.SidebarMenuItem{Title: getters.Static("Create Appointment"), Url: lago.RoutePath("appointments.CreateRoute", nil)},
 		},
 	})
 
@@ -41,19 +41,19 @@ func registerMenus() {
 		Title: getters.Format("Appointment: %s", getters.Any(getters.Key[string]("appointment.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Appointments"),
-			Url:   lago.GetterRoutePath("appointments.ListRoute", nil),
+			Url:   lago.RoutePath("appointments.ListRoute", nil),
 		},
 		Children: []components.PageInterface{
-			components.SidebarMenuItem{Title: getters.Static("Appointment Detail"), Url: lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
-			components.SidebarMenuItem{Title: getters.Static("Edit Appointment"), Url: lago.GetterRoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
-			components.SidebarMenuItem{Title: getters.Static("Delete Appointment"), Url: lago.GetterRoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
+			components.SidebarMenuItem{Title: getters.Static("Appointment Detail"), Url: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
+			components.SidebarMenuItem{Title: getters.Static("Edit Appointment"), Url: lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
+			components.SidebarMenuItem{Title: getters.Static("Delete Appointment"), Url: lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
 		},
 	})
 }
 
 func registerFilter() {
 	lago.RegistryPage.Register("appointments.AppointmentFilter", components.FormComponent[Appointment]{
-		Url:    lago.GetterRoutePath("appointments.ListRoute", nil),
+		Url:    lago.RoutePath("appointments.ListRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.ContainerError{
@@ -133,7 +133,7 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
-				Url:            lago.GetterRoutePath("appointments.CreateRoute", nil),
+				Url:            lago.RoutePath("appointments.CreateRoute", nil),
 				Method:         http.MethodPost,
 				Title:          "Create Appointment",
 				Subtitle:       "Create a new appointment",
@@ -148,7 +148,7 @@ func registerForms() {
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
 				Getter:         getters.Key[Appointment]("appointment"),
-				Url:            lago.GetterRoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				Url:            lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 				Method:         http.MethodPost,
 				Title:          "Edit Appointment",
 				Subtitle:       "Update appointment details",
@@ -170,9 +170,9 @@ func registerTable() {
 				Subtitle:        "List of appointments",
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "appointments.AppointmentFilter"}},
-					&components.TableButtonCreate{Link: lago.GetterRoutePath("appointments.CreateRoute", nil)},
+					&components.TableButtonCreate{Link: lago.RoutePath("appointments.CreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				OnClick: getters.NavigateGetter(lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Location", Name: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.Key[string]("$row.Location")}}},
@@ -193,8 +193,8 @@ func registerDetail() {
 				components.FieldTitle{Getter: getters.Static("Generated Letter")},
 				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
 					components.ButtonLink{Classes: "btn-outline btn-success btn-sm", Label: "Send via WhatsApp", Link: getters.Format("https://wa.me/%v?text=%v", getters.Any(getters.Key[string]("$in.Phone")), getters.Any(getters.QueryEscape(getters.Key[string]("$in.GeneratedLetter"))))},
-					components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("appointments.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-					components.ButtonPost{Label: "Regenerate Letter", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
+					components.ButtonModal{Label: "Edit with AI", Url: lago.RoutePath("appointments.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
+					components.ButtonPost{Label: "Regenerate Letter", URL: lago.RoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
 			components.FieldMarkdown{Getter: getters.Key[string]("$in.GeneratedLetter")},
@@ -203,13 +203,13 @@ func registerDetail() {
 
 	pendingSection := []components.PageInterface{
 		components.HTMXPolling{
-			URL: lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+			URL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 			Children: []components.PageInterface{
 				components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
 					components.FieldText{Getter: getters.Static("Generating...")},
 					components.ButtonPost{
 						Label:   "Cancel Generation",
-						URL:     lago.GetterRoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+						URL:     lago.RoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 						Classes: "btn-outline btn-error btn-sm",
 					},
 				}},
@@ -218,7 +218,7 @@ func registerDetail() {
 	}
 
 	idleSection := []components.PageInterface{
-		components.ButtonPost{Label: "Generate Letter with AI", URL: lago.GetterRoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-primary"},
+		components.ButtonPost{Label: "Generate Letter with AI", URL: lago.RoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-primary"},
 	}
 
 	lago.RegistryPage.Register("appointments.AppointmentDetail", components.ShellScaffold{
@@ -239,7 +239,7 @@ func registerDetail() {
 									Classes: "flex flex-col gap-2 pl-4",
 									Children: []components.PageInterface{
 										components.ContainerRow{Classes: "items-center gap-2", Children: []components.PageInterface{
-											components.ButtonLink{GetterLabel: getters.Key[string]("$row.Name"), Link: lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})},
+											components.ButtonLink{GetterLabel: getters.Key[string]("$row.Name"), Link: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})},
 											components.FieldText{Getter: getters.Static(" — ")},
 											components.FieldText{Getter: getters.Key[string]("$row.Date")},
 										}},
@@ -335,7 +335,7 @@ func registerModal() {
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
 				Getter: getters.Key[Appointment]("appointment"),
-				Url:    lago.GetterRoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
+				Url:    lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 				Method: http.MethodPost,
 				ChildrenInput: []components.PageInterface{
 					components.ContainerError{
@@ -368,7 +368,7 @@ func registerDelete() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this appointment?",
-				CancelUrl: lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
+				CancelUrl: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 			},
 		},
 	})
@@ -399,7 +399,7 @@ func registerSelectionPages() {
 	})
 
 	lago.RegistryPage.Register("appointments.AppointmentCardTimelineFilter", components.FormComponent[Appointment]{
-		Url:    lago.GetterRoutePath("appointments.CardTimelineRoute", nil),
+		Url:    lago.RoutePath("appointments.CardTimelineRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.ContainerError{
@@ -422,13 +422,13 @@ func registerSelectionPages() {
 	lago.RegistryPage.Register("appointments.AppointmentCardTimeline", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
 		Children: []components.PageInterface{
-			components.ButtonLink{Label: "Create New Appointment", Classes: "btn mb-4", Link: lago.GetterRoutePath("appointments.CreateRoute", nil)},
+			components.ButtonLink{Label: "Create New Appointment", Classes: "btn mb-4", Link: lago.RoutePath("appointments.CreateRoute", nil)},
 			components.Timeline[Appointment]{
 				UID:             "appointment-timeline",
 				Title:           "Appointments Timeline",
 				Data:            getters.Key[components.ObjectList[Appointment]]("appointments"),
 				FilterComponent: lago.DynamicPage{Name: "appointments.AppointmentCardTimelineFilter"},
-				OnClick:         lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))}),
+				OnClick:         lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))}),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Children: []components.PageInterface{

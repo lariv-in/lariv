@@ -17,7 +17,7 @@ func init() {
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.Static("Login via SMS")},
 					components.FormComponent[map[string]string]{
-						Url:    lago.GetterRoutePath("otp.PhoneOtpRequestRoute", nil),
+						Url:    lago.RoutePath("otp.PhoneOtpRequestRoute", nil),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
@@ -44,7 +44,7 @@ func init() {
 						Children: []components.PageInterface{
 							components.ButtonLink{
 								Label: "Back to Login",
-								Link:  lago.GetterRoutePath("users.LoginRoute", nil),
+								Link:  lago.RoutePath("users.LoginRoute", nil),
 							},
 						},
 					},
@@ -60,7 +60,7 @@ func init() {
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.Static("Login via Email")},
 					components.FormComponent[map[string]string]{
-						Url:    lago.GetterRoutePath("otp.EmailOtpRequestRoute", nil),
+						Url:    lago.RoutePath("otp.EmailOtpRequestRoute", nil),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
@@ -87,7 +87,7 @@ func init() {
 						Children: []components.PageInterface{
 							components.ButtonLink{
 								Label: "Back to Login",
-								Link:  lago.GetterRoutePath("users.LoginRoute", nil),
+								Link:  lago.RoutePath("users.LoginRoute", nil),
 							},
 						},
 					},
@@ -107,7 +107,7 @@ func init() {
 						Getter:  getters.Static("Enter the code we sent and choose a new password."),
 					},
 					components.FormComponent[map[string]string]{
-						Url:    getters.Format("%v?identifier=%v", getters.Any(lago.GetterRoutePath("otp.OtpVerifyRoute", nil)), getters.Any(getters.QueryEscape(getters.Key[string]("$in.Identifier")))),
+						Url:    getters.Format("%v?identifier=%v", getters.Any(lago.RoutePath("otp.OtpVerifyRoute", nil)), getters.Any(getters.QueryEscape(getters.Key[string]("$in.Identifier")))),
 						Method: http.MethodPost,
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
@@ -156,7 +156,7 @@ func init() {
 						Children: []components.PageInterface{
 							components.ButtonLink{
 								Label: "Cancel",
-								Link:  lago.GetterRoutePath("users.LoginRoute", nil),
+								Link:  lago.RoutePath("users.LoginRoute", nil),
 							},
 						},
 					},
@@ -168,12 +168,12 @@ func init() {
 		Title: getters.Static("OTP Preferences"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to Home"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.Static("Preferences"),
-				Url:   lago.GetterRoutePath("otp.OTPPreferencesRoute", nil),
+				Url:   lago.RoutePath("otp.OTPPreferencesRoute", nil),
 			},
 		},
 	})
@@ -185,7 +185,7 @@ func init() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent[OTPPreferences]{
-				Url:      lago.GetterRoutePath("otp.OTPPreferencesRoute", nil),
+				Url:      lago.RoutePath("otp.OTPPreferencesRoute", nil),
 				Title:    "OTP Preferences",
 				Subtitle: "Configure OTP settings for SMS and Email",
 				Method:   http.MethodPost,
@@ -351,7 +351,7 @@ func init() {
 					func(*components.FormComponent[p_users.User]) *components.ButtonLink {
 						return &components.ButtonLink{
 							Label: "Login with SMS OTP",
-							Link:  lago.GetterRoutePath("otp.PhoneOtpRequestRoute", nil),
+							Link:  lago.RoutePath("otp.PhoneOtpRequestRoute", nil),
 						}
 					})
 				components.InsertChildAfter(scaffold,
@@ -359,7 +359,7 @@ func init() {
 					func(*components.FormComponent[p_users.User]) *components.ButtonLink {
 						return &components.ButtonLink{
 							Label: "Login with Email OTP",
-							Link:  lago.GetterRoutePath("otp.EmailOtpRequestRoute", nil),
+							Link:  lago.RoutePath("otp.EmailOtpRequestRoute", nil),
 						}
 					})
 				return scaffold

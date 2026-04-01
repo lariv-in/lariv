@@ -74,33 +74,33 @@ func init() {
 		Title: getters.Static("Totschool Tally"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to Home"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.Static("Dashboard"),
-				Url:   lago.GetterRoutePath("tally.TallyDashboardRoute", nil),
+				Url:   lago.RoutePath("tally.TallyDashboardRoute", nil),
 				Icon:  "home",
 			},
 			components.SidebarMenuItem{
 				Title: getters.Static("Leaderboard"),
-				Url:   lago.GetterRoutePath("tally.TallyLeaderboardRoute", nil),
+				Url:   lago.RoutePath("tally.TallyLeaderboardRoute", nil),
 				Icon:  "trophy",
 			},
 			components.SidebarMenuItem{
 				Title: getters.Static("List"),
-				Url:   lago.GetterRoutePath("tally.TallyListRoute", nil),
+				Url:   lago.RoutePath("tally.TallyListRoute", nil),
 				Icon:  "list-bullet",
 			},
 			components.SidebarMenuItem{
 				Title: getters.Static("Fill Daily Report"),
-				Url:   lago.GetterRoutePath("tally.TallyDailyFormRoute", nil),
+				Url:   lago.RoutePath("tally.TallyDailyFormRoute", nil),
 				Icon:  "pencil-square",
 			},
 			components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"totschool_admin", "superuser"}},
 				Title: getters.Static("Create Tally (Admin)"),
-				Url:   lago.GetterRoutePath("tally.TallyCreateRoute", nil),
+				Url:   lago.RoutePath("tally.TallyCreateRoute", nil),
 				Icon:  "plus",
 			},
 		},
@@ -116,20 +116,20 @@ func init() {
 				getters.Any(getters.Key[string]("Tally.User.Name")),
 				getters.Any(getters.TimeFormat("2006-01-02", getters.Key[time.Time]("Tally.Date"))),
 			),
-			Url: lago.GetterRoutePath("tally.TallyListRoute", nil),
+			Url: lago.RoutePath("tally.TallyListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
 				Title: getters.Static("Details"),
-				Url:   lago.GetterRoutePath("tally.TallyDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
+				Url:   lago.RoutePath("tally.TallyDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 			},
 			components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url:   lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
+				Url:   lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 			},
 			components.SidebarMenuItem{
 				Title: getters.Static("Delete"),
-				Url:   lago.GetterRoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
+				Url:   lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 			},
 		},
 	})
@@ -139,7 +139,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				Url:           lago.GetterRoutePath("tally.TallyDailyFormRoute", nil),
+				Url:           lago.RoutePath("tally.TallyDailyFormRoute", nil),
 				Method:        "POST",
 				Title:         "Daily Tally",
 				Subtitle:      "Submit or update your tally for today",
@@ -157,7 +157,7 @@ func init() {
 			Page:        components.Page{Roles: []string{"totschool_admin", "superuser"}},
 			Name:        "UserID",
 			Label:       "User",
-			Url:         lago.GetterRoutePath("users.SelectRoute", nil),
+			Url:         lago.RoutePath("users.SelectRoute", nil),
 			Display:     getters.Key[string]("$in.Name"),
 			Placeholder: "Select a user...",
 			Required:    true,
@@ -176,7 +176,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				Url:           lago.GetterRoutePath("tally.TallyCreateRoute", nil),
+				Url:           lago.RoutePath("tally.TallyCreateRoute", nil),
 				Method:        "POST",
 				Title:         "Create Tally",
 				Subtitle:      "Create a tally record for a specific user and date",
@@ -193,7 +193,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				Url:           lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				Url:           lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 				Method:        "POST",
 				Title:         "Update Tally",
 				Subtitle:      "Edit tally details",
@@ -212,7 +212,7 @@ func init() {
 			components.DeleteConfirmation{
 				Title:     "Delete Tally?",
 				Message:   "Are you sure you want to delete this tally? This action cannot be undone.",
-				CancelUrl: lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				CancelUrl: lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 			},
 		},
 	})
@@ -347,7 +347,7 @@ func init() {
 
 	// Tally Filter
 	tallyFilter := components.FormComponent[Tally]{
-		Url:    lago.GetterRoutePath("tally.TallyListRoute", nil),
+		Url:    lago.RoutePath("tally.TallyListRoute", nil),
 		Method: "GET",
 		ChildrenInput: []components.PageInterface{
 			components.InputForeignKey[uint]{
@@ -355,7 +355,7 @@ func init() {
 
 				Name:    "UserID",
 				Label:   "User ID",
-				Url:     lago.GetterRoutePath("users.SelectRoute", nil),
+				Url:     lago.RoutePath("users.SelectRoute", nil),
 				Getter:  getters.Key[uint]("$get.UserID"),
 				Display: getters.Key[string]("$in.Name"),
 			},

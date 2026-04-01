@@ -301,15 +301,15 @@ func init() {
 
 	// Admin CRUD mappings using standard views
 	lago.RegistryView.Register("tally.TallyCreateView",
-		views.CreateView[Tally](lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyCreateForm")).
+		views.CreateView[Tally](lago.RoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyCreateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("tally.admin", RequireAdmin))
 	lago.RegistryView.Register("tally.TallyUpdateView",
-		views.UpdateView[Tally]("id", lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")).
+		views.UpdateView[Tally]("id", lago.RoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("tally.admin", RequireAdmin))
 	lago.RegistryView.Register("tally.TallyDeleteView",
-		views.DeleteView[Tally]("id", lago.GetterRoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")).
+		views.DeleteView[Tally]("id", lago.RoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("tally.admin", RequireAdmin))
 

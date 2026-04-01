@@ -22,12 +22,12 @@ func registerMenuPages() {
 		Title: getters.Static("Contacts"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Contacts"),
-				Url:   lago.GetterRoutePath("contacts.DefaultRoute", nil),
+				Url:   lago.RoutePath("contacts.DefaultRoute", nil),
 			},
 		},
 	})
@@ -36,24 +36,24 @@ func registerMenuPages() {
 		Title: getters.Format("Contact: %s", getters.Any(getters.Key[string]("contact.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Contacts"),
-			Url:   lago.GetterRoutePath("contacts.DefaultRoute", nil),
+			Url:   lago.RoutePath("contacts.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Contact Detail"),
-				Url: lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit Contact"),
-				Url: lago.GetterRoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Delete Contact"),
-				Url: lago.GetterRoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},
@@ -63,7 +63,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("contacts.ContactFilter", &components.FormComponent[Contact]{
-		Url:    lago.GetterRoutePath("contacts.DefaultRoute", nil),
+		Url:    lago.RoutePath("contacts.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -89,7 +89,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("contacts.ContactSelectionFilter", &components.FormComponent[Contact]{
-		Url:    lago.GetterRoutePath("contacts.SelectRoute", nil),
+		Url:    lago.RoutePath("contacts.SelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -190,7 +190,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Contact]{
-				Url:      lago.GetterRoutePath("contacts.CreateRoute", nil),
+				Url:      lago.RoutePath("contacts.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Contact",
 				Subtitle: "Add a new contact",
@@ -212,7 +212,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Contact]{
 				Getter: getters.Key[Contact]("contact"),
-				Url: lago.GetterRoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -243,10 +243,10 @@ func registerTablePages() {
 				Data:      getters.Key[components.ObjectList[Contact]]("contacts"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "contacts.ContactFilter"}},
-					&components.TableButtonCreate{Link: lago.GetterRoutePath("contacts.CreateRoute", nil)},
+					&components.TableButtonCreate{Link: lago.RoutePath("contacts.CreateRoute", nil)},
 				},
 				OnClick: getters.NavigateGetter(
-					lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
+					lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -336,7 +336,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this contact?",
-				CancelUrl: lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},

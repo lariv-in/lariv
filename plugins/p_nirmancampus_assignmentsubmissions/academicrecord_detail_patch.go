@@ -57,13 +57,13 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 				Page: components.Page{Roles: []string{"admin", "superuser"}},
 				Link: getters.Format(
 					"%s?AcademicRecordID=%d",
-					getters.Any(lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil)),
+					getters.Any(lago.RoutePath("assignmentsubmissions.CreateRoute", nil)),
 					getters.Any(getters.Key[uint]("$in.ID")),
 				),
 			},
 		},
 		OnClick: getters.NavigateGetter(
-			lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
+			lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Key[uint]("$row.ID")),
 			}),
 		),

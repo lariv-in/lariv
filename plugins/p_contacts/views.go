@@ -23,7 +23,7 @@ func init() {
 
 	lago.RegistryView.Register("contacts.CreateView",
 		views.CreateView[Contact](
-			lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
+			lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Key[uint]("$id")),
 			}),
 		)(
@@ -34,7 +34,7 @@ func init() {
 	lago.RegistryView.Register("contacts.UpdateView",
 		views.DetailView[Contact]("contact", "id")(
 			views.UpdateView[Contact]("id",
-				lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
+				lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			)(
@@ -45,7 +45,7 @@ func init() {
 
 	lago.RegistryView.Register("contacts.DeleteView",
 		views.DetailView[Contact]("contact", "id")(
-			views.DeleteView[Contact]("id", lago.GetterRoutePath("contacts.DefaultRoute", nil))(
+			views.DeleteView[Contact]("id", lago.RoutePath("contacts.DefaultRoute", nil))(
 				lago.GetPageView("contacts.ContactDeleteForm"),
 			),
 		).

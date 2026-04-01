@@ -44,7 +44,7 @@ func NewRedirectView(routeKey string, args ...map[string]getters.Getter[any]) *v
 	}
 	redirectHandler := func(_ *views.View) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			getter := GetterRoutePath(routeKey, a)
+			getter := RoutePath(routeKey, a)
 			url, err := getters.IfOr(getter, r.Context(), "")
 			if err != nil || url == "" {
 				http.NotFound(w, r)

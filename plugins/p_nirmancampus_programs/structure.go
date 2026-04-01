@@ -69,7 +69,7 @@ func structureEditRedirectURL(ctx context.Context) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("missing program id")
 	}
-	return lago.GetterRoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
+	return lago.RoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static[uint](pid)),
 	})(ctx)
 }

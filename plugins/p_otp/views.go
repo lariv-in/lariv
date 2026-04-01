@@ -72,7 +72,7 @@ func PhoneOtpRequestHandler(v *views.View) http.Handler {
 			} else {
 				sent := SendSmsOtp(db, identifier)
 				if sent {
-					verifyPath, _ := getters.IfOr(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
+					verifyPath, _ := getters.IfOr(lago.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
 					lago.Redirect(w, r, successUrl)
 					return
@@ -145,7 +145,7 @@ func EmailOtpRequestHandler(v *views.View) http.Handler {
 			} else {
 				sent := SendEmailOtp(db, identifier)
 				if sent {
-					verifyPath, _ := getters.IfOr(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
+					verifyPath, _ := getters.IfOr(lago.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
 					lago.Redirect(w, r, successUrl)
 					return
@@ -302,7 +302,7 @@ func init() {
 
 	// OTP Preferences
 	lago.RegistryView.Register("otp.OTPPreferencesView",
-		views.SingletonView[OTPPreferences](lago.GetterRoutePath("otp.OTPPreferencesRoute", nil))(
+		views.SingletonView[OTPPreferences](lago.RoutePath("otp.OTPPreferencesRoute", nil))(
 			lago.GetPageView("otp.OTPPreferencesForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("users.role", p_users.RoleAuthorizationMiddleware([]string{"superuser"})))

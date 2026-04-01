@@ -34,12 +34,12 @@ func registerMenuPages() {
 		Title: getters.Static("Academic Records"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
+			Url:   lago.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("All Academic Records"),
-				Url:   lago.GetterRoutePath("academicrecords.DefaultRoute", nil),
+				Url:   lago.RoutePath("academicrecords.DefaultRoute", nil),
 			},
 		},
 	})
@@ -48,26 +48,26 @@ func registerMenuPages() {
 		Title: getters.Format("Record: %s", getters.Any(getters.Key[string]("academicrecord.Student.User.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Academic Records"),
-			Url:   lago.GetterRoutePath("academicrecords.DefaultRoute", nil),
+			Url:   lago.RoutePath("academicrecords.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Academic Record Detail"),
-				Url: lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Edit Academic Record"),
-				Url: lago.GetterRoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
 				Title: getters.Static("Delete Academic Record"),
-				Url: lago.GetterRoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
 				}),
 			},
@@ -79,7 +79,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordFilter", &components.FormComponent[AcademicRecord]{
-		Url:    lago.GetterRoutePath("academicrecords.DefaultRoute", nil),
+		Url:    lago.RoutePath("academicrecords.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputSelect[string]{
@@ -97,7 +97,7 @@ func registerFilterPages() {
 			&components.InputForeignKey[p_nirmancampus_programs.Program]{
 				Label:       "Program",
 				Name:        "ProgramID",
-				Url:         lago.GetterRoutePath("programs.SelectRoute", nil),
+				Url:         lago.RoutePath("programs.SelectRoute", nil),
 				Placeholder: "Filter by program...",
 				Display:     getters.Key[string]("$in.Name"),
 				Getter: getters.Association[p_nirmancampus_programs.Program](
@@ -274,7 +274,7 @@ func academicRecordOptionalCourseCountDisplayGetter() getters.Getter[string] {
 
 func academicRecordOptionalCoursesMultiSelectURLGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		base, err := lago.GetterRoutePath("courses.MultiSelectRoute", nil)(ctx)
+		base, err := lago.RoutePath("courses.MultiSelectRoute", nil)(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -318,7 +318,7 @@ func academicRecordCreateFormFields() components.ContainerColumn {
 								Label:       "Student",
 								Name:        "StudentID",
 								Required:    true,
-								Url:         lago.GetterRoutePath("students.SelectRoute", nil),
+								Url:         lago.RoutePath("students.SelectRoute", nil),
 								Display:     getters.Key[string]("$in.StudentNo"),
 								Placeholder: "Select a student...",
 								Getter: getters.Association[p_nirmancampus_students.Student](
@@ -334,7 +334,7 @@ func academicRecordCreateFormFields() components.ContainerColumn {
 								Label:       "Program",
 								Name:        "ProgramID",
 								Required:    true,
-								Url:         lago.GetterRoutePath("programs.SelectRoute", nil),
+								Url:         lago.RoutePath("programs.SelectRoute", nil),
 								Display:     getters.Key[string]("$in.Name"),
 								Placeholder: "Select a program...",
 								Getter: getters.Association[p_nirmancampus_programs.Program](
@@ -436,7 +436,7 @@ func academicRecordFormFields() components.ContainerColumn {
 					&components.FieldManyToMany[p_nirmancampus_courses.Course]{
 						Getter:  getters.Key[[]p_nirmancampus_courses.Course]("$in.CompulsoryCourses"),
 						Display: getters.Key[string]("$in.Name"),
-						Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
+						Link: lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
 							"id": getters.Any(getters.Key[uint]("$in.ID")),
 						}),
 						Classes: "w-full",
@@ -491,7 +491,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
-				Url:      lago.GetterRoutePath("academicrecords.CreateRoute", nil),
+				Url:      lago.RoutePath("academicrecords.CreateRoute", nil),
 				Method:   http.MethodPost,
 				Title:    "Create Academic Record",
 				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
@@ -513,7 +513,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
 				Getter: getters.Key[AcademicRecord]("academicrecord"),
-				Url: lago.GetterRoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
+				Url: lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
@@ -534,7 +534,7 @@ func registerFormPages() {
 // --- Tables ---
 
 func registerTablePages() {
-	createURLGetter := lago.GetterRoutePath("academicrecords.CreateRoute", nil)
+	createURLGetter := lago.RoutePath("academicrecords.CreateRoute", nil)
 
 	lago.RegistryPage.Register("academicrecords.AcademicRecordTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -557,7 +557,7 @@ func registerTablePages() {
 					},
 				},
 				OnClick: getters.NavigateGetter(
-					lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+					lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -640,7 +640,7 @@ func registerDetailPages() {
 									&components.FieldManyToMany[p_nirmancampus_courses.Course]{
 										Getter:  getters.Key[[]p_nirmancampus_courses.Course]("$in.CompulsoryCourses"),
 										Display: getters.Key[string]("$in.Name"),
-										Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
+										Link: lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("$in.ID")),
 										}),
 										Classes: "w-full",
@@ -653,7 +653,7 @@ func registerDetailPages() {
 									&components.FieldManyToMany[p_nirmancampus_courses.Course]{
 										Getter:  getters.Key[[]p_nirmancampus_courses.Course]("$in.OptionalCourses"),
 										Display: getters.Key[string]("$in.Name"),
-										Link: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
+										Link: lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("$in.ID")),
 										}),
 										Classes: "w-full",
@@ -675,7 +675,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this academic record?",
-				CancelUrl: lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+				CancelUrl: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
 				}),
 			},

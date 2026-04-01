@@ -33,7 +33,7 @@ func init() {
 
 	lago.RegistryView.Register("assignmentsubmissions.CreateView",
 		views.CreateView[AssignmentSubmission](
-			lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
+			lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Key[uint]("$id")),
 			}),
 		)(
@@ -46,7 +46,7 @@ func init() {
 	lago.RegistryView.Register("assignmentsubmissions.UpdateView",
 		views.DetailView[AssignmentSubmission]("assignmentsubmission", "id")(
 			views.UpdateView[AssignmentSubmission]("id",
-				lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
+				lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			)(
@@ -65,7 +65,7 @@ func init() {
 	lago.RegistryView.Register("assignmentsubmissions.DeleteView",
 		views.DetailView[AssignmentSubmission]("assignmentsubmission", "id")(
 			views.DeleteView[AssignmentSubmission]("id",
-				lago.GetterRoutePath("assignmentsubmissions.DefaultRoute", nil),
+				lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
 			)(
 				lago.GetPageView("assignmentsubmissions.DeleteForm"),
 			),

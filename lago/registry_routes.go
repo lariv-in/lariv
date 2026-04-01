@@ -38,8 +38,8 @@ func GetRouter(config LagoConfig) *http.ServeMux {
 	return baseRouter
 }
 
-// GetterRoutePath returns a Getter that resolves to the route's Path string.
-func GetterRoutePath(name string, args map[string]getters.Getter[any]) getters.Getter[string] {
+// RoutePath returns a Getter that resolves to the route's Path string.
+func RoutePath(name string, args map[string]getters.Getter[any]) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		if route, ok := RegistryRoute.Get(name); ok {
 			r := route.Path

@@ -28,14 +28,14 @@ func init() {
 			WithQueryPatcher("students.scope_by_role", StudentScopeByRole))
 
 	lago.RegistryView.Register("students.CreateView",
-		views.CreateView[Student](lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
+		views.CreateView[Student](lago.RoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
 			lago.GetPageView("students.StudentCreateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("students.admin_role", studentsAdminRoleMiddleware))
 
 	lago.RegistryView.Register("students.UpdateView",
 		views.DetailView[Student]("student", "id")(
-			views.UpdateView[Student]("id", lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
+			views.UpdateView[Student]("id", lago.RoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
 				lago.GetPageView("students.StudentUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("students.admin_role", studentsAdminRoleMiddleware).
@@ -45,7 +45,7 @@ func init() {
 
 	lago.RegistryView.Register("students.DeleteView",
 		views.DetailView[Student]("student", "id")(
-			views.DeleteView[Student]("id", lago.GetterRoutePath("students.DefaultRoute", nil))(
+			views.DeleteView[Student]("id", lago.RoutePath("students.DefaultRoute", nil))(
 				lago.GetPageView("students.StudentDeleteForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("students.admin_role", studentsAdminRoleMiddleware).
