@@ -43,9 +43,11 @@ func (e InputText) Build(ctx context.Context) Node {
 		wrapClass += " hidden"
 	}
 	return Div(Class(wrapClass),
-		If(!e.Hidden, Label(Class("label text-sm font-bold"), Text(e.Label))),
-		Input(If(!e.Hidden, Type("text")), If(e.Hidden, Type("hidden")), Name(e.Name),
-			valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+			If(!e.Hidden, Text(e.Label)),
+			Input(If(!e.Hidden, Type("text")), If(e.Hidden, Type("hidden")), Name(e.Name),
+				valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		),
 	)
 }
 

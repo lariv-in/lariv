@@ -30,14 +30,16 @@ func (e InputFile) GetRoles() []string {
 func (e InputFile) Build(_ context.Context) Node {
 	return Div(
 		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Input(
-			Type("file"),
-			Name(e.Name),
-			Class(fmt.Sprintf("file-input file-input-bordered w-full %s", e.Classes)),
-			If(e.Required, Required()),
-			If(e.Multiple, Multiple()),
-			If(e.Accept != "", Accept(e.Accept)),
+		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+			Text(e.Label),
+			Input(
+				Type("file"),
+				Name(e.Name),
+				Class(fmt.Sprintf("file-input file-input-bordered w-full %s", e.Classes)),
+				If(e.Required, Required()),
+				If(e.Multiple, Multiple()),
+				If(e.Accept != "", Accept(e.Accept)),
+			),
 		),
 	)
 }

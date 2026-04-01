@@ -68,11 +68,13 @@ func (e InputTernary) Build(ctx context.Context) Node {
 	}
 
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Select(Name(e.Name), Class("select select-bordered w-full"),
-			Option(Value(""), If(noneSelected != "", Attr("selected", "")), Text(noneLabel)),
-			Option(Value("True"), If(trueSelected != "", Attr("selected", "")), Text(trueLabel)),
-			Option(Value("False"), If(falseSelected != "", Attr("selected", "")), Text(falseLabel)),
+		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+			Text(e.Label),
+			Select(Name(e.Name), Class("select select-bordered w-full"),
+				Option(Value(""), If(noneSelected != "", Attr("selected", "")), Text(noneLabel)),
+				Option(Value("True"), If(trueSelected != "", Attr("selected", "")), Text(trueLabel)),
+				Option(Value("False"), If(falseSelected != "", Attr("selected", "")), Text(falseLabel)),
+			),
 		),
 	)
 }

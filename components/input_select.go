@@ -84,12 +84,14 @@ func (e InputSelect[T]) Build(ctx context.Context) Node {
 		wrapClass += " hidden"
 	}
 	return Div(Class(wrapClass),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Select(
-			Name(e.Name),
-			Class(fmt.Sprintf("select select-bordered w-full %s", e.Classes)),
-			Group(optionNodes),
-			If(e.Required, Required()),
+		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+			Text(e.Label),
+			Select(
+				Name(e.Name),
+				Class(fmt.Sprintf("select select-bordered w-full %s", e.Classes)),
+				Group(optionNodes),
+				If(e.Required, Required()),
+			),
 		),
 	)
 }

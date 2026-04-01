@@ -70,36 +70,38 @@ $el.closest('form').addEventListener('submit', (e) => {
 
 	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
 	return Div(Class(wrapClass),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Div(
-			Attr("x-data", alpineData),
-			Attr("x-init", initJS),
-			Template(
-				Attr("x-for", "(item, i) in items"),
-				Attr(":key", "i"),
-				Div(
-					Class("flex gap-2 items-center my-1"),
-					Input(
-						Type("text"),
-						Class("input input-bordered flex-1"),
-						Attr("x-model", "items[i]"),
-						Attr("placeholder", "Option value"),
-					),
-					Button(
-						Type("button"),
-						Class("btn btn-ghost btn-sm shrink-0"),
-						Attr("@click", "remove(i)"),
-						Text("Remove"),
+		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+			Text(e.Label),
+			Div(
+				Attr("x-data", alpineData),
+				Attr("x-init", initJS),
+				Template(
+					Attr("x-for", "(item, i) in items"),
+					Attr(":key", "i"),
+					Div(
+						Class("flex gap-2 items-center my-1"),
+						Input(
+							Type("text"),
+							Class("input input-bordered flex-1"),
+							Attr("x-model", "items[i]"),
+							Attr("placeholder", "Option value"),
+						),
+						Button(
+							Type("button"),
+							Class("btn btn-ghost btn-sm shrink-0"),
+							Attr("@click", "remove(i)"),
+							Text("Remove"),
+						),
 					),
 				),
+				Button(
+					Type("button"),
+					Class("btn btn-outline btn-sm mt-1"),
+					Attr("@click", "add()"),
+					Text("Add option"),
+				),
+				Input(Type("hidden"), Name(e.Name)),
 			),
-			Button(
-				Type("button"),
-				Class("btn btn-outline btn-sm mt-1"),
-				Attr("@click", "add()"),
-				Text("Add option"),
-			),
-			Input(Type("hidden"), Name(e.Name)),
 		),
 	)
 }

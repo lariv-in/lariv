@@ -48,8 +48,10 @@ func (e InputNumber) Build(ctx context.Context) Node {
 		)
 	}
 	return Div(Class(wrapClass),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Input(Type("number"), Name(e.Name), valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+			Text(e.Label),
+			Input(Type("number"), Name(e.Name), valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		),
 	)
 }
 

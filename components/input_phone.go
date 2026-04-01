@@ -47,8 +47,10 @@ func (e InputPhone) Build(ctx context.Context) Node {
 		}
 	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Input(Type("tel"), Name(e.Name), Value(displayValue), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+			Text(e.Label),
+			Input(Type("tel"), Name(e.Name), Value(displayValue), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
+		),
 	)
 }
 
