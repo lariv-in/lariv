@@ -3,27 +3,39 @@ package p_nirmancampus_academicrecords
 import (
 	"context"
 	"log"
+	"log/slog"
+	"net/http"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
+
+const studentDetailAcademicRecordsContextKey = "student_academic_records_table"
 
 func init() {
 	registerStudentDetailAcademicRecordsPatch()
 }
 
-func academicRecordsForCurrentStudentGetter() getters.Getter[components.ObjectList[AcademicRecord]] {
-	return func(ctx context.Context) (components.ObjectList[AcademicRecord], error) {
-		studentID, err := getters.Key[uint]("$in.ID")(ctx)
-		if err != nil || studentID == 0 {
-			return components.ObjectList[AcademicRecord]{Number: 1, NumPages: 1}, nil
+// attachStudentAcademicRecordsContext loads AcademicRecords for the current
+// student (from the "student" context key set by DetailView) and stores
+// them as an ObjectList under studentDetailAcademicRecordsContextKey.
+func attachStudentAcademicRecordsContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		student, ok := r.Context().Value("student").(p_nirmancampus_students.Student)
+		if !ok || student.ID == 0 {
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		db, ok := ctx.Value("$db").(*gorm.DB)
+		db, ok := r.Context().Value("$db").(*gorm.DB)
 		if !ok || db == nil {
-			return components.ObjectList[AcademicRecord]{Number: 1, NumPages: 1}, nil
+			slog.Error("attachStudentAcademicRecordsContext: missing $db in context")
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		var rows []AcademicRecord
@@ -31,19 +43,23 @@ func academicRecordsForCurrentStudentGetter() getters.Getter[components.ObjectLi
 			Preload("Program").
 			Preload("CompulsoryCourses").
 			Preload("OptionalCourses").
-			Where("student_id = ?", studentID).
+			Where("student_id = ?", student.ID).
 			Order("id ASC").
 			Find(&rows).Error; err != nil {
-			return components.ObjectList[AcademicRecord]{}, err
+			slog.Error("attachStudentAcademicRecordsContext: query failed", "error", err)
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		return components.ObjectList[AcademicRecord]{
+		ol := components.ObjectList[AcademicRecord]{
 			Items:    rows,
 			Number:   1,
 			NumPages: 1,
 			Total:    int64(len(rows)),
-		}, nil
-	}
+		}
+		ctx := context.WithValue(r.Context(), studentDetailAcademicRecordsContextKey, ol)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func studentDetailAcademicRecordsSection() components.PageInterface {
@@ -52,7 +68,7 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 		UID:         "student-detail-academic-records-table",
 		Title:       "Academic records",
 		Classes:     "w-full mt-4",
-		Data:        academicRecordsForCurrentStudentGetter(),
+		Data:        getters.Key[components.ObjectList[AcademicRecord]](studentDetailAcademicRecordsContextKey),
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
 			&components.TableButtonCreate{
@@ -86,7 +102,7 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 				Name:  "Term",
 				Children: []components.PageInterface{
 					&components.FieldText{
-						Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Term"))),
+						Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.Term"))),
 					},
 				},
 			},
@@ -95,6 +111,10 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 }
 
 func registerStudentDetailAcademicRecordsPatch() {
+	lago.RegistryView.Patch("students.DetailView", func(v *views.View) *views.View {
+		return v.WithRenderMiddleware("academicrecords.student_detail", attachStudentAcademicRecordsContext)
+	})
+
 	lago.RegistryPage.Patch("students.StudentDetail", func(page components.PageInterface) components.PageInterface {
 		scaffold, ok := page.(*components.ShellScaffold)
 		if !ok {

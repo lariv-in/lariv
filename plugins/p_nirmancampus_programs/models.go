@@ -24,10 +24,10 @@ const (
 type ProgramStructureUnit struct {
 	gorm.Model
 
-	ProgramID                   uint `gorm:"not null;uniqueIndex:idx_psu_program_term"`
-	TermNumber                  int  `gorm:"not null;uniqueIndex:idx_psu_program_term"`
+	ProgramID                   uint             `gorm:"not null;uniqueIndex:idx_psu_program_term"`
+	TermNumber                  uint             `gorm:"not null;uniqueIndex:idx_psu_program_term"`
 	CompulsoryCourses           []courses.Course `gorm:"many2many:program_structure_unit_compulsory_courses;"`
-	OptionalCourseCount         int
+	OptionalCourseCount         uint
 	OptionalCourseSelectionPool []courses.Course `gorm:"many2many:program_structure_unit_optional_courses;"`
 
 	Program Program `gorm:"constraint:OnDelete:CASCADE"`
@@ -45,6 +45,18 @@ type Program struct {
 	TermType          string `gorm:"type:varchar(32);not null;default:''"`
 
 	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
+}
+
+var universityChoices = map[string]string{
+	"IGNOU":  "IGNOU",
+	"MRSPTU": "MRSPTU",
+}
+
+var programTypeChoices = map[string]string{
+	"certificate": "Certificate",
+	"diploma":     "Diploma",
+	"bachelor":    "Bachelor",
+	"masters":     "Masters",
 }
 
 func init() {

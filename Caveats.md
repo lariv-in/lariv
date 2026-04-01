@@ -95,6 +95,13 @@ Currently, the following view factories exist in `views/crud.go`:
 
 - Generic CRUD many-to-many support now exists in `views/crud.go`. `InputManyToMany.Parse` returns a typed `AssociationIDs` payload, and `CreateView` / `UpdateView` / `SingletonView` persist it through GORM associations after the base row save. Do not try to make many-to-many form inputs look like ordinary scalar columns.
 
+- When a plugin needs to show related data on another plugin's detail page (e.g. academic records on a student detail page), do **not** write a custom getter that manually pulls `$db` and `$in.ID` from context to run its own query. Instead, use `View.WithRenderMiddleware` (via `lago.RegistryView.Patch`) to load the data at the view level and store it in context, then read from that context key in the component's getter:
+  1. Define a package-level context key constant (e.g. `const myDataContextKey = "my_data_table"`).
+  2. Write a `RenderMiddleware` (`func(http.Handler) http.Handler`) that reads the parent object from context (e.g. `r.Context().Value("student")`), queries related rows, wraps them in `components.ObjectList[T]`, and stores the list under the context key via `context.WithValue`.
+  3. Patch the base plugin's view: `lago.RegistryView.Patch("base.DetailView", func(v *views.View) *views.View { return v.WithRenderMiddleware("myplugin.key", myMiddleware) })`.
+  4. In the `DataTable`, set `Data: getters.Key[components.ObjectList[T]](myDataContextKey)`.
+  - This follows the same pattern as `p_forms.AttachFormFieldsObjectListContext` and keeps data loading in the view layer where it belongs.
+
 # Error handling
 
 Error handling is very important. If an error occurs that could make the program behave incorrectly, it is preferable to panic rather than keep it running in a bad state.

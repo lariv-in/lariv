@@ -153,7 +153,7 @@ func (e PublicSubmitForm) buildField(ctx context.Context, f FormField) []gompone
 			}
 			return 0, nil
 		})
-		return []gomponents.Node{wrap(&components.InputNumber{
+		return []gomponents.Node{wrap(&components.InputNumber[int]{
 			Page:     components.Page{Key: "forms.public." + name},
 			Label:    f.Label,
 			Name:     name,

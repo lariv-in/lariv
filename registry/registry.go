@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -25,6 +26,33 @@ func NewRegistry[T any]() Registry[T] {
 type Pair[K comparable, V any] struct {
 	Key   K
 	Value V
+}
+
+// PairsFromMap converts a map into a stable slice of pairs sorted by key.
+func PairsFromMap[K cmp.Ordered, V any](m map[K]V) []Pair[K, V] {
+	pairs := make([]Pair[K, V], 0, len(m))
+	for k, v := range m {
+		pairs = append(pairs, Pair[K, V]{
+			Key:   k,
+			Value: v,
+		})
+	}
+	slices.SortFunc(pairs, func(a, b Pair[K, V]) int {
+		return cmp.Compare(a.Key, b.Key)
+	})
+	return pairs
+}
+
+// PairFromMap returns the pair for key when it exists in m.
+func PairFromMap[K comparable, V any](key K, m map[K]V) (Pair[K, V], bool) {
+	v, ok := m[key]
+	if !ok {
+		return Pair[K, V]{}, false
+	}
+	return Pair[K, V]{
+		Key:   key,
+		Value: v,
+	}, true
 }
 
 func (p Pair[K, V]) ToKVJson() string {

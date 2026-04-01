@@ -13,27 +13,14 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-func universityChoices() []registry.Pair[string, string] {
-	return []registry.Pair[string, string]{
-		{Key: "IGNOU", Value: "IGNOU"},
-		{Key: "MRSPTU", Value: "MRSPTU"},
-	}
-}
-
-func programTypeChoices() []registry.Pair[string, string] {
-	return []registry.Pair[string, string]{
-		{Key: "certificate", Value: "Certificate"},
-		{Key: "diploma", Value: "Diploma"},
-		{Key: "bachelor", Value: "Bachelor"},
-		{Key: "masters", Value: "Masters"},
-	}
-}
-
 func universityFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
 	return func(ctx context.Context) (registry.Pair[string, string], error) {
 		s, err := getters.Key[string]("$get.University")(ctx)
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
+		}
+		if p, ok := registry.PairFromMap(s, universityChoices); ok {
+			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
 	}
@@ -45,6 +32,9 @@ func programUniversityPairGetter() getters.Getter[registry.Pair[string, string]]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
+		if p, ok := registry.PairFromMap(s, universityChoices); ok {
+			return p, nil
+		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
 	}
 }
@@ -53,7 +43,7 @@ func universityFilterSelect() *components.InputSelect[string] {
 	return &components.InputSelect[string]{
 		Label:   "University",
 		Name:    "University",
-		Choices: getters.Static(universityChoices()),
+		Choices: getters.Static(registry.PairsFromMap(universityChoices)),
 		Getter:  universityFilterPairGetter(),
 	}
 }
@@ -63,7 +53,7 @@ func universityFormSelect() *components.InputSelect[string] {
 		Label:    "University",
 		Name:     "University",
 		Required: false,
-		Choices:  getters.Static(universityChoices()),
+		Choices:  getters.Static(registry.PairsFromMap(universityChoices)),
 		Getter:   programUniversityPairGetter(),
 	}
 }
@@ -74,10 +64,8 @@ func programTypeFilterPairGetter() getters.Getter[registry.Pair[string, string]]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		for _, p := range programTypeChoices() {
-			if p.Key == s {
-				return p, nil
-			}
+		if p, ok := registry.PairFromMap(s, programTypeChoices); ok {
+			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
 	}
@@ -89,10 +77,8 @@ func programProgramTypePairGetter() getters.Getter[registry.Pair[string, string]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		for _, p := range programTypeChoices() {
-			if p.Key == s {
-				return p, nil
-			}
+		if p, ok := registry.PairFromMap(s, programTypeChoices); ok {
+			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
 	}
@@ -102,7 +88,7 @@ func programTypeFilterSelect() *components.InputSelect[string] {
 	return &components.InputSelect[string]{
 		Label:   "Program type",
 		Name:    "ProgramType",
-		Choices: getters.Static(programTypeChoices()),
+		Choices: getters.Static(registry.PairsFromMap(programTypeChoices)),
 		Getter:  programTypeFilterPairGetter(),
 	}
 }
@@ -112,7 +98,7 @@ func programTypeFormSelect() *components.InputSelect[string] {
 		Label:    "Program type",
 		Name:     "ProgramType",
 		Required: false,
-		Choices:  getters.Static(programTypeChoices()),
+		Choices:  getters.Static(registry.PairsFromMap(programTypeChoices)),
 		Getter:   programProgramTypePairGetter(),
 	}
 }
@@ -595,7 +581,7 @@ func registerDetailPages() {
 																	&components.FieldText{
 																		Getter: getters.Format(
 																			"%d",
-																			getters.Any(getters.Key[int]("$row.TermNumber")),
+																			getters.Any(getters.Key[uint]("$row.TermNumber")),
 																		),
 																	},
 																},
@@ -616,7 +602,7 @@ func registerDetailPages() {
 																	&components.FieldText{
 																		Getter: getters.Format(
 																			"%d",
-																			getters.Any(getters.Key[int]("$row.OptionalCourseCount")),
+																			getters.Any(getters.Key[uint]("$row.OptionalCourseCount")),
 																		),
 																	},
 																},

@@ -18,7 +18,7 @@ var sampleStatuses = []string{
 	"Withdrawn",
 }
 
-var sampleTerms = []int{1, 2, 1, 3, 2, 1, 2, 3}
+var sampleTerms = []uint{1, 2, 1, 3, 2, 1, 2, 3}
 
 func init() {
 	lago.RegistryGenerator.Register("academicrecords.Generator", lago.Generator{
