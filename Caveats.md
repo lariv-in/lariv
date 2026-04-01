@@ -10,13 +10,14 @@
 - If a component allows modifying its children, it should implement `MutableParentInterface` from `components/parent.go`.
 - If a component is an input, it needs to implement `InputInterface` from `components/input.go` so that `FormComponent` can detect it and parse its fields.
 
-- Whenever something requires a value that can depend on the request, it should use a `Getter` from `getters/getter.go`.
+- Whenever something requires a value that can depend on the request, it should use a `Getter` from `getters/getters.go` (shared context key constants live there too: `ContextKeyError`, `ContextKeyGet`, `ContextKeyIn`).
+- The `getters/` package is organized by topic in sibling files (no subpackages), e.g. `key.go` for `Key`, `deref.go`, `format.go`, `any.go`, `association.go`, `association_list.go`, `join_association_list.go`, `association_ids.go`, `foreign_key.go`, `select.go` / `select_multi.go`, `navigate.go`, and helpers like `parse_int.go` / `parse_uint.go`. Browse those files or `grep` for `func ` when looking for an existing combinator.
 
 - Before writing a custom getter, always confirm that no existing getter in `getters/` (and no small composition of existing getters) already covers the use case:
-   - Use `getters.GetterDeref(getters.GetterKey[*T]("$in.Field"))` for nullable pointer fields instead of writing custom wrapper functions.
-   - Use `getters.GetterFormat("format", getters.GetterAny(getter1), ...)` to combine multiple getters into a formatted string instead of custom inline functions.
-   - For route params like `id`, prefer `getters.GetterAny(getters.GetterKey[uint]("$id"))` instead of writing custom `uint -> string` wrapper getters.
-   - For many-to-many filter state stored in `$get`, prefer `getters.GetterContextAssociationIDs(getters.ContextKeyGet, "Field")` instead of manually unpacking `AssociationIDs`.
+   - Use `getters.Deref(getters.Key[*T]("$in.Field"))` for nullable pointer fields instead of writing custom wrapper functions.
+   - Use `getters.Format("format", getters.Any(getter1), ...)` to combine multiple getters into a formatted string instead of custom inline functions.
+   - For route params like `id`, prefer `getters.Any(getters.Key[uint]("$id"))` instead of writing custom `uint -> string` wrapper getters.
+   - For many-to-many filter state stored in `$get`, prefer `getters.AssociationIDs(getters.ContextKeyGet, "Field")` instead of manually unpacking `AssociationIDs`.
 
 - When defining getter arguments, use the most restrictive type possible. `any` is almost always a bad idea.
 
@@ -24,13 +25,13 @@
 
 - The same name-matching rule applies to `InputManyToMany` and `GetterMultiSelect(...)`. Many-to-many selectors also need to preserve `target_input` across the initial modal open and any filter/browse requests inside the modal. If `target_input` is dropped, the selector will dispatch the wrong field name and the chips will not update.
 
-- For `InputForeignKey.Getter`, use `getters.GetterAssociation[T](getters.GetterKey[uint]("$in.FieldID"))`. It infers the table name from the type `T` via GORM's `db.Model()`.
+- For `InputForeignKey.Getter`, use `getters.Association[T](getters.Key[uint]("$in.FieldID"))`. It infers the table name from the type `T` via GORM's `db.Model()`.
 
-- For `InputManyToMany.Getter`, prefer preloaded associations plus `getters.GetterKey[[]T]("$in.Field")` instead of custom lookup getters. `InputManyToMany` re-renders from submitted `AssociationIDs`, but update/detail views should still preload the association so initial render and detail pages have the full related objects available.
+- For `InputManyToMany.Getter`, prefer preloaded associations plus `getters.Key[[]T]("$in.Field")` instead of custom lookup getters. `InputManyToMany` re-renders from submitted `AssociationIDs`, but update/detail views should still preload the association so initial render and detail pages have the full related objects available.
 
-- For **detail pages**, use `components.FieldManyToMany[T]` (`components/field_manytomany.go`) to show the same many-to-many association read-only. Reuse the same **`Getter`** and **`Display`** as the matching `InputManyToMany[T]` (including `getters.GetterJoinAssociationList[...]` when the association goes through a join table). **`Link`** is optional: when set, it runs with `getters.ContextKeyIn` bound to each related row (same as **`Display`**), e.g. `lago.GetterRoutePath("plugin.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))})`. Prefer this over `FieldList` + per-row children for plain association lists; keep **`FieldList`** when each row is not a typed related model (e.g. ad-hoc `[]map[string]any` or heavily custom row UI).
+- For **detail pages**, use `components.FieldManyToMany[T]` (`components/field_manytomany.go`) to show the same many-to-many association read-only. Reuse the same **`Getter`** and **`Display`** as the matching `InputManyToMany[T]` (including `getters.JoinAssociationList[...]` when the association goes through a join table). **`Link`** is optional: when set, it runs with `getters.ContextKeyIn` bound to each related row (same as **`Display`**), e.g. `lago.RoutePath("plugin.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})`. Prefer this over `FieldList` + per-row children for plain association lists; keep **`FieldList`** when each row is not a typed related model (e.g. ad-hoc `[]map[string]any` or heavily custom row UI).
 
-- If the relation is intentionally not declared on the base GORM model and is instead represented by a separate join model, prefer shared getters such as `getters.GetterJoinAssociationList[...]` / `getters.GetterAssociationList[...]` plus shared query patchers instead of ad-hoc plugin-local lookup code.
+- If the relation is intentionally not declared on the base GORM model and is instead represented by a separate join model, prefer shared getters such as `getters.JoinAssociationList[...]` / `getters.AssociationList[...]` plus shared query patchers instead of ad-hoc plugin-local lookup code.
 
 - Models are not patchable through registries the way pages and views are. If a plugin needs to extend another plugin's data model, prefer a separate extension/join model owned by the new plugin plus page/view/query patches around it. Only add fields directly to the base GORM model when that relationship truly belongs in the base plugin and is intended to be a first-class part of that model.
 
