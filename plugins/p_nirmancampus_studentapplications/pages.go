@@ -295,7 +295,7 @@ func applicationFormFields() components.ContainerColumn {
 										return nodes, nil
 									}
 									return getters.AssociationList[p_filesystem.VNode](
-										getters.ContextAssociationIDs(getters.ContextKeyIn, "Documents"),
+										getters.AssociationIDs(getters.ContextKeyIn, "Documents"),
 										"",
 									)(ctx)
 								},
