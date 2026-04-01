@@ -15,7 +15,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/registry"
-	"gorm.io/gorm"
 )
 
 func init() {
@@ -25,47 +24,6 @@ func init() {
 	registerTablePages()
 	registerDetailPages()
 	registerSelectionPages()
-}
-
-// --- Shared Helpers ---
-
-// statusPairGetter reads a status string from the given context key, matches it
-// against AcademicRecordStatusChoices, and optionally defaults to the first
-// choice when the value is empty.
-func statusPairGetter(key string, defaultToFirst bool) getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string](key)(ctx)
-		if err != nil || s == "" {
-			if defaultToFirst {
-				if choices := AcademicRecordStatusChoices(); len(choices) > 0 {
-					return choices[0], nil
-				}
-			}
-			return registry.Pair[string, string]{}, nil
-		}
-		for _, p := range AcademicRecordStatusChoices() {
-			if p.Key == s {
-				return p, nil
-			}
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
-
-func statusInputSelect(forCreate bool) *components.InputSelect[string] {
-	var g getters.Getter[registry.Pair[string, string]]
-	if forCreate {
-		g = statusPairGetter("$in.Status", true)
-	} else {
-		g = statusPairGetter("$in.Status", false)
-	}
-	return &components.InputSelect[string]{
-		Label:    "Status",
-		Name:     "Status",
-		Required: true,
-		Choices:  getters.Static(AcademicRecordStatusChoices()),
-		Getter:   g,
-	}
 }
 
 var courseDetailLink = lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{
@@ -96,33 +54,10 @@ func tableColumns() []components.TableColumn {
 // programStructureUnitForIn loads the ProgramStructureUnit for $in.ProgramID
 // and $in.Term. When preloadOptionalPool is true, OptionalCourseSelectionPool
 // is preloaded (for multi-select URLs).
-func programStructureUnitForIn(ctx context.Context, preloadOptionalPool bool) (p_nirmancampus_programs.ProgramStructureUnit, error) {
-	var psu p_nirmancampus_programs.ProgramStructureUnit
-	programID, err := getters.Key[uint]("$in.ProgramID")(ctx)
-	if err != nil || programID == 0 {
-		return psu, err
-	}
-	term, err := getters.Key[uint]("$in.Term")(ctx)
-	if err != nil {
-		return psu, err
-	}
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		return psu, fmt.Errorf("no db in context")
-	}
-	q := db.Where("program_id = ? AND term_number = ?", programID, term)
-	if preloadOptionalPool {
-		err = q.Preload("OptionalCourseSelectionPool").First(&psu).Error
-	} else {
-		err = q.Select("optional_course_count").First(&psu).Error
-	}
-	return psu, err
-}
-
 func optionalCourseCountDisplayGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		psu, err := programStructureUnitForIn(ctx, false)
-		if err != nil {
+		psu, err := getters.Key[p_nirmancampus_programs.ProgramStructureUnit](academicRecordProgramStructureUnitContextKey)(ctx)
+		if err != nil || psu.ID == 0 {
 			return "—", nil
 		}
 		return fmt.Sprintf("%d", psu.OptionalCourseCount), nil
@@ -139,9 +74,9 @@ func optionalCoursesMultiSelectURLGetter() getters.Getter[string] {
 		if errParse != nil {
 			return base, nil
 		}
-		psu, err := programStructureUnitForIn(ctx, true)
+		psu, err := getters.Key[p_nirmancampus_programs.ProgramStructureUnit](academicRecordProgramStructureUnitContextKey)(ctx)
 		q := u.Query()
-		if err != nil || len(psu.OptionalCourseSelectionPool) == 0 {
+		if err != nil || psu.ID == 0 || len(psu.OptionalCourseSelectionPool) == 0 {
 			q.Set("pool_course_ids", "")
 		} else {
 			parts := make([]string, 0, len(psu.OptionalCourseSelectionPool))
@@ -213,8 +148,17 @@ func registerFilterPages() {
 			&components.InputSelect[string]{
 				Label:   "Status",
 				Name:    "Status",
-				Choices: getters.Static(AcademicRecordStatusChoices()),
-				Getter:  statusPairGetter("$get.Status", false),
+				Choices: getters.Static(registry.PairsFromMap(AcademicRecordStatusChoices)),
+				Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
+					s, err := getters.Key[string]("$get.Status")(ctx)
+					if err != nil || s == "" {
+						return registry.Pair[string, string]{}, nil
+					}
+					if p, ok := registry.PairFromMap(s, AcademicRecordStatusChoices); ok {
+						return p, nil
+					}
+					return registry.Pair[string, string]{Key: s, Value: s}, nil
+				},
 			},
 			&components.InputText{
 				Label:  "Term",
@@ -311,7 +255,25 @@ func createFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Status"),
 						Children: []components.PageInterface{
-							statusInputSelect(true),
+							&components.InputSelect[string]{
+								Label:    "Status",
+								Name:     "Status",
+								Required: true,
+								Choices:  getters.Static(registry.PairsFromMap(AcademicRecordStatusChoices)),
+								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
+									s, err := getters.Key[string]("$in.Status")(ctx)
+									if err != nil || s == "" {
+										if p, ok := registry.PairFromMap(AcademicRecordStatusEnrolled, AcademicRecordStatusChoices); ok {
+											return p, nil
+										}
+										return registry.Pair[string, string]{Key: AcademicRecordStatusEnrolled, Value: AcademicRecordStatusEnrolled}, nil
+									}
+									if p, ok := registry.PairFromMap(s, AcademicRecordStatusChoices); ok {
+										return p, nil
+									}
+									return registry.Pair[string, string]{Key: s, Value: s}, nil
+								},
+							},
 						},
 					},
 				},
@@ -417,7 +379,22 @@ func editFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Status"),
 						Children: []components.PageInterface{
-							statusInputSelect(false),
+							&components.InputSelect[string]{
+								Label:    "Status",
+								Name:     "Status",
+								Required: true,
+								Choices:  getters.Static(registry.PairsFromMap(AcademicRecordStatusChoices)),
+								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
+									s, err := getters.Key[string]("$in.Status")(ctx)
+									if err != nil || s == "" {
+										return registry.Pair[string, string]{}, nil
+									}
+									if p, ok := registry.PairFromMap(s, AcademicRecordStatusChoices); ok {
+										return p, nil
+									}
+									return registry.Pair[string, string]{Key: s, Value: s}, nil
+								},
+							},
 						},
 					},
 				},

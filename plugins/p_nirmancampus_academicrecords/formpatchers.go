@@ -16,6 +16,10 @@ import (
 // formPatcherAcademicRecordCreate sets Status (default) and CompulsoryCourses
 // from the program's ProgramStructureUnit for the submitted Term (TermNumber).
 func formPatcherAcademicRecordCreate(_ *views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+	if s, ok := values["Status"].(string); !ok || s == "" {
+		values["Status"] = AcademicRecordStatusEnrolled
+	}
+
 	dbVal := r.Context().Value("$db")
 	db, ok := dbVal.(*gorm.DB)
 	if !ok || db == nil {
@@ -35,10 +39,6 @@ func formPatcherAcademicRecordCreate(_ *views.View, r *http.Request, values map[
 	if !okTerm {
 		formErrors["Term"] = fmt.Errorf("enter a valid term")
 		return values, formErrors
-	}
-
-	if s, ok := values["Status"].(string); !ok || s == "" {
-		values["Status"] = AcademicRecordStatusEnrolled
 	}
 
 	var psu p_nirmancampus_programs.ProgramStructureUnit

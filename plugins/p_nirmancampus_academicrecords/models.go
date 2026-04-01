@@ -7,7 +7,6 @@ import (
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
-	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -19,14 +18,12 @@ const (
 	AcademicRecordStatusWithdrawn = "Withdrawn"
 )
 
-// AcademicRecordStatusChoices is the canonical list for select inputs and filters (value = label).
-func AcademicRecordStatusChoices() []registry.Pair[string, string] {
-	return []registry.Pair[string, string]{
-		{Key: AcademicRecordStatusEnrolled, Value: "Enrolled"},
-		{Key: AcademicRecordStatusCompleted, Value: "Completed"},
-		{Key: AcademicRecordStatusProbation, Value: "Probation"},
-		{Key: AcademicRecordStatusWithdrawn, Value: "Withdrawn"},
-	}
+// AcademicRecordStatusChoices maps stored status values to display labels.
+var AcademicRecordStatusChoices = map[string]string{
+	AcademicRecordStatusEnrolled:  "Enrolled",
+	AcademicRecordStatusCompleted: "Completed",
+	AcademicRecordStatusProbation: "Probation",
+	AcademicRecordStatusWithdrawn: "Withdrawn",
 }
 
 // AcademicRecord links a student to a program term with status and course selections.

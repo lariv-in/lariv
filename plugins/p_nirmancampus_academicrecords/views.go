@@ -68,6 +68,7 @@ func init() {
 			WithQueryPatcher("academicrecords.preload_compulsory_courses", views.QueryPatcherPreload("CompulsoryCourses")).
 			WithQueryPatcher("academicrecords.preload_optional_courses", views.QueryPatcherPreload("OptionalCourses")).
 			WithQueryPatcher("academicrecords.scope_by_role", AcademicRecordScopeByRole).
+			WithRenderMiddleware("academicrecords.program_structure_unit", attachAcademicRecordProgramStructureUnitContext).
 			WithFormPatcher("academicrecords.optional_course_count", formPatcherAcademicRecordUpdate),
 	)
 
