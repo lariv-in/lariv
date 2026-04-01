@@ -3,45 +3,62 @@ package p_nirmancampus_assignmentsubmissions
 import (
 	"context"
 	"log"
+	"log/slog"
+	"net/http"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
+
+const academicRecordDetailSubmissionsContextKey = "academic_record_submissions_table"
 
 func init() {
 	registerAcademicRecordDetailPatch()
 }
 
-func submissionsForCurrentAcademicRecordGetter() getters.Getter[components.ObjectList[AssignmentSubmission]] {
-	return func(ctx context.Context) (components.ObjectList[AssignmentSubmission], error) {
-		academicRecordID, err := getters.Key[uint]("$in.ID")(ctx)
-		if err != nil || academicRecordID == 0 {
-			return components.ObjectList[AssignmentSubmission]{Number: 1, NumPages: 1}, nil
+// attachAcademicRecordSubmissionsContext loads AssignmentSubmissions for the
+// current academic record (from the "academicrecord" context key set by
+// DetailView) and stores them as an ObjectList under
+// academicRecordDetailSubmissionsContextKey.
+func attachAcademicRecordSubmissionsContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		record, ok := r.Context().Value("academicrecord").(p_nirmancampus_academicrecords.AcademicRecord)
+		if !ok || record.ID == 0 {
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		db, ok := ctx.Value("$db").(*gorm.DB)
+		db, ok := r.Context().Value("$db").(*gorm.DB)
 		if !ok || db == nil {
-			return components.ObjectList[AssignmentSubmission]{Number: 1, NumPages: 1}, nil
+			slog.Error("attachAcademicRecordSubmissionsContext: missing $db in context")
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		var rows []AssignmentSubmission
 		if err := db.Model(&AssignmentSubmission{}).
 			Preload("Course").
-			Where("academic_record_id = ?", academicRecordID).
+			Where("academic_record_id = ?", record.ID).
 			Order("id ASC").
 			Find(&rows).Error; err != nil {
-			return components.ObjectList[AssignmentSubmission]{}, err
+			slog.Error("attachAcademicRecordSubmissionsContext: query failed", "error", err)
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		return components.ObjectList[AssignmentSubmission]{
+		ol := components.ObjectList[AssignmentSubmission]{
 			Items:    rows,
 			Number:   1,
 			NumPages: 1,
 			Total:    int64(len(rows)),
-		}, nil
-	}
+		}
+		ctx := context.WithValue(r.Context(), academicRecordDetailSubmissionsContextKey, ol)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface {
@@ -50,7 +67,7 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 		UID:         "academic-record-assignment-submissions-table",
 		Title:       "Assignment submissions",
 		Classes:     "w-full mt-4",
-		Data:        submissionsForCurrentAcademicRecordGetter(),
+		Data:        getters.Key[components.ObjectList[AssignmentSubmission]](academicRecordDetailSubmissionsContextKey),
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
 			&components.TableButtonCreate{
@@ -94,6 +111,10 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 }
 
 func registerAcademicRecordDetailPatch() {
+	lago.RegistryView.Patch("academicrecords.DetailView", func(v *views.View) *views.View {
+		return v.WithRenderMiddleware("assignmentsubmissions.academic_record_detail", attachAcademicRecordSubmissionsContext)
+	})
+
 	lago.RegistryPage.Patch("academicrecords.AcademicRecordDetail", func(page components.PageInterface) components.PageInterface {
 		scaffold, ok := page.(*components.ShellScaffold)
 		if !ok {

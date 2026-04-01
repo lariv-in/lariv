@@ -125,7 +125,7 @@ func optionalCourseCountDisplayGetter() getters.Getter[string] {
 		if err != nil {
 			return "—", nil
 		}
-		return strconv.Itoa(psu.OptionalCourseCount), nil
+		return fmt.Sprintf("%d", psu.OptionalCourseCount), nil
 	}
 }
 

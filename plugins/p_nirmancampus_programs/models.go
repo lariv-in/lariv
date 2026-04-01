@@ -5,6 +5,7 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -25,9 +26,9 @@ type ProgramStructureUnit struct {
 	gorm.Model
 
 	ProgramID                   uint `gorm:"not null;uniqueIndex:idx_psu_program_term"`
-	TermNumber                  int  `gorm:"not null;uniqueIndex:idx_psu_program_term"`
+	TermNumber                  uint `gorm:"not null;uniqueIndex:idx_psu_program_term"`
 	CompulsoryCourses           []courses.Course `gorm:"many2many:program_structure_unit_compulsory_courses;"`
-	OptionalCourseCount         int
+	OptionalCourseCount         uint
 	OptionalCourseSelectionPool []courses.Course `gorm:"many2many:program_structure_unit_optional_courses;"`
 
 	Program Program `gorm:"constraint:OnDelete:CASCADE"`
@@ -45,6 +46,34 @@ type Program struct {
 	TermType          string `gorm:"type:varchar(32);not null;default:''"`
 
 	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
+}
+
+func universityChoices() []registry.Pair[string, string] {
+	return []registry.Pair[string, string]{
+		{Key: "IGNOU", Value: "IGNOU"},
+		{Key: "MRSPTU", Value: "MRSPTU"},
+	}
+}
+
+func universityPairForKey(stored string) registry.Pair[string, string] {
+	if stored == "" {
+		return registry.Pair[string, string]{}
+	}
+	for _, p := range universityChoices() {
+		if p.Key == stored {
+			return p
+		}
+	}
+	return registry.Pair[string, string]{Key: stored, Value: stored}
+}
+
+func programTypeChoices() []registry.Pair[string, string] {
+	return []registry.Pair[string, string]{
+		{Key: "certificate", Value: "Certificate"},
+		{Key: "diploma", Value: "Diploma"},
+		{Key: "bachelor", Value: "Bachelor"},
+		{Key: "masters", Value: "Masters"},
+	}
 }
 
 func init() {

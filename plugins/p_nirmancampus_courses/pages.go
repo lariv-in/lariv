@@ -1,8 +1,6 @@
 package p_nirmancampus_courses
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
@@ -185,19 +183,6 @@ func courseFormFields() *components.ContainerColumn {
 	}
 }
 
-func courseCreateUrlGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if role == "superuser" || role == "admin" {
-			return lago.RoutePath("courses.CreateRoute", nil)(ctx)
-		}
-		return "", fmt.Errorf("you do not have permission to do this action")
-	}
-}
-
 func registerFormPages() {
 	lago.RegistryPage.Register("courses.CourseFormFields", courseFormFields())
 
@@ -261,7 +246,10 @@ func registerTablePages() {
 				Data:            getters.Key[components.ObjectList[Course]]("courses"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseFilter"}},
-					&components.TableButtonCreate{Link: courseCreateUrlGetter()},
+					&components.TableButtonCreate{
+						Page: components.Page{Roles: []string{"admin", "superuser"}},
+						Link: lago.RoutePath("courses.CreateRoute", nil),
+					},
 				},
 				OnClick: getters.NavigateGetter(lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{

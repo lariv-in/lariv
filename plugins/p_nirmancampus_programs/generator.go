@@ -10,8 +10,8 @@ import (
 
 // programStructureUnitSeed describes one term; course codes must exist (courses generator runs first).
 type programStructureUnitSeed struct {
-	TermNumber          int
-	OptionalCourseCount int
+	TermNumber          uint
+	OptionalCourseCount uint
 	CompulsoryCodes     []string
 	OptionalPoolCodes   []string
 }

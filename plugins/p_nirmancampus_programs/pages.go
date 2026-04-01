@@ -13,29 +13,13 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-func universityChoices() []registry.Pair[string, string] {
-	return []registry.Pair[string, string]{
-		{Key: "IGNOU", Value: "IGNOU"},
-		{Key: "MRSPTU", Value: "MRSPTU"},
-	}
-}
-
-func programTypeChoices() []registry.Pair[string, string] {
-	return []registry.Pair[string, string]{
-		{Key: "certificate", Value: "Certificate"},
-		{Key: "diploma", Value: "Diploma"},
-		{Key: "bachelor", Value: "Bachelor"},
-		{Key: "masters", Value: "Masters"},
-	}
-}
-
 func universityFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
 	return func(ctx context.Context) (registry.Pair[string, string], error) {
 		s, err := getters.Key[string]("$get.University")(ctx)
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
+		return universityPairForKey(s), nil
 	}
 }
 
@@ -45,7 +29,7 @@ func programUniversityPairGetter() getters.Getter[registry.Pair[string, string]]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
+		return universityPairForKey(s), nil
 	}
 }
 
@@ -595,7 +579,7 @@ func registerDetailPages() {
 																	&components.FieldText{
 																		Getter: getters.Format(
 																			"%d",
-																			getters.Any(getters.Key[int]("$row.TermNumber")),
+																			getters.Any(getters.Key[uint]("$row.TermNumber")),
 																		),
 																	},
 																},
@@ -616,7 +600,7 @@ func registerDetailPages() {
 																	&components.FieldText{
 																		Getter: getters.Format(
 																			"%d",
-																			getters.Any(getters.Key[int]("$row.OptionalCourseCount")),
+																			getters.Any(getters.Key[uint]("$row.OptionalCourseCount")),
 																		),
 																	},
 																},

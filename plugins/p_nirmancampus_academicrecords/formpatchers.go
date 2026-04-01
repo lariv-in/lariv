@@ -97,7 +97,7 @@ func formPatcherAcademicRecordUpdate(_ *views.View, r *http.Request, values map[
 			got = len(aids.IDs)
 		}
 	}
-	if got != expected {
+	if uint(got) != expected {
 		formErrors["OptionalCourses"] = fmt.Errorf("select exactly %d optional course(s) for this program term", expected)
 	}
 	return values, formErrors
