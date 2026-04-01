@@ -468,7 +468,7 @@ func JsonImport[T any](fileField string, successURL getters.Getter[string]) func
 				}
 
 				ctx := context.WithValue(r.Context(), "$count", len(records))
-				redirectURL, _ := getters.IfOrGetter(successURL, ctx, "")
+				redirectURL, _ := getters.IfOr(successURL, ctx, "")
 				http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 			})
 		})
@@ -515,7 +515,7 @@ func CreateView[T any](successURL getters.Getter[string]) func(*View) *View {
 
 				id := uint(reflect.ValueOf(*record).FieldByName("ID").Uint())
 				ctx := context.WithValue(r.Context(), "$id", id)
-				redirectUrl, _ := getters.IfOrGetter(successURL, ctx, "")
+				redirectUrl, _ := getters.IfOr(successURL, ctx, "")
 				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
@@ -580,7 +580,7 @@ func UpdateView[T any](pathParamKey string, successURL getters.Getter[string]) f
 				}
 
 				ctx := context.WithValue(r.Context(), "$id", uint(id))
-				redirectUrl, _ := getters.IfOrGetter(successURL, ctx, "")
+				redirectUrl, _ := getters.IfOr(successURL, ctx, "")
 				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
@@ -641,7 +641,7 @@ func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
 					return
 				}
 
-				redirectUrl, _ := getters.IfOrGetter(successURL, r.Context(), "")
+				redirectUrl, _ := getters.IfOr(successURL, r.Context(), "")
 				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})
@@ -672,7 +672,7 @@ func DeleteView[T any](pathParamKey string, successUrl getters.Getter[string]) f
 					return
 				}
 
-				redirectUrl, _ := getters.IfOrGetter(successUrl, r.Context(), "")
+				redirectUrl, _ := getters.IfOr(successUrl, r.Context(), "")
 				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 			})
 		})

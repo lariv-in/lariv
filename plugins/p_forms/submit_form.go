@@ -37,7 +37,7 @@ func (e PublicSubmitForm) GetRoles() []string {
 }
 
 func (e PublicSubmitForm) Build(ctx context.Context) gomponents.Node {
-	form, err := getters.GetterKey[*Form](ContextKeyPublicLoadedForm)(ctx)
+	form, err := getters.Key[*Form](ContextKeyPublicLoadedForm)(ctx)
 	if err != nil || form == nil {
 		slog.Error("PublicSubmitForm: missing loaded form in context")
 		return ghtml.Div(ghtml.Class("text-error"), gomponents.Text("Form unavailable."))
@@ -108,7 +108,7 @@ func (e PublicSubmitForm) buildField(ctx context.Context, f FormField) []gompone
 
 	wrap := func(child components.PageInterface) gomponents.Node {
 		return components.ContainerError{
-			Error:    getters.GetterKey[error](errKey),
+			Error:    getters.Key[error](errKey),
 			Children: []components.PageInterface{child},
 		}.Build(ctx)
 	}
@@ -162,7 +162,7 @@ func (e PublicSubmitForm) buildField(ctx context.Context, f FormField) []gompone
 		})}
 	case FieldTypeSelect:
 		opts := selectOptionsFromField(f)
-		choices := getters.GetterStatic(opts)
+		choices := getters.Static(opts)
 		selGetter := getters.Getter[registry.Pair[string, string]](func(c context.Context) (registry.Pair[string, string], error) {
 			in := map[string]any{}
 			if m, ok := c.Value(getters.ContextKeyIn).(map[string]any); ok {
@@ -207,7 +207,7 @@ func selectOptionsFromField(f FormField) []registry.Pair[string, string] {
 
 func (e PublicSubmitForm) ParseForm(r *http.Request) (map[string]any, map[string]error, error) {
 	ctx := r.Context()
-	form, err := getters.GetterKey[*Form](ContextKeyPublicLoadedForm)(ctx)
+	form, err := getters.Key[*Form](ContextKeyPublicLoadedForm)(ctx)
 	if err != nil || form == nil {
 		return nil, nil, fmt.Errorf("missing form in context")
 	}

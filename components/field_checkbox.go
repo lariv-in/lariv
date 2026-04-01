@@ -28,7 +28,7 @@ func (e FieldCheckbox) Build(ctx context.Context) Node {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldCheckbox getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		truthy = value
 	}

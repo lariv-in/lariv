@@ -23,39 +23,39 @@ func init() {
 
 func registerMenuPages() {
 	lago.RegistryPage.Register("courses.CourseMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Courses"),
+		Title: getters.Static("Courses"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to Home"),
+			Title: getters.Static("Back to Home"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("All Courses"),
+				Title: getters.Static("All Courses"),
 				Url:   lago.GetterRoutePath("courses.DefaultRoute", nil),
 			},
 		},
 	})
 
 	lago.RegistryPage.Register("courses.CourseDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Course: %s", getters.GetterAny(getters.GetterKey[string]("course.Name"))),
+		Title: getters.Format("Course: %s", getters.Any(getters.Key[string]("course.Name"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Courses"),
+			Title: getters.Static("Back to All Courses"),
 			Url:   lago.GetterRoutePath("courses.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Course Detail"),
-				Url:   lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
+				Title: getters.Static("Course Detail"),
+				Url:   lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
-				Title: getters.GetterStatic("Edit Course"),
-				Url:   lago.GetterRoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
+				Title: getters.Static("Edit Course"),
+				Url:   lago.GetterRoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
-				Title: getters.GetterStatic("Delete Course"),
-				Url:   lago.GetterRoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
+				Title: getters.Static("Delete Course"),
+				Url:   lago.GetterRoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 			},
 		},
 	})
@@ -68,16 +68,16 @@ func registerFilterPages() {
 		Url:    lago.GetterRoutePath("courses.DefaultRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
-			&components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey[string]("$get.Code")},
-			&components.InputText{Label: "Type", Name: "CourseType", Getter: getters.GetterKey[string]("$get.CourseType")},
+			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
+			&components.InputText{Label: "Code", Name: "Code", Getter: getters.Key[string]("$get.Code")},
+			&components.InputText{Label: "Type", Name: "CourseType", Getter: getters.Key[string]("$get.CourseType")},
 			&components.InputTernary{
 				Label:      "Active",
 				Name:       "IsActive",
 				TrueLabel:  "Active Only",
 				FalseLabel: "Inactive Only",
 				NoneLabel:  "All",
-				Getter:     getters.GetterKey[bool]("$get.IsActive"),
+				Getter:     getters.Key[bool]("$get.IsActive"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -92,8 +92,8 @@ func registerFilterPages() {
 		Url:    lago.GetterRoutePath("courses.SelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
-			&components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey[string]("$get.Code")},
+			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
+			&components.InputText{Label: "Code", Name: "Code", Getter: getters.Key[string]("$get.Code")},
 		},
 		ChildrenAction: []components.PageInterface{
 			&components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -107,10 +107,10 @@ func registerFilterPages() {
 		Url:    lago.GetterRoutePath("courses.MultiSelectRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			&components.InputText{Hidden: true, Name: "target_input", Getter: getters.GetterKey[string]("$get.target_input")},
-			&components.InputText{Hidden: true, Name: "pool_course_ids", Getter: getters.GetterKey[string]("$get.pool_course_ids")},
-			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
-			&components.InputText{Label: "Code", Name: "Code", Getter: getters.GetterKey[string]("$get.Code")},
+			&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
+			&components.InputText{Hidden: true, Name: "pool_course_ids", Getter: getters.Key[string]("$get.pool_course_ids")},
+			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
+			&components.InputText{Label: "Code", Name: "Code", Getter: getters.Key[string]("$get.Code")},
 		},
 		ChildrenAction: []components.PageInterface{
 			&components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -133,15 +133,15 @@ func courseFormFields() *components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Name"),
+						Error: getters.Key[error]("$error.Name"),
 						Children: []components.PageInterface{
-							&components.InputText{Label: "Course Name", Name: "Name", Required: true, Getter: getters.GetterKey[string]("$in.Name")},
+							&components.InputText{Label: "Course Name", Name: "Name", Required: true, Getter: getters.Key[string]("$in.Name")},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Code"),
+						Error: getters.Key[error]("$error.Code"),
 						Children: []components.PageInterface{
-							&components.InputText{Label: "Code", Name: "Code", Required: true, Getter: getters.GetterKey[string]("$in.Code")},
+							&components.InputText{Label: "Code", Name: "Code", Required: true, Getter: getters.Key[string]("$in.Code")},
 						},
 					},
 				},
@@ -150,15 +150,15 @@ func courseFormFields() *components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.CourseType"),
+						Error: getters.Key[error]("$error.CourseType"),
 						Children: []components.PageInterface{
-							&components.InputText{Label: "Type", Name: "CourseType", Getter: getters.GetterKey[string]("$in.CourseType")},
+							&components.InputText{Label: "Type", Name: "CourseType", Getter: getters.Key[string]("$in.CourseType")},
 						},
 					},
 				},
 			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.IsActive"),
+				Error: getters.Key[error]("$error.IsActive"),
 				Children: []components.PageInterface{
 					&components.InputTernary{
 						Label:      "Active",
@@ -166,18 +166,18 @@ func courseFormFields() *components.ContainerColumn {
 						TrueLabel:  "Yes",
 						FalseLabel: "No",
 						NoneLabel:  "Not Set",
-						Getter:     getters.GetterKey[bool]("$in.IsActive"),
+						Getter:     getters.Key[bool]("$in.IsActive"),
 					},
 				},
 			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Description"),
+				Error: getters.Key[error]("$error.Description"),
 				Children: []components.PageInterface{
 					&components.InputTextarea{
 						Label:  "Description",
 						Name:   "Description",
 						Rows:   3,
-						Getter: getters.GetterKey[string]("$in.Description"),
+						Getter: getters.Key[string]("$in.Description"),
 					},
 				},
 			},
@@ -187,7 +187,7 @@ func courseFormFields() *components.ContainerColumn {
 
 func courseCreateUrlGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		role, err := getters.GetterKey[string]("$role")(ctx)
+		role, err := getters.Key[string]("$role")(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -230,8 +230,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Course]{
-				Getter:   getters.GetterKey[Course]("course"),
-				Url:      lago.GetterRoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Getter:   getters.Key[Course]("course"),
+				Url:      lago.GetterRoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 				Method:   http.MethodPost,
 				Title:    "Edit Course",
 				Subtitle: "Update course details",
@@ -258,24 +258,24 @@ func registerTablePages() {
 			&components.DataTable[Course]{
 				UID:             "course-table",
 				Classes:         "w-full",
-				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
+				Data:            getters.Key[components.ObjectList[Course]]("courses"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseFilter"}},
 					&components.TableButtonCreate{Link: courseCreateUrlGetter()},
 				},
-				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
+				OnClick: getters.NavigateGetter(lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
+						&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 					}},
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
+						&components.FieldText{Getter: getters.Key[string]("$row.Code")},
 					}},
 					{Label: "Type", Name: "CourseType", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.CourseType")},
+						&components.FieldText{Getter: getters.Key[string]("$row.CourseType")},
 					}},
 					{Label: "Active", Name: "IsActive", Children: []components.PageInterface{
-						&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsActive")},
+						&components.FieldCheckbox{Getter: getters.Key[bool]("$row.IsActive")},
 					}},
 				},
 			},
@@ -292,32 +292,32 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Course]{
-				Getter: getters.GetterKey[Course]("course"),
+				Getter: getters.Key[Course]("course"),
 				Children: []components.PageInterface{
 					&components.ContainerColumn{
 						Page: components.Page{
 							Key: "courses.CourseDetailContent",
 						},
 						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
-							&components.FieldSubtitle{Getter: getters.GetterKey[string]("$in.Code")},
+							&components.FieldTitle{Getter: getters.Key[string]("$in.Name")},
+							&components.FieldSubtitle{Getter: getters.Key[string]("$in.Code")},
 							&components.LabelInline{
 								Title:   "Type",
 								Classes: "mt-2",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.CourseType")},
+									&components.FieldText{Getter: getters.Key[string]("$in.CourseType")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Active",
 								Children: []components.PageInterface{
-									&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$in.IsActive")},
+									&components.FieldCheckbox{Getter: getters.Key[bool]("$in.IsActive")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Description",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Description")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Description")},
 								},
 							},
 						},
@@ -336,7 +336,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this course?",
-				CancelUrl: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("course.ID"))}),
+				CancelUrl: lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 			},
 		},
 	})
@@ -351,17 +351,17 @@ func registerSelectionPages() {
 		Children: []components.PageInterface{
 			&components.DataTable[Course]{
 				UID:             "course-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				OnClick: getters.GetterSelect("CourseID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Data:            getters.Key[components.ObjectList[Course]]("courses"),
+				OnClick: getters.Select("CourseID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseSelectionFilter"}},
 				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
+						&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 					}},
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
+						&components.FieldText{Getter: getters.Key[string]("$row.Code")},
 					}},
 				},
 			},
@@ -374,17 +374,24 @@ func registerSelectionPages() {
 		Children: []components.PageInterface{
 			&components.DataTable[Course]{
 				UID:             "course-multi-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[Course]]("courses"),
-				OnClick: getters.GetterMultiSelectNamedByTargetInput("Courses", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Data:            getters.Key[components.ObjectList[Course]]("courses"),
+				OnClick: getters.SelectMulti(
+					getters.IfOrElse(
+						getters.Key[string]("$get.target_input"),
+						getters.Static("Courses"),
+					),
+					getters.Key[uint]("$row.ID"),
+					getters.Key[string]("$row.Name"),
+				),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
 				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
+						&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 					}},
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
-						&components.FieldText{Getter: getters.GetterKey[string]("$row.Code")},
+						&components.FieldText{Getter: getters.Key[string]("$row.Code")},
 					}},
 				},
 			},

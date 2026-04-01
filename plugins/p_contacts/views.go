@@ -24,7 +24,7 @@ func init() {
 	lago.RegistryView.Register("contacts.CreateView",
 		views.CreateView[Contact](
 			lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
-				"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
+				"id": getters.Any(getters.Key[uint]("$id")),
 			}),
 		)(
 			lago.GetPageView("contacts.ContactCreateForm"),
@@ -35,7 +35,7 @@ func init() {
 		views.DetailView[Contact]("contact", "id")(
 			views.UpdateView[Contact]("id",
 				lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			)(
 				lago.GetPageView("contacts.ContactUpdateForm"),

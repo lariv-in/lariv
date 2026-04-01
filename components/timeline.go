@@ -28,7 +28,7 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 		list, err := e.Data(ctx)
 		if err != nil {
 			slog.Error("Timeline Data getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		data = list.Items
 	}
@@ -43,7 +43,7 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 		createURL, err := e.CreateUrl(ctx)
 		if err == nil && createURL != "" {
 			createNode = Render(ButtonLink{
-				Link:    getters.GetterStatic(createURL),
+				Link:    getters.Static(createURL),
 				Icon:    "plus",
 				Classes: "btn-square btn-outline btn-sm",
 			}, ctx)
@@ -107,7 +107,7 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 				url, err := e.OnClick(itemCtx)
 				if err != nil {
 					slog.Error("Timeline OnClick getter failed", "error", err, "key", e.Key)
-					return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+					return ContainerError{Error: getters.Static(err)}.Build(ctx)
 				}
 				if url != "" {
 					timelineContent = A(Href(url), timelineContent)

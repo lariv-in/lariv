@@ -21,7 +21,7 @@ func (e HTMXPolling) Build(ctx context.Context) Node {
 	}
 	url, err := e.URL(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	return Div(
 		Attr("hx-get", url),

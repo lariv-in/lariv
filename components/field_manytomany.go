@@ -38,7 +38,7 @@ func (e FieldManyToMany[T]) Build(ctx context.Context) Node {
 		values, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldManyToMany getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		for _, v := range values {
 			pair, ok := manyToManySelectionPair(ctx, v, e.Display, e.Key)

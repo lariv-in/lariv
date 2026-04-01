@@ -31,7 +31,7 @@ func (e FieldLink) Build(ctx context.Context) Node {
 		v, err := e.Href(ctx)
 		if err != nil {
 			slog.Error("FieldLink href getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		href = v
 	}

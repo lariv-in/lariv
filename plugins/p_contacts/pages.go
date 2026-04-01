@@ -19,42 +19,42 @@ func init() {
 
 func registerMenuPages() {
 	lago.RegistryPage.Register("contacts.ContactMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Contacts"),
+		Title: getters.Static("Contacts"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Apps"),
+			Title: getters.Static("Back to All Apps"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("All Contacts"),
+				Title: getters.Static("All Contacts"),
 				Url:   lago.GetterRoutePath("contacts.DefaultRoute", nil),
 			},
 		},
 	})
 
 	lago.RegistryPage.Register("contacts.ContactDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Contact: %s", getters.GetterAny(getters.GetterKey[string]("contact.Name"))),
+		Title: getters.Format("Contact: %s", getters.Any(getters.Key[string]("contact.Name"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to all Contacts"),
+			Title: getters.Static("Back to all Contacts"),
 			Url:   lago.GetterRoutePath("contacts.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Contact Detail"),
+				Title: getters.Static("Contact Detail"),
 				Url: lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("contact.ID")),
+					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Edit Contact"),
+				Title: getters.Static("Edit Contact"),
 				Url: lago.GetterRoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("contact.ID")),
+					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Delete Contact"),
+				Title: getters.Static("Delete Contact"),
 				Url: lago.GetterRoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("contact.ID")),
+					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},
 		},
@@ -69,12 +69,12 @@ func registerFilterPages() {
 			&components.InputText{
 				Label:  "Name",
 				Name:   "Name",
-				Getter: getters.GetterKey[string]("$get.Name"),
+				Getter: getters.Key[string]("$get.Name"),
 			},
 			&components.InputText{
 				Label:  "Email",
 				Name:   "Email",
-				Getter: getters.GetterKey[string]("$get.Email"),
+				Getter: getters.Key[string]("$get.Email"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -95,12 +95,12 @@ func registerFilterPages() {
 			&components.InputText{
 				Label:  "Name",
 				Name:   "Name",
-				Getter: getters.GetterKey[string]("$get.Name"),
+				Getter: getters.Key[string]("$get.Name"),
 			},
 			&components.InputText{
 				Label:  "Email",
 				Name:   "Email",
-				Getter: getters.GetterKey[string]("$get.Email"),
+				Getter: getters.Key[string]("$get.Email"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -122,13 +122,13 @@ func contactFormFields() components.ContainerColumn {
 		},
 		Children: []components.PageInterface{
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Name"),
+				Error: getters.Key[error]("$error.Name"),
 				Children: []components.PageInterface{
 					&components.InputText{
 						Label:    "Name",
 						Name:     "Name",
 						Required: true,
-						Getter:   getters.GetterKey[string]("$in.Name"),
+						Getter:   getters.Key[string]("$in.Name"),
 					},
 				},
 			},
@@ -136,46 +136,46 @@ func contactFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Phone"),
+						Error: getters.Key[error]("$error.Phone"),
 						Children: []components.PageInterface{
 							&components.InputPhone{
 								Label:  "Phone",
 								Name:   "Phone",
-								Getter: getters.GetterKey[string]("$in.Phone"),
+								Getter: getters.Key[string]("$in.Phone"),
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Email"),
+						Error: getters.Key[error]("$error.Email"),
 						Children: []components.PageInterface{
 							&components.InputEmail{
 								Label:  "Email",
 								Name:   "Email",
-								Getter: getters.GetterKey[string]("$in.Email"),
+								Getter: getters.Key[string]("$in.Email"),
 							},
 						},
 					},
 				},
 			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Address"),
+				Error: getters.Key[error]("$error.Address"),
 				Children: []components.PageInterface{
 					&components.InputTextarea{
 						Label:  "Address",
 						Name:   "Address",
 						Rows:   3,
-						Getter: getters.GetterKey[string]("$in.Address"),
+						Getter: getters.Key[string]("$in.Address"),
 					},
 				},
 			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Notes"),
+				Error: getters.Key[error]("$error.Notes"),
 				Children: []components.PageInterface{
 					&components.InputTextarea{
 						Label:  "Notes",
 						Name:   "Notes",
 						Rows:   4,
-						Getter: getters.GetterKey[string]("$in.Notes"),
+						Getter: getters.Key[string]("$in.Notes"),
 					},
 				},
 			},
@@ -211,9 +211,9 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Contact]{
-				Getter: getters.GetterKey[Contact]("contact"),
+				Getter: getters.Key[Contact]("contact"),
 				Url: lago.GetterRoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
 				Title:    "Edit Contact",
@@ -240,14 +240,14 @@ func registerTablePages() {
 				Page:      components.Page{Key: "contacts.ContactTableBody"},
 				UID:       "contact-table",
 				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[Contact]]("contacts"),
+				Data:      getters.Key[components.ObjectList[Contact]]("contacts"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "contacts.ContactFilter"}},
 					&components.TableButtonCreate{Link: lago.GetterRoutePath("contacts.CreateRoute", nil)},
 				},
-				OnClick: getters.GetterNavigateGetter(
+				OnClick: getters.NavigateGetter(
 					lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
-						"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
 				Columns: []components.TableColumn{
@@ -255,21 +255,21 @@ func registerTablePages() {
 						Label: "Name",
 						Name:  "Name",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 						},
 					},
 					{
 						Label: "Phone",
 						Name:  "Phone",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Phone")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Phone")},
 						},
 					},
 					{
 						Label: "Email",
 						Name:  "Email",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Email")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Email")},
 						},
 					},
 				},
@@ -285,29 +285,29 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Contact]{
-				Getter: getters.GetterKey[Contact]("contact"),
+				Getter: getters.Key[Contact]("contact"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Page: components.Page{Key: "contacts.ContactDetailContent"},
 						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
+							&components.FieldTitle{Getter: getters.Key[string]("$in.Name")},
 							&components.LabelInline{
 								Title: "Phone",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Phone")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Phone")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Email",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Email")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Email")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Address",
 								Children: []components.PageInterface{
 									&components.FieldText{
-										Getter:  getters.GetterKey[string]("$in.Address"),
+										Getter:  getters.Key[string]("$in.Address"),
 										Classes: "whitespace-pre-wrap",
 									},
 								},
@@ -316,7 +316,7 @@ func registerDetailPages() {
 								Title: "Notes",
 								Children: []components.PageInterface{
 									&components.FieldText{
-										Getter:  getters.GetterKey[string]("$in.Notes"),
+										Getter:  getters.Key[string]("$in.Notes"),
 										Classes: "whitespace-pre-wrap",
 									},
 								},
@@ -337,7 +337,7 @@ func registerDetailPages() {
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this contact?",
 				CancelUrl: lago.GetterRoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("contact.ID")),
+					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			},
 		},
@@ -352,8 +352,8 @@ func registerSelectionPages() {
 			&components.DataTable[Contact]{
 				Page:            components.Page{Key: "contacts.ContactSelectionTableBody"},
 				UID:             "contact-selection-table",
-				Data:            getters.GetterKey[components.ObjectList[Contact]]("contacts"),
-				OnClick: getters.GetterSelect("ContactID", getters.GetterKey[uint]("$row.ID"), getters.GetterKey[string]("$row.Name")),
+				Data:            getters.Key[components.ObjectList[Contact]]("contacts"),
+				OnClick: getters.Select("ContactID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "contacts.ContactSelectionFilter"}},
 				},
@@ -362,21 +362,21 @@ func registerSelectionPages() {
 						Label: "Name",
 						Name:  "Name",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
 						},
 					},
 					{
 						Label: "Phone",
 						Name:  "Phone",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Phone")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Phone")},
 						},
 					},
 					{
 						Label: "Email",
 						Name:  "Email",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Email")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Email")},
 						},
 					},
 				},

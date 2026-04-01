@@ -54,16 +54,16 @@ func tallyCommonFields() []components.PageInterface {
 		components.ContainerRow{
 			Classes: "grid grid-cols-1 md:grid-cols-2 gap-4",
 			Children: []components.PageInterface{
-				components.InputNumber{Name: "Visits", Label: "Visits", Required: true, Getter: getters.GetterKey[int]("$in.Visits")},
-				components.InputNumber{Name: "Appointments", Label: "Appointments", Required: true, Getter: getters.GetterKey[int]("$in.Appointments")},
-				components.InputNumber{Name: "Leads", Label: "Leads", Required: true, Getter: getters.GetterKey[int]("$in.Leads")},
-				components.InputNumber{Name: "Presentations", Label: "Presentations", Required: true, Getter: getters.GetterKey[int]("$in.Presentations")},
-				components.InputNumber{Name: "Demos", Label: "Demonstrations", Required: true, Getter: getters.GetterKey[int]("$in.Demos")},
-				components.InputNumber{Name: "Letters", Label: "Follow Up Letters Sent", Required: true, Getter: getters.GetterKey[int]("$in.Letters")},
-				components.InputNumber{Name: "FollowUps", Label: "Follow Ups", Required: true, Getter: getters.GetterKey[int]("$in.FollowUps")},
-				components.InputNumber{Name: "Proposals", Label: "Proposals Given", Required: true, Getter: getters.GetterKey[int]("$in.Proposals")},
-				components.InputNumber{Name: "Policies", Label: "Policies Sold", Required: true, Getter: getters.GetterKey[int]("$in.Policies")},
-				components.InputNumber{Name: "Premium", Label: "Premium", Required: true, Getter: getters.GetterKey[int]("$in.Premium")},
+				components.InputNumber{Name: "Visits", Label: "Visits", Required: true, Getter: getters.Key[int]("$in.Visits")},
+				components.InputNumber{Name: "Appointments", Label: "Appointments", Required: true, Getter: getters.Key[int]("$in.Appointments")},
+				components.InputNumber{Name: "Leads", Label: "Leads", Required: true, Getter: getters.Key[int]("$in.Leads")},
+				components.InputNumber{Name: "Presentations", Label: "Presentations", Required: true, Getter: getters.Key[int]("$in.Presentations")},
+				components.InputNumber{Name: "Demos", Label: "Demonstrations", Required: true, Getter: getters.Key[int]("$in.Demos")},
+				components.InputNumber{Name: "Letters", Label: "Follow Up Letters Sent", Required: true, Getter: getters.Key[int]("$in.Letters")},
+				components.InputNumber{Name: "FollowUps", Label: "Follow Ups", Required: true, Getter: getters.Key[int]("$in.FollowUps")},
+				components.InputNumber{Name: "Proposals", Label: "Proposals Given", Required: true, Getter: getters.Key[int]("$in.Proposals")},
+				components.InputNumber{Name: "Policies", Label: "Policies Sold", Required: true, Getter: getters.Key[int]("$in.Policies")},
+				components.InputNumber{Name: "Premium", Label: "Premium", Required: true, Getter: getters.Key[int]("$in.Premium")},
 			},
 		},
 	}
@@ -71,35 +71,35 @@ func tallyCommonFields() []components.PageInterface {
 
 func init() {
 	lago.RegistryPage.Register("tally.TallyMenu", components.SidebarMenu{
-		Title: getters.GetterStatic("Totschool Tally"),
+		Title: getters.Static("Totschool Tally"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to Home"),
+			Title: getters.Static("Back to Home"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
-				Title: getters.GetterStatic("Dashboard"),
+				Title: getters.Static("Dashboard"),
 				Url:   lago.GetterRoutePath("tally.TallyDashboardRoute", nil),
 				Icon:  "home",
 			},
 			components.SidebarMenuItem{
-				Title: getters.GetterStatic("Leaderboard"),
+				Title: getters.Static("Leaderboard"),
 				Url:   lago.GetterRoutePath("tally.TallyLeaderboardRoute", nil),
 				Icon:  "trophy",
 			},
 			components.SidebarMenuItem{
-				Title: getters.GetterStatic("List"),
+				Title: getters.Static("List"),
 				Url:   lago.GetterRoutePath("tally.TallyListRoute", nil),
 				Icon:  "list-bullet",
 			},
 			components.SidebarMenuItem{
-				Title: getters.GetterStatic("Fill Daily Report"),
+				Title: getters.Static("Fill Daily Report"),
 				Url:   lago.GetterRoutePath("tally.TallyDailyFormRoute", nil),
 				Icon:  "pencil-square",
 			},
 			components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"totschool_admin", "superuser"}},
-				Title: getters.GetterStatic("Create Tally (Admin)"),
+				Title: getters.Static("Create Tally (Admin)"),
 				Url:   lago.GetterRoutePath("tally.TallyCreateRoute", nil),
 				Icon:  "plus",
 			},
@@ -107,29 +107,29 @@ func init() {
 	})
 
 	lago.RegistryPage.Register("tally.TallyDetailMenu", components.SidebarMenu{
-		Title: getters.GetterStatic("Tally Details"),
+		Title: getters.Static("Tally Details"),
 		Back: &components.SidebarMenuItem{
 			// Show the user's name and the tally date (date only), using a
 			// formatted time.Time getter for the Date field.
-			Title: getters.GetterFormat(
+			Title: getters.Format(
 				"Tally: %s (%s)",
-				getters.GetterAny(getters.GetterKey[string]("Tally.User.Name")),
-				getters.GetterAny(getters.GetterTimeFormat("2006-01-02", getters.GetterKey[time.Time]("Tally.Date"))),
+				getters.Any(getters.Key[string]("Tally.User.Name")),
+				getters.Any(getters.TimeFormat("2006-01-02", getters.Key[time.Time]("Tally.Date"))),
 			),
 			Url: lago.GetterRoutePath("tally.TallyListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{
-				Title: getters.GetterStatic("Details"),
-				Url:   lago.GetterRoutePath("tally.TallyDetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("Tally.ID"))}),
+				Title: getters.Static("Details"),
+				Url:   lago.GetterRoutePath("tally.TallyDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 			},
 			components.SidebarMenuItem{
-				Title: getters.GetterStatic("Edit"),
-				Url:   lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("Tally.ID"))}),
+				Title: getters.Static("Edit"),
+				Url:   lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 			},
 			components.SidebarMenuItem{
-				Title: getters.GetterStatic("Delete"),
-				Url:   lago.GetterRoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("Tally.ID"))}),
+				Title: getters.Static("Delete"),
+				Url:   lago.GetterRoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 			},
 		},
 	})
@@ -158,17 +158,17 @@ func init() {
 			Name:        "UserID",
 			Label:       "User",
 			Url:         lago.GetterRoutePath("users.SelectRoute", nil),
-			Display:     getters.GetterKey[string]("$in.Name"),
+			Display:     getters.Key[string]("$in.Name"),
 			Placeholder: "Select a user...",
 			Required:    true,
-			Getter:      getters.GetterAssociation[p_users.User](getters.GetterKey[uint]("$in.UserID")),
+			Getter:      getters.Association[p_users.User](getters.Key[uint]("$in.UserID")),
 		},
 		components.InputDate{
 			Page:     components.Page{Roles: []string{"totschool_admin", "superuser"}},
 			Name:     "Date",
 			Label:    "Date (YYYY-MM-DD)",
 			Required: true,
-			Getter:   getters.GetterKey[time.Time]("$in.Date"),
+			Getter:   getters.Key[time.Time]("$in.Date"),
 		},
 	}, tallyCommonFields()...)
 
@@ -193,7 +193,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				Url:           lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Url:           lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 				Method:        "POST",
 				Title:         "Update Tally",
 				Subtitle:      "Edit tally details",
@@ -212,7 +212,7 @@ func init() {
 			components.DeleteConfirmation{
 				Title:     "Delete Tally?",
 				Message:   "Are you sure you want to delete this tally? This action cannot be undone.",
-				CancelUrl: lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				CancelUrl: lago.GetterRoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 			},
 		},
 	})
@@ -224,116 +224,116 @@ func init() {
 			components.ContainerColumn{
 				Classes: "p-4",
 				Children: []components.PageInterface{
-					components.FieldTitle{Getter: getters.GetterStatic("Tally Details")},
+					components.FieldTitle{Getter: getters.Static("Tally Details")},
 				},
 			},
 			components.Detail[Tally]{
-				Getter: getters.GetterKey[Tally]("Tally"),
+				Getter: getters.Key[Tally]("Tally"),
 				Children: []components.PageInterface{
 					components.ContainerRow{
 						Classes: "grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-4 bg-base-100 shadow rounded-box",
 						Children: []components.PageInterface{
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("User")},
+									components.FieldTitle{Getter: getters.Static("User")},
 									components.FieldText{
-										Getter:  getters.GetterForeignKey[p_users.User, uint, string](getters.GetterKey[uint]("$in.UserID"), "Name"),
+										Getter:  getters.ForeignKey[p_users.User, uint, string](getters.Key[uint]("$in.UserID"), "Name"),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Date")},
-									components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.Date"), Classes: "font-semibold"},
+									components.FieldTitle{Getter: getters.Static("Date")},
+									components.FieldDatetime{Getter: getters.Key[time.Time]("$in.Date"), Classes: "font-semibold"},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Visits")},
+									components.FieldTitle{Getter: getters.Static("Visits")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Visits")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Visits")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Appointments")},
+									components.FieldTitle{Getter: getters.Static("Appointments")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Appointments")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Appointments")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Leads")},
+									components.FieldTitle{Getter: getters.Static("Leads")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Leads")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Leads")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Presentations")},
+									components.FieldTitle{Getter: getters.Static("Presentations")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Presentations")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Presentations")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Demonstrations")},
+									components.FieldTitle{Getter: getters.Static("Demonstrations")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Demos")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Demos")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Follow Up Letters Sent")},
+									components.FieldTitle{Getter: getters.Static("Follow Up Letters Sent")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Letters")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Letters")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Follow Ups")},
+									components.FieldTitle{Getter: getters.Static("Follow Ups")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.FollowUps")),
+										Getter:  getters.IntString(getters.Key[int]("$in.FollowUps")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Proposals Given")},
+									components.FieldTitle{Getter: getters.Static("Proposals Given")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Proposals")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Proposals")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Policies Sold")},
+									components.FieldTitle{Getter: getters.Static("Policies Sold")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Policies")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Policies")),
 										Classes: "font-semibold",
 									},
 								},
 							},
 							components.ContainerColumn{
 								Children: []components.PageInterface{
-									components.FieldTitle{Getter: getters.GetterStatic("Premium")},
+									components.FieldTitle{Getter: getters.Static("Premium")},
 									components.FieldText{
-										Getter:  getters.GetterIntString(getters.GetterKey[int]("$in.Premium")),
+										Getter:  getters.IntString(getters.Key[int]("$in.Premium")),
 										Classes: "font-semibold",
 									},
 								},
@@ -356,10 +356,10 @@ func init() {
 				Name:    "UserID",
 				Label:   "User ID",
 				Url:     lago.GetterRoutePath("users.SelectRoute", nil),
-				Getter:  getters.GetterKey[uint]("$get.UserID"),
-				Display: getters.GetterKey[string]("$in.Name"),
+				Getter:  getters.Key[uint]("$get.UserID"),
+				Display: getters.Key[string]("$in.Name"),
 			},
-			components.InputDate{Name: "Date", Label: "Date", Getter: getters.GetterKey[time.Time]("$get.Date")},
+			components.InputDate{Name: "Date", Label: "Date", Getter: getters.Key[time.Time]("$get.Date")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ButtonSubmit{Label: "Apply Filter"},
@@ -370,7 +370,7 @@ func init() {
 	// Session environment selector (shared across list, dashboard, leaderboard)
 	sessionEnvironment := &components.Environment[uint]{
 		Label:   "Session",
-		Key:     getters.GetterStatic("session"),
+		Key:     getters.Static("session"),
 		Options: SessionsListGetter,
 		Default: tallySessionEnvironmentDefault,
 	}
@@ -383,7 +383,7 @@ func init() {
 			components.DataTable[Tally]{
 				Title:    "Tallies List",
 				Subtitle: "All tallies in the system",
-				Data:     getters.GetterKey[components.ObjectList[Tally]]("Tallies"),
+				Data:     getters.Key[components.ObjectList[Tally]]("Tallies"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: &tallyFilter},
 				},
@@ -393,7 +393,7 @@ func init() {
 						Label: "Date",
 						Name:  "Date",
 						Children: []components.PageInterface{
-							components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.Date")},
+							components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Date")},
 						},
 					},
 					{
@@ -401,7 +401,7 @@ func init() {
 						Name:  "User.Name",
 						Children: []components.PageInterface{
 							components.FieldText{
-								Getter: getters.GetterKey[string]("$row.User.Name"),
+								Getter: getters.Key[string]("$row.User.Name"),
 							},
 						},
 					},
@@ -410,7 +410,7 @@ func init() {
 						Name:  "Visits",
 						Children: []components.PageInterface{
 							components.FieldText{
-								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Visits")),
+								Getter: getters.IntString(getters.Key[int]("$row.Visits")),
 							},
 						},
 					},
@@ -419,7 +419,7 @@ func init() {
 						Name:  "Appointments",
 						Children: []components.PageInterface{
 							components.FieldText{
-								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Appointments")),
+								Getter: getters.IntString(getters.Key[int]("$row.Appointments")),
 							},
 						},
 					},
@@ -428,7 +428,7 @@ func init() {
 						Name:  "Policies",
 						Children: []components.PageInterface{
 							components.FieldText{
-								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Policies")),
+								Getter: getters.IntString(getters.Key[int]("$row.Policies")),
 							},
 						},
 					},
@@ -437,12 +437,12 @@ func init() {
 						Name:  "Premium",
 						Children: []components.PageInterface{
 							components.FieldText{
-								Getter: getters.GetterIntString(getters.GetterKey[int]("$row.Premium")),
+								Getter: getters.IntString(getters.Key[int]("$row.Premium")),
 							},
 						},
 					},
 				},
-				OnClick: getters.GetterNavigate("/tally/%v/", getters.GetterAny(getters.GetterKey[uint]("$row.ID"))),
+				OnClick: getters.Navigate("/tally/%v/", getters.Any(getters.Key[uint]("$row.ID"))),
 			},
 		},
 	})
@@ -490,7 +490,7 @@ func init() {
 						Children: []components.PageInterface{
 							&components.Environment[uint]{
 								Label:   "Session",
-								Key:     getters.GetterStatic("session"),
+								Key:     getters.Static("session"),
 								Options: SessionsListGetter,
 								Default: tallySessionEnvironmentDefault,
 							},
@@ -498,7 +498,7 @@ func init() {
 								Page: components.Page{
 									Key: "tally.UserSessionTallies",
 								},
-								UserGetter:    getters.GetterKey[p_users.User]("user"),
+								UserGetter:    getters.Key[p_users.User]("user"),
 								SessionGetter: CurrentEnvironmentSessionGetter,
 							},
 							StatLineChart{

@@ -32,12 +32,12 @@ func (e FieldPhone) Build(ctx context.Context) Node {
 	value, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldPhone getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
 	v, err := phonenumbers.Parse(value, "IN")
 	if err != nil {
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
 	return Div(Class(e.Classes), Text(phonenumbers.Format(v, phonenumbers.E164)))

@@ -31,7 +31,7 @@ func (e DeleteConfirmation) Build(ctx context.Context) Node {
 		url, err := e.CancelUrl(ctx)
 		if err != nil {
 			slog.Error("DeleteConfirmation CancelUrl getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		cancelUrl = url
 	}

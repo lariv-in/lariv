@@ -12,7 +12,7 @@ import (
 
 func getterNotIsLink() getters.Getter[any] {
 	return func(ctx context.Context) (any, error) {
-		v, err := getters.GetterKey[bool]("$in.IsLink")(ctx)
+		v, err := getters.Key[bool]("$in.IsLink")(ctx)
 		if err != nil {
 			return true, nil
 		}
@@ -33,74 +33,74 @@ func init() {
 
 func registerStudentZoneAdminMenuPages() {
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Student Zone"),
+		Title: getters.Static("Student Zone"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to Website"),
+			Title: getters.Static("Back to Website"),
 			Url:   lago.GetterRoutePath("nirmancampus_website.AppLandingRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("All Sections"),
+				Title: getters.Static("All Sections"),
 				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("All Items"),
+				Title: getters.Static("All Items"),
 				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 			},
 		},
 	})
 
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Section: %s", getters.GetterAny(getters.GetterKey[string]("section.Title"))),
+		Title: getters.Format("Section: %s", getters.Any(getters.Key[string]("section.Title"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to all Sections"),
+			Title: getters.Static("Back to all Sections"),
 			Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Section Detail"),
+				Title: getters.Static("Section Detail"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("section.ID")),
+					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Edit Section"),
+				Title: getters.Static("Edit Section"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("section.ID")),
+					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Delete Section"),
+				Title: getters.Static("Delete Section"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("section.ID")),
+					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
 		},
 	})
 
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminItemDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Item: %s", getters.GetterAny(getters.GetterKey[string]("item.Title"))),
+		Title: getters.Format("Item: %s", getters.Any(getters.Key[string]("item.Title"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to all Items"),
+			Title: getters.Static("Back to all Items"),
 			Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Item Detail"),
+				Title: getters.Static("Item Detail"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("item.ID")),
+					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Edit Item"),
+				Title: getters.Static("Edit Item"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("item.ID")),
+					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Delete Item"),
+				Title: getters.Static("Delete Item"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("item.ID")),
+					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
 		},
@@ -117,7 +117,7 @@ func registerStudentZoneAdminFilterPages() {
 			&components.InputText{
 				Label:  "Title",
 				Name:   "Title",
-				Getter: getters.GetterKey[string]("$get.Title"),
+				Getter: getters.Key[string]("$get.Title"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -138,7 +138,7 @@ func registerStudentZoneAdminFilterPages() {
 			&components.InputText{
 				Label:  "Title",
 				Name:   "Title",
-				Getter: getters.GetterKey[string]("$get.Title"),
+				Getter: getters.Key[string]("$get.Title"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -159,7 +159,7 @@ func registerStudentZoneAdminFilterPages() {
 			&components.InputText{
 				Label:  "Title",
 				Name:   "Title",
-				Getter: getters.GetterKey[string]("$get.Title"),
+				Getter: getters.Key[string]("$get.Title"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -184,23 +184,23 @@ func studentZoneAdminSectionFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Title"),
+						Error: getters.Key[error]("$error.Title"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:    "Title",
 								Name:     "Title",
 								Required: true,
-								Getter:   getters.GetterKey[string]("$in.Title"),
+								Getter:   getters.Key[string]("$in.Title"),
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Order"),
+						Error: getters.Key[error]("$error.Order"),
 						Children: []components.PageInterface{
 							&components.InputNumber{
 								Label:  "Order",
 								Name:   "Order",
-								Getter: getters.GetterKey[int]("$in.Order"),
+								Getter: getters.Key[int]("$in.Order"),
 							},
 						},
 					},
@@ -215,27 +215,27 @@ func studentZoneAdminItemFormFields() components.ContainerColumn {
 		Page: components.Page{Key: "nirmancampus_website.StudentZoneAdminItemFormFieldsBody"},
 		Children: []components.PageInterface{
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Title"),
+				Error: getters.Key[error]("$error.Title"),
 				Children: []components.PageInterface{
 					&components.InputText{
 						Label:    "Title",
 						Name:     "Title",
 						Required: true,
-						Getter:   getters.GetterKey[string]("$in.Title"),
+						Getter:   getters.Key[string]("$in.Title"),
 					},
 				},
 			},
 
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.StudentZoneSectionID"),
+				Error: getters.Key[error]("$error.StudentZoneSectionID"),
 				Children: []components.PageInterface{
 					&components.InputForeignKey[StudentZoneSection]{
 						Label:       "Section",
 						Name:        "StudentZoneSectionID",
 						Required:    true,
-						Getter:      getters.GetterAssociation[StudentZoneSection](getters.GetterKey[uint]("$in.StudentZoneSectionID")),
+						Getter:      getters.Association[StudentZoneSection](getters.Key[uint]("$in.StudentZoneSectionID")),
 						Url:         lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionSelectRoute", nil),
-						Display:     getters.GetterKey[string]("$in.Title"),
+						Display:     getters.Key[string]("$in.Title"),
 						Placeholder: "Select a section...",
 					},
 				},
@@ -248,7 +248,7 @@ func studentZoneAdminItemFormFields() components.ContainerColumn {
 					&components.InputCheckbox{
 						Label:  "Is Link",
 						Name:   "IsLink",
-						Getter: getters.GetterKey[bool]("$in.IsLink"),
+						Getter: getters.Key[bool]("$in.IsLink"),
 						XModel: "isLink",
 					},
 
@@ -256,12 +256,12 @@ func studentZoneAdminItemFormFields() components.ContainerColumn {
 						Condition: "isLink",
 						Children: []components.PageInterface{
 							&components.ContainerError{
-								Error: getters.GetterKey[error]("$error.Link"),
+								Error: getters.Key[error]("$error.Link"),
 								Children: []components.PageInterface{
 									&components.InputText{
 										Label:  "Link URL",
 										Name:   "Link",
-										Getter: getters.GetterKey[string]("$in.Link"),
+										Getter: getters.Key[string]("$in.Link"),
 									},
 								},
 							},
@@ -272,12 +272,12 @@ func studentZoneAdminItemFormFields() components.ContainerColumn {
 						Condition: "!isLink",
 						Children: []components.PageInterface{
 							&components.ContainerError{
-								Error: getters.GetterKey[error]("$error.FileID"),
+								Error: getters.Key[error]("$error.FileID"),
 								Children: []components.PageInterface{
 									&p_filesystem.InputVNode{
 										Label: "File",
 										Name:  "FileID",
-										VNode: getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.FileID"))),
+										VNode: getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$in.FileID"))),
 									},
 								},
 							},
@@ -322,9 +322,9 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneSection]{
-				Getter: getters.GetterKey[StudentZoneSection]("section"),
+				Getter: getters.Key[StudentZoneSection]("section"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
 				Title:    "Edit Section",
@@ -367,9 +367,9 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneItem]{
-				Getter: getters.GetterKey[StudentZoneItem]("item"),
+				Getter: getters.Key[StudentZoneItem]("item"),
 				Url: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
 				Title:    "Edit Item",
@@ -397,27 +397,27 @@ func registerStudentZoneAdminTablePages() {
 			&components.DataTable[StudentZoneSection]{
 				UID:       "section-table",
 				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[StudentZoneSection]]("sections"),
+				Data:      getters.Key[components.ObjectList[StudentZoneSection]]("sections"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionFilter"}},
 					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil)},
 				},
-				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+				OnClick: getters.NavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
 						Name:  "Title",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "Order",
 						Name:  "Order",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$row.Order")))},
+							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Order")))},
 						},
 					},
 				},
@@ -433,34 +433,34 @@ func registerStudentZoneAdminTablePages() {
 			&components.DataTable[StudentZoneItem]{
 				UID:       "item-table",
 				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[StudentZoneItem]]("items"),
+				Data:      getters.Key[components.ObjectList[StudentZoneItem]]("items"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminItemFilter"}},
 					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil)},
 				},
-				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+				OnClick: getters.NavigateGetter(lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
 						Name:  "Title",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "Section",
 						Name:  "Section",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.StudentZoneSection.Title")},
+							&components.FieldText{Getter: getters.Key[string]("$row.StudentZoneSection.Title")},
 						},
 					},
 					{
 						Label: "Is Link",
 						Name:  "IsLink",
 						Children: []components.PageInterface{
-							&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsLink")},
+							&components.FieldCheckbox{Getter: getters.Key[bool]("$row.IsLink")},
 						},
 					},
 				},
@@ -478,16 +478,16 @@ func registerStudentZoneAdminDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[StudentZoneSection]{
-				Getter: getters.GetterKey[StudentZoneSection]("section"),
+				Getter: getters.Key[StudentZoneSection]("section"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Page: components.Page{Key: "nirmancampus_website.StudentZoneAdminSectionDetailContent"},
 						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Title")},
+							&components.FieldTitle{Getter: getters.Key[string]("$in.Title")},
 							&components.LabelInline{
 								Title: "Order",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$in.Order")))},
+									&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$in.Order")))},
 								},
 							},
 						},
@@ -506,7 +506,7 @@ func registerStudentZoneAdminDetailPages() {
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this section? All items in this section will also be deleted.",
 				CancelUrl: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("section.ID")),
+					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
 		},
@@ -518,25 +518,25 @@ func registerStudentZoneAdminDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[StudentZoneItem]{
-				Getter: getters.GetterKey[StudentZoneItem]("item"),
+				Getter: getters.Key[StudentZoneItem]("item"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Page: components.Page{Key: "nirmancampus_website.StudentZoneAdminItemDetailContent"},
 						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Title")},
+							&components.FieldTitle{Getter: getters.Key[string]("$in.Title")},
 							&components.LabelInline{
 								Title: "Section",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.StudentZoneSection.Title")},
+									&components.FieldText{Getter: getters.Key[string]("$in.StudentZoneSection.Title")},
 								},
 							},
 							&components.ShowIf{
-								Getter: getters.GetterAny(getters.GetterKey[bool]("$in.IsLink")),
+								Getter: getters.Any(getters.Key[bool]("$in.IsLink")),
 								Children: []components.PageInterface{
 									&components.LabelInline{
 										Title: "Link",
 										Children: []components.PageInterface{
-											&components.FieldText{Getter: getters.GetterKey[string]("$in.Link")},
+											&components.FieldText{Getter: getters.Key[string]("$in.Link")},
 										},
 									},
 								},
@@ -548,7 +548,7 @@ func registerStudentZoneAdminDetailPages() {
 										Title: "File",
 										Children: []components.PageInterface{
 											&p_filesystem.FieldFile{
-												VNode: getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.FileID"))),
+												VNode: getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$in.FileID"))),
 											},
 										},
 									},
@@ -570,7 +570,7 @@ func registerStudentZoneAdminDetailPages() {
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item?",
 				CancelUrl: lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("item.ID")),
+					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
 		},
@@ -586,10 +586,10 @@ func registerStudentZoneAdminSelectionPages() {
 		Children: []components.PageInterface{
 			&components.DataTable[StudentZoneSection]{
 				UID:  "section-selection-table",
-				Data: getters.GetterKey[components.ObjectList[StudentZoneSection]]("sections"),
-				OnClick: getters.GetterSelect("StudentZoneSectionID",
-					getters.GetterKey[uint]("$row.ID"),
-					getters.GetterKey[string]("$row.Title"),
+				Data: getters.Key[components.ObjectList[StudentZoneSection]]("sections"),
+				OnClick: getters.Select("StudentZoneSectionID",
+					getters.Key[uint]("$row.ID"),
+					getters.Key[string]("$row.Title"),
 				),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionSelectionFilter"}},
@@ -599,14 +599,14 @@ func registerStudentZoneAdminSelectionPages() {
 						Label: "Title",
 						Name:  "Title",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "Order",
 						Name:  "Order",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$row.Order")))},
+							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Order")))},
 						},
 					},
 				},

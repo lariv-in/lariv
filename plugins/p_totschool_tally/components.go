@@ -148,7 +148,7 @@ func TallyDashboardHTML(ctx context.Context, _ Node) Node {
 			)
 		} else {
 			// Daily report not submitted state
-			dailyURL, _ := getters.IfOrGetter(lago.GetterRoutePath("tally.TallyDailyFormRoute", nil), ctx, "")
+			dailyURL, _ := getters.IfOr(lago.GetterRoutePath("tally.TallyDailyFormRoute", nil), ctx, "")
 
 			whatsappSection = Div(Class("bg-base-200 rounded-box border border-base-300 p-4 mb-4"),
 				Div(Class("flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"),

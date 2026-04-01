@@ -80,7 +80,7 @@ func generateHandler(v *views.View) http.Handler {
 		Generate(db, appointment.ID, content, systemPrompt)
 
 		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(idStr)),
+			"id": getters.Any(getters.Static(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
@@ -105,7 +105,7 @@ func cancelHandler(v *views.View) http.Handler {
 		}
 
 		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(idStr)),
+			"id": getters.Any(getters.Static(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
@@ -152,7 +152,7 @@ func aiEditHandler(v *views.View) http.Handler {
 		Generate(db, appointment.ID, userPrompt, letterEditorSystemPrompt)
 
 		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(idStr)),
+			"id": getters.Any(getters.Static(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
@@ -253,13 +253,13 @@ func init() {
 	)
 
 	lago.RegistryView.Register("appointments.CreateView",
-		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
+		views.CreateView[Appointment](lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
 			WithFormPatcher("appointments.form", FormCreatedByPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("appointments.UpdateView",
 		views.DetailView[Appointment]("appointment", "id")(
-			views.UpdateView[Appointment]("id", lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
+			views.UpdateView[Appointment]("id", lago.GetterRoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
 			WithFormPatcher("appointments.form", FormCreatedByPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 

@@ -24,27 +24,27 @@ func init() {
 
 func registerMenus() {
 	lago.RegistryPage.Register("proposals.ProposalMenu", components.SidebarMenu{
-		Title: getters.GetterStatic("Proposals"),
+		Title: getters.Static("Proposals"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Apps"),
+			Title: getters.Static("Back to All Apps"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
-			components.SidebarMenuItem{Title: getters.GetterStatic("All Proposals"), Url: lago.GetterRoutePath("proposals.ListRoute", nil)},
-			components.SidebarMenuItem{Title: getters.GetterStatic("Create Proposal"), Url: lago.GetterRoutePath("proposals.CreateRoute", nil)},
+			components.SidebarMenuItem{Title: getters.Static("All Proposals"), Url: lago.GetterRoutePath("proposals.ListRoute", nil)},
+			components.SidebarMenuItem{Title: getters.Static("Create Proposal"), Url: lago.GetterRoutePath("proposals.CreateRoute", nil)},
 		},
 	})
 
 	lago.RegistryPage.Register("proposals.ProposalDetailMenu", components.SidebarMenu{
-		Title: getters.GetterFormat("Proposal: %s", getters.GetterAny(getters.GetterKey[string]("proposal.Title"))),
+		Title: getters.Format("Proposal: %s", getters.Any(getters.Key[string]("proposal.Title"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to all Proposals"),
+			Title: getters.Static("Back to all Proposals"),
 			Url:   lago.GetterRoutePath("proposals.ListRoute", nil),
 		},
 		Children: []components.PageInterface{
-			components.SidebarMenuItem{Title: getters.GetterStatic("Proposal Detail"), Url: lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("proposal.ID"))})},
-			components.SidebarMenuItem{Title: getters.GetterStatic("Edit Proposal"), Url: lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("proposal.ID"))})},
-			components.SidebarMenuItem{Title: getters.GetterStatic("Delete Proposal"), Url: lago.GetterRoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("proposal.ID"))})},
+			components.SidebarMenuItem{Title: getters.Static("Proposal Detail"), Url: lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))})},
+			components.SidebarMenuItem{Title: getters.Static("Edit Proposal"), Url: lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))})},
+			components.SidebarMenuItem{Title: getters.Static("Delete Proposal"), Url: lago.GetterRoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))})},
 		},
 	})
 }
@@ -54,7 +54,7 @@ func registerFilter() {
 		Url:    lago.GetterRoutePath("proposals.ListRoute", nil),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			components.InputText{Label: "Title", Name: "Title", Getter: getters.GetterKey[string]("$get.Title")},
+			components.InputText{Label: "Title", Name: "Title", Getter: getters.Key[string]("$get.Title")},
 		},
 		ChildrenAction: []components.PageInterface{
 			components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -68,7 +68,7 @@ func registerFilter() {
 func registerForms() {
 	lago.RegistryPage.Register("proposals.ProposalFormFields", components.ContainerColumn{
 		Children: []components.PageInterface{
-			components.ContainerColumn{Children: []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.GetterKey[string]("$in.Title")}, components.InputKeyValue{Getter: getters.GetterKey[datatypes.JSON]("$in.Answers"), Keys: getters.GetterStatic(QUESTIONS), Name: "Answers"}}},
+			components.ContainerColumn{Children: []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.Key[string]("$in.Title")}, components.InputKeyValue{Getter: getters.Key[datatypes.JSON]("$in.Answers"), Keys: getters.Static(QUESTIONS), Name: "Answers"}}},
 		},
 	})
 
@@ -80,7 +80,7 @@ func registerForms() {
 				Method:         http.MethodPost,
 				Title:          "Create Proposal",
 				Subtitle:       "Fill in the questionnaire answers",
-				ChildrenInput:  []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.GetterKey[string]("$in.Title")}, components.InputKeyValue{Getter: getters.GetterKey[datatypes.JSON]("$in.Answers"), Keys: getters.GetterStatic(QUESTIONS), Name: "Answers"}},
+				ChildrenInput:  []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.Key[string]("$in.Title")}, components.InputKeyValue{Getter: getters.Key[datatypes.JSON]("$in.Answers"), Keys: getters.Static(QUESTIONS), Name: "Answers"}},
 				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
 			},
 		},
@@ -90,16 +90,16 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
-				Getter:   getters.GetterKey[Proposal]("proposal"),
-				Url:      lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Getter:   getters.Key[Proposal]("proposal"),
+				Url:      lago.GetterRoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 				Method:   http.MethodPost,
 				Title:    "Edit Proposal",
 				Subtitle: "Update questionnaire answers",
 				ChildrenInput: []components.PageInterface{
-					components.InputText{Label: "Title", Name: "Title", Getter: getters.GetterKey[string]("$in.Title")},
+					components.InputText{Label: "Title", Name: "Title", Getter: getters.Key[string]("$in.Title")},
 					components.InputKeyValue{
-						Getter: getters.GetterKey[datatypes.JSON]("$in.Answers"),
-						Keys:   getters.GetterStatic(QUESTIONS),
+						Getter: getters.Key[datatypes.JSON]("$in.Answers"),
+						Keys:   getters.Static(QUESTIONS),
 						Name:   "Answers",
 					},
 				},
@@ -115,18 +115,18 @@ func registerTable() {
 		Children: []components.PageInterface{
 			components.DataTable[Proposal]{
 				UID:             "proposal-table",
-				Data:            getters.GetterKey[components.ObjectList[Proposal]]("proposals"),
+				Data:            getters.Key[components.ObjectList[Proposal]]("proposals"),
 				Title:           "Proposals",
 				Subtitle:        "List of financial proposals",
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "proposals.ProposalFilter"}},
 					&components.TableButtonCreate{Link: lago.GetterRoutePath("proposals.CreateRoute", nil)},
 				},
-				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
+				OnClick: getters.NavigateGetter(lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
-					{Label: "Title", Name: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.GetterKey[string]("$row.Title")}}},
-					{Label: "Created At", Name: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.CreatedAt")}}},
-					{Label: "Updated At", Name: "UpdatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.UpdatedAt")}}},
+					{Label: "Title", Name: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.Key[string]("$row.Title")}}},
+					{Label: "Created At", Name: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.Key[time.Time]("$row.CreatedAt")}}},
+					{Label: "Updated At", Name: "UpdatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.Key[time.Time]("$row.UpdatedAt")}}},
 				},
 			},
 		},
@@ -139,18 +139,18 @@ func registerDetail() {
 			Classes: "mt-4",
 			Items: []components.AccordionItem{
 				{
-					Title: components.FieldText{Classes: "font-semibold", Getter: getters.GetterStatic("Generated Proposal")},
+					Title: components.FieldText{Classes: "font-semibold", Getter: getters.Static("Generated Proposal")},
 					Children: []components.PageInterface{
 						components.ContainerColumn{Classes: "my-2", Children: []components.PageInterface{
 							components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
 								components.ContainerColumn{Classes: "flex flex-wrap gap-2 items-center", Children: []components.PageInterface{
-									components.ButtonDownload{Label: "Export to PDF", Link: lago.GetterRoutePath("proposals.ExportPdfRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-									components.ButtonDownload{Label: "Export to Word", Link: lago.GetterRoutePath("proposals.ExportDocxRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-									components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("proposals.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-									components.ButtonPost{Label: "Regenerate Proposal", URL: lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
+									components.ButtonDownload{Label: "Export to PDF", Link: lago.GetterRoutePath("proposals.ExportPdfRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
+									components.ButtonDownload{Label: "Export to Word", Link: lago.GetterRoutePath("proposals.ExportDocxRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
+									components.ButtonModal{Label: "Edit with AI", Url: lago.GetterRoutePath("proposals.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
+									components.ButtonPost{Label: "Regenerate Proposal", URL: lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
 								}},
 							}},
-							components.FieldMarkdown{Classes: "ml-2", Getter: getters.GetterKey[string]("$in.GeneratedContent")},
+							components.FieldMarkdown{Classes: "ml-2", Getter: getters.Key[string]("$in.GeneratedContent")},
 						}},
 					},
 				},
@@ -161,14 +161,14 @@ func registerDetail() {
 	pendingSection := []components.PageInterface{
 		components.HTMXPolling{
 			URL: lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{
-				"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+				"id": getters.Any(getters.Key[uint]("$in.ID")),
 			}),
 			Children: []components.PageInterface{
 				components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
-					components.FieldText{Getter: getters.GetterStatic("Generating...")},
+					components.FieldText{Getter: getters.Static("Generating...")},
 					components.ButtonPost{
 						Label:   "Cancel Generation",
-						URL:     lago.GetterRoutePath("proposals.CancelRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+						URL:     lago.GetterRoutePath("proposals.CancelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 						Classes: "btn-outline btn-error btn-sm",
 					},
 				}},
@@ -182,7 +182,7 @@ func registerDetail() {
 				Key: "proposals.GenerateProposalWithAi",
 			},
 			Label: "Generate Proposal with AI",
-			URL:   lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}), Classes: "btn-primary",
+			URL:   lago.GetterRoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-primary",
 		},
 	}
 
@@ -190,23 +190,23 @@ func registerDetail() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalDetailMenu"}},
 		Children: []components.PageInterface{
 			components.Detail[Proposal]{
-				Getter: getters.GetterKey[Proposal]("proposal"),
+				Getter: getters.Key[Proposal]("proposal"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{Children: []components.PageInterface{
-						components.FieldTitle{Getter: getters.GetterKey[string]("$in.Title")},
-						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.CreatedAt")}}},
+						components.FieldTitle{Getter: getters.Key[string]("$in.Title")},
+						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.Key[time.Time]("$in.CreatedAt")}}},
 						components.Accordion{Classes: "mt-4", Items: []components.AccordionItem{
 							{
-								Title: components.FieldText{Classes: "font-semibold", Getter: getters.GetterStatic("Questionnaire Answers")},
+								Title: components.FieldText{Classes: "font-semibold", Getter: getters.Static("Questionnaire Answers")},
 								Children: []components.PageInterface{
-									components.FieldKeyValue{Getter: getters.GetterKey[datatypes.JSON]("$in.Answers")},
+									components.FieldKeyValue{Getter: getters.Key[datatypes.JSON]("$in.Answers")},
 								},
 							},
 						}},
 						components.ContainerColumn{Children: []components.PageInterface{
-							components.ShowIf{Getter: getters.GetterAny(getterGenerated()), Children: generatedSection},
-							components.ShowIf{Getter: getters.GetterAny(getterGenerationPending()), Children: pendingSection},
-							components.ShowIf{Getter: getters.GetterAny(getterIdleGeneration()), Children: idleSection},
+							components.ShowIf{Getter: getters.Any(getterGenerated()), Children: generatedSection},
+							components.ShowIf{Getter: getters.Any(getterGenerationPending()), Children: pendingSection},
+							components.ShowIf{Getter: getters.Any(getterIdleGeneration()), Children: idleSection},
 						}},
 					}},
 				},
@@ -217,12 +217,12 @@ func registerDetail() {
 
 func getterGenerated() getters.Getter[bool] {
 	return func(ctx context.Context) (bool, error) {
-		id, err := getters.GetterKey[*int]("$in.GenerationID")(ctx)
+		id, err := getters.Key[*int]("$in.GenerationID")(ctx)
 		if err != nil {
 			slog.Error("Error while getting id for checking if appointment is idle", "error", err)
 			return false, err
 		}
-		content, err := getters.GetterKey[string]("$in.GeneratedContent")(ctx)
+		content, err := getters.Key[string]("$in.GeneratedContent")(ctx)
 		if err != nil {
 			slog.Error("Error while getting content for checking if appointment is idle", "error", err)
 			return false, err
@@ -236,12 +236,12 @@ func getterGenerated() getters.Getter[bool] {
 
 func getterGenerationPending() getters.Getter[bool] {
 	return func(ctx context.Context) (bool, error) {
-		id, err := getters.GetterKey[*int]("$in.GenerationID")(ctx)
+		id, err := getters.Key[*int]("$in.GenerationID")(ctx)
 		if err != nil {
 			slog.Error("Error while getting id for checking if appointment is idle", "error", err)
 			return false, err
 		}
-		content, err := getters.GetterKey[string]("$in.GeneratedContent")(ctx)
+		content, err := getters.Key[string]("$in.GeneratedContent")(ctx)
 		if err != nil {
 			slog.Error("Error while getting content for checking if appointment is idle", "error", err)
 			return false, err
@@ -255,12 +255,12 @@ func getterGenerationPending() getters.Getter[bool] {
 
 func getterIdleGeneration() getters.Getter[bool] {
 	return func(ctx context.Context) (bool, error) {
-		id, err := getters.GetterKey[*int]("$in.GenerationID")(ctx)
+		id, err := getters.Key[*int]("$in.GenerationID")(ctx)
 		if err != nil {
 			slog.Error("Error while getting id for checking if appointment is idle", "error", err)
 			return false, err
 		}
-		content, err := getters.GetterKey[string]("$in.GeneratedContent")(ctx)
+		content, err := getters.Key[string]("$in.GeneratedContent")(ctx)
 		if err != nil {
 			slog.Error("Error while getting content for checking if appointment is idle", "error", err)
 			return false, err
@@ -278,12 +278,12 @@ func registerModal() {
 		Title: "Edit with AI",
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
-				Getter: getters.GetterKey[Proposal]("proposal"),
-				Url:    lago.GetterRoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("proposal.ID"))}),
+				Getter: getters.Key[Proposal]("proposal"),
+				Url:    lago.GetterRoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
 				Method: http.MethodPost,
 				ChildrenInput: []components.PageInterface{
-					components.InputTextarea{Name: "GeneratedContent", Label: "Current Proposal Markdown", Getter: getters.GetterKey[string]("$in.GeneratedContent"), Rows: 8},
-					components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Getter: getters.GetterKey[string]("$in.instructions"), Rows: 4, Required: true},
+					components.InputTextarea{Name: "GeneratedContent", Label: "Current Proposal Markdown", Getter: getters.Key[string]("$in.GeneratedContent"), Rows: 8},
+					components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Getter: getters.Key[string]("$in.instructions"), Rows: 4, Required: true},
 				},
 				ChildrenAction: []components.PageInterface{
 					components.ContainerRow{Classes: "flex justify-end gap-2", Children: []components.PageInterface{
@@ -302,7 +302,7 @@ func registerDelete() {
 			components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this proposal?",
-				CancelUrl: lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("proposal.ID"))}),
+				CancelUrl: lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
 			},
 		},
 	})

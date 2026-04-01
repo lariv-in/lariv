@@ -34,7 +34,7 @@ func (e FieldKeyValue) Build(ctx context.Context) Node {
 	jsonData, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldKeyValue getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	if len(jsonData) == 0 {
 		return Div()
@@ -44,7 +44,7 @@ func (e FieldKeyValue) Build(ctx context.Context) Node {
 	err = json.Unmarshal(jsonData, &val)
 	if err != nil {
 		slog.Error("FieldKeyValue unmarshal failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
 	var nodes []Node

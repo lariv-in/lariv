@@ -24,7 +24,7 @@ func (e FieldList) Build(ctx context.Context) Node {
 		rawData, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldList getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		if rawData != nil {
 			value := reflect.ValueOf(rawData)

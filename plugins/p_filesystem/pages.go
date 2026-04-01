@@ -116,56 +116,56 @@ func currentVNodeBackRoute() getters.Getter[string] {
 			return lago.GetterRoutePath("filesystem.ListRoute", nil)(ctx)
 		}
 		return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
-			"parent_id": getters.GetterAny(getters.GetterStatic(*node.ParentID)),
+			"parent_id": getters.Any(getters.Static(*node.ParentID)),
 		})(ctx)
 	}
 }
 
 func currentVNodeDetailRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-		"id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeEditRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.UpdateRoute", map[string]getters.Getter[any]{
-		"id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeDeleteRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
-		"id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeMoveRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.MoveRoute", map[string]getters.Getter[any]{
-		"id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeBrowseRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
-		"parent_id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeCreateChildRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.CreateChildRoute", map[string]getters.Getter[any]{
-		"parent_id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeUploadChildRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.MultiUploadChildRoute", map[string]getters.Getter[any]{
-		"parent_id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
 func currentVNodeDownloadRoute() getters.Getter[string] {
 	return lago.GetterRoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
-		"id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+		"id": getters.Any(getters.Key[uint]("vnode.ID")),
 	})
 }
 
@@ -176,7 +176,7 @@ func listOrBrowseRoute(listRoute, browseRoute string) getters.Getter[string] {
 			return lago.GetterRoutePath(listRoute, nil)(ctx)
 		}
 		return lago.GetterRoutePath(browseRoute, map[string]getters.Getter[any]{
-			"parent_id": getters.GetterAny(getters.GetterStatic(node.ID)),
+			"parent_id": getters.Any(getters.Static(node.ID)),
 		})(ctx)
 	}
 }
@@ -221,14 +221,14 @@ func selectionTargetInput(defaultName string) getters.Getter[string] {
 
 func selectionBrowseRouteGetter(childRoute string) getters.Getter[string] {
 	return withSelectionTarget(lago.GetterRoutePath(childRoute, map[string]getters.Getter[any]{
-		"parent_id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+		"parent_id": getters.Any(getters.Key[uint]("$row.ID")),
 	}))
 }
 
 func selectionRowClickGetter(defaultName string, modalID string, childRoute string, multi bool, selectDirectories bool) getters.Getter[string] {
 	targetGetter := selectionTargetInput(defaultName)
 	return func(ctx context.Context) (string, error) {
-		isDirectory, err := getters.GetterKey[bool]("$row.IsDirectory")(ctx)
+		isDirectory, err := getters.Key[bool]("$row.IsDirectory")(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -246,21 +246,21 @@ func selectionRowClickGetter(defaultName string, modalID string, childRoute stri
 		}
 
 		if multi {
-			return getters.GetterMultiSelect(targetName,
-				getters.GetterKey[uint]("$row.ID"),
-				getters.GetterKey[string]("$row.Name"),
+			return getters.SelectMulti(getters.Static(targetName),
+				getters.Key[uint]("$row.ID"),
+				getters.Key[string]("$row.Name"),
 			)(ctx)
 		}
-		return getters.GetterSelect(targetName,
-			getters.GetterKey[uint]("$row.ID"),
-			getters.GetterKey[string]("$row.Name"),
+		return getters.Select(targetName,
+			getters.Key[uint]("$row.ID"),
+			getters.Key[string]("$row.Name"),
 		)(ctx)
 	}
 }
 
 func vnodeTypeForKey(key string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		isDirectory, err := getters.GetterKey[bool](key + ".IsDirectory")(ctx)
+		isDirectory, err := getters.Key[bool](key + ".IsDirectory")(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -273,14 +273,14 @@ func vnodeTypeForKey(key string) getters.Getter[string] {
 
 func vnodeSizeForKey(key string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		isDirectory, err := getters.GetterKey[bool](key + ".IsDirectory")(ctx)
+		isDirectory, err := getters.Key[bool](key + ".IsDirectory")(ctx)
 		if err != nil {
 			return "", err
 		}
 		if isDirectory {
 			return "-", nil
 		}
-		path, err := getters.GetterKey[string](key + ".FilePath")(ctx)
+		path, err := getters.Key[string](key + ".FilePath")(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -300,14 +300,14 @@ func vnodeSizeForKey(key string) getters.Getter[string] {
 
 func vnodeChildrenCountForKey(key string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		isDirectory, err := getters.GetterKey[bool](key + ".IsDirectory")(ctx)
+		isDirectory, err := getters.Key[bool](key + ".IsDirectory")(ctx)
 		if err != nil {
 			return "", err
 		}
 		if !isDirectory {
 			return "-", nil
 		}
-		id, err := getters.GetterKey[uint](key + ".ID")(ctx)
+		id, err := getters.Key[uint](key + ".ID")(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -322,21 +322,21 @@ func vnodeChildrenCountForKey(key string) getters.Getter[string] {
 
 func rowOpenRoute() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		isDirectory, err := getters.GetterKey[bool]("$row.IsDirectory")(ctx)
+		isDirectory, err := getters.Key[bool]("$row.IsDirectory")(ctx)
 		if err != nil {
 			return "", err
 		}
-		id, err := getters.GetterKey[uint]("$row.ID")(ctx)
+		id, err := getters.Key[uint]("$row.ID")(ctx)
 		if err != nil {
 			return "", err
 		}
 		if isDirectory {
 			return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
-				"parent_id": getters.GetterAny(getters.GetterStatic(id)),
+				"parent_id": getters.Any(getters.Static(id)),
 			})(ctx)
 		}
 		return lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(id)),
+			"id": getters.Any(getters.Static(id)),
 		})(ctx)
 	}
 }
@@ -382,7 +382,7 @@ func filesystemSidebar() []components.PageInterface {
 			},
 		},
 		&components.ShowIf{
-			Getter: getters.GetterAny(func(ctx context.Context) (bool, error) {
+			Getter: getters.Any(func(ctx context.Context) (bool, error) {
 				node, err := mustCurrentVNode(ctx)
 				return err != nil || node.ID == 0, nil
 			}),
@@ -395,37 +395,37 @@ func filesystemSidebar() []components.PageInterface {
 
 func vnodeFormFields(includeFileInput bool, submitLabel string, multi bool) components.ContainerColumn {
 	initialIsDirectory := false
-	isDirectoryGetter := getters.GetterKey[bool]("$in.IsDirectory")
+	isDirectoryGetter := getters.Key[bool]("$in.IsDirectory")
 	if v, err := isDirectoryGetter(context.Background()); err == nil {
 		initialIsDirectory = v
 	}
 
 	children := []components.PageInterface{
 		&components.ContainerError{
-			Error: getters.GetterKey[error]("$error.ParentID"),
+			Error: getters.Key[error]("$error.ParentID"),
 			Children: []components.PageInterface{
 				&components.InputForeignKey[VNode]{
 					Label:       "Location",
 					Name:        "ParentID",
 					Getter:      currentLocationGetter(),
 					Url:         listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute"),
-					Display:     getters.GetterKey[string]("$in.Name"),
+					Display:     getters.Key[string]("$in.Name"),
 					Placeholder: "Root (no parent)",
 				},
 			},
 		},
 		&components.ContainerError{
-			Error: getters.GetterKey[error]("$error.IsDirectory"),
+			Error: getters.Key[error]("$error.IsDirectory"),
 			Children: []components.PageInterface{
-				&components.InputCheckbox{Label: "Create Directory", Name: "IsDirectory", Getter: getters.GetterKey[bool]("$in.IsDirectory"), XModel: "isDirectory"},
+				&components.InputCheckbox{Label: "Create Directory", Name: "IsDirectory", Getter: getters.Key[bool]("$in.IsDirectory"), XModel: "isDirectory"},
 			},
 		},
 		&components.ClientIf{
 			Condition: "isDirectory",
 			Children: []components.PageInterface{&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Name"),
+				Error: getters.Key[error]("$error.Name"),
 				Children: []components.PageInterface{
-					&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$in.Name")},
+					&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$in.Name")},
 				},
 			}},
 		},
@@ -441,7 +441,7 @@ func vnodeFormFields(includeFileInput bool, submitLabel string, multi bool) comp
 		children = append(children, &components.ClientIf{
 			Condition: "!isDirectory",
 			Children: []components.PageInterface{&components.ContainerError{
-				Error: getters.GetterKey[error]("$error." + name),
+				Error: getters.Key[error]("$error." + name),
 				Children: []components.PageInterface{
 					&components.InputFile{Label: label, Name: name, Multiple: multi},
 				},
@@ -464,35 +464,35 @@ func vnodeFormFields(includeFileInput bool, submitLabel string, multi bool) comp
 
 func registerMenus() {
 	lago.RegistryPage.Register("filesystem.MainMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Filesystem"),
+		Title: getters.Static("Filesystem"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Apps"),
+			Title: getters.Static("Back to All Apps"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
-			&components.SidebarMenuItem{Title: getters.GetterStatic("All Files"), Url: lago.GetterRoutePath("filesystem.ListRoute", nil), Icon: "folder-open"},
-			&components.SidebarMenuItem{Title: getters.GetterStatic("Create Item"), Url: lago.GetterRoutePath("filesystem.CreateRoute", nil), Icon: "plus"},
-			&components.SidebarMenuItem{Title: getters.GetterStatic("Bulk Upload"), Url: lago.GetterRoutePath("filesystem.MultiUploadRoute", nil), Icon: "arrow-up-tray"},
+			&components.SidebarMenuItem{Title: getters.Static("All Files"), Url: lago.GetterRoutePath("filesystem.ListRoute", nil), Icon: "folder-open"},
+			&components.SidebarMenuItem{Title: getters.Static("Create Item"), Url: lago.GetterRoutePath("filesystem.CreateRoute", nil), Icon: "plus"},
+			&components.SidebarMenuItem{Title: getters.Static("Bulk Upload"), Url: lago.GetterRoutePath("filesystem.MultiUploadRoute", nil), Icon: "arrow-up-tray"},
 		},
 	})
 
 	lago.RegistryPage.Register("filesystem.VNodeMenu", &components.SidebarMenu{
 		Title: currentVNodeTitle(),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back"),
+			Title: getters.Static("Back"),
 			Url:   currentVNodeBackRoute(),
 		},
 		Children: []components.PageInterface{
-			&components.SidebarMenuItem{Title: getters.GetterStatic("View Details"), Url: currentVNodeDetailRoute(), Icon: "eye"},
-			&components.SidebarMenuItem{Title: getters.GetterStatic("Edit"), Url: currentVNodeEditRoute(), Icon: "pencil-square"},
-			&components.SidebarMenuItem{Title: getters.GetterStatic("Move"), Url: currentVNodeMoveRoute(), Icon: "arrow-right-circle"},
-			&components.SidebarMenuItem{Title: getters.GetterStatic("Delete"), Url: currentVNodeDeleteRoute(), Icon: "trash"},
+			&components.SidebarMenuItem{Title: getters.Static("View Details"), Url: currentVNodeDetailRoute(), Icon: "eye"},
+			&components.SidebarMenuItem{Title: getters.Static("Edit"), Url: currentVNodeEditRoute(), Icon: "pencil-square"},
+			&components.SidebarMenuItem{Title: getters.Static("Move"), Url: currentVNodeMoveRoute(), Icon: "arrow-right-circle"},
+			&components.SidebarMenuItem{Title: getters.Static("Delete"), Url: currentVNodeDeleteRoute(), Icon: "trash"},
 			&components.ShowIf{
 				Getter: currentVNodeIsDirectory(),
 				Children: []components.PageInterface{
-					&components.SidebarMenuItem{Title: getters.GetterStatic("Browse Contents"), Url: currentVNodeBrowseRoute(), Icon: "folder-open"},
-					&components.SidebarMenuItem{Title: getters.GetterStatic("Add New Item"), Url: currentVNodeCreateChildRoute(), Icon: "plus"},
-					&components.SidebarMenuItem{Title: getters.GetterStatic("Bulk Upload"), Url: currentVNodeUploadChildRoute(), Icon: "arrow-up-tray"},
+					&components.SidebarMenuItem{Title: getters.Static("Browse Contents"), Url: currentVNodeBrowseRoute(), Icon: "folder-open"},
+					&components.SidebarMenuItem{Title: getters.Static("Add New Item"), Url: currentVNodeCreateChildRoute(), Icon: "plus"},
+					&components.SidebarMenuItem{Title: getters.Static("Bulk Upload"), Url: currentVNodeUploadChildRoute(), Icon: "arrow-up-tray"},
 				},
 			},
 		},
@@ -504,7 +504,7 @@ func registerFilters() {
 		Url:    listOrBrowseRoute("filesystem.ListRoute", "filesystem.BrowseRoute"),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
+			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			&components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -518,7 +518,7 @@ func registerFilters() {
 		Url:    withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute")),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
+			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			&components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -532,7 +532,7 @@ func registerFilters() {
 		Url:    withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute")),
 		Method: http.MethodGet,
 		ChildrenInput: []components.PageInterface{
-			&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$get.Name")},
+			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
 		ChildrenAction: []components.PageInterface{
 			&components.ContainerRow{Classes: "flex gap-2", Children: []components.PageInterface{
@@ -564,7 +564,7 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
-				Getter:   getters.GetterKey[VNode]("vnode"),
+				Getter:   getters.Key[VNode]("vnode"),
 				Url:      currentVNodeEditRoute(),
 				Method:   http.MethodPost,
 				Enctype:  "multipart/form-data",
@@ -572,14 +572,14 @@ func registerForms() {
 				Subtitle: "Update file or directory details",
 				ChildrenInput: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Name"),
+						Error: getters.Key[error]("$error.Name"),
 						Children: []components.PageInterface{
-							&components.InputText{Label: "Name", Name: "Name", Getter: getters.GetterKey[string]("$in.Name"), Required: true},
+							&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$in.Name"), Required: true},
 						},
 					},
 					&components.ShowIf{
-						Getter: getters.GetterAny(func(ctx context.Context) (bool, error) {
-							isDirectory, err := getters.GetterKey[bool]("$in.IsDirectory")(ctx)
+						Getter: getters.Any(func(ctx context.Context) (bool, error) {
+							isDirectory, err := getters.Key[bool]("$in.IsDirectory")(ctx)
 							if err != nil {
 								return false, err
 							}
@@ -587,7 +587,7 @@ func registerForms() {
 						}),
 						Children: []components.PageInterface{
 							&components.ContainerError{
-								Error: getters.GetterKey[error]("$error.File"),
+								Error: getters.Key[error]("$error.File"),
 								Children: []components.PageInterface{
 									&components.InputFile{Label: "Replace File", Name: "File"},
 								},
@@ -606,21 +606,21 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
-				Getter:   getters.GetterKey[VNode]("vnode"),
+				Getter:   getters.Key[VNode]("vnode"),
 				Url:      currentVNodeMoveRoute(),
 				Method:   http.MethodPost,
 				Title:    "Move Item",
 				Subtitle: "Select the destination directory",
 				ChildrenInput: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.DestinationID"),
+						Error: getters.Key[error]("$error.DestinationID"),
 						Children: []components.PageInterface{
 							&components.InputForeignKey[VNode]{
 								Label:       "Destination Directory",
 								Name:        "DestinationID",
 								Getter:      parentOfCurrentVNodeGetter(),
 								Url:         lago.GetterRoutePath("filesystem.MoveSelectRoute", nil),
-								Display:     getters.GetterKey[string]("$in.Name"),
+								Display:     getters.Key[string]("$in.Name"),
 								Placeholder: "Root (move to top level)",
 							},
 						},
@@ -645,7 +645,7 @@ func registerForms() {
 				ChildrenInput: []components.PageInterface{
 					vnodeFormFields(false, "", false),
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Files"),
+						Error: getters.Key[error]("$error.Files"),
 						Children: []components.PageInterface{
 							&components.InputFile{Label: "Files", Name: "Files", Multiple: true, Required: true},
 						},
@@ -664,21 +664,21 @@ func registerTables() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.DataTable[VNode]{
-				UID:             "filesystem-table",
-				Data:            getters.GetterKey[components.ObjectList[VNode]]("vnodes"),
-				Title:           "Filesystem",
-				Subtitle:        "Files and folders",
+				UID:      "filesystem-table",
+				Data:     getters.Key[components.ObjectList[VNode]]("vnodes"),
+				Title:    "Filesystem",
+				Subtitle: "Files and folders",
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "filesystem.VNodeFilter"}},
 					&components.TableButtonCreate{Link: listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute")},
 				},
-				OnClick: getters.GetterNavigateGetter(rowOpenRoute()),
+				OnClick: getters.NavigateGetter(rowOpenRoute()),
 				Columns: []components.TableColumn{
-					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Type", Name: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$row")}}},
 					{Label: "Size", Name: "Size", Children: []components.PageInterface{&components.FieldText{Getter: vnodeSizeForKey("$row")}}},
 					{Label: "Items", Name: "Items", Children: []components.PageInterface{&components.FieldText{Getter: vnodeChildrenCountForKey("$row")}}},
-					{Label: "Modified", Name: "UpdatedAt", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.UpdatedAt")}}},
+					{Label: "Modified", Name: "UpdatedAt", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.UpdatedAt")}}},
 				},
 			},
 		},
@@ -690,20 +690,20 @@ func registerDetail() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.Detail[VNode]{
-				Getter: getters.GetterKey[VNode]("vnode"),
+				Getter: getters.Key[VNode]("vnode"),
 				Children: []components.PageInterface{
 					&components.ContainerColumn{Children: []components.PageInterface{
-						&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Name")},
+						&components.FieldTitle{Getter: getters.Key[string]("$in.Name")},
 						&components.FieldSubtitle{Getter: currentVNodeTitle()},
 						&components.LabelInline{Title: "Path", Classes: "mt-2", Children: []components.PageInterface{&components.FieldText{Getter: currentVNodePath()}}},
 						&components.LabelInline{Title: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$in")}}},
 						&components.LabelInline{Title: "Size", Children: []components.PageInterface{&components.FieldText{Getter: vnodeSizeForKey("$in")}}},
 						&components.LabelInline{Title: "Items", Children: []components.PageInterface{&components.FieldText{Getter: vnodeChildrenCountForKey("$in")}}},
-						&components.LabelInline{Title: "Created At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.CreatedAt")}}},
-						&components.LabelInline{Title: "Modified At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.UpdatedAt")}}},
+						&components.LabelInline{Title: "Created At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.CreatedAt")}}},
+						&components.LabelInline{Title: "Modified At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.UpdatedAt")}}},
 						&components.ShowIf{
-							Getter: getters.GetterAny(func(ctx context.Context) (bool, error) {
-								isDirectory, err := getters.GetterKey[bool]("$in.IsDirectory")(ctx)
+							Getter: getters.Any(func(ctx context.Context) (bool, error) {
+								isDirectory, err := getters.Key[bool]("$in.IsDirectory")(ctx)
 								if err != nil {
 									return false, err
 								}
@@ -711,7 +711,7 @@ func registerDetail() {
 							}),
 							Children: []components.PageInterface{
 								&components.ButtonDownload{Label: "Download", Link: lago.GetterRoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
-									"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+									"id": getters.Any(getters.Key[uint]("$in.ID")),
 								}), Icon: "arrow-down-tray", Classes: "btn-primary mt-4"},
 							},
 						},
@@ -738,19 +738,19 @@ func selectionTable(name string, filterName string, childRoute string, multi boo
 		Title: title,
 		Children: []components.PageInterface{
 			&components.DataTable[VNode]{
-				UID:             "filesystem-selection-table-" + name,
-				Data:            getters.GetterKey[components.ObjectList[VNode]]("vnodes"),
-				Title:           title,
-				Subtitle:        subtitle,
+				UID:      "filesystem-selection-table-" + name,
+				Data:     getters.Key[components.ObjectList[VNode]]("vnodes"),
+				Title:    title,
+				Subtitle: subtitle,
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: filterName}},
 				},
 				OnClick: onClick,
 				Columns: []components.TableColumn{
-					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
+					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Type", Name: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$row")}}},
-					{Label: "Path", Name: "Path", Children: []components.PageInterface{&components.FieldText{Getter: getters.GetterKey[string]("$row.Name")}}},
-					{Label: "Modified", Name: "UpdatedAt", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.UpdatedAt")}}},
+					{Label: "Path", Name: "Path", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
+					{Label: "Modified", Name: "UpdatedAt", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.UpdatedAt")}}},
 				},
 			},
 		},
@@ -771,7 +771,7 @@ func registerDelete() {
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item? Deleting directories will remove all nested contents.",
 				CancelUrl: lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("vnode.ID")),
+					"id": getters.Any(getters.Key[uint]("vnode.ID")),
 				}),
 			},
 		},

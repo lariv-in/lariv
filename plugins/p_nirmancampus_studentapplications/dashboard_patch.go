@@ -15,7 +15,7 @@ func init() {
 
 func getterRoleIsUnassigned() getters.Getter[any] {
 	return func(ctx context.Context) (any, error) {
-		role, err := getters.GetterKey[string]("$role")(ctx)
+		role, err := getters.Key[string]("$role")(ctx)
 		if err != nil {
 			return false, nil
 		}
@@ -25,7 +25,7 @@ func getterRoleIsUnassigned() getters.Getter[any] {
 
 func getterRoleIsNotUnassigned() getters.Getter[any] {
 	return func(ctx context.Context) (any, error) {
-		role, err := getters.GetterKey[string]("$role")(ctx)
+		role, err := getters.Key[string]("$role")(ctx)
 		if err != nil {
 			return true, nil
 		}
@@ -55,7 +55,7 @@ func registerDashboardAppsPagePatch() {
 							Children: []components.PageInterface{
 								&components.FieldText{
 									Page:    components.Page{Key: "studentapplications.DashboardUnassignedHello"},
-									Getter:  getters.GetterFormat("Hello %s", getters.GetterAny(getters.GetterKey[string]("$user.Name"))),
+									Getter:  getters.Format("Hello %s", getters.Any(getters.Key[string]("$user.Name"))),
 									Classes: "text-3xl font-bold mb-8",
 								},
 								&components.ContainerRow{

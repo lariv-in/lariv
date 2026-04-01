@@ -37,7 +37,7 @@ func (e programStructureUnitCards) GetKey() string { return e.Key }
 func (programStructureUnitCards) GetChildren() []components.PageInterface { return nil }
 
 func (e programStructureUnitCards) Build(ctx context.Context) Node {
-	units, err := getters.GetterKey[[]ProgramStructureUnit]("program.ProgramStructureUnits")(ctx)
+	units, err := getters.Key[[]ProgramStructureUnit]("program.ProgramStructureUnits")(ctx)
 	if err != nil || len(units) == 0 {
 		return P(Class("text-base-content/70"), Text("No structure units yet. Use “Add new unit” to create one."))
 	}
@@ -45,8 +45,8 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 	for i := range units {
 		u := units[i]
 		editURL, err := lago.GetterRoutePath("programs.StructureUnitEditModalRoute", map[string]getters.Getter[any]{
-			"id":     getters.GetterAny(getters.GetterKey[uint]("program.ID")),
-			"unitId": getters.GetterAny(getters.GetterStatic[uint](u.ID)),
+			"id":     getters.Any(getters.Key[uint]("program.ID")),
+			"unitId": getters.Any(getters.Static[uint](u.ID)),
 		})(ctx)
 		if err != nil {
 			editURL = "#"
@@ -63,7 +63,7 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 				),
 				components.Render(&components.ButtonModal{
 					Label:   "Edit",
-					Url:     getters.GetterStatic(editURL),
+					Url:     getters.Static(editURL),
 					Classes: "btn-outline btn-sm",
 				}, ctx),
 			),
@@ -86,15 +86,15 @@ func registerStructurePages() {
 				Classes: "max-w-3xl flex flex-col",
 				Children: []components.PageInterface{
 					&components.FieldTitle{
-						Getter: getters.GetterStatic("Edit program structure"),
+						Getter: getters.Static("Edit program structure"),
 					},
 					&components.FieldSubtitle{
-						Getter: getters.GetterKey[string]("program.Name"),
+						Getter: getters.Key[string]("program.Name"),
 					},
 					programStructureUnitCards{},
 					&components.ButtonModal{
 						Label:   "Add new unit",
-						Url:     lago.GetterRoutePath("programs.StructureUnitCreateModalRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("program.ID"))}),
+						Url:     lago.GetterRoutePath("programs.StructureUnitCreateModalRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 						Classes: "btn-primary",
 					},
 				},
@@ -107,50 +107,50 @@ func registerStructurePages() {
 			Page: components.Page{Key: "programs.StructureUnitFormFieldsBody"},
 			Children: []components.PageInterface{
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.TermNumber"),
+					Error: getters.Key[error]("$error.TermNumber"),
 					Children: []components.PageInterface{
 						&components.InputNumber{
 							Label:    "Term number",
 							Name:     "TermNumber",
 							Required: true,
-							Getter:   getters.GetterKey[int]("$in.TermNumber"),
+							Getter:   getters.Key[int]("$in.TermNumber"),
 						},
 					},
 				},
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.CompulsoryCourses"),
+					Error: getters.Key[error]("$error.CompulsoryCourses"),
 					Children: []components.PageInterface{
 						&components.InputManyToMany[courses.Course]{
 							Label:       "Compulsory courses",
 							Name:        "CompulsoryCourses",
-							Getter:      getters.GetterKey[[]courses.Course]("$in.CompulsoryCourses"),
+							Getter:      getters.Key[[]courses.Course]("$in.CompulsoryCourses"),
 							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
-							Display:     getters.GetterKey[string]("$in.Name"),
+							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select compulsory courses…",
 							Classes:     "w-full",
 						},
 					},
 				},
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.OptionalCourseCount"),
+					Error: getters.Key[error]("$error.OptionalCourseCount"),
 					Children: []components.PageInterface{
 						&components.InputNumber{
 							Label:    "Optional course count",
 							Name:     "OptionalCourseCount",
 							Required: false,
-							Getter:   getters.GetterKey[int]("$in.OptionalCourseCount"),
+							Getter:   getters.Key[int]("$in.OptionalCourseCount"),
 						},
 					},
 				},
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.OptionalCourseSelectionPool"),
+					Error: getters.Key[error]("$error.OptionalCourseSelectionPool"),
 					Children: []components.PageInterface{
 						&components.InputManyToMany[courses.Course]{
 							Label:       "Optional course pool",
 							Name:        "OptionalCourseSelectionPool",
-							Getter:      getters.GetterKey[[]courses.Course]("$in.OptionalCourseSelectionPool"),
+							Getter:      getters.Key[[]courses.Course]("$in.OptionalCourseSelectionPool"),
 							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
-							Display:     getters.GetterKey[string]("$in.Name"),
+							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select optional pool courses…",
 							Classes:     "w-full",
 						},
@@ -165,50 +165,50 @@ func registerStructurePages() {
 			Page: components.Page{Key: "programs.StructureUnitFormFieldsCreateBody"},
 			Children: []components.PageInterface{
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.TermNumber"),
+					Error: getters.Key[error]("$error.TermNumber"),
 					Children: []components.PageInterface{
 						&components.InputNumber{
 							Label:    "Term number",
 							Name:     "TermNumber",
 							Required: true,
-							Getter:   getters.GetterStatic(0),
+							Getter:   getters.Static(0),
 						},
 					},
 				},
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.CompulsoryCourses"),
+					Error: getters.Key[error]("$error.CompulsoryCourses"),
 					Children: []components.PageInterface{
 						&components.InputManyToMany[courses.Course]{
 							Label:       "Compulsory courses",
 							Name:        "CompulsoryCourses",
-							Getter:      getters.GetterKey[[]courses.Course]("$in.CompulsoryCourses"),
+							Getter:      getters.Key[[]courses.Course]("$in.CompulsoryCourses"),
 							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
-							Display:     getters.GetterKey[string]("$in.Name"),
+							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select compulsory courses…",
 							Classes:     "w-full",
 						},
 					},
 				},
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.OptionalCourseCount"),
+					Error: getters.Key[error]("$error.OptionalCourseCount"),
 					Children: []components.PageInterface{
 						&components.InputNumber{
 							Label:    "Optional course count",
 							Name:     "OptionalCourseCount",
 							Required: false,
-							Getter:   getters.GetterStatic(0),
+							Getter:   getters.Static(0),
 						},
 					},
 				},
 				&components.ContainerError{
-					Error: getters.GetterKey[error]("$error.OptionalCourseSelectionPool"),
+					Error: getters.Key[error]("$error.OptionalCourseSelectionPool"),
 					Children: []components.PageInterface{
 						&components.InputManyToMany[courses.Course]{
 							Label:       "Optional course pool",
 							Name:        "OptionalCourseSelectionPool",
-							Getter:      getters.GetterKey[[]courses.Course]("$in.OptionalCourseSelectionPool"),
+							Getter:      getters.Key[[]courses.Course]("$in.OptionalCourseSelectionPool"),
 							Url:         lago.GetterRoutePath("courses.MultiSelectRoute", nil),
-							Display:     getters.GetterKey[string]("$in.Name"),
+							Display:     getters.Key[string]("$in.Name"),
 							Placeholder: "Select optional pool courses…",
 							Classes:     "w-full",
 						},
@@ -223,13 +223,13 @@ func registerStructurePages() {
 		Title: "Add structure unit",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
-				Url:    lago.GetterRoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("program.ID"))}),
+				Url:    lago.GetterRoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 				Method: http.MethodPost,
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
 						Hidden: true,
 						Name:   "ProgramID",
-						Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("program.ID"))),
+						Getter: getters.Format("%d", getters.Any(getters.Key[uint]("program.ID"))),
 					},
 					structureUnitFormFieldsCreate(),
 				},
@@ -250,17 +250,17 @@ func registerStructurePages() {
 		Title: "Edit structure unit",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
-				Getter: getters.GetterKey[ProgramStructureUnit]("unit"),
+				Getter: getters.Key[ProgramStructureUnit]("unit"),
 				Url: lago.GetterRoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
-					"id":     getters.GetterAny(getters.GetterKey[uint]("program.ID")),
-					"unitId": getters.GetterAny(getters.GetterKey[uint]("unit.ID")),
+					"id":     getters.Any(getters.Key[uint]("program.ID")),
+					"unitId": getters.Any(getters.Key[uint]("unit.ID")),
 				}),
 				Method: http.MethodPost,
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
 						Hidden: true,
 						Name:   "ProgramID",
-						Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[uint]("program.ID"))),
+						Getter: getters.Format("%d", getters.Any(getters.Key[uint]("program.ID"))),
 					},
 					structureUnitFormFieldsEdit(),
 				},

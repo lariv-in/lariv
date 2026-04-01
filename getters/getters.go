@@ -26,18 +26,18 @@ const (
 // Getter defines a common type for fetching data that could be dynamic
 type Getter[T any] func(context.Context) (T, error)
 
-// GetterStatic returns a Getter which will always return a static value
+// Static returns a Getter which will always return a static value
 // Never errors
-func GetterStatic[T any](value T) Getter[T] {
+func Static[T any](value T) Getter[T] {
 	return func(ctx context.Context) (T, error) {
 		return value, nil
 	}
 }
 
-// GetterKey returns a Getter that gets the value from the context.
+// Key returns a Getter that gets the value from the context.
 // '.' can be used to traverse map or struct fields. Keys must match exactly.
 // Returns the zero value of T when key is not found, with an error
-func GetterKey[T any](key string) Getter[T] {
+func Key[T any](key string) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		parts := strings.Split(key, ".")
@@ -80,7 +80,7 @@ type Number interface {
 	constraints.Integer | constraints.Float
 }
 
-func GetterNumberCast[T Number, V Number](g Getter[V]) Getter[T] {
+func NumberCast[T Number, V Number](g Getter[V]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		value, err := g(ctx)
@@ -91,10 +91,10 @@ func GetterNumberCast[T Number, V Number](g Getter[V]) Getter[T] {
 	}
 }
 
-func GetterQueryEscape[T comparable](g Getter[T]) Getter[string] {
+func QueryEscape[T comparable](g Getter[T]) Getter[string] {
 	var zero T
 	return func(ctx context.Context) (string, error) {
-		value, err := IfOrGetter(g, ctx, zero)
+		value, err := IfOr(g, ctx, zero)
 		if err != nil {
 			return "", err
 		}
@@ -102,21 +102,21 @@ func GetterQueryEscape[T comparable](g Getter[T]) Getter[string] {
 	}
 }
 
-func GetterNil[T any]() Getter[T] {
+func Nil[T any]() Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		return zero, nil
 	}
 }
 
-func GetterAny[T any](g Getter[T]) Getter[any] {
+func Any[T any](g Getter[T]) Getter[any] {
 	return func(ctx context.Context) (any, error) {
 		return g(ctx)
 	}
 }
 
-// GetterBoolNot negates a boolean getter. The result is Getter[any] for use with ShowIf and similar.
-func GetterBoolNot[T ~bool](g Getter[T]) Getter[any] {
+// BoolNot negates a boolean getter. The result is Getter[any] for use with ShowIf and similar.
+func BoolNot[T ~bool](g Getter[T]) Getter[any] {
 	return func(ctx context.Context) (any, error) {
 		v, err := g(ctx)
 		if err != nil {
@@ -126,9 +126,9 @@ func GetterBoolNot[T ~bool](g Getter[T]) Getter[any] {
 	}
 }
 
-// GetterIntString converts a Getter[int] to Getter[string] by formatting the int.
+// IntString converts a Getter[int] to Getter[string] by formatting the int.
 // Errors from the underlying getter (e.g. type mismatch) are propagated.
-func GetterIntString(g Getter[int]) Getter[string] {
+func IntString(g Getter[int]) Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		v, err := g(ctx)
 		if err != nil {
@@ -138,9 +138,9 @@ func GetterIntString(g Getter[int]) Getter[string] {
 	}
 }
 
-// GetterUintString converts a Getter[uint] to Getter[string] by formatting the uint.
+// UintString converts a Getter[uint] to Getter[string] by formatting the uint.
 // Errors from the underlying getter are propagated.
-func GetterUintString(g Getter[uint]) Getter[string] {
+func UintString(g Getter[uint]) Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		v, err := g(ctx)
 		if err != nil {
@@ -150,10 +150,10 @@ func GetterUintString(g Getter[uint]) Getter[string] {
 	}
 }
 
-// GetterTimeFormat converts a Getter[time.Time] to Getter[string] by formatting
+// TimeFormat converts a Getter[time.Time] to Getter[string] by formatting
 // the time using the provided layout. Errors from the underlying getter are
 // propagated.
-func GetterTimeFormat(layout string, g Getter[time.Time]) Getter[string] {
+func TimeFormat(layout string, g Getter[time.Time]) Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		t, err := g(ctx)
 		if err != nil {
@@ -166,11 +166,11 @@ func GetterTimeFormat(layout string, g Getter[time.Time]) Getter[string] {
 	}
 }
 
-func GetterFormat(format string, g ...Getter[any]) Getter[string] {
+func Format(format string, g ...Getter[any]) Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		values := []any{}
 		for _, getter := range g {
-			v, err := IfOrGetter(getter, ctx, "")
+			v, err := IfOr(getter, ctx, "")
 			if err != nil {
 				return "", err
 			}
@@ -246,9 +246,9 @@ func associationIDsFromValue(raw any) []uint {
 	return ids
 }
 
-// GetterContextAssociationIDs reads an association-ID style value from a context map
+// ContextAssociationIDs reads an association-ID style value from a context map
 // such as $get and normalizes it into []uint.
-func GetterContextAssociationIDs(contextKey, field string) Getter[[]uint] {
+func ContextAssociationIDs(contextKey, field string) Getter[[]uint] {
 	return func(ctx context.Context) ([]uint, error) {
 		value := ctx.Value(contextKey)
 		if value == nil {
@@ -267,7 +267,7 @@ func GetterContextAssociationIDs(contextKey, field string) Getter[[]uint] {
 }
 
 // Invokes the getter, if it is not nil and returns a non-nil value, and does not error out, returns that value. Otherwise returns the defaultValue.
-func IfOrGetter[T comparable](g Getter[T], ctx context.Context, defaultValue T) (T, error) {
+func IfOr[T comparable](g Getter[T], ctx context.Context, defaultValue T) (T, error) {
 	var zero T
 	if g == nil {
 		return defaultValue, nil
@@ -282,9 +282,9 @@ func IfOrGetter[T comparable](g Getter[T], ctx context.Context, defaultValue T) 
 	return value, nil
 }
 
-// IfOrElseGetter returns a Getter that invokes g when g is non-nil and returns a non-zero value without error;
+// IfOrElse returns a Getter that invokes g when g is non-nil and returns a non-zero value without error;
 // otherwise it invokes elseGetter. If elseGetter is nil in those fallback cases, returns the zero value of T.
-func IfOrElseGetter[T comparable](g Getter[T], elseGetter Getter[T]) Getter[T] {
+func IfOrElse[T comparable](g Getter[T], elseGetter Getter[T]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		if g != nil {
@@ -301,7 +301,7 @@ func IfOrElseGetter[T comparable](g Getter[T], elseGetter Getter[T]) Getter[T] {
 }
 
 // Invokes the getter, if it is not nil and returns a non-nil value and does not error out, calls the builder. Otherwise returns the zero value of T.
-func GetterIf[T any, V comparable](g Getter[V], ctx context.Context, builder func(context.Context, V) (T, error)) (T, error) {
+func If[T any, V comparable](g Getter[V], ctx context.Context, builder func(context.Context, V) (T, error)) (T, error) {
 	var zero T
 	var zeroV V
 	if g == nil {
@@ -317,8 +317,8 @@ func GetterIf[T any, V comparable](g Getter[V], ctx context.Context, builder fun
 	return builder(ctx, value)
 }
 
-// GetterAssociation fetches a single record based on a foreign key dynamically at render time.
-func GetterAssociation[T any, V any](foreignKeyGetter Getter[V]) Getter[T] {
+// Association fetches a single record based on a foreign key dynamically at render time.
+func Association[T any, V any](foreignKeyGetter Getter[V]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		fkValue, err := foreignKeyGetter(ctx)
@@ -339,14 +339,14 @@ func GetterAssociation[T any, V any](foreignKeyGetter Getter[V]) Getter[T] {
 	}
 }
 
-// GetterForeignKey fetches a related model T by its primary key and returns a specific field.
+// ForeignKey fetches a related model T by its primary key and returns a specific field.
 // foreignKeyGetter resolves the FK value (e.g. GetterKey("$in.RoleID")).
 // fieldPath is the dot-separated path into the related model's map (e.g. "Name").
-func GetterForeignKey[T any, K comparable, V any](foreignKeyGetter Getter[K], fieldPath string) Getter[V] {
+func ForeignKey[T any, K comparable, V any](foreignKeyGetter Getter[K], fieldPath string) Getter[V] {
 	var zeroK K
 	var zeroV V
 	return func(ctx context.Context) (V, error) {
-		fkValue, err := IfOrGetter(foreignKeyGetter, ctx, zeroK)
+		fkValue, err := IfOr(foreignKeyGetter, ctx, zeroK)
 		if err != nil {
 			return zeroV, err
 		}
@@ -456,9 +456,9 @@ func orderedAssociationSlice[T any](items []T, ids []uint, order string) []T {
 	return ordered
 }
 
-// GetterAssociationList fetches multiple records by ID and returns them as a slice.
+// AssociationList fetches multiple records by ID and returns them as a slice.
 // When order is empty, the returned slice preserves the order of idsGetter.
-func GetterAssociationList[T any](idsGetter Getter[[]uint], order string, preloads ...string) Getter[[]T] {
+func AssociationList[T any](idsGetter Getter[[]uint], order string, preloads ...string) Getter[[]T] {
 	return func(ctx context.Context) ([]T, error) {
 		ids, err := idsGetter(ctx)
 		if err != nil {
@@ -489,10 +489,10 @@ func GetterAssociationList[T any](idsGetter Getter[[]uint], order string, preloa
 	}
 }
 
-// GetterJoinAssociationList fetches related records through a join model.
+// JoinAssociationList fetches related records through a join model.
 // ownerField and targetField are struct field names on the join model (for example,
 // "CourseID" and "TeacherID"). When order is empty, join-row order is preserved.
-func GetterJoinAssociationList[TJoin any, TTarget any](ownerIDGetter Getter[uint], ownerField, targetField, order string, preloads ...string) Getter[[]TTarget] {
+func JoinAssociationList[TJoin any, TTarget any](ownerIDGetter Getter[uint], ownerField, targetField, order string, preloads ...string) Getter[[]TTarget] {
 	return func(ctx context.Context) ([]TTarget, error) {
 		ownerID, err := ownerIDGetter(ctx)
 		if err != nil {
@@ -529,16 +529,16 @@ func GetterJoinAssociationList[TJoin any, TTarget any](ownerIDGetter Getter[uint
 			return nil, nil
 		}
 
-		return GetterAssociationList[TTarget](GetterStatic(targetIDs), order, preloads...)(ctx)
+		return AssociationList[TTarget](Static(targetIDs), order, preloads...)(ctx)
 	}
 }
 
-// GetterNavigate returns an Alpine @click expression that performs HTMX navigation.
+// Navigate returns an Alpine @click expression that performs HTMX navigation.
 // urlFormat and getters work like GetterFormat to produce the URL per-row.
-func GetterNavigate(urlFormat string, getters ...Getter[any]) Getter[string] {
-	urlGetter := GetterFormat(urlFormat, getters...)
+func Navigate(urlFormat string, getters ...Getter[any]) Getter[string] {
+	urlGetter := Format(urlFormat, getters...)
 	return func(ctx context.Context) (string, error) {
-		url, err := IfOrGetter(urlGetter, ctx, "")
+		url, err := IfOr(urlGetter, ctx, "")
 		if err != nil {
 			return "", err
 		}
@@ -547,11 +547,11 @@ func GetterNavigate(urlFormat string, getters ...Getter[any]) Getter[string] {
 	}
 }
 
-// GetterNavigateGetter is like GetterNavigate but takes a pre-built Getter for the URL.
-func GetterNavigateGetter[T comparable](urlGetter Getter[T]) Getter[string] {
+// NavigateGetter is like GetterNavigate but takes a pre-built Getter for the URL.
+func NavigateGetter[T comparable](urlGetter Getter[T]) Getter[string] {
 	var zero T
 	return func(ctx context.Context) (string, error) {
-		url, err := IfOrGetter(urlGetter, ctx, zero)
+		url, err := IfOr(urlGetter, ctx, zero)
 		if err != nil {
 			return "", err
 		}
@@ -559,17 +559,17 @@ func GetterNavigateGetter[T comparable](urlGetter Getter[T]) Getter[string] {
 	}
 }
 
-// GetterSelect returns an Alpine @click expression that dispatches an 'fk-select' event for single selection.
+// Select returns an Alpine @click expression that dispatches an 'fk-select' event for single selection.
 // name is the input field name. valueGetter and displayGetter resolve per-row.
-func GetterSelect[T, D comparable](name string, valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
+func Select[T, D comparable](name string, valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
 	var zeroT T
 	var zeroD D
 	return func(ctx context.Context) (string, error) {
-		value, err := IfOrGetter(valueGetter, ctx, zeroT)
+		value, err := IfOr(valueGetter, ctx, zeroT)
 		if err != nil {
 			return "", err
 		}
-		display, err := IfOrGetter(displayGetter, ctx, zeroD)
+		display, err := IfOr(displayGetter, ctx, zeroD)
 		if err != nil {
 			return "", err
 		}
@@ -578,17 +578,24 @@ func GetterSelect[T, D comparable](name string, valueGetter Getter[T], displayGe
 	}
 }
 
-// GetterMultiSelect returns an Alpine @click expression that dispatches an
-// 'fk-multi-select' event for multi-selection inputs.
-func GetterMultiSelect[T, D comparable](name string, valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
+// SelectMulti returns an Alpine @click expression that dispatches an
+// 'fk-multi-select' event for multi-selection inputs. nameGetter resolves the
+// input field name (e.g. getters.GetterStatic("Field"), or
+// getters.IfOrElseGetter(getters.GetterKey[string]("$get.target_input"), getters.GetterStatic("Field"))
+// when the name may come from target_input on the request).
+func SelectMulti[T, D comparable](nameGetter Getter[string], valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
 	var zeroT T
 	var zeroD D
 	return func(ctx context.Context) (string, error) {
-		value, err := IfOrGetter(valueGetter, ctx, zeroT)
+		name, err := IfOr(nameGetter, ctx, "")
 		if err != nil {
 			return "", err
 		}
-		display, err := IfOrGetter(displayGetter, ctx, zeroD)
+		value, err := IfOr(valueGetter, ctx, zeroT)
+		if err != nil {
+			return "", err
+		}
+		display, err := IfOr(displayGetter, ctx, zeroD)
 		if err != nil {
 			return "", err
 		}
@@ -597,31 +604,7 @@ func GetterMultiSelect[T, D comparable](name string, valueGetter Getter[T], disp
 	}
 }
 
-// GetterMultiSelectNamedByTargetInput uses query / $get "target_input" as the
-// fk-multi-select field name when non-empty; otherwise defaultName. Use with
-// InputManyToMany URLs that append target_input (see components.InputManyToMany.Build)
-// and preserve target_input on filter forms (e.g. hidden input).
-func GetterMultiSelectNamedByTargetInput[T, D comparable](defaultName string, valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
-	var zeroT T
-	var zeroD D
-	return func(ctx context.Context) (string, error) {
-		name := defaultName
-		if s, err := GetterKey[string]("$get.target_input")(ctx); err == nil && s != "" {
-			name = s
-		}
-		value, err := IfOrGetter(valueGetter, ctx, zeroT)
-		if err != nil {
-			return "", err
-		}
-		display, err := IfOrGetter(displayGetter, ctx, zeroD)
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("$dispatch('fk-multi-select',{name:'%s',value:'%v',display:'%v'})", name, value, display), nil
-	}
-}
-
-func GetterDeref[T any](g Getter[*T]) Getter[T] {
+func Deref[T any](g Getter[*T]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		value, err := g(ctx)
@@ -635,7 +618,7 @@ func GetterDeref[T any](g Getter[*T]) Getter[T] {
 	}
 }
 
-func GetterMap[T, V any](g Getter[T], f func(context.Context, T) (V, error)) Getter[V] {
+func Map[T, V any](g Getter[T], f func(context.Context, T) (V, error)) Getter[V] {
 	var zero V
 	return func(ctx context.Context) (V, error) {
 		value, err := g(ctx)
@@ -646,9 +629,9 @@ func GetterMap[T, V any](g Getter[T], f func(context.Context, T) (V, error)) Get
 	}
 }
 
-// GetterJsonObj parses JSON from a string getter and returns datatypes.JSON. The top-level value must be a JSON object.
+// JSONObj parses JSON from a string getter and returns datatypes.JSON. The top-level value must be a JSON object.
 // Empty or whitespace-only input yields "{}".
-func GetterJsonObj[T any](g Getter[string]) Getter[datatypes.JSON] {
+func JSONObj[T any](g Getter[string]) Getter[datatypes.JSON] {
 	return func(ctx context.Context) (datatypes.JSON, error) {
 		s, err := g(ctx)
 		if err != nil {
@@ -670,9 +653,9 @@ func GetterJsonObj[T any](g Getter[string]) Getter[datatypes.JSON] {
 	}
 }
 
-// GetterJsonArray parses JSON from a string getter and returns datatypes.JSON. The top-level value must be a JSON array.
+// JSONArray parses JSON from a string getter and returns datatypes.JSON. The top-level value must be a JSON array.
 // Empty or whitespace-only input yields "[]".
-func GetterJsonArray[T any](g Getter[string]) Getter[datatypes.JSON] {
+func JSONArray[T any](g Getter[string]) Getter[datatypes.JSON] {
 	return func(ctx context.Context) (datatypes.JSON, error) {
 		s, err := g(ctx)
 		if err != nil {
@@ -694,7 +677,7 @@ func GetterJsonArray[T any](g Getter[string]) Getter[datatypes.JSON] {
 	}
 }
 
-func GetterParseUint(g Getter[string]) Getter[uint] {
+func ParseUint(g Getter[string]) Getter[uint] {
 	return func(ctx context.Context) (uint, error) {
 		s, err := g(ctx)
 		if err != nil {
@@ -708,7 +691,7 @@ func GetterParseUint(g Getter[string]) Getter[uint] {
 	}
 }
 
-func GetterParseInt(g Getter[string]) Getter[int] {
+func ParseInt(g Getter[string]) Getter[int] {
 	return func(ctx context.Context) (int, error) {
 		s, err := g(ctx)
 		if err != nil {

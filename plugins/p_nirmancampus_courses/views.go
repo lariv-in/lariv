@@ -28,7 +28,7 @@ func init() {
 
 	// Create view
 	lago.RegistryView.Register("courses.CreateView",
-		views.CreateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
+		views.CreateView[Course](lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
 			lago.GetPageView("courses.CourseCreateForm")).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("courses.admin_role", coursesAdminRoleMiddleware))
@@ -36,7 +36,7 @@ func init() {
 	// Update view
 	lago.RegistryView.Register("courses.UpdateView",
 		views.DetailView[Course]("course", "id")(
-			views.UpdateView[Course]("id", lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(
+			views.UpdateView[Course]("id", lago.GetterRoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
 				lago.GetPageView("courses.CourseUpdateForm"))).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
 			WithMiddleware("courses.admin_role", coursesAdminRoleMiddleware).

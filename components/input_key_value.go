@@ -61,8 +61,8 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
 			displayVal = val[i].Value
 		}
 		nodes = append(nodes,
-			InputText{Hidden: true, Name: e.Name + "Key", Getter: getters.GetterStatic(k)}.Build(ctx),
-			InputTextarea{Name: e.Name + "Value", Label: k, Getter: getters.GetterStatic(displayVal)}.Build(ctx),
+			InputText{Hidden: true, Name: e.Name + "Key", Getter: getters.Static(k)}.Build(ctx),
+			InputTextarea{Name: e.Name + "Value", Label: k, Getter: getters.Static(displayVal)}.Build(ctx),
 		)
 	}
 

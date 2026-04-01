@@ -24,7 +24,7 @@ func (e Detail[T]) Build(ctx context.Context) Node {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("Detail getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		if v := reflect.ValueOf(value); v.IsValid() && !v.IsZero() {
 			objMap := getters.MapFromStruct(value)

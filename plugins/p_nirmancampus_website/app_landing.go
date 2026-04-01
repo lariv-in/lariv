@@ -25,14 +25,14 @@ func (p *websiteAppLandingPage) Build(ctx context.Context) gomponents.Node {
 			components.ContainerColumn{
 				Classes: "max-w-3xl",
 				Children: []components.PageInterface{
-					&components.FieldTitle{Getter: getters.GetterStatic("Website Admin")},
-					&components.FieldText{Getter: getters.GetterStatic("Use the sidebar to navigate.")},
+					&components.FieldTitle{Getter: getters.Static("Website Admin")},
+					&components.FieldText{Getter: getters.Static("Use the sidebar to navigate.")},
 					components.ContainerRow{
 						Classes: "flex gap-2 flex-wrap mt-4",
 						Children: []components.PageInterface{
 							&components.ButtonLink{
 								Label:   "View Website",
-								Link:    getters.GetterStatic("/"),
+								Link:    getters.Static("/"),
 								Classes: "btn btn-outline",
 							},
 						},
@@ -50,26 +50,26 @@ func init() {
 	lago.RegistryPage.Register("nirmancampus_website.AppLandingPage", &websiteAppLandingPage{})
 
 	lago.RegistryPage.Register("nirmancampus_website.WebsiteAdminMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Website"),
+		Title: getters.Static("Website"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Apps"),
+			Title: getters.Static("Back to All Apps"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Home"),
+				Title: getters.Static("Home"),
 				Url:   lago.GetterRoutePath("nirmancampus_website.AppLandingRoute", nil),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Student Zone Sections"),
+				Title: getters.Static("Student Zone Sections"),
 				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Student Zone Items"),
+				Title: getters.Static("Student Zone Items"),
 				Url:   lago.GetterRoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Important Links"),
+				Title: getters.Static("Important Links"),
 				Url:   lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
 			},
 		},

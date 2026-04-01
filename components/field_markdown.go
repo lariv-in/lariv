@@ -91,7 +91,7 @@ func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 	s, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldMarkdown getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	if s == "" {
 		return ghtml.Div()

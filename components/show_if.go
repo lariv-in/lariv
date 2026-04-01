@@ -24,7 +24,7 @@ func (e ShowIf) Build(ctx context.Context) Node {
 	v, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("ShowIf getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	if !isTruthy(v) {
 		return Group{}

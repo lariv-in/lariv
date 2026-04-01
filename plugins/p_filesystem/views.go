@@ -101,7 +101,7 @@ func optionalNodeFromValue(db *gorm.DB, value any, fallback *VNode) (*VNode, err
 func parentRedirect(ctx context.Context, node *VNode) (string, error) {
 	if node != nil && node.ParentID != nil {
 		return lago.GetterRoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
-			"parent_id": getters.GetterAny(getters.GetterStatic(*node.ParentID)),
+			"parent_id": getters.Any(getters.Static(*node.ParentID)),
 		})(ctx)
 	}
 	return lago.GetterRoutePath("filesystem.ListRoute", nil)(ctx)
@@ -220,7 +220,7 @@ func updateHandler(v *views.View) http.Handler {
 		}
 
 		redirectURL, err := lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(node.ID)),
+			"id": getters.Any(getters.Static(node.ID)),
 		})(r.Context())
 		if err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)

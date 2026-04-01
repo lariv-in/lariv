@@ -28,7 +28,7 @@ func (e FieldSubtitle) Build(ctx context.Context) Node {
 		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldSubtitle getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		value = v
 	}

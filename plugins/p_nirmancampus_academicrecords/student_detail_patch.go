@@ -16,7 +16,7 @@ func init() {
 
 func academicRecordsForCurrentStudentGetter() getters.Getter[components.ObjectList[AcademicRecord]] {
 	return func(ctx context.Context) (components.ObjectList[AcademicRecord], error) {
-		studentID, err := getters.GetterKey[uint]("$in.ID")(ctx)
+		studentID, err := getters.Key[uint]("$in.ID")(ctx)
 		if err != nil || studentID == 0 {
 			return components.ObjectList[AcademicRecord]{Number: 1, NumPages: 1}, nil
 		}
@@ -56,29 +56,29 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
 			&components.TableButtonCreate{
-				Link: getters.GetterFormat(
+				Link: getters.Format(
 					"%s?StudentID=%d",
-					getters.GetterAny(lago.GetterRoutePath("academicrecords.CreateRoute", nil)),
-					getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+					getters.Any(lago.GetterRoutePath("academicrecords.CreateRoute", nil)),
+					getters.Any(getters.Key[uint]("$in.ID")),
 				),
 			},
 		},
-		OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+		OnClick: getters.NavigateGetter(lago.GetterRoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Key[uint]("$row.ID")),
 		})),
 		Columns: []components.TableColumn{
 			{
 				Label: "Program",
 				Name:  "Program.Name",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.GetterKey[string]("$row.Program.Name")},
+					&components.FieldText{Getter: getters.Key[string]("$row.Program.Name")},
 				},
 			},
 			{
 				Label: "Status",
 				Name:  "Status",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.GetterKey[string]("$row.Status")},
+					&components.FieldText{Getter: getters.Key[string]("$row.Status")},
 				},
 			},
 			{
@@ -86,7 +86,7 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 				Name:  "Term",
 				Children: []components.PageInterface{
 					&components.FieldText{
-						Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$row.Term"))),
+						Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Term"))),
 					},
 				},
 			},

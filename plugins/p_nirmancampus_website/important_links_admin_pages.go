@@ -12,7 +12,7 @@ import (
 
 func importantLinkGetterNotIsLink() getters.Getter[any] {
 	return func(ctx context.Context) (any, error) {
-		v, err := getters.GetterKey[bool]("$in.IsLink")(ctx)
+		v, err := getters.Key[bool]("$in.IsLink")(ctx)
 		if err != nil {
 			return true, nil
 		}
@@ -22,7 +22,7 @@ func importantLinkGetterNotIsLink() getters.Getter[any] {
 
 func importantLinkGetterNotIsLinkRow() getters.Getter[any] {
 	return func(ctx context.Context) (any, error) {
-		v, err := getters.GetterKey[bool]("$row.IsLink")(ctx)
+		v, err := getters.Key[bool]("$row.IsLink")(ctx)
 		if err != nil {
 			return true, nil
 		}
@@ -45,7 +45,7 @@ func registerImportantLinksAdminFilterPages() {
 			&components.InputText{
 				Label:  "Title",
 				Name:   "Title",
-				Getter: getters.GetterKey[string]("$get.Title"),
+				Getter: getters.Key[string]("$get.Title"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -68,23 +68,23 @@ func importantLinksFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Title"),
+						Error: getters.Key[error]("$error.Title"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:    "Title",
 								Name:     "Title",
 								Required: true,
-								Getter:   getters.GetterKey[string]("$in.Title"),
+								Getter:   getters.Key[string]("$in.Title"),
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Order"),
+						Error: getters.Key[error]("$error.Order"),
 						Children: []components.PageInterface{
 							&components.InputNumber{
 								Label:  "Order",
 								Name:   "Order",
-								Getter: getters.GetterKey[int]("$in.Order"),
+								Getter: getters.Key[int]("$in.Order"),
 							},
 						},
 					},
@@ -98,7 +98,7 @@ func importantLinksFormFields() components.ContainerColumn {
 					&components.InputCheckbox{
 						Label:  "Is Link",
 						Name:   "IsLink",
-						Getter: getters.GetterKey[bool]("$in.IsLink"),
+						Getter: getters.Key[bool]("$in.IsLink"),
 						XModel: "isLink",
 					},
 
@@ -106,12 +106,12 @@ func importantLinksFormFields() components.ContainerColumn {
 						Condition: "isLink",
 						Children: []components.PageInterface{
 							&components.ContainerError{
-								Error: getters.GetterKey[error]("$error.Link"),
+								Error: getters.Key[error]("$error.Link"),
 								Children: []components.PageInterface{
 									&components.InputText{
 										Label:  "Link URL",
 										Name:   "Link",
-										Getter: getters.GetterKey[string]("$in.Link"),
+										Getter: getters.Key[string]("$in.Link"),
 									},
 								},
 							},
@@ -122,12 +122,12 @@ func importantLinksFormFields() components.ContainerColumn {
 						Condition: "!isLink",
 						Children: []components.PageInterface{
 							&components.ContainerError{
-								Error: getters.GetterKey[error]("$error.FileID"),
+								Error: getters.Key[error]("$error.FileID"),
 								Children: []components.PageInterface{
 									&p_filesystem.InputVNode{
 										Label: "File",
 										Name:  "FileID",
-										VNode: getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.FileID"))),
+										VNode: getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$in.FileID"))),
 									},
 								},
 							},
@@ -203,9 +203,9 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[ImportantLink]{
-				Getter: getters.GetterKey[ImportantLink]("link"),
+				Getter: getters.Key[ImportantLink]("link"),
 				Url: lago.GetterRoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
 				Title:    "Edit Important Link",
@@ -242,34 +242,34 @@ func registerImportantLinksAdminTablePages() {
 			&components.DataTable[ImportantLink]{
 				UID:       "important-links-table",
 				Classes:   "w-full",
-				Data:      getters.GetterKey[components.ObjectList[ImportantLink]]("links"),
+				Data:      getters.Key[components.ObjectList[ImportantLink]]("links"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksFilter"}},
 					&components.TableButtonCreate{Link: lago.GetterRoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)},
 				},
-				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+				OnClick: getters.NavigateGetter(lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
 						Name:  "Title",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "Order",
 						Name:  "Order",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$row.Order")))},
+							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$row.Order")))},
 						},
 					},
 					{
 						Label: "Mode",
 						Name:  "IsLink",
 						Children: []components.PageInterface{
-							&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$row.IsLink")},
+							&components.FieldCheckbox{Getter: getters.Key[bool]("$row.IsLink")},
 						},
 					},
 					{
@@ -277,16 +277,16 @@ func registerImportantLinksAdminTablePages() {
 						Name:  "Value",
 						Children: []components.PageInterface{
 							&components.ShowIf{
-								Getter: getters.GetterAny(getters.GetterKey[bool]("$row.IsLink")),
+								Getter: getters.Any(getters.Key[bool]("$row.IsLink")),
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$row.Link")},
+									&components.FieldText{Getter: getters.Key[string]("$row.Link")},
 								},
 							},
 							&components.ShowIf{
-								Getter: getters.GetterAny(importantLinkGetterNotIsLinkRow()),
+								Getter: getters.Any(importantLinkGetterNotIsLinkRow()),
 								Children: []components.PageInterface{
 									&p_filesystem.FieldFile{
-										VNode: getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$row.FileID"))),
+										VNode: getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$row.FileID"))),
 									},
 								},
 							},
@@ -300,22 +300,22 @@ func registerImportantLinksAdminTablePages() {
 
 func registerImportantLinksAdminDetailPages() {
 	lago.RegistryPage.Register("nirmancampus_website.ImportantLinksDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Important Links"),
+		Title: getters.Static("Important Links"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to Important Links"),
+			Title: getters.Static("Back to Important Links"),
 			Url:   lago.GetterRoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Edit"),
+				Title: getters.Static("Edit"),
 				Url: lago.GetterRoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("link.ID")),
+					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Delete"),
+				Title: getters.Static("Delete"),
 				Url: lago.GetterRoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("link.ID")),
+					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 			},
 		},
@@ -327,31 +327,31 @@ func registerImportantLinksAdminDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[ImportantLink]{
-				Getter: getters.GetterKey[ImportantLink]("link"),
+				Getter: getters.Key[ImportantLink]("link"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Page: components.Page{Key: "nirmancampus_website.ImportantLinksDetailContent"},
 						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.GetterKey[string]("$in.Title")},
+							&components.FieldTitle{Getter: getters.Key[string]("$in.Title")},
 							&components.LabelInline{
 								Title: "Order",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterFormat("%d", getters.GetterAny(getters.GetterKey[int]("$in.Order")))},
+									&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[int]("$in.Order")))},
 								},
 							},
 							&components.LabelInline{
 								Title: "Is Link",
 								Children: []components.PageInterface{
-									&components.FieldCheckbox{Getter: getters.GetterKey[bool]("$in.IsLink")},
+									&components.FieldCheckbox{Getter: getters.Key[bool]("$in.IsLink")},
 								},
 							},
 							&components.ShowIf{
-								Getter: getters.GetterAny(getters.GetterKey[bool]("$in.IsLink")),
+								Getter: getters.Any(getters.Key[bool]("$in.IsLink")),
 								Children: []components.PageInterface{
 									&components.LabelInline{
 										Title: "Link",
 										Children: []components.PageInterface{
-											&components.FieldText{Getter: getters.GetterKey[string]("$in.Link")},
+											&components.FieldText{Getter: getters.Key[string]("$in.Link")},
 										},
 									},
 								},
@@ -363,7 +363,7 @@ func registerImportantLinksAdminDetailPages() {
 										Title: "File",
 										Children: []components.PageInterface{
 											&p_filesystem.FieldFile{
-												VNode: getters.GetterAssociation[p_filesystem.VNode](getters.GetterDeref(getters.GetterKey[*uint]("$in.FileID"))),
+												VNode: getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$in.FileID"))),
 											},
 										},
 									},
@@ -385,7 +385,7 @@ func registerImportantLinksAdminDetailPages() {
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this important link?",
 				CancelUrl: lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("link.ID")),
+					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 			},
 		},

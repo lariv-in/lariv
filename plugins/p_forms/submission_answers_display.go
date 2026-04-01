@@ -67,7 +67,7 @@ func (e SubmissionAnswersDisplay) Build(ctx context.Context) gomponents.Node {
 			Children: []components.PageInterface{
 				&components.FieldText{
 					Page:    components.Page{Key: e.Key + ".val." + f.Name},
-					Getter:  getters.GetterStatic(valStr),
+					Getter:  getters.Static(valStr),
 					Classes: classes,
 				},
 			},
@@ -89,7 +89,7 @@ func (e SubmissionAnswersDisplay) Build(ctx context.Context) gomponents.Node {
 			Children: []components.PageInterface{
 				&components.FieldText{
 					Page:    components.Page{Key: e.Key + ".extra.val." + k},
-					Getter:  getters.GetterStatic(strings.TrimSpace(fmt.Sprint(v))),
+					Getter:  getters.Static(strings.TrimSpace(fmt.Sprint(v))),
 					Classes: "font-mono text-sm whitespace-pre-wrap break-all",
 				},
 			},

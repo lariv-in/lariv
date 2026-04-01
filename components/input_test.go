@@ -58,7 +58,7 @@ func TestInputStringListParse(t *testing.T) {
 }
 
 func TestInputSelectParse(t *testing.T) {
-	choices := getters.GetterStatic([]registry.Pair[string, string]{
+	choices := getters.Static([]registry.Pair[string, string]{
 		{Key: "a", Value: "Alpha"},
 		{Key: "b", Value: "Beta"},
 	})
@@ -87,11 +87,11 @@ func TestInputSelectParse(t *testing.T) {
 }
 
 func TestInputSelectBuildSelected(t *testing.T) {
-	choices := getters.GetterStatic([]registry.Pair[string, string]{
+	choices := getters.Static([]registry.Pair[string, string]{
 		{Key: "a", Value: "Alpha"},
 		{Key: "b", Value: "Beta"},
 	})
-	current := getters.GetterStatic(registry.Pair[string, string]{Key: "b", Value: "Beta"})
+	current := getters.Static(registry.Pair[string, string]{Key: "b", Value: "Beta"})
 	input := InputSelect[string]{Label: "Pick", Name: "pick", Choices: choices, Getter: current}
 
 	html := renderNode(t, input.Build(context.Background()))
@@ -274,7 +274,7 @@ func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
 	input := InputManyToMany[testAssociationModel]{
 		Label:   "Teachers",
 		Name:    "Teachers",
-		Display: getters.GetterKey[string]("$in.Name"),
+		Display: getters.Key[string]("$in.Name"),
 	}
 	ctx := context.WithValue(context.Background(), "$db", db)
 	ctx = context.WithValue(ctx, getters.ContextKeyIn, map[string]any{

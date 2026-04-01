@@ -260,7 +260,7 @@ Create a detailed, personalized financial proposal following the report structur
 		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
 		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(fmt.Sprintf("%d", proposal.ID))),
+			"id": getters.Any(getters.Static(fmt.Sprintf("%d", proposal.ID))),
 		}).ServeHTTP(w, r)
 	})
 }
@@ -297,7 +297,7 @@ func cancelHandler(v *views.View) http.Handler {
 		}
 
 		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(idStr)),
+			"id": getters.Any(getters.Static(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
@@ -393,7 +393,7 @@ Rules:
 		Generate(db, proposal.ID, userPrompt, systemPrompt)
 
 		lago.NewRedirectView("proposals.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.GetterAny(getters.GetterStatic(idStr)),
+			"id": getters.Any(getters.Static(idStr)),
 		}).ServeHTTP(w, r)
 	})
 }
@@ -541,13 +541,13 @@ func init() {
 			WithMiddleware("proposals.detail", proposalDetailMiddleware))
 
 	lago.RegistryView.Register("proposals.CreateView",
-		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("proposals.ProposalCreateForm")).
+		views.CreateView[Proposal](lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("proposals.ProposalCreateForm")).
 			WithFormPatcher("proposals.form", ProposalFormPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 
 	lago.RegistryView.Register("proposals.UpdateView",
 		views.DetailView[Proposal]("proposal", "id")(
-			views.UpdateView[Proposal]("id", lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$id"))}))(lago.GetPageView("proposals.ProposalUpdateForm"))).
+			views.UpdateView[Proposal]("id", lago.GetterRoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("proposals.ProposalUpdateForm"))).
 			WithFormPatcher("proposals.form", ProposalFormPatcher).
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
 

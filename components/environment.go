@@ -37,7 +37,7 @@ func (e Environment[T]) Build(ctx context.Context) Node {
 		k, err := e.Key(ctx)
 		if err != nil {
 			slog.Error("Environment Key getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		key = k
 	}
@@ -47,7 +47,7 @@ func (e Environment[T]) Build(ctx context.Context) Node {
 		opts, err := e.Options(ctx)
 		if err != nil {
 			slog.Error("Environment Options getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		options = opts
 	}
@@ -63,7 +63,7 @@ func (e Environment[T]) Build(ctx context.Context) Node {
 		def, err := e.Default(ctx)
 		if err != nil {
 			slog.Error("Environment Default getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		if any(def) != any(zero) {
 			rawSel = fmt.Sprint(def)

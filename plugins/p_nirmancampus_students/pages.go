@@ -15,7 +15,7 @@ import (
 
 func dobGetter() getters.Getter[time.Time] {
 	return func(ctx context.Context) (time.Time, error) {
-		dobPtr, err := getters.GetterKey[*time.Time]("$in.DOB")(ctx)
+		dobPtr, err := getters.Key[*time.Time]("$in.DOB")(ctx)
 		if err != nil || dobPtr == nil {
 			return time.Time{}, nil
 		}
@@ -25,7 +25,7 @@ func dobGetter() getters.Getter[time.Time] {
 
 func dobDetailGetter() getters.Getter[time.Time] {
 	return func(ctx context.Context) (time.Time, error) {
-		dobPtr, err := getters.GetterKey[*time.Time]("$in.DOB")(ctx)
+		dobPtr, err := getters.Key[*time.Time]("$in.DOB")(ctx)
 		if err != nil || dobPtr == nil {
 			return time.Time{}, nil
 		}
@@ -44,44 +44,44 @@ func init() {
 
 func registerMenuPages() {
 	lago.RegistryPage.Register("students.StudentMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Students"),
+		Title: getters.Static("Students"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Apps"),
+			Title: getters.Static("Back to All Apps"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("All Students"),
+				Title: getters.Static("All Students"),
 				Url:   lago.GetterRoutePath("students.DefaultRoute", nil),
 			},
 		},
 	})
 
 	lago.RegistryPage.Register("students.StudentDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Student: %s", getters.GetterAny(getters.GetterKey[string]("student.User.Name"))),
+		Title: getters.Format("Student: %s", getters.Any(getters.Key[string]("student.User.Name"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Students"),
+			Title: getters.Static("Back to All Students"),
 			Url:   lago.GetterRoutePath("students.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Student Detail"),
+				Title: getters.Static("Student Detail"),
 				Url: lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("student.ID")),
+					"id": getters.Any(getters.Key[uint]("student.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
-				Title: getters.GetterStatic("Edit Student"),
+				Title: getters.Static("Edit Student"),
 				Url: lago.GetterRoutePath("students.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("student.ID")),
+					"id": getters.Any(getters.Key[uint]("student.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
-				Title: getters.GetterStatic("Delete Student"),
+				Title: getters.Static("Delete Student"),
 				Url: lago.GetterRoutePath("students.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("student.ID")),
+					"id": getters.Any(getters.Key[uint]("student.ID")),
 				}),
 			},
 		},
@@ -96,22 +96,22 @@ func registerFilterPages() {
 			&components.InputText{
 				Label:  "Student Number",
 				Name:   "StudentNo",
-				Getter: getters.GetterKey[string]("$get.StudentNo"),
+				Getter: getters.Key[string]("$get.StudentNo"),
 			},
 			&components.InputText{
 				Label:  "Name",
 				Name:   "User.Name",
-				Getter: getters.GetterKey[string]("$get.User.Name"),
+				Getter: getters.Key[string]("$get.User.Name"),
 			},
 			&components.InputText{
 				Label:  "Father's Name",
 				Name:   "FathersName",
-				Getter: getters.GetterKey[string]("$get.FathersName"),
+				Getter: getters.Key[string]("$get.FathersName"),
 			},
 			&components.InputText{
 				Label:  "Category",
 				Name:   "Category",
-				Getter: getters.GetterKey[string]("$get.Category"),
+				Getter: getters.Key[string]("$get.Category"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -132,12 +132,12 @@ func registerFilterPages() {
 			&components.InputText{
 				Label:  "Name",
 				Name:   "User.Name",
-				Getter: getters.GetterKey[string]("$get.User.Name"),
+				Getter: getters.Key[string]("$get.User.Name"),
 			},
 			&components.InputText{
 				Label:  "Student No",
 				Name:   "StudentNo",
-				Getter: getters.GetterKey[string]("$get.StudentNo"),
+				Getter: getters.Key[string]("$get.StudentNo"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -162,34 +162,34 @@ func studentFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.UserID"),
+						Error: getters.Key[error]("$error.UserID"),
 						Children: []components.PageInterface{
 							&components.InputForeignKey[p_users.User]{
 								Label:       "User Account",
 								Name:        "UserID",
 								Required:    true,
-								Getter:      getters.GetterAssociation[p_users.User](getters.GetterKey[uint]("$in.UserID")),
+								Getter:      getters.Association[p_users.User](getters.Key[uint]("$in.UserID")),
 								Url:         lago.GetterRoutePath("users.SelectRoute", nil),
-								Display:     getters.GetterKey[string]("$in.Name"),
+								Display:     getters.Key[string]("$in.Name"),
 								Placeholder: "Select a user...",
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.StudentNo"),
+						Error: getters.Key[error]("$error.StudentNo"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:    "Student Number",
 								Name:     "StudentNo",
 								Required: true,
-								Getter:   getters.GetterKey[string]("$in.StudentNo"),
+								Getter:   getters.Key[string]("$in.StudentNo"),
 							},
 						},
 					},
 				},
 			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.DOB"),
+				Error: getters.Key[error]("$error.DOB"),
 				Children: []components.PageInterface{
 					&components.InputDate{
 						Label:  "Date of Birth",
@@ -202,47 +202,47 @@ func studentFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.FathersName"),
+						Error: getters.Key[error]("$error.FathersName"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:  "Father's Name",
 								Name:   "FathersName",
-								Getter: getters.GetterKey[string]("$in.FathersName"),
+								Getter: getters.Key[string]("$in.FathersName"),
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Category"),
+						Error: getters.Key[error]("$error.Category"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:  "Category",
 								Name:   "Category",
-								Getter: getters.GetterKey[string]("$in.Category"),
+								Getter: getters.Key[string]("$in.Category"),
 							},
 						},
 					},
 				},
 			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Address"),
+				Error: getters.Key[error]("$error.Address"),
 				Children: []components.PageInterface{
 					&components.InputTextarea{
 						Label:  "Address",
 						Name:   "Address",
 						Rows:   3,
-						Getter: getters.GetterKey[string]("$in.Address"),
+						Getter: getters.Key[string]("$in.Address"),
 					},
 				},
 			},
 			&components.ContainerError{
-				Error: getters.GetterKey[error]("$error.Assets"),
+				Error: getters.Key[error]("$error.Assets"),
 				Children: []components.PageInterface{
 					&components.InputManyToMany[p_filesystem.VNode]{
 						Label:       "Assets",
 						Name:        "Assets",
-						Getter:      getters.GetterKey[[]p_filesystem.VNode]("$in.Assets"),
+						Getter:      getters.Key[[]p_filesystem.VNode]("$in.Assets"),
 						Url:         lago.GetterRoutePath("filesystem.MultiSelectRoute", nil),
-						Display:     getters.GetterKey[string]("$in.Name"),
+						Display:     getters.Key[string]("$in.Name"),
 						Placeholder: "Select assets...",
 					},
 				},
@@ -253,7 +253,7 @@ func studentFormFields() components.ContainerColumn {
 
 func studentCreateUrlGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		role, err := getters.GetterKey[string]("$role")(ctx)
+		role, err := getters.Key[string]("$role")(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -296,8 +296,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Student]{
-				Getter:   getters.GetterKey[Student]("student"),
-				Url:      lago.GetterRoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID"))}),
+				Getter:   getters.Key[Student]("student"),
+				Url:      lago.GetterRoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
 				Method:   http.MethodPost,
 				Title:    "Edit Student",
 				Subtitle: "Update student details",
@@ -323,20 +323,20 @@ func registerTablePages() {
 				Page:    components.Page{Key: "students.StudentTableBody"},
 				UID:     "student-table",
 				Classes: "w-full",
-				Data:    getters.GetterKey[components.ObjectList[Student]]("students"),
+				Data:    getters.Key[components.ObjectList[Student]]("students"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentFilter"}, Page: components.Page{Roles: []string{"admin", "superuser"}}},
 					&components.TableButtonCreate{Link: studentCreateUrlGetter(), Page: components.Page{Roles: []string{"admin", "superuser"}}},
 				},
-				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID"))})),
+				OnClick: getters.NavigateGetter(lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
 						Name:  "User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterForeignKey[p_users.User, uint, string](
-									getters.GetterKey[uint]("$row.UserID"),
+								Getter: getters.ForeignKey[p_users.User, uint, string](
+									getters.Key[uint]("$row.UserID"),
 									"Name",
 								),
 							},
@@ -347,7 +347,7 @@ func registerTablePages() {
 						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterKey[string]("$row.StudentNo"),
+								Getter: getters.Key[string]("$row.StudentNo"),
 							},
 						},
 					},
@@ -356,8 +356,8 @@ func registerTablePages() {
 						Name:  "User.Email",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterForeignKey[p_users.User, uint, string](
-									getters.GetterKey[uint]("$row.UserID"),
+								Getter: getters.ForeignKey[p_users.User, uint, string](
+									getters.Key[uint]("$row.UserID"),
 									"Email",
 								),
 							},
@@ -367,21 +367,21 @@ func registerTablePages() {
 						Label: "Father's Name",
 						Name:  "FathersName",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.FathersName")},
+							&components.FieldText{Getter: getters.Key[string]("$row.FathersName")},
 						},
 					},
 					{
 						Label: "Category",
 						Name:  "Category",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Category")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Category")},
 						},
 					},
 					{
 						Label: "Address",
 						Name:  "Address",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Address")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Address")},
 						},
 					},
 				},
@@ -397,16 +397,16 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Student]{
-				Getter: getters.GetterKey[Student]("student"),
+				Getter: getters.Key[Student]("student"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
 						Page: components.Page{Key: "students.StudentDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{
-								Getter: getters.GetterKey[string]("$in.User.Name"),
+								Getter: getters.Key[string]("$in.User.Name"),
 							},
 							&components.FieldSubtitle{
-								Getter: getters.GetterKey[string]("$in.StudentNo"),
+								Getter: getters.Key[string]("$in.StudentNo"),
 							},
 							&components.LabelInline{
 								Title: "Date of Birth",
@@ -419,29 +419,29 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Address",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Address")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Address")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Category",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.Category")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Category")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Father's Name",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.FathersName")},
+									&components.FieldText{Getter: getters.Key[string]("$in.FathersName")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Assets",
 								Children: []components.PageInterface{
 									&components.FieldManyToMany[p_filesystem.VNode]{
-										Getter:  getters.GetterKey[[]p_filesystem.VNode]("$in.Assets"),
-										Display: getters.GetterKey[string]("$in.Name"),
+										Getter:  getters.Key[[]p_filesystem.VNode]("$in.Assets"),
+										Display: getters.Key[string]("$in.Name"),
 										Link: lago.GetterRoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-											"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+											"id": getters.Any(getters.Key[uint]("$in.ID")),
 										}),
 										Classes: "w-full",
 									},
@@ -463,7 +463,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:     "Confirm Deletion",
 				Message:   "Are you sure you want to delete this student?",
-				CancelUrl: lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.GetterAny(getters.GetterKey[uint]("student.ID"))}),
+				CancelUrl: lago.GetterRoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("student.ID"))}),
 			},
 		},
 	})
@@ -477,8 +477,8 @@ func registerSelectionPages() {
 			&components.DataTable[Student]{
 				Page:    components.Page{Key: "students.StudentSelectionTableBody"},
 				UID:     "student-selection-table",
-				Data:    getters.GetterKey[components.ObjectList[Student]]("students"),
-				OnClick: getters.GetterSelect("StudentID", getters.GetterKey[uint]("$row.ID"), getters.GetterForeignKey[Student, uint, string](getters.GetterKey[uint]("$row.ID"), "StudentNo")),
+				Data:    getters.Key[components.ObjectList[Student]]("students"),
+				OnClick: getters.Select("StudentID", getters.Key[uint]("$row.ID"), getters.ForeignKey[Student, uint, string](getters.Key[uint]("$row.ID"), "StudentNo")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentSelectionFilter"}},
 				},
@@ -488,8 +488,8 @@ func registerSelectionPages() {
 						Name:  "User.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterForeignKey[p_users.User, uint, string](
-									getters.GetterKey[uint]("$row.UserID"),
+								Getter: getters.ForeignKey[p_users.User, uint, string](
+									getters.Key[uint]("$row.UserID"),
 									"Name",
 								),
 							},
@@ -500,7 +500,7 @@ func registerSelectionPages() {
 						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.GetterKey[string]("$row.StudentNo"),
+								Getter: getters.Key[string]("$row.StudentNo"),
 							},
 						},
 					},
@@ -508,14 +508,14 @@ func registerSelectionPages() {
 						Label: "Father's Name",
 						Name:  "FathersName",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.FathersName")},
+							&components.FieldText{Getter: getters.Key[string]("$row.FathersName")},
 						},
 					},
 					{
 						Label: "Category",
 						Name:  "Category",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Category")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Category")},
 						},
 					},
 				},

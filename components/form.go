@@ -38,7 +38,7 @@ func (e FormComponent[T]) Build(ctx context.Context) Node {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FormComponent getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		if v := reflect.ValueOf(value); v.IsValid() && !v.IsZero() {
 			objMap := getters.MapFromStruct(value)
@@ -59,7 +59,7 @@ func (e FormComponent[T]) Build(ctx context.Context) Node {
 		u, err := e.Url(childCtx)
 		if err != nil {
 			slog.Error("FormComponent Url getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		urlString = u
 	}

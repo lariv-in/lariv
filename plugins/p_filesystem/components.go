@@ -447,7 +447,7 @@ func (e FieldPhoto) Build(ctx context.Context) Node {
 	}
 
 	downloadURL, err := lago.GetterRoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
-		"id": getters.GetterAny(getters.GetterStatic(v.ID)),
+		"id": getters.Any(getters.Static(v.ID)),
 	})(ctx)
 	if err != nil {
 		slog.Error("FieldPhoto route resolution failed", "error", err, "key", e.Key)

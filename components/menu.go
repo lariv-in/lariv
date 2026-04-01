@@ -31,7 +31,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 		t, err := e.Title(ctx)
 		if err != nil {
 			slog.Error("SidebarMenuItem Title getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		title = t
 	}
@@ -40,7 +40,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 		u, err := e.Url(ctx)
 		if err != nil {
 			slog.Error("SidebarMenuItem Url getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		url = u
 	}
@@ -80,7 +80,7 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 			t, err := e.Back.Title(ctx)
 			if err != nil {
 				slog.Error("SidebarMenu Back Title getter failed", "error", err, "key", e.Key)
-				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+				return ContainerError{Error: getters.Static(err)}.Build(ctx)
 			}
 			backTitle = t
 		}
@@ -89,7 +89,7 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 			u, err := e.Back.Url(ctx)
 			if err != nil {
 				slog.Error("SidebarMenu Back Url getter failed", "error", err, "key", e.Key)
-				return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+				return ContainerError{Error: getters.Static(err)}.Build(ctx)
 			}
 			backUrl = u
 		}
@@ -97,7 +97,7 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 			Render(ButtonLink{
 				Page:    e.Back.Page,
 				Label:   backTitle,
-				Link:    getters.GetterStatic(backUrl),
+				Link:    getters.Static(backUrl),
 				Icon:    "arrow-left",
 				Classes: "btn-sm mb-2",
 			}, ctx),
@@ -109,7 +109,7 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 		title, err := e.Title(ctx)
 		if err != nil {
 			slog.Error("SidebarMenu Title getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
 		if title != "" {
 			items = append(items, Li(Class("menu-title font-semibold opacity-70"), Text(title)))

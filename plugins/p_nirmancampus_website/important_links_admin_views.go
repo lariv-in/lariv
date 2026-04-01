@@ -33,7 +33,7 @@ func init() {
 	lago.RegistryView.Register("nirmancampus_website.ImportantLinksCreateView",
 		views.CreateView[ImportantLink](
 			lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
-				"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
+				"id": getters.Any(getters.Key[uint]("$id")),
 			}),
 		)(
 			lago.GetPageView("nirmancampus_website.ImportantLinksCreateForm"),
@@ -57,7 +57,7 @@ func init() {
 		views.DetailView[ImportantLink]("link", "id")(
 			views.UpdateView[ImportantLink]("id",
 				lago.GetterRoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			)(
 				lago.GetPageView("nirmancampus_website.ImportantLinksUpdateForm"),

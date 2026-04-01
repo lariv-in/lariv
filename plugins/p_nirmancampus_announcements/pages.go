@@ -24,44 +24,44 @@ func init() {
 
 func registerMenuPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementMenu", &components.SidebarMenu{
-		Title: getters.GetterStatic("Announcements"),
+		Title: getters.Static("Announcements"),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to All Apps"),
+			Title: getters.Static("Back to All Apps"),
 			Url:   lago.GetterRoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("All Announcements"),
+				Title: getters.Static("All Announcements"),
 				Url:   lago.GetterRoutePath("announcements.DefaultRoute", nil),
 			},
 		},
 	})
 
 	lago.RegistryPage.Register("announcements.AnnouncementDetailMenu", &components.SidebarMenu{
-		Title: getters.GetterFormat("Announcement: %s", getters.GetterAny(getters.GetterKey[string]("announcement.Title"))),
+		Title: getters.Format("Announcement: %s", getters.Any(getters.Key[string]("announcement.Title"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.GetterStatic("Back to all Announcements"),
+			Title: getters.Static("Back to all Announcements"),
 			Url:   lago.GetterRoutePath("announcements.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
-				Title: getters.GetterStatic("Announcement Detail"),
+				Title: getters.Static("Announcement Detail"),
 				Url: lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("announcement.ID")),
+					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
-				Title: getters.GetterStatic("Edit Announcement"),
+				Title: getters.Static("Edit Announcement"),
 				Url: lago.GetterRoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("announcement.ID")),
+					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Page:  components.Page{Roles: []string{"admin", "superuser"}},
-				Title: getters.GetterStatic("Delete Announcement"),
+				Title: getters.Static("Delete Announcement"),
 				Url: lago.GetterRoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("announcement.ID")),
+					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},
 		},
@@ -78,12 +78,12 @@ func registerFilterPages() {
 			&components.InputText{
 				Label:  "Title",
 				Name:   "Title",
-				Getter: getters.GetterKey[string]("$get.Title"),
+				Getter: getters.Key[string]("$get.Title"),
 			},
 			&components.InputText{
 				Label:  "Description",
 				Name:   "Description",
-				Getter: getters.GetterKey[string]("$get.Description"),
+				Getter: getters.Key[string]("$get.Description"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -104,7 +104,7 @@ func registerFilterPages() {
 			&components.InputText{
 				Label:  "Title",
 				Name:   "Title",
-				Getter: getters.GetterKey[string]("$get.Title"),
+				Getter: getters.Key[string]("$get.Title"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -129,24 +129,24 @@ func announcementFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Title"),
+						Error: getters.Key[error]("$error.Title"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:    "Title",
 								Name:     "Title",
 								Required: true,
-								Getter:   getters.GetterKey[string]("$in.Title"),
+								Getter:   getters.Key[string]("$in.Title"),
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.Description"),
+						Error: getters.Key[error]("$error.Description"),
 						Children: []components.PageInterface{
 							&components.InputTextarea{
 								Label:  "Description",
 								Name:   "Description",
 								Rows:   4,
-								Getter: getters.GetterKey[string]("$in.Description"),
+								Getter: getters.Key[string]("$in.Description"),
 							},
 						},
 					},
@@ -157,12 +157,12 @@ func announcementFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.URL"),
+						Error: getters.Key[error]("$error.URL"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:  "URL",
 								Name:   "URL",
-								Getter: getters.GetterKey[string]("$in.URL"),
+								Getter: getters.Key[string]("$in.URL"),
 							},
 						},
 					},
@@ -173,24 +173,24 @@ func announcementFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.ReleaseAt"),
+						Error: getters.Key[error]("$error.ReleaseAt"),
 						Children: []components.PageInterface{
 							&components.InputDatetime{
 								Label:    "Release At",
 								Name:     "ReleaseAt",
 								Required: true,
-								Getter:   getters.GetterKey[time.Time]("$in.ReleaseAt"),
+								Getter:   getters.Key[time.Time]("$in.ReleaseAt"),
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.GetterKey[error]("$error.ExpiryAt"),
+						Error: getters.Key[error]("$error.ExpiryAt"),
 						Children: []components.PageInterface{
 							&components.InputDatetime{
 								Label:    "Expiry At",
 								Name:     "ExpiryAt",
 								Required: false,
-								Getter:   getters.GetterDeref(getters.GetterKey[*time.Time]("$in.ExpiryAt")),
+								Getter:   getters.Deref(getters.Key[*time.Time]("$in.ExpiryAt")),
 							},
 						},
 					},
@@ -234,9 +234,9 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Announcement]{
-				Getter: getters.GetterKey[Announcement]("announcement"),
+				Getter: getters.Key[Announcement]("announcement"),
 				Url: lago.GetterRoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+					"id": getters.Any(getters.Key[uint]("$in.ID")),
 				}),
 				Method:   http.MethodPost,
 				Title:    "Edit Announcement",
@@ -255,7 +255,7 @@ func registerFormPages() {
 
 func announcementCreateUrlGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		role, err := getters.GetterKey[string]("$role")(ctx)
+		role, err := getters.Key[string]("$role")(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -278,7 +278,7 @@ func registerTablePages() {
 				Page:    components.Page{Key: "announcements.AnnouncementTableBody"},
 				UID:     "announcement-table",
 				Classes: "w-full",
-				Data:    getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
+				Data:    getters.Key[components.ObjectList[Announcement]]("announcements"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{
 						Child: lago.DynamicPage{Name: "announcements.AnnouncementFilter"},
@@ -288,36 +288,36 @@ func registerTablePages() {
 						Page: components.Page{Roles: []string{"admin", "superuser"}},
 					},
 				},
-				OnClick: getters.GetterNavigateGetter(lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+				OnClick: getters.NavigateGetter(lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Title",
 						Name:  "Title",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "URL",
 						Name:  "URL",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.URL")},
+							&components.FieldText{Getter: getters.Key[string]("$row.URL")},
 						},
 					},
 					{
 						Label: "Release At",
 						Name:  "ReleaseAt",
 						Children: []components.PageInterface{
-							&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.ReleaseAt")},
+							&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.ReleaseAt")},
 						},
 					},
 					{
 						Label: "Expiry At",
 						Name:  "ExpiryAt",
 						Children: []components.PageInterface{
-							&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$row.ExpiryAt"))},
+							&components.FieldDatetime{Getter: getters.Deref(getters.Key[*time.Time]("$row.ExpiryAt"))},
 						},
 					},
 				},
@@ -335,37 +335,37 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Announcement]{
-				Getter: getters.GetterKey[Announcement]("announcement"),
+				Getter: getters.Key[Announcement]("announcement"),
 				Children: []components.PageInterface{
 					&components.ContainerColumn{
 						Page: components.Page{Key: "announcements.AnnouncementDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{
 								Page:   components.Page{Key: "announcements.AnnouncementDetailTitle"},
-								Getter: getters.GetterKey[string]("$in.Title"),
+								Getter: getters.Key[string]("$in.Title"),
 							},
 							&components.LabelInline{
 								Title: "Description",
 								Children: []components.PageInterface{
-									&components.FieldMarkdown{Getter: getters.GetterKey[string]("$in.Description")},
+									&components.FieldMarkdown{Getter: getters.Key[string]("$in.Description")},
 								},
 							},
 							&components.LabelInline{
 								Title: "URL",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.GetterKey[string]("$in.URL")},
+									&components.FieldText{Getter: getters.Key[string]("$in.URL")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Release At",
 								Children: []components.PageInterface{
-									&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$in.ReleaseAt")},
+									&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.ReleaseAt")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Expiry At",
 								Children: []components.PageInterface{
-									&components.FieldDatetime{Getter: getters.GetterDeref(getters.GetterKey[*time.Time]("$in.ExpiryAt"))},
+									&components.FieldDatetime{Getter: getters.Deref(getters.Key[*time.Time]("$in.ExpiryAt"))},
 								},
 							},
 						},
@@ -385,7 +385,7 @@ func registerDetailPages() {
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this announcement?",
 				CancelUrl: lago.GetterRoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.GetterAny(getters.GetterKey[uint]("announcement.ID")),
+					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 			},
 		},
@@ -402,10 +402,10 @@ func registerSelectionPages() {
 			&components.DataTable[Announcement]{
 				Page: components.Page{Key: "announcements.AnnouncementSelectionTableBody"},
 				UID:  "announcement-selection-table",
-				Data: getters.GetterKey[components.ObjectList[Announcement]]("announcements"),
-				OnClick: getters.GetterSelect("AnnouncementID",
-					getters.GetterKey[uint]("$row.ID"),
-					getters.GetterKey[string]("$row.Title"),
+				Data: getters.Key[components.ObjectList[Announcement]]("announcements"),
+				OnClick: getters.Select("AnnouncementID",
+					getters.Key[uint]("$row.ID"),
+					getters.Key[string]("$row.Title"),
 				),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{
@@ -418,14 +418,14 @@ func registerSelectionPages() {
 						Label: "Title",
 						Name:  "Title",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.GetterKey[string]("$row.Title")},
+							&components.FieldText{Getter: getters.Key[string]("$row.Title")},
 						},
 					},
 					{
 						Label: "Release At",
 						Name:  "ReleaseAt",
 						Children: []components.PageInterface{
-							&components.FieldDatetime{Getter: getters.GetterKey[time.Time]("$row.ReleaseAt")},
+							&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.ReleaseAt")},
 						},
 					},
 				},

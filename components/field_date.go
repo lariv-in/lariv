@@ -31,7 +31,7 @@ func (e FieldDate) Build(ctx context.Context) Node {
 	v, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldDate getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.GetterStatic(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	timezone, _ := ctx.Value("$tz").(*time.Location)
 	if timezone == nil {

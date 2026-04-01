@@ -16,7 +16,7 @@ func init() {
 
 func submissionsForCurrentAcademicRecordGetter() getters.Getter[components.ObjectList[AssignmentSubmission]] {
 	return func(ctx context.Context) (components.ObjectList[AssignmentSubmission], error) {
-		academicRecordID, err := getters.GetterKey[uint]("$in.ID")(ctx)
+		academicRecordID, err := getters.Key[uint]("$in.ID")(ctx)
 		if err != nil || academicRecordID == 0 {
 			return components.ObjectList[AssignmentSubmission]{Number: 1, NumPages: 1}, nil
 		}
@@ -55,16 +55,16 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 		Actions: []components.PageInterface{
 			&components.TableButtonCreate{
 				Page: components.Page{Roles: []string{"admin", "superuser"}},
-				Link: getters.GetterFormat(
+				Link: getters.Format(
 					"%s?AcademicRecordID=%d",
-					getters.GetterAny(lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil)),
-					getters.GetterAny(getters.GetterKey[uint]("$in.ID")),
+					getters.Any(lago.GetterRoutePath("assignmentsubmissions.CreateRoute", nil)),
+					getters.Any(getters.Key[uint]("$in.ID")),
 				),
 			},
 		},
-		OnClick: getters.GetterNavigateGetter(
+		OnClick: getters.NavigateGetter(
 			lago.GetterRoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
-				"id": getters.GetterAny(getters.GetterKey[uint]("$row.ID")),
+				"id": getters.Any(getters.Key[uint]("$row.ID")),
 			}),
 		),
 		Columns: []components.TableColumn{
@@ -72,21 +72,21 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 				Label: "Assignment",
 				Name:  "AssignmentTitle",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.GetterKey[string]("$row.AssignmentTitle")},
+					&components.FieldText{Getter: getters.Key[string]("$row.AssignmentTitle")},
 				},
 			},
 			{
 				Label: "Course",
 				Name:  "Course.Name",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.GetterKey[string]("$row.Course.Name")},
+					&components.FieldText{Getter: getters.Key[string]("$row.Course.Name")},
 				},
 			},
 			{
 				Label: "Status",
 				Name:  "SubmissionStatus",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.GetterKey[string]("$row.SubmissionStatus")},
+					&components.FieldText{Getter: getters.Key[string]("$row.SubmissionStatus")},
 				},
 			},
 		},

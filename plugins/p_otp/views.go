@@ -72,7 +72,7 @@ func PhoneOtpRequestHandler(v *views.View) http.Handler {
 			} else {
 				sent := SendSmsOtp(db, identifier)
 				if sent {
-					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
+					verifyPath, _ := getters.IfOr(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
 					lago.Redirect(w, r, successUrl)
 					return
@@ -145,7 +145,7 @@ func EmailOtpRequestHandler(v *views.View) http.Handler {
 			} else {
 				sent := SendEmailOtp(db, identifier)
 				if sent {
-					verifyPath, _ := getters.IfOrGetter(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
+					verifyPath, _ := getters.IfOr(lago.GetterRoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 					successUrl := verifyPath + "?identifier=" + url.QueryEscape(identifier)
 					lago.Redirect(w, r, successUrl)
 					return

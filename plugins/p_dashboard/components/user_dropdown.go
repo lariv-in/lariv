@@ -49,7 +49,7 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		),
 	}
 	if _, ok := userObj.(p_users.User); ok {
-		selfDetailHref, err := getters.IfOrGetter(lago.GetterRoutePath("users.SelfDetailRoute", nil), ctx, "")
+		selfDetailHref, err := getters.IfOr(lago.GetterRoutePath("users.SelfDetailRoute", nil), ctx, "")
 		if err != nil {
 			slog.Error("user dropdown: resolve self detail route", "error", err)
 		}
