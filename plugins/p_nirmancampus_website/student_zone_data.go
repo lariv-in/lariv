@@ -29,16 +29,16 @@ func buildStudentZonePageData(ctx context.Context) studentZonePageData {
 		return studentZonePageData{}
 	}
 
-	var sections []StudentZoneSection
-	if err := db.Order(`"order" ASC`).Find(&sections).Error; err != nil {
+	sections, err := gorm.G[StudentZoneSection](db).Order(`"order" ASC`).Find(ctx)
+	if err != nil {
 		slog.Error("nirmancampus_website: failed loading student zone sections", "error", err)
 		return studentZonePageData{}
 	}
 
 	result := make([]studentZoneSection, 0, len(sections))
 	for _, s := range sections {
-		var items []StudentZoneItem
-		if err := db.Where("student_zone_section_id = ?", s.ID).Find(&items).Error; err != nil {
+		items, err := gorm.G[StudentZoneItem](db).Where("student_zone_section_id = ?", s.ID).Find(ctx)
+		if err != nil {
 			slog.Error("nirmancampus_website: failed loading student zone items", "error", err, "section_id", s.ID)
 			continue
 		}

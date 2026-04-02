@@ -38,8 +38,8 @@ func buildHomePageData(ctx context.Context) homePageData {
 	}
 
 	return homePageData{
-		Announcements:  loadHomeAnnouncements(db, time.Now()),
-		ImportantLinks: loadHomeImportantLinks(db),
+		Announcements:  loadHomeAnnouncements(ctx, db, time.Now()),
+		ImportantLinks: loadHomeImportantLinks(ctx, db),
 	}
 }
 
@@ -51,13 +51,13 @@ func homePageDB(ctx context.Context) (*gorm.DB, error) {
 	return db, nil
 }
 
-func loadHomeAnnouncements(db *gorm.DB, now time.Time) []homeAnnouncement {
-	var announcements []p_nirmancampus_announcements.Announcement
-	if err := db.Model(&p_nirmancampus_announcements.Announcement{}).
+func loadHomeAnnouncements(ctx context.Context, db *gorm.DB, now time.Time) []homeAnnouncement {
+	announcements, err := gorm.G[p_nirmancampus_announcements.Announcement](db).
 		Where("release_at <= ?", now).
 		Where("expiry_at IS NULL OR expiry_at > ?", now).
 		Order("release_at DESC").
-		Find(&announcements).Error; err != nil {
+		Find(ctx)
+	if err != nil {
 		slog.Error("nirmancampus_website: failed loading announcements", "error", err)
 		return nil
 	}
@@ -79,9 +79,9 @@ func loadHomeAnnouncements(db *gorm.DB, now time.Time) []homeAnnouncement {
 	return items
 }
 
-func loadHomeImportantLinks(db *gorm.DB) []homeImportantLink {
-	var links []ImportantLink
-	if err := db.Order(`"order" ASC`).Find(&links).Error; err != nil {
+func loadHomeImportantLinks(ctx context.Context, db *gorm.DB) []homeImportantLink {
+	links, err := gorm.G[ImportantLink](db).Order(`"order" ASC`).Find(ctx)
+	if err != nil {
 		slog.Error("nirmancampus_website: failed loading important links", "error", err)
 		return nil
 	}

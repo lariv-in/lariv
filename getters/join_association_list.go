@@ -30,19 +30,23 @@ func JoinAssociationList[TJoin, TTarget any](ownerIDGetter Getter[uint], ownerFi
 		if err != nil {
 			return nil, err
 		}
-		targetDBName, err := schemaFieldDBName[TJoin](db, targetField)
+
+		chain := gorm.G[TJoin](db).Where(ownerDBName+" = ?", ownerID)
+		if order == "" {
+			chain = chain.Order(ownerDBName + " ASC")
+		} else {
+			chain = chain.Order(order)
+		}
+		joinRows, err := chain.Find(ctx)
 		if err != nil {
 			return nil, err
 		}
-
-		joinQuery := db.Model(new(TJoin)).Where(ownerDBName+" = ?", ownerID)
-		if order == "" {
-			joinQuery = joinQuery.Order(ownerDBName + " ASC")
-		}
-
-		var targetIDs []uint
-		if err := joinQuery.Pluck(targetDBName, &targetIDs).Error; err != nil {
-			return nil, err
+		targetIDs := make([]uint, 0, len(joinRows))
+		for i := range joinRows {
+			id, ok := uintFromMapField(MapFromStruct(joinRows[i]), targetField)
+			if ok {
+				targetIDs = append(targetIDs, id)
+			}
 		}
 		if len(targetIDs) == 0 {
 			return nil, nil
@@ -50,6 +54,54 @@ func JoinAssociationList[TJoin, TTarget any](ownerIDGetter Getter[uint], ownerFi
 
 		return AssociationList[TTarget](Static(targetIDs), order, preloads...)(ctx)
 	}
+}
+
+func uintFromMapField(m map[string]any, fieldName string) (uint, bool) {
+	raw, ok := m[fieldName]
+	if !ok || raw == nil {
+		return 0, false
+	}
+	switch v := raw.(type) {
+	case uint:
+		return v, true
+	case uint8:
+		return uint(v), true
+	case uint16:
+		return uint(v), true
+	case uint32:
+		return uint(v), true
+	case uint64:
+		return uint(v), true
+	case int:
+		if v > 0 {
+			return uint(v), true
+		}
+	case int8:
+		if v > 0 {
+			return uint(v), true
+		}
+	case int16:
+		if v > 0 {
+			return uint(v), true
+		}
+	case int32:
+		if v > 0 {
+			return uint(v), true
+		}
+	case int64:
+		if v > 0 {
+			return uint(v), true
+		}
+	case *uint:
+		if v != nil {
+			return *v, true
+		}
+	case *uint64:
+		if v != nil {
+			return uint(*v), true
+		}
+	}
+	return 0, false
 }
 
 func schemaFieldDBName[T any](db *gorm.DB, fieldName string) (string, error) {

@@ -26,8 +26,8 @@ func importantLinkItemHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		var item ImportantLink
-		if err := db.Preload("File").First(&item, id).Error; err != nil {
+		item, err := gorm.G[ImportantLink](db).Preload("File", nil).Where("id = ?", id).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}

@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"context"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -8,8 +9,8 @@ import (
 
 // reorderFormField moves a field one position up (earlier in sort_order order) or down.
 func reorderFormField(db *gorm.DB, formID, fieldID uint, moveUp bool) error {
-	var fields []FormField
-	if err := db.Where("form_id = ?", formID).Order("sort_order ASC, id ASC").Find(&fields).Error; err != nil {
+	fields, err := gorm.G[FormField](db).Where("form_id = ?", formID).Order("sort_order ASC, id ASC").Find(context.Background())
+	if err != nil {
 		return err
 	}
 	idx := -1

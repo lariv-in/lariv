@@ -172,8 +172,7 @@ func formPatcherNextSortOrderOnFieldCreate() views.FormPatcher {
 		if !ok || db == nil {
 			return formData, formErrors
 		}
-		var rows []FormField
-		db.Where("form_id = ?", formID).Order("sort_order DESC").Limit(1).Find(&rows)
+		rows, _ := gorm.G[FormField](db).Where("form_id = ?", formID).Order("sort_order DESC").Limit(1).Find(r.Context())
 		next := 0
 		if len(rows) > 0 {
 			next = rows[0].SortOrder + 1

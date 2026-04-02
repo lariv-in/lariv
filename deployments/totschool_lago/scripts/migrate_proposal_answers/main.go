@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -102,12 +103,12 @@ func previewJSON(raw string, max int) string {
 }
 
 func process(db *gorm.DB, dryRun bool, limit, sampleUnknown int) error {
-	var rows []proposalRow
-	q := db.Table("proposals").Select("id, answers").Order("id asc")
+	chain := gorm.G[proposalRow](db).Table("proposals").Select("id, answers").Order("id asc")
 	if limit > 0 {
-		q = q.Limit(limit)
+		chain = chain.Limit(limit)
 	}
-	if err := q.Find(&rows).Error; err != nil {
+	rows, err := chain.Find(context.Background())
+	if err != nil {
 		return err
 	}
 

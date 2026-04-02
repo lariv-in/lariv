@@ -23,8 +23,8 @@ func tallySessionEnvironmentDefault(ctx context.Context) (uint, error) {
 // SessionsListGetter returns session id / display name pairs for the environment selector.
 func SessionsListGetter(ctx context.Context) ([]registry.Pair[uint, string], error) {
 	db := ctx.Value("$db").(*gorm.DB)
-	var sessions []TotSchoolSession
-	if err := db.Model(&TotSchoolSession{}).Order(`"start" DESC`).Find(&sessions).Error; err != nil {
+	sessions, err := gorm.G[TotSchoolSession](db).Order(`"start" DESC`).Find(ctx)
+	if err != nil {
 		return nil, err
 	}
 	out := make([]registry.Pair[uint, string], 0, len(sessions))

@@ -1,6 +1,7 @@
 package p_totschool_appointments
 
 import (
+	"context"
 	"time"
 
 	"github.com/lariv-in/lago/lago"
@@ -26,13 +27,15 @@ func (a *Appointment) GetOverlappingAppointments(db *gorm.DB) []Appointment {
 	if a.CreatedByID == 0 || a.Datetime.IsZero() {
 		return nil
 	}
-	var results []Appointment
-	db.Where("created_by_id = ? AND datetime >= ? AND datetime <= ? AND id != ?",
+	results, err := gorm.G[Appointment](db).Where("created_by_id = ? AND datetime >= ? AND datetime <= ? AND id != ?",
 		a.CreatedByID,
 		a.Datetime.Add(-30*time.Minute),
 		a.Datetime.Add(30*time.Minute),
 		a.ID,
-	).Find(&results)
+	).Find(context.Background())
+	if err != nil {
+		return nil
+	}
 	return results
 }
 
