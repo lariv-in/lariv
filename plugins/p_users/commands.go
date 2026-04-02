@@ -1,6 +1,7 @@
 package p_users
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/mail"
@@ -8,6 +9,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -45,7 +47,7 @@ func createSuperuserCommand(config lago.LagoConfig) *cobra.Command {
 				RoleID:      role.ID,
 				Role:        role,
 			}
-			if err := db.Create(&user).Error; err != nil {
+			if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 				return fmt.Errorf("failed to create superuser: %w", err)
 			}
 
@@ -78,8 +80,8 @@ func changePasswordCommand(config lago.LagoConfig) *cobra.Command {
 
 			email, _ := cmd.Flags().GetString("email")
 			password, _ := cmd.Flags().GetString("password")
-			var user User
-			if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+			user, err := gorm.G[User](db).Where("email = ?", email).First(context.Background())
+			if err != nil {
 				return fmt.Errorf("failed to find user: %w", err)
 			}
 
@@ -112,8 +114,8 @@ func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
 				return err
 			}
 
-			var users []User
-			if err := db.Find(&users).Error; err != nil {
+			users, err := gorm.G[User](db).Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("failed to fetch users for revalidation: %w", err)
 			}
 

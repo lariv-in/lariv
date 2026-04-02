@@ -1,6 +1,7 @@
 package p_nirmancampus_studentapplications
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -146,18 +147,14 @@ func pickDistinctFiles(files []p_filesystem.VNode, n int, excludeID *uint) []p_f
 }
 
 func loadFileNodes(db *gorm.DB) ([]p_filesystem.VNode, error) {
-	var files []p_filesystem.VNode
-	if err := db.Where("is_directory = ?", false).Find(&files).Error; err != nil {
-		return nil, err
-	}
-	return files, nil
+	return gorm.G[p_filesystem.VNode](db).Where("is_directory = ?", false).Find(context.Background())
 }
 
 func init() {
 	lago.RegistryGenerator.Register("studentapplications.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var programs []p_nirmancampus_programs.Program
-			if err := db.Find(&programs).Error; err != nil {
+			programs, err := gorm.G[p_nirmancampus_programs.Program](db).Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("load programs: %w", err)
 			}
 			if len(programs) == 0 {
@@ -169,9 +166,8 @@ func init() {
 				return err
 			}
 
-			var seedCreator p_users.User
 			var seedCreatorID *uint
-			if err := db.First(&seedCreator).Error; err == nil {
+			if seedCreator, err := gorm.G[p_users.User](db).Where("TRUE").Limit(1).First(context.Background()); err == nil {
 				id := seedCreator.ID
 				seedCreatorID = &id
 			}
@@ -207,7 +203,7 @@ func init() {
 					}
 				}
 
-				if err := db.Create(&app).Error; err != nil {
+				if err := gorm.G[StudentApplication](db).Create(context.Background(), &app); err != nil {
 					return fmt.Errorf("failed to create student application %q: %w", row.studentName, err)
 				}
 

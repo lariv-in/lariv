@@ -1,6 +1,7 @@
 package p_users
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -62,8 +63,10 @@ func GenerateRandomPhone() string {
 func GenerateUser(db *gorm.DB, roleName string) (*User, error) {
 	name := GetRandomIndianName()
 
-	var userCount int64
-	db.Model(&User{}).Count(&userCount)
+	userCount, err := gorm.G[User](db).Count(context.Background(), "*")
+	if err != nil {
+		return nil, err
+	}
 	username := fmt.Sprintf("%s_%d", strings.ToLower(strings.ReplaceAll(name, " ", ".")), userCount+1)
 
 	role := Role{Name: roleName}
@@ -76,7 +79,7 @@ func GenerateUser(db *gorm.DB, roleName string) (*User, error) {
 		Password: []byte(defaultPassword),
 		RoleID:   role.ID,
 	}
-	if err := db.Create(&user).Error; err != nil {
+	if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -87,8 +90,10 @@ func GenerateUser(db *gorm.DB, roleName string) (*User, error) {
 func GenerateUserWithoutPassword(db *gorm.DB, roleName string) (*User, error) {
 	name := GetRandomIndianName()
 
-	var userCount int64
-	db.Model(&User{}).Count(&userCount)
+	userCount, err := gorm.G[User](db).Count(context.Background(), "*")
+	if err != nil {
+		return nil, err
+	}
 	username := fmt.Sprintf("%s_%d", strings.ToLower(strings.ReplaceAll(name, " ", ".")), userCount+1)
 
 	role := Role{Name: roleName}
@@ -100,7 +105,7 @@ func GenerateUserWithoutPassword(db *gorm.DB, roleName string) (*User, error) {
 		Phone:  GenerateRandomPhone(),
 		RoleID: role.ID,
 	}
-	if err := db.Create(&user).Error; err != nil {
+	if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -109,8 +114,7 @@ func GenerateUserWithoutPassword(db *gorm.DB, roleName string) (*User, error) {
 // CreateOverallSuperuser idempotently creates the system superuser (superadmin@lariv.in).
 // Returns the existing user if already present.
 func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
-	var existing User
-	err := db.Where("email = ?", "superadmin@lariv.in").First(&existing).Error
+	existing, err := gorm.G[User](db).Where("email = ?", "superadmin@lariv.in").First(context.Background())
 	if err == nil {
 		fmt.Println("Overall superuser already exists")
 		return &existing, nil
@@ -126,7 +130,7 @@ func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
 		IsSuperuser: true,
 		RoleID:      role.ID,
 	}
-	if err := db.Create(&user).Error; err != nil {
+	if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 		return nil, err
 	}
 	fmt.Println("Created overall superuser")

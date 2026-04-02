@@ -1,6 +1,7 @@
 package p_totschool_tally
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -64,8 +65,7 @@ func EnsureSessionForDate(db *gorm.DB, date time.Time) TotSchoolSession {
 
 	name := fmt.Sprintf("%d Quarter %d", year, quarter)
 
-	var session TotSchoolSession
-	err := db.Where("name = ?", name).First(&session).Error
+	session, err := gorm.G[TotSchoolSession](db).Where("name = ?", name).First(context.Background())
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			session = TotSchoolSession{
@@ -73,7 +73,7 @@ func EnsureSessionForDate(db *gorm.DB, date time.Time) TotSchoolSession {
 				Start: startDate,
 				End:   endDate,
 			}
-			db.Create(&session)
+			_ = gorm.G[TotSchoolSession](db).Create(context.Background(), &session)
 		}
 	}
 	return session
@@ -145,9 +145,8 @@ func GetDashboardStats(db *gorm.DB, userID *uint, session *TotSchoolSession) Das
 
 func GetWhatsappReportData(db *gorm.DB, userID uint) WhatsappReportData {
 	today := time.Now().Truncate(24 * time.Hour)
-	var count int64
-	db.Model(&Tally{}).Where("user_id = ? AND date = ?", userID, today).Count(&count)
-	if count == 0 {
+	count, err := gorm.G[Tally](db).Where("user_id = ? AND date = ?", userID, today).Count(context.Background(), "*")
+	if err != nil || count == 0 {
 		return WhatsappReportData{Submitted: false}
 	}
 
@@ -162,8 +161,7 @@ func GetWhatsappReportData(db *gorm.DB, userID uint) WhatsappReportData {
 	lastQuarterSession := EnsureSessionForDate(db, lastQuarterDate)
 	lastQuarterTotals := GetDashboardStats(db, &userID, &lastQuarterSession)
 
-	var user p_users.User
-	db.First(&user, userID)
+	user, _ := gorm.G[p_users.User](db).Where("id = ?", userID).First(context.Background())
 
 	return WhatsappReportData{
 		Submitted:   true,
@@ -246,8 +244,8 @@ func GetLeaderboards(db *gorm.DB, userID *uint, session *TotSchoolSession) map[s
 		}
 
 		if userID != nil && userEntry == nil {
-			var user p_users.User
-			if err := db.First(&user, *userID).Error; err == nil {
+			user, err := gorm.G[p_users.User](db).Where("id = ?", *userID).First(context.Background())
+			if err == nil {
 				userEntry = &LeaderboardEntry{
 					Rank:     "-",
 					UserID:   user.ID,

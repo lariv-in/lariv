@@ -1,6 +1,7 @@
 package p_nirmancampus_sessions
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -49,7 +50,7 @@ func init() {
 			}
 
 			for i := range rows {
-				if err := db.Create(&rows[i]).Error; err != nil {
+				if err := gorm.G[Semester](db).Create(context.Background(), &rows[i]); err != nil {
 					return fmt.Errorf("failed to create semester %q: %w", rows[i].Name, err)
 				}
 			}

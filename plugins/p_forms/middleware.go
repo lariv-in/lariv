@@ -67,8 +67,8 @@ func AttachFormForParentFieldsPath(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		var form Form
-		if err := db.First(&form, formID).Error; err != nil {
+		form, err := gorm.G[Form](db).Where("id = ?", formID).First(r.Context())
+		if err != nil {
 			next.ServeHTTP(w, r)
 			return
 		}

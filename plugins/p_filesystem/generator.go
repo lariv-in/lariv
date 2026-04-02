@@ -1,6 +1,7 @@
 package p_filesystem
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -43,8 +44,8 @@ func downloadPhoto(index int) (storedPath, fileName string, err error) {
 // GeneratePhotoFile downloads a new photo or picks an existing file VNode
 // (once we have enough photos). This mirrors the Django generate_photo_file().
 func GeneratePhotoFile(db *gorm.DB) (*VNode, error) {
-	var fileCount int64
-	if err := db.Model(&VNode{}).Where("is_directory = ?", false).Count(&fileCount).Error; err != nil {
+	fileCount, err := gorm.G[VNode](db).Where("is_directory = ?", false).Count(context.Background(), "*")
+	if err != nil {
 		return nil, err
 	}
 
@@ -60,7 +61,7 @@ func GeneratePhotoFile(db *gorm.DB) (*VNode, error) {
 			IsDirectory: false,
 			FilePath:    storedPath,
 		}
-		if err := db.Create(node).Error; err != nil {
+		if err := gorm.G[VNode](db).Create(context.Background(), node); err != nil {
 			// Clean up the written file on DB failure.
 			if deleteErr := Store.Delete(storedPath); deleteErr != nil {
 				slog.Error("failed cleaning up stored file after create error", "path", storedPath, "error", deleteErr)
@@ -71,8 +72,8 @@ func GeneratePhotoFile(db *gorm.DB) (*VNode, error) {
 	}
 
 	// Pick a random existing file.
-	var files []VNode
-	if err := db.Where("is_directory = ?", false).Find(&files).Error; err != nil {
+	files, err := gorm.G[VNode](db).Where("is_directory = ?", false).Find(context.Background())
+	if err != nil {
 		return nil, err
 	}
 	if len(files) == 0 {
@@ -90,7 +91,7 @@ func init() {
 				Name:        "Generated Photos",
 				IsDirectory: true,
 			}
-			if err := db.Create(dir).Error; err != nil {
+			if err := gorm.G[VNode](db).Create(context.Background(), dir); err != nil {
 				return fmt.Errorf("failed to create photos directory: %w", err)
 			}
 			fmt.Println("Created directory: Generated Photos")
@@ -111,7 +112,7 @@ func init() {
 					FilePath:    storedPath,
 					ParentID:    &dir.ID,
 				}
-				if err := db.Create(node).Error; err != nil {
+				if err := gorm.G[VNode](db).Create(context.Background(), node); err != nil {
 					slog.Error("failed creating photo VNode", "name", fileName, "error", err)
 					if deleteErr := Store.Delete(storedPath); deleteErr != nil {
 						slog.Error("failed cleaning up stored file", "path", storedPath, "error", deleteErr)
@@ -137,7 +138,7 @@ func init() {
 					IsDirectory: false,
 					FilePath:    storedPath,
 				}
-				if err := db.Create(node).Error; err != nil {
+				if err := gorm.G[VNode](db).Create(context.Background(), node); err != nil {
 					slog.Error("failed creating loose photo VNode", "name", fileName, "error", err)
 					if deleteErr := Store.Delete(storedPath); deleteErr != nil {
 						slog.Error("failed cleaning up stored file", "path", storedPath, "error", deleteErr)

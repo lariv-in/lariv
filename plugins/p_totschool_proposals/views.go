@@ -120,8 +120,8 @@ func generateHandler(v *views.View) http.Handler {
 			return
 		}
 
-		var proposal Proposal
-		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+		proposal, err := gorm.G[Proposal](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			slog.Error("generateHandler: proposal not found or DB error",
 				"error", err,
 				"id", idStr,
@@ -282,8 +282,8 @@ func cancelHandler(v *views.View) http.Handler {
 			return
 		}
 
-		var proposal Proposal
-		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+		proposal, err := gorm.G[Proposal](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			slog.Error("cancelHandler: proposal not found or DB error",
 				"error", err,
 				"id", idStr,
@@ -311,8 +311,8 @@ func aiEditFormHandler(v *views.View) http.Handler {
 			return
 		}
 
-		var proposal Proposal
-		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+		proposal, err := gorm.G[Proposal](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			slog.Error("aiEditFormHandler: proposal not found or DB error",
 				"error", err,
 				"id", idStr,
@@ -351,8 +351,8 @@ func aiEditHandler(v *views.View) http.Handler {
 			return
 		}
 
-		var proposal Proposal
-		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+		proposal, err := gorm.G[Proposal](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			slog.Error("aiEditHandler: proposal not found or DB error",
 				"error", err,
 				"id", idStr,
@@ -407,8 +407,8 @@ func exportDocxHandler(v *views.View) http.Handler {
 			return
 		}
 
-		var proposal Proposal
-		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+		proposal, err := gorm.G[Proposal](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			slog.Error("exportDocxHandler: proposal not found or DB error",
 				"error", err,
 				"id", idStr,
@@ -460,8 +460,8 @@ func exportPdfHandler(v *views.View) http.Handler {
 			return
 		}
 
-		var proposal Proposal
-		if err := db.Where("id = ?", idStr).First(&proposal).Error; err != nil {
+		proposal, err := gorm.G[Proposal](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			slog.Error("exportPdfHandler: proposal not found or DB error",
 				"error", err,
 				"id", idStr,

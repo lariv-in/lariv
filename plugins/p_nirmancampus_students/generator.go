@@ -1,6 +1,7 @@
 package p_nirmancampus_students
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -96,7 +97,7 @@ func CreateSampleStudent(db *gorm.DB) (*Student, error) {
 		Password: []byte(defaultPassword),
 		RoleID:   role.ID,
 	}
-	if err := db.Create(&user).Error; err != nil {
+	if err := gorm.G[p_users.User](db).Create(context.Background(), &user); err != nil {
 		return nil, fmt.Errorf("failed to create sample student user: %w", err)
 	}
 
@@ -108,7 +109,7 @@ func CreateSampleStudent(db *gorm.DB) (*Student, error) {
 		Category:    "",
 		Address:     "",
 	}
-	if err := db.Create(&student).Error; err != nil {
+	if err := gorm.G[Student](db).Create(context.Background(), &student); err != nil {
 		return nil, fmt.Errorf("failed to create sample student: %w", err)
 	}
 
@@ -144,7 +145,7 @@ func init() {
 					Category:    cat,
 					Address:     addr,
 				}
-				if err := db.Create(&student).Error; err != nil {
+				if err := gorm.G[Student](db).Create(context.Background(), &student); err != nil {
 					return fmt.Errorf("failed to create student %s: %w", studentNo, err)
 				}
 			}

@@ -1,6 +1,7 @@
 package p_totschool_appointments
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"time"
@@ -53,11 +54,13 @@ func GenerateAppointmentsForUser(db *gorm.DB, user p_users.User, count int) {
 
 		// Ensure no overlapping appointments for this user
 		for {
-			var overlappingCount int64
-			db.Model(&Appointment{}).Where(
+			overlappingCount, err := gorm.G[Appointment](db).Where(
 				"created_by_id = ? AND datetime = ?",
 				user.ID, apptDate,
-			).Count(&overlappingCount)
+			).Count(context.Background(), "*")
+			if err != nil {
+				overlappingCount = 0
+			}
 
 			if overlappingCount == 0 {
 				break
@@ -91,15 +94,15 @@ func GenerateAppointmentsForUser(db *gorm.DB, user p_users.User, count int) {
 			Remarks:     remarks,
 			ExtraInfo:   extraInfo,
 		}
-		db.Create(&appointment)
+		_ = gorm.G[Appointment](db).Create(context.Background(), &appointment)
 	}
 }
 
 func init() {
 	lago.RegistryGenerator.Register("appointments.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var users []p_users.User
-			if err := db.Find(&users).Error; err != nil {
+			users, err := gorm.G[p_users.User](db).Find(context.Background())
+			if err != nil {
 				return err
 			}
 

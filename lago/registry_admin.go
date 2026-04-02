@@ -1,6 +1,7 @@
 package lago
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"os"
@@ -60,13 +61,13 @@ func (a AdminPanel[T]) ModelName() string {
 }
 
 func (a AdminPanel[T]) List(db *gorm.DB, page, pageSize int) ([]map[string]any, error) {
-	var results []T
 	offset := (page - 1) * pageSize
-	q := db.Offset(offset).Limit(pageSize)
+	chain := gorm.G[T](db).Where("TRUE").Offset(offset).Limit(pageSize)
 	for _, p := range a.Preload {
-		q = q.Preload(p)
+		chain = chain.Preload(p, nil)
 	}
-	if err := q.Find(&results).Error; err != nil {
+	results, err := chain.Find(context.Background())
+	if err != nil {
 		return nil, err
 	}
 
@@ -82,8 +83,8 @@ func (a AdminPanel[T]) GetListFields() []string {
 }
 
 func (a AdminPanel[T]) Save(db *gorm.DB, id string, values map[string]*string) error {
-	var record T
-	if err := db.First(&record, id).Error; err != nil {
+	record, err := gorm.G[T](db).Where("id = ?", id).First(context.Background())
+	if err != nil {
 		return err
 	}
 
@@ -149,7 +150,7 @@ func (a AdminPanel[T]) Create(db *gorm.DB, values map[string]*string) error {
 		}
 		setFieldFromString(fv, *strPtr)
 	}
-	return db.Create(&record).Error
+	return gorm.G[T](db).Create(context.Background(), &record)
 }
 
 func (a AdminPanel[T]) ImportCSV(db *gorm.DB, path string) (int, error) {
@@ -201,8 +202,8 @@ func (a AdminPanel[T]) ImportCSV(db *gorm.DB, path string) (int, error) {
 				setFieldFromString(fv, val)
 			}
 		}
-		rec := record.Addr().Interface()
-		if err := db.Create(rec).Error; err != nil {
+		rec := record.Addr().Interface().(*T)
+		if err := gorm.G[T](db).Create(context.Background(), rec); err != nil {
 			return created, fmt.Errorf("row %d: %w", created+1, err)
 		}
 		created++
@@ -211,12 +212,12 @@ func (a AdminPanel[T]) ImportCSV(db *gorm.DB, path string) (int, error) {
 }
 
 func (a AdminPanel[T]) ExportCSV(db *gorm.DB, path string) (int, error) {
-	var results []T
-	q := db.Model(new(T))
+	chain := gorm.G[T](db).Where("TRUE")
 	for _, p := range a.Preload {
-		q = q.Preload(p)
+		chain = chain.Preload(p, nil)
 	}
-	if err := q.Find(&results).Error; err != nil {
+	results, err := chain.Find(context.Background())
+	if err != nil {
 		return 0, err
 	}
 	if len(results) == 0 {

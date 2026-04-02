@@ -21,8 +21,8 @@ func Association[T, V any](foreignKeyGetter Getter[V]) Getter[T] {
 			return zero, errors.New("Couldn't load db connection from context")
 		}
 
-		var result T
-		if err := db.Model(new(T)).Where("id = ?", fkValue).Take(&result).Error; err != nil {
+		result, err := gorm.G[T](db).Where("id = ?", fkValue).Take(ctx)
+		if err != nil {
 			return zero, err
 		}
 		return result, nil

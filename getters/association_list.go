@@ -24,16 +24,16 @@ func AssociationList[T any](idsGetter Getter[[]uint], order string, preloads ...
 			return nil, errors.New("Couldn't load db connection from context")
 		}
 
-		query := db.Model(new(T))
+		chain := gorm.G[T](db).Where("id IN ?", ids)
 		for _, preload := range preloads {
-			query = query.Preload(preload)
+			chain = chain.Preload(preload, nil)
 		}
 		if order != "" {
-			query = query.Order(order)
+			chain = chain.Order(order)
 		}
 
-		var results []T
-		if err := query.Where("id IN ?", ids).Find(&results).Error; err != nil {
+		results, err := chain.Find(ctx)
+		if err != nil {
 			return nil, err
 		}
 		return orderedAssociationSlice(results, ids, order), nil

@@ -1,6 +1,7 @@
 package p_nirmancampus_announcements
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -27,10 +28,9 @@ var announcementTitles = []string{
 }
 
 func pickCreatedByForAnnouncements(db *gorm.DB) *uint {
-	var u p_users.User
-	err := db.Where("is_superuser = ?", true).Order("id ASC").First(&u).Error
+	u, err := gorm.G[p_users.User](db).Where("is_superuser = ?", true).Order("id ASC").First(context.Background())
 	if err != nil {
-		err = db.Order("id ASC").First(&u).Error
+		u, err = gorm.G[p_users.User](db).Where("TRUE").Order("id ASC").First(context.Background())
 		if err != nil {
 			return nil
 		}
@@ -70,7 +70,7 @@ func init() {
 					ReleaseAt:   release,
 					ExpiryAt:    expiry,
 				}
-				if err := db.Create(&a).Error; err != nil {
+				if err := gorm.G[Announcement](db).Create(context.Background(), &a); err != nil {
 					return fmt.Errorf("failed to create announcement %q: %w", title, err)
 				}
 			}

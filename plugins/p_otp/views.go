@@ -60,8 +60,8 @@ func PhoneOtpRequestHandler(v *views.View) http.Handler {
 		}
 
 		if !v.HasErrors(fieldErrors) {
-			var count int64
-			if err := db.Model(&p_users.User{}).Where("phone = ?", identifier).Count(&count).Error; err != nil {
+			count, err := gorm.G[p_users.User](db).Where("phone = ?", identifier).Count(r.Context(), "*")
+			if err != nil {
 				slog.Error("PhoneOtpRequestHandler: failed to count users by phone",
 					"identifier", identifier,
 					"error", err,
@@ -133,8 +133,8 @@ func EmailOtpRequestHandler(v *views.View) http.Handler {
 		}
 
 		if !v.HasErrors(fieldErrors) {
-			var count int64
-			if err := db.Model(&p_users.User{}).Where("email = ?", identifier).Count(&count).Error; err != nil {
+			count, err := gorm.G[p_users.User](db).Where("email = ?", identifier).Count(r.Context(), "*")
+			if err != nil {
 				slog.Error("EmailOtpRequestHandler: failed to count users by email",
 					"identifier", identifier,
 					"error", err,
@@ -246,8 +246,7 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 			return
 		}
 
-		var user p_users.User
-		err = db.Where("phone = ? OR email = ?", identifier, identifier).First(&user).Error
+		user, err := gorm.G[p_users.User](db).Where("phone = ? OR email = ?", identifier, identifier).First(r.Context())
 		if err == nil {
 			user.Password = []byte(newPassword)
 			if err := db.Save(&user).Error; err != nil {

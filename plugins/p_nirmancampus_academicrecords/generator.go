@@ -1,6 +1,7 @@
 package p_nirmancampus_academicrecords
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
@@ -23,24 +24,24 @@ var sampleTerms = []uint{1, 2, 1, 3, 2, 1, 2, 3}
 func init() {
 	lago.RegistryGenerator.Register("academicrecords.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var students []p_nirmancampus_students.Student
-			if err := db.Order("id ASC").Find(&students).Error; err != nil {
+			students, err := gorm.G[p_nirmancampus_students.Student](db).Order("id ASC").Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("failed to load students: %w", err)
 			}
 			if len(students) == 0 {
 				return fmt.Errorf("need at least one student before generating academic records")
 			}
 
-			var programs []p_nirmancampus_programs.Program
-			if err := db.Order("id ASC").Find(&programs).Error; err != nil {
+			programs, err := gorm.G[p_nirmancampus_programs.Program](db).Order("id ASC").Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("failed to load programs: %w", err)
 			}
 			if len(programs) == 0 {
 				return fmt.Errorf("need at least one program before generating academic records")
 			}
 
-			var courses []p_nirmancampus_courses.Course
-			if err := db.Order("id ASC").Find(&courses).Error; err != nil {
+			courses, err := gorm.G[p_nirmancampus_courses.Course](db).Order("id ASC").Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("failed to load courses: %w", err)
 			}
 			if len(courses) == 0 {
@@ -55,7 +56,7 @@ func init() {
 					Term:      sampleTerms[k%len(sampleTerms)],
 					Status:    sampleStatuses[k%len(sampleStatuses)],
 				}
-				if err := db.Create(&rec).Error; err != nil {
+				if err := gorm.G[AcademicRecord](db).Create(context.Background(), &rec); err != nil {
 					return fmt.Errorf("failed to create academic record (student_id=%d): %w", st.ID, err)
 				}
 

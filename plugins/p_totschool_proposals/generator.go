@@ -1,6 +1,7 @@
 package p_totschool_proposals
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -53,7 +54,7 @@ func GenerateProposalsForUser(db *gorm.DB, user *p_users.User, count int) (int, 
 			Title:       title,
 			Answers:     datatypes.JSON(b),
 		}
-		if err := db.Create(&p).Error; err != nil {
+		if err := gorm.G[Proposal](db).Create(context.Background(), &p); err != nil {
 			return created, err
 		}
 		created++

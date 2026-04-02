@@ -197,8 +197,8 @@ func (e InputManyToMany[T]) Parse(v any, ctx context.Context) (any, error) {
 	}
 
 	if len(ids) > 0 {
-		var count int64
-		if err := db.Model(new(T)).Where("id IN ?", ids).Count(&count).Error; err != nil {
+		count, err := gorm.G[T](db).Where("id IN ?", ids).Count(ctx, "*")
+		if err != nil {
 			slog.Error("Error while fetching data for the specified many-to-many values", "error", err)
 			return AssociationIDs{Field: e.Name, IDs: ids}, err
 		}
@@ -299,8 +299,8 @@ func (e InputManyToMany[T]) selectionsForIDs(ctx context.Context, ids []uint) []
 		return items
 	}
 
-	var values []T
-	if err := db.Model(new(T)).Where("id IN ?", ids).Find(&values).Error; err != nil {
+	values, err := gorm.G[T](db).Where("id IN ?", ids).Find(ctx)
+	if err != nil {
 		slog.Error("InputManyToMany lookup failed", "error", err, "key", e.Key)
 		return nil
 	}

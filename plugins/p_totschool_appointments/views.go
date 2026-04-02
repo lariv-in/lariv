@@ -70,8 +70,8 @@ func generateHandler(v *views.View) http.Handler {
 		db := r.Context().Value("$db").(*gorm.DB)
 		user := r.Context().Value("$user").(p_users.User)
 
-		var appointment Appointment
-		if err := db.Where("id = ?", idStr).First(&appointment).Error; err != nil {
+		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -94,8 +94,8 @@ func cancelHandler(v *views.View) http.Handler {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		var appointment Appointment
-		if err := db.Where("id = ?", idStr).First(&appointment).Error; err != nil {
+		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -115,8 +115,8 @@ func aiEditFormHandler(v *views.View) http.Handler {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		var appointment Appointment
-		if err := db.Where("id = ?", idStr).First(&appointment).Error; err != nil {
+		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -135,8 +135,8 @@ func aiEditHandler(v *views.View) http.Handler {
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		var appointment Appointment
-		if err := db.Where("id = ?", idStr).First(&appointment).Error; err != nil {
+		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}

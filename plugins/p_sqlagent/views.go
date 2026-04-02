@@ -56,8 +56,8 @@ func detailRenderMiddleware() views.Middleware {
 				slog.Error("sqlagent: load messages", "error", err, "conversation_id", conv.ID)
 				msgs = []ConversationMessage{}
 			}
-			var convs []Conversation
-			if err := db.Where("created_by_id = ?", u.ID).Order("updated_at DESC").Limit(200).Find(&convs).Error; err != nil {
+			convs, err := gorm.G[Conversation](db).Where("created_by_id = ?", u.ID).Order("updated_at DESC").Limit(200).Find(r.Context())
+			if err != nil {
 				slog.Error("sqlagent: load conversation list", "error", err)
 				convs = nil
 			}

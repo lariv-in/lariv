@@ -41,10 +41,10 @@ func formPatcherAcademicRecordCreate(_ *views.View, r *http.Request, values map[
 		return values, formErrors
 	}
 
-	var psu p_nirmancampus_programs.ProgramStructureUnit
-	err := db.Where("program_id = ? AND term_number = ?", programID, term).
-		Preload("CompulsoryCourses").
-		First(&psu).Error
+	psu, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).
+		Where("program_id = ? AND term_number = ?", programID, term).
+		Preload("CompulsoryCourses", nil).
+		First(r.Context())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			slog.Warn("academic record create: no program structure unit for program/term",
@@ -80,14 +80,15 @@ func formPatcherAcademicRecordUpdate(_ *views.View, r *http.Request, values map[
 	if !ok || db == nil {
 		return values, formErrors
 	}
-	var rec AcademicRecord
-	if err := db.First(&rec, id).Error; err != nil {
+	rec, err := gorm.G[AcademicRecord](db).Where("id = ?", id).First(r.Context())
+	if err != nil {
 		return values, formErrors
 	}
-	var psu p_nirmancampus_programs.ProgramStructureUnit
-	if err := db.Select("optional_course_count").
+	psu, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).
+		Select("optional_course_count").
 		Where("program_id = ? AND term_number = ?", rec.ProgramID, rec.Term).
-		First(&psu).Error; err != nil {
+		First(r.Context())
+	if err != nil {
 		return values, formErrors
 	}
 	expected := psu.OptionalCourseCount

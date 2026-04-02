@@ -234,10 +234,11 @@ func TestInputManyToManyParse(t *testing.T) {
 	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {
 		t.Fatalf("AutoMigrate failed: %v", err)
 	}
-	if err := db.Create([]testAssociationModel{
+	seed := []testAssociationModel{
 		{ID: 1, Name: "Alpha"},
 		{ID: 2, Name: "Beta"},
-	}).Error; err != nil {
+	}
+	if err := gorm.G[testAssociationModel](db).CreateInBatches(context.Background(), &seed, len(seed)); err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
 
@@ -264,10 +265,11 @@ func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
 	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {
 		t.Fatalf("AutoMigrate failed: %v", err)
 	}
-	if err := db.Create([]testAssociationModel{
+	seed := []testAssociationModel{
 		{ID: 1, Name: "Alpha"},
 		{ID: 2, Name: "Beta"},
-	}).Error; err != nil {
+	}
+	if err := gorm.G[testAssociationModel](db).CreateInBatches(context.Background(), &seed, len(seed)); err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
 
@@ -323,10 +325,11 @@ func TestFormComponentParseFormUsesRepeatedValuesForManyToMany(t *testing.T) {
 	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {
 		t.Fatalf("AutoMigrate failed: %v", err)
 	}
-	if err := db.Create([]testAssociationModel{
+	seed := []testAssociationModel{
 		{ID: 1, Name: "Alpha"},
 		{ID: 2, Name: "Beta"},
-	}).Error; err != nil {
+	}
+	if err := gorm.G[testAssociationModel](db).CreateInBatches(context.Background(), &seed, len(seed)); err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
 

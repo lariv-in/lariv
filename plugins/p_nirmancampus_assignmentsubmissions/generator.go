@@ -1,6 +1,7 @@
 package p_nirmancampus_assignmentsubmissions
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -27,24 +28,24 @@ var sampleSubmissionRows = []struct {
 func init() {
 	lago.RegistryGenerator.Register("assignmentsubmissions.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
-			var academicRecords []p_nirmancampus_academicrecords.AcademicRecord
-			if err := db.Order("id ASC").Find(&academicRecords).Error; err != nil {
+			academicRecords, err := gorm.G[p_nirmancampus_academicrecords.AcademicRecord](db).Order("id ASC").Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("load academic records: %w", err)
 			}
 			if len(academicRecords) == 0 {
 				return fmt.Errorf("assignmentsubmissions.Generator: no academic records in database; run academicrecords.Generator first")
 			}
 
-			var courses []p_nirmancampus_courses.Course
-			if err := db.Order("id ASC").Find(&courses).Error; err != nil {
+			courses, err := gorm.G[p_nirmancampus_courses.Course](db).Order("id ASC").Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("load courses: %w", err)
 			}
 			if len(courses) == 0 {
 				return fmt.Errorf("assignmentsubmissions.Generator: no courses in database; run courses.Generator first")
 			}
 
-			var files []p_filesystem.VNode
-			if err := db.Where("is_directory = ?", false).Find(&files).Error; err != nil {
+			files, err := gorm.G[p_filesystem.VNode](db).Where("is_directory = ?", false).Find(context.Background())
+			if err != nil {
 				return fmt.Errorf("load filesystem files: %w", err)
 			}
 
@@ -59,7 +60,7 @@ func init() {
 					CourseID:         courses[i%len(courses)].ID,
 					AcademicRecordID: ar.ID,
 				}
-				if err := db.Create(&submission).Error; err != nil {
+				if err := gorm.G[AssignmentSubmission](db).Create(context.Background(), &submission); err != nil {
 					return fmt.Errorf("create assignment submission for academic_record_id=%d: %w", ar.ID, err)
 				}
 

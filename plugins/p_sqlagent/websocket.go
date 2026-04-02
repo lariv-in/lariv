@@ -1,6 +1,7 @@
 package sqlagent
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -48,8 +49,8 @@ func chatSocketHandler(conn *websocket.Conn) {
 	conversationID := uint(convID64)
 
 	db := ctx.Value("$db").(*gorm.DB)
-	var conv Conversation
-	if err := db.Where("id = ? AND created_by_id = ?", conversationID, u.ID).First(&conv).Error; err != nil {
+	conv, err := gorm.G[Conversation](db).Where("id = ? AND created_by_id = ?", conversationID, u.ID).First(ctx)
+	if err != nil {
 		slog.Error("sqlagent: websocket conversation not found or denied", "error", err, "conversation_id", conversationID)
 		return
 	}
@@ -90,8 +91,7 @@ func parseWSContent(raw string) string {
 }
 
 func nextSortOrder(db *gorm.DB, conversationID uint) (int, error) {
-	var last ConversationMessage
-	err := db.Where("conversation_id = ?", conversationID).Order("sort_order DESC").First(&last).Error
+	last, err := gorm.G[ConversationMessage](db).Where("conversation_id = ?", conversationID).Order("sort_order DESC").First(context.Background())
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, nil
 	}
@@ -119,14 +119,14 @@ func handleChatMessage(conn *websocket.Conn, db *gorm.DB, conv *Conversation, us
 			SortOrder:      sortU,
 			Kind:           MessageKindUser,
 		}
-		if err := tx.Create(&userMsg).Error; err != nil {
+		if err := gorm.G[ConversationMessage](tx).Create(context.Background(), &userMsg); err != nil {
 			return err
 		}
 		um := UserMessage{
 			ConversationMessageID: userMsg.ID,
 			Content:               content,
 		}
-		if err := tx.Create(&um).Error; err != nil {
+		if err := gorm.G[UserMessage](tx).Create(context.Background(), &um); err != nil {
 			return err
 		}
 		userMsg.UserMessage = &um
@@ -137,7 +137,7 @@ func handleChatMessage(conn *websocket.Conn, db *gorm.DB, conv *Conversation, us
 			SortOrder:      sortA,
 			Kind:           MessageKindAI,
 		}
-		if err := tx.Create(&aiMsg).Error; err != nil {
+		if err := gorm.G[ConversationMessage](tx).Create(context.Background(), &aiMsg); err != nil {
 			return err
 		}
 		am := AIMessage{
@@ -145,7 +145,7 @@ func handleChatMessage(conn *websocket.Conn, db *gorm.DB, conv *Conversation, us
 			Content:               "",
 			Status:                AIStatusStreaming,
 		}
-		if err := tx.Create(&am).Error; err != nil {
+		if err := gorm.G[AIMessage](tx).Create(context.Background(), &am); err != nil {
 			return err
 		}
 		aiMsg.AIMessage = &am
@@ -211,8 +211,8 @@ func maybeUpdateConversationTitle(db *gorm.DB, convID uint, titleHint string) {
 	if titleHint == "" {
 		return
 	}
-	var c Conversation
-	if err := db.First(&c, convID).Error; err != nil {
+	c, err := gorm.G[Conversation](db).Where("id = ?", convID).First(context.Background())
+	if err != nil {
 		slog.Error("sqlagent: load conversation for title", "error", err)
 		return
 	}

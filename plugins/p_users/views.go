@@ -21,8 +21,8 @@ func SelfUserQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.
 }
 
 func changeUserPassword(db *gorm.DB, userID uint, newPassword string) error {
-	var targetUser User
-	if err := db.Model(User{}).Last(&targetUser, "ID = ?", userID).Error; err != nil {
+	targetUser, err := gorm.G[User](db).Where("id = ?", userID).Last(context.Background())
+	if err != nil {
 		return err
 	}
 	targetUser.Password = []byte(newPassword)
@@ -141,13 +141,11 @@ func SignupHandler(v *views.View) http.Handler {
 		db := r.Context().Value("$db").(*gorm.DB)
 
 		// Check for existing user by email and phone to surface friendly errors
-		var existingByEmail User
-		if err := db.Where("email = ?", email).Last(&existingByEmail).Error; err == nil {
+		if _, err := gorm.G[User](db).Where("email = ?", email).Last(r.Context()); err == nil {
 			fieldErrors["Email"] = fmt.Errorf("An account with this email already exists")
 		}
 
-		var existingByPhone User
-		if err := db.Where("phone = ?", phone).Last(&existingByPhone).Error; err == nil {
+		if _, err := gorm.G[User](db).Where("phone = ?", phone).Last(r.Context()); err == nil {
 			fieldErrors["Phone"] = fmt.Errorf("An account with this phone number already exists")
 		}
 

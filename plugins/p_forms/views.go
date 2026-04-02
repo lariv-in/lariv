@@ -444,8 +444,8 @@ func fieldMovePostView(moveUp bool) *views.View {
 						return
 					}
 					db := r.Context().Value("$db").(*gorm.DB)
-					var ff FormField
-					if err := db.First(&ff, fieldID64).Error; err != nil {
+					ff, err := gorm.G[FormField](db).Where("id = ?", fieldID64).First(r.Context())
+					if err != nil {
 						http.NotFound(w, r)
 						return
 					}
@@ -479,10 +479,11 @@ func publicSubmitView() *views.View {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					slug := r.PathValue("slug")
 					db := r.Context().Value("$db").(*gorm.DB)
-					var form Form
-					if err := db.Preload("FormFields", func(db *gorm.DB) *gorm.DB {
-						return db.Order("sort_order ASC, id ASC")
-					}).Where("slug = ?", slug).First(&form).Error; err != nil {
+					form, err := gorm.G[Form](db).Preload("FormFields", func(p gorm.PreloadBuilder) error {
+						p.Order("sort_order ASC, id ASC")
+						return nil
+					}).Where("slug = ?", slug).First(r.Context())
+					if err != nil {
 						http.NotFound(w, r)
 						return
 					}
@@ -502,10 +503,11 @@ func publicSubmitView() *views.View {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					slug := r.PathValue("slug")
 					db := r.Context().Value("$db").(*gorm.DB)
-					var form Form
-					if err := db.Preload("FormFields", func(db *gorm.DB) *gorm.DB {
-						return db.Order("sort_order ASC, id ASC")
-					}).Where("slug = ?", slug).First(&form).Error; err != nil {
+					form, err := gorm.G[Form](db).Preload("FormFields", func(p gorm.PreloadBuilder) error {
+						p.Order("sort_order ASC, id ASC")
+						return nil
+					}).Where("slug = ?", slug).First(r.Context())
+					if err != nil {
 						http.NotFound(w, r)
 						return
 					}
@@ -536,7 +538,7 @@ func publicSubmitView() *views.View {
 						return
 					}
 					sub := FormSubmission{FormID: form.ID, Answers: datatypes.JSON(raw)}
-					if err := db.Create(&sub).Error; err != nil {
+					if err := gorm.G[FormSubmission](db).Create(r.Context(), &sub); err != nil {
 						slog.Error("forms: create submission", "error", err)
 						fieldErrors["_form"] = err
 						inner.RenderWithErrors(w, r, fieldErrors, values)

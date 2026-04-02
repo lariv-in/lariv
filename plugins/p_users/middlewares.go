@@ -54,8 +54,8 @@ func resolveAuth(r *http.Request) context.Context {
 		slog.Warn("resolveAuth: missing $db in context")
 		return nil
 	}
-	var user User
-	if err := db.Model(User{}).Last(&user, "ID = ?", userID).Error; err != nil {
+	user, err := gorm.G[User](db).Where("id = ?", uint(userID)).Last(r.Context())
+	if err != nil {
 		slog.Warn("Error while loading user", "err", err)
 		return nil
 	}

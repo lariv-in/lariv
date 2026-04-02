@@ -21,8 +21,8 @@ func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSessio
 	if envMap, ok := ctx.Value("$environment").(map[string]string); ok {
 		if raw, exists := envMap["session"]; exists && raw != "" {
 			if id, err := strconv.ParseUint(raw, 10, 64); err == nil && id > 0 {
-				var session TotSchoolSession
-				if qerr := db.First(&session, uint(id)).Error; qerr == nil {
+				session, qerr := gorm.G[TotSchoolSession](db).Where("id = ?", uint(id)).First(ctx)
+				if qerr == nil {
 					return session
 				} else {
 					slog.Error("getSessionFromEnvironment: failed to load session by id from $environment",
@@ -32,8 +32,8 @@ func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSessio
 				}
 			} else {
 				// Legacy: cookie held session name.
-				var session TotSchoolSession
-				if err := db.Where("name = ?", raw).First(&session).Error; err == nil {
+				session, err := gorm.G[TotSchoolSession](db).Where("name = ?", raw).First(ctx)
+				if err == nil {
 					return session
 				}
 			}
@@ -236,8 +236,7 @@ func TallyDailyFormHandler(v *views.View) http.Handler {
 		db := r.Context().Value("$db").(*gorm.DB)
 		today := time.Now().Truncate(24 * time.Hour)
 
-		var tally Tally
-		err := db.Where("user_id = ? AND date = ?", user.ID, today).First(&tally).Error
+		tally, err := gorm.G[Tally](db).Where("user_id = ? AND date = ?", user.ID, today).First(r.Context())
 		if err != nil {
 			tally = Tally{UserID: user.ID, Date: today}
 		}
@@ -274,7 +273,7 @@ func TallyDailyFormHandler(v *views.View) http.Handler {
 		tally.Premium, _ = values["Premium"].(int)
 
 		if tally.ID == 0 {
-			db.Create(&tally)
+			_ = gorm.G[Tally](db).Create(r.Context(), &tally)
 		} else {
 			db.Save(&tally)
 		}

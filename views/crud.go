@@ -459,7 +459,7 @@ func JsonImport[T any](fileField string, successURL getters.Getter[string]) func
 				db := r.Context().Value("$db").(*gorm.DB)
 				if len(records) > 0 {
 					if err := db.Transaction(func(tx *gorm.DB) error {
-						return tx.Create(&records).Error
+						return gorm.G[T](tx).CreateInBatches(r.Context(), &records, 100)
 					}); err != nil {
 						fieldErrors["_form"] = fmt.Errorf("%v", err)
 						renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
@@ -502,7 +502,7 @@ func CreateView[T any](successURL getters.Getter[string]) func(*View) *View {
 					if err := PopulateFromMap(record, regularValues); err != nil {
 						return err
 					}
-					if err := tx.Create(record).Error; err != nil {
+					if err := gorm.G[T](tx).Create(r.Context(), record); err != nil {
 						return err
 					}
 					return applyAssociationReplacements(tx, record, associationValues)

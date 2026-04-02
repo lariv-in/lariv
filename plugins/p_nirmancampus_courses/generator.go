@@ -1,6 +1,7 @@
 package p_nirmancampus_courses
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
@@ -71,7 +72,7 @@ func init() {
 		Create: func(db *gorm.DB) error {
 			for i := range sampleCourses {
 				c := sampleCourses[i]
-				if err := db.Create(&c).Error; err != nil {
+				if err := gorm.G[Course](db).Create(context.Background(), &c); err != nil {
 					return fmt.Errorf("failed to create course %q: %w", c.Code, err)
 				}
 			}

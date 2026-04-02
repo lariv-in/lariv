@@ -27,8 +27,8 @@ func ForeignKey[T any, K comparable, V any](foreignKeyGetter Getter[K], fieldPat
 			return zeroV, errors.New("Couldn't load db connection from context")
 		}
 
-		var instance T
-		if err := db.First(&instance, fkValue).Error; err != nil {
+		instance, err := gorm.G[T](db).Where("id = ?", fkValue).First(ctx)
+		if err != nil {
 			return zeroV, err
 		}
 

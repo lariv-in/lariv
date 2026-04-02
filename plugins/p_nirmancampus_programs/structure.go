@@ -169,7 +169,7 @@ func handleStructureUnitCreate(v *views.View) http.Handler {
 		}
 		db := r.Context().Value("$db").(*gorm.DB)
 		if err := db.Transaction(func(tx *gorm.DB) error {
-			if err := tx.Create(record).Error; err != nil {
+			if err := gorm.G[ProgramStructureUnit](tx).Create(r.Context(), record); err != nil {
 				return err
 			}
 			return replaceStructureUnitCourseAssociations(tx, record, assoc)
@@ -211,8 +211,8 @@ func handleStructureUnitUpdate(v *views.View) http.Handler {
 			return
 		}
 		db := r.Context().Value("$db").(*gorm.DB)
-		var existing ProgramStructureUnit
-		if err := db.Where("id = ? AND program_id = ?", unitID, parentID).First(&existing).Error; err != nil {
+		existing, err := gorm.G[ProgramStructureUnit](db).Where("id = ? AND program_id = ?", unitID, parentID).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}

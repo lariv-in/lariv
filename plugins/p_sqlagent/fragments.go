@@ -1,6 +1,7 @@
 package sqlagent
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"strings"
@@ -135,13 +136,11 @@ func OOBReplaceMessage(msg ConversationMessage) string {
 
 // LoadMessagesForConversation loads ordered messages with payloads for transcript rendering.
 func LoadMessagesForConversation(db *gorm.DB, conversationID uint) ([]ConversationMessage, error) {
-	var msgs []ConversationMessage
-	err := db.Where("conversation_id = ?", conversationID).
-		Preload("UserMessage").
-		Preload("AIMessage").
-		Preload("ToolMessage").
-		Preload("ErrorMessage").
-		Order("sort_order ASC, id ASC").
-		Find(&msgs).Error
-	return msgs, err
+	chain := gorm.G[ConversationMessage](db).Where("conversation_id = ?", conversationID).
+		Preload("UserMessage", nil).
+		Preload("AIMessage", nil).
+		Preload("ToolMessage", nil).
+		Preload("ErrorMessage", nil).
+		Order("sort_order ASC, id ASC")
+	return chain.Find(context.Background())
 }

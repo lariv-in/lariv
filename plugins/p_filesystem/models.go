@@ -1,6 +1,7 @@
 package p_filesystem
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -38,8 +39,8 @@ func sanitizeNodeName(name string) string {
 }
 
 func GetVNodeByID(db *gorm.DB, id uint) (*VNode, error) {
-	var node VNode
-	if err := db.First(&node, id).Error; err != nil {
+	node, err := gorm.G[VNode](db).Where("id = ?", id).First(context.Background())
+	if err != nil {
 		return nil, err
 	}
 	return &node, nil
@@ -60,15 +61,15 @@ func GetVNodeByPath(db *gorm.DB, rawPath string) (*VNode, string, error) {
 			return nil, "", fmt.Errorf("invalid path segment %q", part)
 		}
 
-		query := db.Where("name = ?", name)
+		chain := gorm.G[VNode](db).Where("name = ?", name)
 		if current == nil {
-			query = query.Where("parent_id IS NULL")
+			chain = chain.Where("parent_id IS NULL")
 		} else {
-			query = query.Where("parent_id = ?", current.ID)
+			chain = chain.Where("parent_id = ?", current.ID)
 		}
 
-		var next VNode
-		if err := query.First(&next).Error; err != nil {
+		next, err := chain.First(context.Background())
+		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				traversed := "/"
 				if i > 0 {
@@ -102,15 +103,15 @@ func EnsureDirectoryPath(db *gorm.DB, rawPath string) (*VNode, error) {
 			return nil, fmt.Errorf("invalid path segment %q", part)
 		}
 
-		query := db.Where("name = ?", name)
+		chain := gorm.G[VNode](db).Where("name = ?", name)
 		if current == nil {
-			query = query.Where("parent_id IS NULL")
+			chain = chain.Where("parent_id IS NULL")
 		} else {
-			query = query.Where("parent_id = ?", current.ID)
+			chain = chain.Where("parent_id = ?", current.ID)
 		}
 
-		var next VNode
-		if err := query.First(&next).Error; err != nil {
+		next, err := chain.First(context.Background())
+		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				created, cerr := CreateVNode(db, name, true, nil, current)
 				if cerr != nil {
@@ -169,7 +170,7 @@ func CreateVNode(db *gorm.DB, name string, isDirectory bool, file *multipart.Fil
 		node.ParentID = &parent.ID
 	}
 
-	if err := db.Create(node).Error; err != nil {
+	if err := gorm.G[VNode](db).Create(context.Background(), node); err != nil {
 		if deleteErr := Store.Delete(storedPath); deleteErr != nil {
 			slog.Error("failed cleaning up stored file after create error", "path", storedPath, "error", deleteErr)
 		}
@@ -236,8 +237,8 @@ func (n *VNode) MoveToNode(db *gorm.DB, destination *VNode) error {
 }
 
 func (n *VNode) DeleteTree(db *gorm.DB) error {
-	var children []VNode
-	if err := db.Where("parent_id = ?", n.ID).Find(&children).Error; err != nil {
+	children, err := gorm.G[VNode](db).Where("parent_id = ?", n.ID).Find(context.Background())
+	if err != nil {
 		return err
 	}
 	for i := range children {
@@ -245,7 +246,8 @@ func (n *VNode) DeleteTree(db *gorm.DB) error {
 			return err
 		}
 	}
-	return db.Delete(n).Error
+	_, err = gorm.G[VNode](db).Where("id = ?", n.ID).Delete(context.Background())
+	return err
 }
 
 func (n *VNode) IsDescendantOf(db *gorm.DB, ancestorID uint) (bool, error) {
@@ -307,8 +309,8 @@ func (n *VNode) GetChildrenCount(db *gorm.DB) string {
 		return "-"
 	}
 
-	var count int64
-	if err := db.Model(&VNode{}).Where("parent_id = ?", n.ID).Count(&count).Error; err != nil {
+	count, err := gorm.G[VNode](db).Where("parent_id = ?", n.ID).Count(context.Background(), "*")
+	if err != nil {
 		slog.Error("failed to count vnode children", "id", n.ID, "error", err)
 		return "Error"
 	}

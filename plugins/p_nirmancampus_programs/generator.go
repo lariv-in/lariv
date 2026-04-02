@@ -1,6 +1,7 @@
 package p_nirmancampus_programs
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/lariv-in/lago/lago"
@@ -117,8 +118,8 @@ func coursesByCodes(db *gorm.DB, codes []string) ([]courses.Course, error) {
 	if len(codes) == 0 {
 		return nil, nil
 	}
-	var out []courses.Course
-	if err := db.Where("code IN ?", codes).Find(&out).Error; err != nil {
+	out, err := gorm.G[courses.Course](db).Where("code IN ?", codes).Find(context.Background())
+	if err != nil {
 		return nil, err
 	}
 	if len(out) != len(codes) {
@@ -136,7 +137,7 @@ func init() {
 			for i := range sampleProgramSeeds {
 				seed := sampleProgramSeeds[i]
 				p := seed.Program
-				if err := db.Create(&p).Error; err != nil {
+				if err := gorm.G[Program](db).Create(context.Background(), &p); err != nil {
 					return fmt.Errorf("failed to create program %q: %w", p.Code, err)
 				}
 				for j := range seed.Units {
@@ -146,7 +147,7 @@ func init() {
 						TermNumber:          su.TermNumber,
 						OptionalCourseCount: su.OptionalCourseCount,
 					}
-					if err := db.Create(&u).Error; err != nil {
+					if err := gorm.G[ProgramStructureUnit](db).Create(context.Background(), &u); err != nil {
 						return fmt.Errorf("failed to create structure unit for program %q term %d: %w", p.Code, u.TermNumber, err)
 					}
 					compulsory, err := coursesByCodes(db, su.CompulsoryCodes)
