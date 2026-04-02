@@ -58,10 +58,7 @@ func (e *Accordion) SetChildren(children []PageInterface) {
 	offset := 0
 	for i := range e.Items {
 		n := len(e.Items[i].Children)
-		end := offset + n
-		if end > len(children) {
-			end = len(children)
-		}
+		end := min(offset+n, len(children))
 		e.Items[i].Children = children[offset:end]
 		offset = end
 		if offset >= len(children) {

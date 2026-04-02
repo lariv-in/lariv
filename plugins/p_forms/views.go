@@ -224,7 +224,7 @@ func ensureUniqueFormSlug(db *gorm.DB, base string, excludeID uint) string {
 			base = "form"
 		}
 	}
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		candidate := base
 		if i > 0 {
 			suf := fmt.Sprintf("-%d", i+1)

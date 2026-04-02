@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/registry"
@@ -62,16 +63,13 @@ func GenerateProposalsForUser(db *gorm.DB, user *p_users.User, count int) (int, 
 
 func randomSentence(minWords, maxWords int) string {
 	words := []string{"The", "client", "has", "stated", "that", "they", "want", "to", "save", "for", "future", "and", "invest", "in", "property", "with", "adequate", "insurance", "coverage", "for", "family."}
-	n := minWords + rand.Intn(maxWords-minWords+1)
-	if n > len(words) {
-		n = len(words)
-	}
-	s := ""
-	for i := 0; i < n; i++ {
+	n := min(minWords+rand.Intn(maxWords-minWords+1), len(words))
+	var s strings.Builder
+	for i := range n {
 		if i > 0 {
-			s += " "
+			s.WriteString(" ")
 		}
-		s += words[rand.Intn(len(words))]
+		s.WriteString(words[rand.Intn(len(words))])
 	}
-	return s + "."
+	return s.String() + "."
 }

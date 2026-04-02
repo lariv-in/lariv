@@ -150,10 +150,7 @@ func (e *DataTable[T]) SetChildren(children []PageInterface) {
 	}
 	for i := range e.Columns {
 		n := len(e.Columns[i].Children)
-		end := offset + n
-		if end > len(children) {
-			end = len(children)
-		}
+		end := min(offset+n, len(children))
 		e.Columns[i].Children = children[offset:end]
 		offset = end
 		if offset >= len(children) {

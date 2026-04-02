@@ -95,20 +95,14 @@ func (e LayoutSidebar) GetChildren() []PageInterface {
 func (e *LayoutSidebar) SetChildren(children []PageInterface) {
 	offset := 0
 	nSidebar := len(e.Sidebar)
-	end := offset + nSidebar
-	if end > len(children) {
-		end = len(children)
-	}
+	end := min(offset+nSidebar, len(children))
 	e.Sidebar = children[offset:end]
 	offset = end
 	if offset >= len(children) {
 		return
 	}
 	nContent := len(e.Children)
-	end = offset + nContent
-	if end > len(children) {
-		end = len(children)
-	}
+	end = min(offset+nContent, len(children))
 	e.Children = children[offset:end]
 	offset = end
 	if offset < len(children) {

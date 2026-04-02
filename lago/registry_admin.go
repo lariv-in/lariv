@@ -53,7 +53,7 @@ func (a AdminPanel[T]) IsAdminPanel() bool {
 func (a AdminPanel[T]) ModelName() string {
 	var zero T
 	t := reflect.TypeOf(zero)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	return t.Name()
@@ -111,12 +111,11 @@ func (a AdminPanel[T]) Save(db *gorm.DB, id string, values map[string]*string) e
 func (a AdminPanel[T]) EditableFields() []string {
 	var zero T
 	t := reflect.TypeOf(zero)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	var fields []string
-	for i := range t.NumField() {
-		f := t.Field(i)
+	for f := range t.Fields() {
 		if !f.IsExported() || f.Anonymous {
 			continue
 		}
@@ -168,7 +167,7 @@ func (a AdminPanel[T]) ImportCSV(db *gorm.DB, path string) (int, error) {
 
 	var zero T
 	structType := reflect.TypeOf(zero)
-	if structType.Kind() == reflect.Ptr {
+	if structType.Kind() == reflect.Pointer {
 		structType = structType.Elem()
 	}
 

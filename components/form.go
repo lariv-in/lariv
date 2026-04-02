@@ -117,20 +117,14 @@ func (e FormComponent[T]) GetChildren() []PageInterface {
 func (e *FormComponent[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	nInput := len(e.ChildrenInput)
-	end := offset + nInput
-	if end > len(children) {
-		end = len(children)
-	}
+	end := min(offset+nInput, len(children))
 	e.ChildrenInput = children[offset:end]
 	offset = end
 	if offset >= len(children) {
 		return
 	}
 	nAction := len(e.ChildrenAction)
-	end = offset + nAction
-	if end > len(children) {
-		end = len(children)
-	}
+	end = min(offset+nAction, len(children))
 	e.ChildrenAction = children[offset:end]
 	offset = end
 	if offset < len(children) {

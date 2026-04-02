@@ -122,10 +122,7 @@ func (e *TableGridContent[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	for i := range e.Columns {
 		n := len(e.Columns[i].Children)
-		end := offset + n
-		if end > len(children) {
-			end = len(children)
-		}
+		end := min(offset+n, len(children))
 		e.Columns[i].Children = children[offset:end]
 		offset = end
 		if offset >= len(children) {

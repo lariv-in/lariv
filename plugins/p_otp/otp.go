@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
+	"maps"
 	"net/mail"
 	"net/smtp"
 	"regexp"
@@ -168,9 +169,7 @@ func SendSmsOtp(db *gorm.DB, phone string) bool {
 		otpFieldName: otp,
 	}
 
-	for k, v := range prefs.GetExtraFields() {
-		recipient[k] = v
-	}
+	maps.Copy(recipient, prefs.GetExtraFields())
 
 	client := adapters.NewMsg91Client(authKey)
 	res, err := client.SendSMSFlow(templateID, []adapters.FlowRecipient{recipient}, true)

@@ -180,10 +180,7 @@ func (m model) prevTab() model {
 }
 
 func (m *model) ensureTabVisible() {
-	visible := m.contentHeight()
-	if visible < 1 {
-		visible = 1
-	}
+	visible := max(m.contentHeight(), 1)
 	if m.currentTab < m.tabScroll {
 		m.tabScroll = m.currentTab
 	} else if m.currentTab >= m.tabScroll+visible {
@@ -193,10 +190,7 @@ func (m *model) ensureTabVisible() {
 
 func (m *model) ensureRowVisible() {
 	// 2 lines for header+separator, 2 for title+blank
-	visible := m.contentHeight() - 4
-	if visible < 1 {
-		visible = 1
-	}
+	visible := max(m.contentHeight()-4, 1)
 	if m.currentRow < m.rowScroll {
 		m.rowScroll = m.currentRow
 	} else if m.currentRow >= m.rowScroll+visible {
@@ -355,15 +349,9 @@ func truncate(s string, max int) string {
 }
 
 func (m model) renderSidebar() string {
-	visible := m.contentHeight()
-	if visible < 1 {
-		visible = 1
-	}
+	visible := max(m.contentHeight(), 1)
 
-	end := m.tabScroll + visible
-	if end > len(m.tabs) {
-		end = len(m.tabs)
-	}
+	end := min(m.tabScroll+visible, len(m.tabs))
 
 	var lines []string
 	for i := m.tabScroll; i < end; i++ {
@@ -444,14 +432,10 @@ func (m model) renderTable() string {
 	b.WriteString(strings.Join(separator, "─┼─") + "\n")
 
 	// Visible rows
-	visibleRows := m.contentHeight() - 4 // title, blank, header, separator
-	if visibleRows < 1 {
-		visibleRows = 1
-	}
-	end := m.rowScroll + visibleRows
-	if end > len(m.rows) {
-		end = len(m.rows)
-	}
+	visibleRows := max(
+		// title, blank, header, separator
+		m.contentHeight()-4, 1)
+	end := min(m.rowScroll+visibleRows, len(m.rows))
 
 	if m.rowScroll > 0 {
 		b.WriteString("  ▲\n")
