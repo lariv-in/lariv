@@ -17,12 +17,23 @@ func MapFromStruct(s any) map[string]any {
 		v = reflect.ValueOf(s)
 	}
 
-	if m, ok := v.Interface().(map[string]any); ok {
+	if !v.IsValid() {
 		return m
 	}
 
 	if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
+		if v.IsNil() {
+			return m
+		}
 		v = v.Elem()
+	}
+
+	if !v.IsValid() {
+		return m
+	}
+
+	if m, ok := v.Interface().(map[string]any); ok {
+		return m
 	}
 
 	if v.Kind() != reflect.Struct {

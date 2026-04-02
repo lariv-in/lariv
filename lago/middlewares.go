@@ -77,7 +77,7 @@ func MiddlewareEnvironment(next http.Handler) http.Handler {
 
 func setEmptyEnvironmentCookie(w http.ResponseWriter, cookieName string) {
 	http.SetCookie(w, &http.Cookie{
-		Name:  "environment",
+		Name:  cookieName,
 		Value: url.QueryEscape("{}"),
 		Path:  "/",
 	})
