@@ -45,10 +45,10 @@ type DataTable[T any] struct {
 func (e DataTable[T]) Build(ctx context.Context) Node {
 	if e.Displays == nil {
 		e.Displays = map[string]TableDisplayBuilder[T]{
-			"List": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string], rowClass getters.Getter[string]) PageInterface {
+			"List": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick, rowClass getters.Getter[string]) PageInterface {
 				return TableListContent[T]{Columns: cols, Data: data, OnClick: onClick, RowClass: rowClass}
 			},
-			"Grid": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string], rowClass getters.Getter[string]) PageInterface {
+			"Grid": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick, rowClass getters.Getter[string]) PageInterface {
 				return TableGridContent[T]{Columns: cols, Data: data, OnClick: onClick, RowClass: rowClass}
 			},
 		}

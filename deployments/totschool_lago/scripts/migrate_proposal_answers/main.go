@@ -101,7 +101,7 @@ func previewJSON(raw string, max int) string {
 	return s
 }
 
-func process(db *gorm.DB, dryRun bool, limit int, sampleUnknown int) error {
+func process(db *gorm.DB, dryRun bool, limit, sampleUnknown int) error {
 	var rows []proposalRow
 	q := db.Table("proposals").Select("id, answers").Order("id asc")
 	if limit > 0 {

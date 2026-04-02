@@ -109,7 +109,7 @@ func (s *GCSFilestore) Save(file *multipart.FileHeader) (string, error) {
 	return s.SaveFromReader(src, filepath.Ext(file.Filename))
 }
 
-func (s *GCSFilestore) Open(path string, name string) (*FileDownload, error) {
+func (s *GCSFilestore) Open(path, name string) (*FileDownload, error) {
 	if path == "" {
 		return nil, os.ErrNotExist
 	}

@@ -59,7 +59,7 @@ func (a AdminPanel[T]) ModelName() string {
 	return t.Name()
 }
 
-func (a AdminPanel[T]) List(db *gorm.DB, page int, pageSize int) ([]map[string]any, error) {
+func (a AdminPanel[T]) List(db *gorm.DB, page, pageSize int) ([]map[string]any, error) {
 	var results []T
 	offset := (page - 1) * pageSize
 	q := db.Offset(offset).Limit(pageSize)
@@ -267,7 +267,7 @@ type AdminPanelInterface interface {
 	ModelName() string
 	GetListFields() []string
 	EditableFields() []string
-	List(db *gorm.DB, page int, pageSize int) ([]map[string]any, error)
+	List(db *gorm.DB, page, pageSize int) ([]map[string]any, error)
 	Save(db *gorm.DB, id string, values map[string]*string) error
 	Create(db *gorm.DB, values map[string]*string) error
 	ImportCSV(db *gorm.DB, path string) (int, error)

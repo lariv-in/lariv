@@ -19,7 +19,7 @@ const (
 
 // downloadPhoto fetches a random JPEG from picsum.photos and saves it via
 // the configured Filestore, returning the stored path and a display name.
-func downloadPhoto(index int) (storedPath string, fileName string, err error) {
+func downloadPhoto(index int) (storedPath, fileName string, err error) {
 	client := &http.Client{Timeout: httpTimeout}
 	resp, err := client.Get(picsumURL)
 	if err != nil {

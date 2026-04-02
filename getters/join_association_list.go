@@ -11,7 +11,7 @@ import (
 // JoinAssociationList fetches related records through a join model.
 // ownerField and targetField are struct field names on the join model (for example,
 // "CourseID" and "TeacherID"). When order is empty, join-row order is preserved.
-func JoinAssociationList[TJoin any, TTarget any](ownerIDGetter Getter[uint], ownerField, targetField, order string, preloads ...string) Getter[[]TTarget] {
+func JoinAssociationList[TJoin, TTarget any](ownerIDGetter Getter[uint], ownerField, targetField, order string, preloads ...string) Getter[[]TTarget] {
 	return func(ctx context.Context) ([]TTarget, error) {
 		ownerID, err := ownerIDGetter(ctx)
 		if err != nil {

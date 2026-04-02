@@ -18,7 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func HashPassword(password []byte, passwordSalt []byte) []byte {
+func HashPassword(password, passwordSalt []byte) []byte {
 	key, err := scrypt.Key(password, passwordSalt, 32768, 8, 1, 32)
 	if err != nil {
 		panic("According to the docs for scrypt, this should be impossible")
@@ -26,7 +26,7 @@ func HashPassword(password []byte, passwordSalt []byte) []byte {
 	return key
 }
 
-func Authenticate(db *gorm.DB, email string, password string) (*User, error) {
+func Authenticate(db *gorm.DB, email, password string) (*User, error) {
 	var user User
 	if err := db.Where("email = ?", email).Last(&user).Error; err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (c *AuthConfig) PostConfig() {
 	}
 }
 
-func (u *User) GetClaims(currentTime time.Time, expiryTime time.Time) jwt.RegisteredClaims {
+func (u *User) GetClaims(currentTime, expiryTime time.Time) jwt.RegisteredClaims {
 	return jwt.RegisteredClaims{
 		Issuer:    "lariv",
 		Subject:   fmt.Sprintf("%d-%s", u.ID, base64.StdEncoding.EncodeToString(u.PasswordSalt)),
@@ -93,7 +93,7 @@ func (u *User) GetClaims(currentTime time.Time, expiryTime time.Time) jwt.Regist
 	}
 }
 
-func (u *User) GetJwt(currentTime time.Time, expiryTime time.Time) (string, error) {
+func (u *User) GetJwt(currentTime, expiryTime time.Time) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS512, u.GetClaims(currentTime, expiryTime)).SignedString(signingKey[:])
 }
 

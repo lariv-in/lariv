@@ -224,7 +224,7 @@ func selectionBrowseRouteGetter(childRoute string) getters.Getter[string] {
 	}))
 }
 
-func selectionRowClickGetter(defaultName string, modalID string, childRoute string, multi bool, selectDirectories bool) getters.Getter[string] {
+func selectionRowClickGetter(defaultName, modalID, childRoute string, multi, selectDirectories bool) getters.Getter[string] {
 	targetGetter := selectionTargetInput(defaultName)
 	return func(ctx context.Context) (string, error) {
 		isDirectory, err := getters.Key[bool]("$row.IsDirectory")(ctx)
@@ -721,7 +721,7 @@ func registerDetail() {
 	})
 }
 
-func selectionTable(name string, filterName string, childRoute string, multi bool, selectDirectories bool) *components.Modal {
+func selectionTable(name, filterName, childRoute string, multi, selectDirectories bool) *components.Modal {
 	title := "Select Directory"
 	subtitle := "Choose a folder"
 	if !selectDirectories {

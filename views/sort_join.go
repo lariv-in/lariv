@@ -109,7 +109,7 @@ func applyListViewSorts(query *gorm.DB, root *schema.Schema, sortValues []string
 	return query
 }
 
-func parseSortIdentAndDir(raw string) (ident string, dir string) {
+func parseSortIdentAndDir(raw string) (ident, dir string) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return "", ""

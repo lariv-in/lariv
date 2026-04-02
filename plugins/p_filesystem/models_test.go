@@ -44,7 +44,7 @@ func withTempStorage(t *testing.T) string {
 	return dir
 }
 
-func uploadHeader(t *testing.T, fieldName string, fileName string, body string) *multipart.FileHeader {
+func uploadHeader(t *testing.T, fieldName, fileName, body string) *multipart.FileHeader {
 	t.Helper()
 
 	var buf bytes.Buffer

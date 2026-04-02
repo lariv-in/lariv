@@ -51,7 +51,7 @@ func (u *User) hashPassword() (err error) {
 
 	u.PasswordHash = HashPassword(u.Password, u.PasswordSalt)
 	u.Password = nil
-	return
+	return err
 }
 
 func init() {

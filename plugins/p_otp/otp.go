@@ -41,7 +41,7 @@ func NewMemoryCache() *MemoryCache {
 	}
 }
 
-func (c *MemoryCache) Set(key string, otp string, duration time.Duration) {
+func (c *MemoryCache) Set(key, otp string, duration time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.store[key] = CacheEntry{
@@ -89,7 +89,7 @@ func getCacheKeyPhone(phone string) string {
 	return OtpCachePrefixPhone + phoneToCacheSuffix(phone)
 }
 
-func StoreOtpPhone(phone string, otp string) {
+func StoreOtpPhone(phone, otp string) {
 	key := getCacheKeyPhone(phone)
 	otpCache.Set(key, otp, time.Duration(OtpExpirySeconds)*time.Second)
 	log.Printf("OTP stored for phone %s", phone)
@@ -101,14 +101,14 @@ func getCacheKeyEmail(email string) string {
 	return OtpCachePrefixEmail + s
 }
 
-func StoreOtpEmail(email string, otp string) {
+func StoreOtpEmail(email, otp string) {
 	key := getCacheKeyEmail(email)
 	otpCache.Set(key, otp, time.Duration(OtpExpirySeconds)*time.Second)
 	log.Printf("OTP stored for email %s", email)
 }
 
 // VerifyOTP checks the generic identifier (email or phone) against the cache.
-func VerifyOTP(identifier string, otp string) bool {
+func VerifyOTP(identifier, otp string) bool {
 	identifier = strings.TrimSpace(identifier)
 
 	// Determine if it's an email or phone

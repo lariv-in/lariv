@@ -21,7 +21,7 @@ type FileDownload struct {
 type Filestore interface {
 	Save(file *multipart.FileHeader) (string, error)
 	SaveFromReader(r io.Reader, ext string) (string, error)
-	Open(path string, name string) (*FileDownload, error)
+	Open(path, name string) (*FileDownload, error)
 	Delete(path string) error
 	StoredSize(path string) (int64, error)
 }

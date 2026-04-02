@@ -8,7 +8,7 @@ import (
 )
 
 // Association fetches a single record based on a foreign key dynamically at render time.
-func Association[T any, V any](foreignKeyGetter Getter[V]) Getter[T] {
+func Association[T, V any](foreignKeyGetter Getter[V]) Getter[T] {
 	var zero T
 	return func(ctx context.Context) (T, error) {
 		fkValue, err := foreignKeyGetter(ctx)

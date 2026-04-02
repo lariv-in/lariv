@@ -84,7 +84,7 @@ func (s *LocalFilestore) Save(file *multipart.FileHeader) (string, error) {
 	return s.SaveFromReader(src, filepath.Ext(file.Filename))
 }
 
-func (s *LocalFilestore) Open(path string, name string) (*FileDownload, error) {
+func (s *LocalFilestore) Open(path, name string) (*FileDownload, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		slog.Error("failed opening local filestore path", "path", path, "error", err)

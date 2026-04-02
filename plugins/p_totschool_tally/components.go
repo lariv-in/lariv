@@ -107,7 +107,7 @@ type WhatsappReportData struct {
 	Date        time.Time
 }
 
-func createStatCard(_ context.Context, title string, value string, classes string) Node {
+func createStatCard(_ context.Context, title, value, classes string) Node {
 	return Div(Class("stat rounded-box border border-base-300"),
 		Div(Class("stat-title"), Text(title)),
 		Div(Class(fmt.Sprintf("stat-value text-lg font-bold %s", classes)), Text(value)),
@@ -583,7 +583,7 @@ func encodeStringSliceForJS(items []string) string {
 	return "[" + strings.Join(parts, ",") + "]"
 }
 
-func encodeValuesByKeyForJS(keys []string, dates []string, valuesByKey map[string]map[string]int) string {
+func encodeValuesByKeyForJS(keys, dates []string, valuesByKey map[string]map[string]int) string {
 	// valuesByKeyJS will be: {key: [values aligned with dates], ...}
 	pairs := make([]string, 0, len(keys))
 	for _, key := range keys {

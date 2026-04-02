@@ -204,7 +204,7 @@ func detailViewWrapNonGETHandler[T any](key, pathParamKey string, old func(*View
 // When the view already has a GET handler (e.g. from GetPageView or an inner DetailView), GET runs
 // preload first, then delegates to that handler so multiple DetailViews can be nested (outer path params first).
 // View.RenderMiddlewares apply on the final ServeRenderPage (see WithRenderMiddleware).
-func DetailView[T any](key string, pathParamKey string) func(*View) *View {
+func DetailView[T any](key, pathParamKey string) func(*View) *View {
 	return func(v *View) *View {
 		prevGET := v.Handlers[http.MethodGet]
 

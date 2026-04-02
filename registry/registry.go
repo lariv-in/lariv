@@ -133,7 +133,7 @@ func (r *Registry[T]) Build() {
 		})
 	}
 
-	slices.SortFunc(r.itemsList, func(a Pair[string, T], b Pair[string, T]) int {
+	slices.SortFunc(r.itemsList, func(a, b Pair[string, T]) int {
 		return strings.Compare(a.Key, b.Key)
 	})
 
