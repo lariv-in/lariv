@@ -288,6 +288,12 @@ func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
 	if !strings.Contains(html, `@fk-multi-select.window`) {
 		t.Fatalf("expected multi-select event handler, got %s", html)
 	}
+	if !strings.Contains(html, `hasItem(value)`) {
+		t.Fatalf("expected multi-select state to derive from items, got %s", html)
+	}
+	if strings.Contains(html, `ev.target.selected`) {
+		t.Fatalf("expected multi-select handler not to use row-local selected state, got %s", html)
+	}
 }
 
 func TestInputManyToManyBuildEmptyStateUsesArray(t *testing.T) {

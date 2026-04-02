@@ -13,9 +13,10 @@ import (
 
 type TableListContent[T any] struct {
 	Page
-	Columns []TableColumn
-	Data    getters.Getter[ObjectList[T]]
-	OnClick getters.Getter[string]
+	Columns  []TableColumn
+	Data     getters.Getter[ObjectList[T]]
+	OnClick  getters.Getter[string]
+	RowClass getters.Getter[string]
 }
 
 func (e TableListContent[T]) Build(ctx context.Context) Node {
@@ -72,18 +73,37 @@ func (e TableListContent[T]) Build(ctx context.Context) Node {
 				tds = append(tds, g_html.Td(g_html.Class("whitespace-nowrap truncate max-w-xs min-w-[100px]"), Group(cellNodes)))
 			}
 
+			rowClassExpr := ""
+			if e.RowClass != nil {
+				expr, err := e.RowClass(rowCtx)
+				if err == nil {
+					rowClassExpr = expr
+				}
+			}
+
+			rowNodes := []Node{}
+			switch {
+			case e.OnClick != nil && rowClassExpr != "":
+				rowNodes = append(rowNodes, g_html.Class("cursor-pointer transition-colors"), Attr(":class", rowClassExpr))
+			case e.OnClick != nil:
+				rowNodes = append(rowNodes, g_html.Class("cursor-pointer hover:bg-base-200 transition-colors"))
+			case rowClassExpr != "":
+				rowNodes = append(rowNodes, g_html.Class("transition-colors"), Attr(":class", rowClassExpr))
+			default:
+				rowNodes = append(rowNodes, g_html.Class("hover:bg-base-200 transition-colors"))
+			}
+
 			if e.OnClick != nil {
 				expr, err := e.OnClick(rowCtx)
 				if err == nil && expr != "" {
-					trs = append(trs, g_html.Tr(
-						g_html.Class("cursor-pointer hover:bg-base-200 transition-colors"),
-						Attr("@click", expr),
-						Group(tds),
-					))
+					rowNodes = append(rowNodes, Attr("@click", expr), Group(tds))
+					trs = append(trs, g_html.Tr(rowNodes...))
 					continue
 				}
 			}
-			trs = append(trs, g_html.Tr(g_html.Class("hover:bg-base-200 transition-colors"), Group(tds)))
+
+			rowNodes = append(rowNodes, Group(tds))
+			trs = append(trs, g_html.Tr(rowNodes...))
 		}
 	}
 

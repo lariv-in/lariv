@@ -10,9 +10,10 @@ import (
 
 type TableGridContent[T any] struct {
 	Page
-	Columns []TableColumn
-	Data    getters.Getter[ObjectList[T]]
-	OnClick getters.Getter[string]
+	Columns  []TableColumn
+	Data     getters.Getter[ObjectList[T]]
+	OnClick  getters.Getter[string]
+	RowClass getters.Getter[string]
 }
 
 func (e TableGridContent[T]) Build(ctx context.Context) Node {
@@ -58,21 +59,37 @@ func (e TableGridContent[T]) Build(ctx context.Context) Node {
 				))
 			}
 
+			rowClassExpr := ""
+			if e.RowClass != nil {
+				expr, err := e.RowClass(rowCtx)
+				if err == nil {
+					rowClassExpr = expr
+				}
+			}
+
+			cardNodes := []Node{}
+			switch {
+			case e.OnClick != nil && rowClassExpr != "":
+				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer transition-colors"), Attr(":class", rowClassExpr))
+			case e.OnClick != nil:
+				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200 transition-colors"))
+			case rowClassExpr != "":
+				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 transition-colors"), Attr(":class", rowClassExpr))
+			default:
+				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 hover:bg-base-200 transition-colors"))
+			}
+
 			if e.OnClick != nil {
 				expr, err := e.OnClick(rowCtx)
 				if err == nil && expr != "" {
-					cards = append(cards, g_html.Div(
-						g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200"),
-						Attr("@click", expr),
-						Group(contentNodes),
-					))
+					cardNodes = append(cardNodes, Attr("@click", expr), Group(contentNodes))
+					cards = append(cards, g_html.Div(cardNodes...))
 					continue
 				}
 			}
-			cards = append(cards, g_html.Div(
-				g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2"),
-				Group(contentNodes),
-			))
+
+			cardNodes = append(cardNodes, Group(contentNodes))
+			cards = append(cards, g_html.Div(cardNodes...))
 		}
 	}
 

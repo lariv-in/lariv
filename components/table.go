@@ -21,6 +21,8 @@ type TableColumn struct {
 	Children  []PageInterface
 }
 
+type TableDisplayBuilder[T any] func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string], getters.Getter[string]) PageInterface
+
 type DataTable[T any] struct {
 	Page
 	UID      string
@@ -31,22 +33,23 @@ type DataTable[T any] struct {
 	Classes  string
 	// Displays is a map of view name to display component
 	// e.g. "List": TableListContent, "Grid": TableGridContent
-	Displays map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface
+	Displays map[string]TableDisplayBuilder[T]
 	// DefaultView is the initial display mode; must match a key in Displays. Empty means "List".
 	DefaultView string
 	// Actions are rendered in the toolbar after the view switcher (e.g. &TableButtonFilter{Child: ...}, &TableButtonCreate{Link: ...}).
-	Actions []PageInterface
-	OnClick getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
+	Actions  []PageInterface
+	OnClick  getters.Getter[string] // Per-row Alpine @click expression (use GetterNavigate, GetterSelect)
+	RowClass getters.Getter[string] // Per-row Alpine :class expression
 }
 
 func (e DataTable[T]) Build(ctx context.Context) Node {
 	if e.Displays == nil {
-		e.Displays = map[string]func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[string]) PageInterface{
-			"List": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string]) PageInterface {
-				return TableListContent[T]{Columns: cols, Data: data, OnClick: onClick}
+		e.Displays = map[string]TableDisplayBuilder[T]{
+			"List": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string], rowClass getters.Getter[string]) PageInterface {
+				return TableListContent[T]{Columns: cols, Data: data, OnClick: onClick, RowClass: rowClass}
 			},
-			"Grid": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string]) PageInterface {
-				return TableGridContent[T]{Columns: cols, Data: data, OnClick: onClick}
+			"Grid": func(cols []TableColumn, data getters.Getter[ObjectList[T]], onClick getters.Getter[string], rowClass getters.Getter[string]) PageInterface {
+				return TableGridContent[T]{Columns: cols, Data: data, OnClick: onClick, RowClass: rowClass}
 			},
 		}
 	}
@@ -54,7 +57,7 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 	displayNodes := Group{}
 	for name, builder := range e.Displays {
 		displayNodes = append(displayNodes, Div(
-			Attr("x-show", fmt.Sprintf("view === '%s'", name)), Render(builder(e.Columns, e.Data, e.OnClick), ctx),
+			Attr("x-show", fmt.Sprintf("view === '%s'", name)), Render(builder(e.Columns, e.Data, e.OnClick, e.RowClass), ctx),
 		))
 	}
 

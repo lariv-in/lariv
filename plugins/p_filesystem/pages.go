@@ -731,6 +731,10 @@ func selectionTable(name string, filterName string, childRoute string, multi boo
 
 	modalID := "filesystem-selection-modal-" + name
 	onClick := selectionRowClickGetter(name, modalID, childRoute, multi, selectDirectories)
+	var rowClass getters.Getter[string]
+	if multi {
+		rowClass = getters.SelectMultiRowClass(getters.Key[uint]("$row.ID"))
+	}
 
 	return &components.Modal{
 		UID:   modalID,
@@ -744,7 +748,8 @@ func selectionTable(name string, filterName string, childRoute string, multi boo
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: filterName}},
 				},
-				OnClick: onClick,
+				OnClick:  onClick,
+				RowClass: rowClass,
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Type", Name: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$row")}}},

@@ -83,9 +83,13 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	alpineData := fmt.Sprintf(`{
 		items: %s,
 		placeholder: %s,
+		hasItem(value) {
+			value = String(value)
+			return this.items.some(item => item.Key === value)
+		},
 		addItem(detail) {
 			const value = String(detail.value)
-			if (this.items.some(item => item.Key === value)) {
+			if (this.hasItem(value)) {
 				return
 			}
 			const display = detail.display ? String(detail.display) : value
@@ -97,14 +101,10 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 		},
 		eventHandler(ev) {
 			if (ev.detail.name === %s) {
-				if (!ev.target.selected) {
+				if (!this.hasItem(ev.detail.value)) {
 					this.addItem(ev.detail)
-					ev.target.classList.add('bg-success')
-					ev.target.selected = true
 				} else {
 					this.removeItem(ev.detail)
-					ev.target.classList.remove('bg-success')
-					ev.target.selected = false
 				}
 			}
 		}
