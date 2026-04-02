@@ -164,6 +164,49 @@ func init() {
 			},
 		},
 	})
+
+	lago.RegistryPage.Register("otp.ForgotPasswordPage", components.ShellAuthScaffold{
+		Children: []components.PageInterface{
+			components.ContainerColumn{
+				Classes: "w-80",
+				Children: []components.PageInterface{
+					components.ContainerRow{
+						Classes: "items-center",
+						Children: []components.PageInterface{
+							components.ButtonLink{
+								Icon:    "arrow-left",
+								Link:    lago.RoutePath("users.LoginRoute", nil),
+								Classes: "btn-ghost btn-square",
+							},
+							components.FieldTitle{
+								Getter:  getters.Static("Forgot Password"),
+								Classes: "grow text-center",
+							},
+							components.ButtonLink{
+								Icon:    "arrow-left",
+								Classes: "btn-ghost btn-square invisible",
+							},
+						},
+					},
+					components.ContainerColumn{
+						Classes: "gap-2 mt-3",
+						Children: []components.PageInterface{
+							components.ButtonLink{
+								Label:   "Reset password with email",
+								Link:    lago.RoutePath("otp.EmailOtpRequestRoute", nil),
+								Classes: "w-full",
+							},
+							components.ButtonLink{
+								Label:   "Reset password with phone number",
+								Link:    lago.RoutePath("otp.PhoneOtpRequestRoute", nil),
+								Classes: "w-full",
+							},
+						},
+					},
+				},
+			},
+		},
+	})
 	lago.RegistryPage.Register("otp.OTPPreferencesMenu", components.SidebarMenu{
 		Title: getters.Static("OTP Preferences"),
 		Back: &components.SidebarMenuItem{
@@ -350,16 +393,8 @@ func init() {
 					"users.AuthForm",
 					func(*components.FormComponent[p_users.User]) *components.ButtonLink {
 						return &components.ButtonLink{
-							Label: "Login with SMS OTP",
-							Link:  lago.RoutePath("otp.PhoneOtpRequestRoute", nil),
-						}
-					})
-				components.InsertChildAfter(scaffold,
-					"users.AuthForm",
-					func(*components.FormComponent[p_users.User]) *components.ButtonLink {
-						return &components.ButtonLink{
-							Label: "Login with Email OTP",
-							Link:  lago.RoutePath("otp.EmailOtpRequestRoute", nil),
+							Label: "Forgot password?",
+							Link:  lago.RoutePath("otp.ForgotPasswordRoute", nil),
 						}
 					})
 				return scaffold

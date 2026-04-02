@@ -5,6 +5,11 @@ import (
 )
 
 func init() {
+	_ = lago.RegistryRoute.Register("otp.ForgotPasswordRoute", lago.Route{
+		Path:    "/otp/forgot-password/",
+		Handler: lago.NewDynamicView("otp.ForgotPasswordView"),
+	})
+
 	_ = lago.RegistryRoute.Register("otp.PhoneOtpRequestRoute", lago.Route{
 		Path:    "/otp/login/sms/",
 		Handler: lago.NewDynamicView("otp.PhoneOtpRequestView"),

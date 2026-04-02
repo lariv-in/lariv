@@ -261,7 +261,7 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 				return
 			}
 			user.Login(w)
-			lago.NewRedirectView("users.LoginSuccessRoute").ServeHTTP(w, r)
+			lago.NewRedirectView("users.LoginRoute").ServeHTTP(w, r)
 			return
 		}
 		if err == gorm.ErrRecordNotFound {
@@ -284,6 +284,9 @@ func OtpVerifyHandler(v *views.View) http.Handler {
 }
 
 func init() {
+	lago.RegistryView.Register("otp.ForgotPasswordView",
+		lago.GetPageView("otp.ForgotPasswordPage"))
+
 	// SMS OTP Request
 	lago.RegistryView.Register("otp.PhoneOtpRequestView",
 		lago.GetPageView("otp.PhoneOtpRequestForm").
