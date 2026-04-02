@@ -291,6 +291,12 @@ func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
 	if !strings.Contains(html, `hasItem(value)`) {
 		t.Fatalf("expected multi-select state to derive from items, got %s", html)
 	}
+	if !strings.Contains(html, `x-init="syncStore()"`) {
+		t.Fatalf("expected many-to-many input to sync selected items into Alpine store, got %s", html)
+	}
+	if !strings.Contains(html, `Alpine.store(&#39;m2mSelections&#39;)`) {
+		t.Fatalf("expected many-to-many input to render Alpine store sync logic, got %s", html)
+	}
 	if strings.Contains(html, `ev.target.selected`) {
 		t.Fatalf("expected multi-select handler not to use row-local selected state, got %s", html)
 	}

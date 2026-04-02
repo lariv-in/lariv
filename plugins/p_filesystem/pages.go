@@ -733,7 +733,7 @@ func selectionTable(name string, filterName string, childRoute string, multi boo
 	onClick := selectionRowClickGetter(name, modalID, childRoute, multi, selectDirectories)
 	var rowClass getters.Getter[string]
 	if multi {
-		rowClass = getters.SelectMultiRowClass(getters.Key[uint]("$row.ID"))
+		rowClass = getters.SelectMultiRowClass(selectionTargetInput(name), getters.Key[uint]("$row.ID"))
 	}
 
 	return &components.Modal{

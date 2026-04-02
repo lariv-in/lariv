@@ -371,7 +371,13 @@ func registerSelectionPages() {
 					getters.Key[uint]("$row.ID"),
 					getters.Key[string]("$row.Name"),
 				),
-				RowClass: getters.SelectMultiRowClass(getters.Key[uint]("$row.ID")),
+				RowClass: getters.SelectMultiRowClass(
+					getters.IfOrElse(
+						getters.Key[string]("$get.target_input"),
+						getters.Static("Courses"),
+					),
+					getters.Key[uint]("$row.ID"),
+				),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
 				},

@@ -83,6 +83,15 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	alpineData := fmt.Sprintf(`{
 		items: %s,
 		placeholder: %s,
+		syncStore() {
+			if (typeof Alpine === 'undefined') {
+				return
+			}
+			if (!Alpine.store('m2mSelections')) {
+				Alpine.store('m2mSelections', {})
+			}
+			Alpine.store('m2mSelections')[%s] = this.items
+		},
 		hasItem(value) {
 			value = String(value)
 			return this.items.some(item => item.Key === value)
@@ -94,10 +103,12 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 			}
 			const display = detail.display ? String(detail.display) : value
 			this.items = [...this.items, { Key: value, Value: display }]
+			this.syncStore()
 		},
 		removeItem(detail) {
 			const value = String(detail.value)
 			this.items = this.items.filter(item => item.Key !== value)
+			this.syncStore()
 		},
 		eventHandler(ev) {
 			if (ev.detail.name === %s) {
@@ -108,15 +119,16 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 				}
 			}
 		}
-	}`, itemsJSON, placeholderJSON, string(nameJSON))
+	}`, itemsJSON, placeholderJSON, string(nameJSON), string(nameJSON))
 	eventHandler := "eventHandler($event)"
 
 	return Div(
 		Class(fmt.Sprintf("my-1 relative %s", e.Classes)),
 		Attr("x-data", alpineData),
+		Attr("x-init", "syncStore()"),
 		Attr("@fk-multi-select.window", eventHandler),
-		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
+		Div(Class("flex flex-col items-start gap-1"),
+			If(e.Label != "", Label(Class("label text-sm font-bold"), Text(e.Label))),
 			Div(
 				Class("input input-bordered w-full min-h-12 h-auto flex flex-wrap items-center gap-2 cursor-pointer"),
 				Attr(":class", "items.length ? '' : 'opacity-50'"),
