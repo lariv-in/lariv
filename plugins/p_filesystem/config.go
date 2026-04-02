@@ -16,7 +16,7 @@ const (
 
 type FilesystemConfig struct {
 	StorageBackend StorageBackend `toml:"storageBackend"`
-	LocalDir       string `toml:"localDir"`
+	LocalDir       string         `toml:"localDir"`
 	// GCS: bucket name (required when storageBackend is "gcs").
 	GCSBucket string `toml:"gcsBucket"`
 	// GCS: path to service account JSON key file. Empty uses Application Default Credentials.

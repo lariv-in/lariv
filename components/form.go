@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/lariv-in/lago/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"maragu.dev/gomponents"
+	"maragu.dev/gomponents/html"
 )
 
 type FormComponent[T any] struct {
@@ -31,7 +31,7 @@ type FormInterface interface {
 	ParseForm(r *http.Request) (map[string]any, map[string]error, error)
 }
 
-func (e FormComponent[T]) Build(ctx context.Context) Node {
+func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	// If a Getter is set, resolve the object and pass it to children via $in
 	childCtx := ctx
 	if e.Getter != nil {
@@ -46,11 +46,11 @@ func (e FormComponent[T]) Build(ctx context.Context) Node {
 		}
 	}
 
-	inputGroup := Group{}
+	inputGroup := gomponents.Group{}
 	for _, child := range e.ChildrenInput {
 		inputGroup = append(inputGroup, Render(child, childCtx))
 	}
-	submitGroup := Group{}
+	submitGroup := gomponents.Group{}
 	for _, child := range e.ChildrenAction {
 		submitGroup = append(submitGroup, Render(child, childCtx))
 	}
@@ -64,12 +64,12 @@ func (e FormComponent[T]) Build(ctx context.Context) Node {
 		urlString = u
 	}
 
-	var headerNodes []Node
+	var headerNodes []gomponents.Node
 	if e.Title != "" {
-		headerNodes = append(headerNodes, Div(Class("text-xl font-semibold"), Text(e.Title)))
+		headerNodes = append(headerNodes, html.Div(html.Class("text-xl font-semibold"), gomponents.Text(e.Title)))
 	}
 	if e.Subtitle != "" {
-		headerNodes = append(headerNodes, Div(Class("text-sm text-gray-500"), Text(e.Subtitle)))
+		headerNodes = append(headerNodes, html.Div(html.Class("text-sm text-gray-500"), gomponents.Text(e.Subtitle)))
 	}
 
 	enctype := e.Enctype
@@ -82,21 +82,21 @@ func (e FormComponent[T]) Build(ctx context.Context) Node {
 		}
 	}
 
-	var formErrorNode Node
+	var formErrorNode gomponents.Node
 	if errorMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]any); ok {
 		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
 			if err, ok := formErr.(error); ok {
-				formErrorNode = Span(Class("text-sm text-error"), Text(err.Error()))
+				formErrorNode = html.Span(html.Class("text-sm text-error"), gomponents.Text(err.Error()))
 			}
 		}
 	}
 
-	return Form(
-		Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
-		If(e.Method != "", Method(e.Method)),
-		If(urlString != "", Action(urlString)),
-		If(enctype != "", Attr("enctype", enctype)),
-		Group(headerNodes),
+	return html.Form(
+		html.Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
+		gomponents.If(e.Method != "", html.Method(e.Method)),
+		gomponents.If(urlString != "", html.Action(urlString)),
+		gomponents.If(enctype != "", gomponents.Attr("enctype", enctype)),
+		gomponents.Group(headerNodes),
 		inputGroup,
 		formErrorNode,
 		submitGroup)

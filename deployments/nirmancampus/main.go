@@ -19,6 +19,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_website"
 	_ "github.com/lariv-in/lago/plugins/p_otp"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
+	_ "github.com/lariv-in/lago/plugins/p_sqlagent"
 	_ "github.com/lariv-in/lago/plugins/p_users"
 )
 
