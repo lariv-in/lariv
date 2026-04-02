@@ -68,6 +68,7 @@ func BuildWhatsappMessage(data WhatsappReportData) string {
 	message += fmt.Sprintf("- Follow Up Letters: %d/%d/%d\n", data.Today.TotalLetters, data.QTD.TotalLetters, data.LastQuarter.TotalLetters)
 	message += fmt.Sprintf("- Follow Ups: %d/%d/%d\n", data.Today.TotalFollowUps, data.QTD.TotalFollowUps, data.LastQuarter.TotalFollowUps)
 	message += fmt.Sprintf("- Proposals Given: %d/%d/%d\n", data.Today.TotalProposals, data.QTD.TotalProposals, data.LastQuarter.TotalProposals)
+	message += fmt.Sprintf("- Policies: %d/%d/%d\n", data.Today.TotalPolicies, data.QTD.TotalPolicies, data.LastQuarter.TotalPolicies)
 
 	// Premium uses Indian currency formatting
 	message += fmt.Sprintf(
