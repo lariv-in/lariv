@@ -7,8 +7,15 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
+type StorageBackend string
+
+const (
+	StorageBackendLocal StorageBackend = "local"
+	StorageBackendGCS   StorageBackend = "gcs"
+)
+
 type FilesystemConfig struct {
-	StorageBackend string `toml:"storageBackend"`
+	StorageBackend StorageBackend `toml:"storageBackend"`
 	LocalDir       string `toml:"localDir"`
 	// GCS: bucket name (required when storageBackend is "gcs").
 	GCSBucket string `toml:"gcsBucket"`
@@ -19,15 +26,15 @@ type FilesystemConfig struct {
 }
 
 var Config = &FilesystemConfig{
-	StorageBackend: "local",
+	StorageBackend: StorageBackendLocal,
 	LocalDir:       "filesystem",
 }
 
 func (c *FilesystemConfig) PostConfig() {
 	switch c.StorageBackend {
-	case "", "local":
+	case "", StorageBackendLocal:
 		Store = &LocalFilestore{BaseDir: c.LocalDir}
-	case "gcs":
+	case StorageBackendGCS:
 		if c.GCSBucket == "" {
 			log.Panicf("filesystem storageBackend %q requires gcsBucket in config", c.StorageBackend)
 		}
