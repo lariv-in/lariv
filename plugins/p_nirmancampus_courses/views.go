@@ -59,7 +59,7 @@ func init() {
 			}).
 			WithMiddleware("courses.update", views.MiddlewareUpdate[Course]{
 				Key:        getters.Static("course"),
-				SuccessURL: lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}),
+				SuccessURL: lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 				QueryPatchers: views.QueryPatchers[Course]{
 					{Key: "courses.scope_by_role", Value: CourseScopeByRole},
 				},

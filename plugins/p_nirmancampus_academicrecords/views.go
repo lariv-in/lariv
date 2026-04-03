@@ -79,7 +79,7 @@ func init() {
 			WithMiddleware("academicrecords.update", views.MiddlewareUpdate[AcademicRecord]{
 				Key: getters.Static("academicrecord"),
 				SuccessURL: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
 				}),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},

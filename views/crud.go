@@ -49,7 +49,7 @@ func splitAssociationValues(values map[string]any) (map[string]any, map[string]c
 	return regularValues, associationValues
 }
 
-func applyAssociationReplacements(db *gorm.DB, record any, associations map[string]components.AssociationIDs) error {
+func applyAssociationReplacements[T any](db *gorm.DB, record *T, associations map[string]components.AssociationIDs) error {
 	if len(associations) == 0 {
 		return nil
 	}

@@ -112,7 +112,7 @@ func init() {
 			}).
 			WithMiddleware("studentapplications.update", views.MiddlewareUpdate[StudentApplication]{
 				Key:        getters.Static("studentapplication"),
-				SuccessURL: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}),
+				SuccessURL: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("studentapplication.ID"))}),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
 				},

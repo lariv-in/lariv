@@ -289,7 +289,7 @@ func init() {
 			WithMiddleware("forms.update", views.MiddlewareUpdate[Form]{
 				Key: getters.Static("form"),
 				SuccessURL: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
-					"form_id": getters.Any(getters.Key[uint]("$id")),
+					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 				FormPatchers: views.FormPatchers{
 					{Key: "forms.slug_from_title", Value: slugFromTitle{}},

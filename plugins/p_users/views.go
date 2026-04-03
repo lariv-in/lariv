@@ -289,7 +289,7 @@ func init() {
 			WithMiddleware("users.update", views.MiddlewareUpdate[User]{
 				Key: getters.Static("user"),
 				SuccessURL: lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("user.ID")),
 				}),
 			}))
 
@@ -396,7 +396,7 @@ func init() {
 			WithMiddleware("users.role_update", views.MiddlewareUpdate[Role]{
 				Key: getters.Static("role"),
 				SuccessURL: lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("role.ID")),
 				}),
 			}))
 

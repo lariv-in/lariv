@@ -72,7 +72,7 @@ func init() {
 			WithMiddleware("important_links_admin.update", views.MiddlewareUpdate[ImportantLink]{
 				Key: getters.Static("link"),
 				SuccessURL: lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 			}))
 

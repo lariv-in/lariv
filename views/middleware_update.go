@@ -87,7 +87,12 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 				if err := PopulateFromMap(&record, regularValues); err != nil {
 					return err
 				}
-				updateQuery := gorm.G[T](tx).Where("id = ?", id)
+				// GORM's update association callbacks require an addressable model; the
+				// generic chain defaults to Model(zero T), which is not. Bind the loaded
+				// row as Model before Updates (Dest may remain the struct value).
+				updateQuery := gorm.G[T](tx).Scopes(func(stmt *gorm.Statement) {
+					stmt.Model = &record
+				}).Where("id = ?", id)
 				updateQuery = m.QueryPatchers.Apply(view, r, updateQuery)
 				_, err := updateQuery.Updates(ctx, record)
 				if err != nil {
@@ -95,7 +100,7 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 				}
 			}
 
-			return applyAssociationReplacements(tx, record, associationValues)
+			return applyAssociationReplacements(tx, &record, associationValues)
 		})
 		if err != nil {
 			slog.Error("views: middleware update: transaction", "error", err)

@@ -46,7 +46,7 @@ func init() {
 			WithMiddleware("contacts.update", views.MiddlewareUpdate[Contact]{
 				Key: getters.Static("contact"),
 				SuccessURL: lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 			}))
 

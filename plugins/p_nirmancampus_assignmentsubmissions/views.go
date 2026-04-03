@@ -68,7 +68,7 @@ func init() {
 			WithMiddleware("assignmentsubmissions.update", views.MiddlewareUpdate[AssignmentSubmission]{
 				Key: getters.Static("assignmentsubmission"),
 				SuccessURL: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.scope_by_role", Value: AssignmentSubmissionScopeByRole},

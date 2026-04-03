@@ -107,7 +107,7 @@ func init() {
 			WithMiddleware("announcements.update", views.MiddlewareUpdate[Announcement]{
 				Key: getters.Static("announcement"),
 				SuccessURL: lago.RoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 				QueryPatchers: views.QueryPatchers[Announcement]{
 					registry.Pair[string, views.QueryPatcher[Announcement]]{Key: "announcements.scope_by_role", Value: AnnouncementScopeByRole},

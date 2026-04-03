@@ -53,7 +53,7 @@ func init() {
 			WithMiddleware("student_zone_admin.section_update", views.MiddlewareUpdate[StudentZoneSection]{
 				Key: getters.Static("section"),
 				SuccessURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			}))
 
@@ -133,7 +133,7 @@ func init() {
 			WithMiddleware("student_zone_admin.item_update", views.MiddlewareUpdate[StudentZoneItem]{
 				Key: getters.Static("item"),
 				SuccessURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			}))
 

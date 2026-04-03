@@ -282,7 +282,7 @@ func init() {
 			WithMiddleware("appointments.update", views.MiddlewareUpdate[Appointment]{
 				Key: getters.Static("appointment"),
 				SuccessURL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("appointment.ID")),
 				}),
 				FormPatchers: views.FormPatchers{
 					{Key: "appointments.form", Value: appointmentFormCreatedByPatcher{}},

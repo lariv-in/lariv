@@ -68,7 +68,7 @@ func init() {
 			WithMiddleware("programs.update", views.MiddlewareUpdate[Program]{
 				Key: getters.Static("program"),
 				SuccessURL: lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("program.ID")),
 				}),
 				QueryPatchers: views.QueryPatchers[Program]{
 					{Key: "programs.scope_by_role", Value: programScopeByRole{}},

@@ -84,7 +84,7 @@ func init() {
 			WithMiddleware("sessions.update", views.MiddlewareUpdate[Semester]{
 				Key: getters.Static("semester"),
 				SuccessURL: lago.RoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
+					"id": getters.Any(getters.Key[uint]("semester.ID")),
 				}),
 			}))
 
