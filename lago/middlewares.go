@@ -10,23 +10,24 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
-func MiddlewareDB(db *gorm.DB) views.Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "$db", db)))
-		})
-	}
+type DBMiddleware struct {
+	DB *gorm.DB
 }
 
-func MiddlewareLogging(next http.Handler) http.Handler {
+func (m DBMiddleware) Next(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "$db", m.DB)))
+	})
+}
+
+type LoggingMiddleware struct{}
+
+func (LoggingMiddleware) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-
-		// Use a custom ResponseWriter to capture the status code
 		wrapped := &statusWriter{ResponseWriter: w, status: http.StatusOK}
 
 		next.ServeHTTP(wrapped, r)
@@ -51,7 +52,9 @@ func (w *statusWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func MiddlewareEnvironment(next http.Handler) http.Handler {
+type EnvironmentMiddleware struct{}
+
+func (EnvironmentMiddleware) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		envMap := map[string]string{}
 		cookie, err := r.Cookie("environment")
@@ -83,14 +86,18 @@ func setEmptyEnvironmentCookie(w http.ResponseWriter, cookieName string) {
 	})
 }
 
-func MiddlewareHtmxBoost(next http.Handler) http.Handler {
+type HtmxBoostMiddleware struct{}
+
+func (HtmxBoostMiddleware) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		isBoosted := r.Header.Get("HX-Boosted") == "true"
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "isHtmxBoosted", isBoosted)))
 	})
 }
 
-func MiddlewareCacheDisable(next http.Handler) http.Handler {
+type CacheDisableMiddleware struct{}
+
+func (CacheDisableMiddleware) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
 		w.Header().Set("Pragma", "no-cache")
@@ -102,7 +109,9 @@ func MiddlewareCacheDisable(next http.Handler) http.Handler {
 	})
 }
 
-func MiddlewareResponseLogger(next http.Handler) http.Handler {
+type ResponseLoggerMiddleware struct{}
+
+func (ResponseLoggerMiddleware) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		rww := NewResponseWriterWrapper(w)

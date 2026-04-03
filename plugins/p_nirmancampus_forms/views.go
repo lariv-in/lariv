@@ -13,7 +13,7 @@ func init() {
 	}
 
 	// Superusers are allowed by RoleAuthorizationMiddleware; everyone else must have role "admin".
-	adminOnly := p_users.RoleAuthorizationMiddleware([]string{"admin"})
+	adminOnly := p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
 	for _, name := range []string{
 		"forms.ListView",
 		"forms.DetailView",

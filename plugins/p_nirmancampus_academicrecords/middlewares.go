@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +16,9 @@ const academicRecordProgramStructureUnitContextKey = "academicrecord_program_str
 // attachAcademicRecordProgramStructureUnitContext loads the ProgramStructureUnit
 // for the current AcademicRecord (from the "academicrecord" context key set by
 // DetailView) and stores it in context for update-form rendering.
-func attachAcademicRecordProgramStructureUnitContext(next http.Handler) http.Handler {
+type academicRecordProgramStructureUnitContextMiddleware struct{}
+
+func (academicRecordProgramStructureUnitContextMiddleware) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		record, ok := r.Context().Value("academicrecord").(AcademicRecord)
 		if !ok || record.ID == 0 {

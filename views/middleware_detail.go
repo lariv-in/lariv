@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -39,6 +40,7 @@ func (m MiddlewareDetail[T]) Next(view View, next http.Handler) http.Handler {
 			ctx := r.Context()
 			pathParamKey, err := m.PathParamKey(ctx)
 			if err != nil {
+				slog.Error("views: middleware detail: resolve path param key", "error", err)
 				ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 					"_global": fmt.Errorf("failed to resolve path param key: %w", err),
 				})
@@ -48,6 +50,7 @@ func (m MiddlewareDetail[T]) Next(view View, next http.Handler) http.Handler {
 			idStr := r.PathValue(pathParamKey)
 			id, err := strconv.ParseUint(idStr, 10, 32)
 			if err != nil {
+				slog.Error("views: middleware detail: parse id", "error", err, "id", idStr)
 				ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 					"_global": fmt.Errorf("invalid ID %q", idStr),
 				})
@@ -59,6 +62,7 @@ func (m MiddlewareDetail[T]) Next(view View, next http.Handler) http.Handler {
 			query := m.QueryPatchers.Apply(view, r, gorm.G[T](db).Scopes())
 			instance, err := query.Where("ID = ?", id).First(ctx)
 			if err != nil {
+				slog.Error("views: middleware detail: load record", "error", err, "id", id)
 				ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 					"_global": fmt.Errorf("record not found"),
 				})
@@ -67,6 +71,7 @@ func (m MiddlewareDetail[T]) Next(view View, next http.Handler) http.Handler {
 			}
 			key, err := m.Key(ctx)
 			if err != nil {
+				slog.Error("views: middleware detail: resolve context key", "error", err)
 				ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 					"_global": fmt.Errorf("failed to resolve context key: %w", err),
 				})

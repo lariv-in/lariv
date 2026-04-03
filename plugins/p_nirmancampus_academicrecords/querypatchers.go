@@ -11,11 +11,13 @@ import (
 	"gorm.io/gorm"
 )
 
+type academicRecordScopeByRole struct{}
+
 // AcademicRecordScopeByRole restricts academic record queries:
 // - superuser, admin: full queryset
 // - student: only academic records for the logged-in user's Student row (read via list/detail/select)
 // - default (any other role): empty queryset
-func AcademicRecordScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[AcademicRecord]) gorm.ChainInterface[AcademicRecord] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -66,3 +68,5 @@ func AcademicRecordScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *
 		return query.Where("1 = 0")
 	}
 }
+
+var AcademicRecordScopeByRole views.QueryPatcher[AcademicRecord] = academicRecordScopeByRole{}

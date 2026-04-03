@@ -13,6 +13,7 @@ import (
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // getSessionFromEnvironment looks up the session selected in the $environment cookie
@@ -100,7 +101,9 @@ func TallyLeaderboardHandler(v *views.View) http.Handler {
 
 // TallyDetailQueryPatcher scopes the detail query so that non-admin users
 // can only see their own tallies, while admins/superusers can see all.
-func TallyDetailQueryPatcher(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+type tallyDetailQueryPatcher struct{}
+
+func (tallyDetailQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
 	user, ok := r.Context().Value("$user").(p_users.User)
 	if !ok {
 		return query
@@ -120,8 +123,11 @@ func TallyDetailQueryPatcher(_ *views.View, r *http.Request, query *gorm.DB) *go
 	return query
 }
 
-// RequireAdmin middleware to restrict access to admins only.
-func RequireAdmin(next http.Handler) http.Handler {
+var TallyDetailQueryPatcher views.QueryPatcher[Tally] = tallyDetailQueryPatcher{}
+
+type requireAdminMiddleware struct{}
+
+func (requireAdminMiddleware) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := r.Context().Value("$user").(p_users.User)
 		if !ok {
@@ -143,8 +149,19 @@ func RequireAdmin(next http.Handler) http.Handler {
 	})
 }
 
+func scopeAppointmentsQueryToCurrentUser(r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
+	user := r.Context().Value("$user").(p_users.User)
+	role, _ := r.Context().Value("$role").(string)
+	if user.IsSuperuser || role == "totschool_admin" {
+		return query
+	}
+	return query.Where("user_id = ?", user.ID)
+}
+
 // TallyListQueryPatcher scopes and filters the tallies list for the generic ListView.
-func TallyListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+type tallyListQueryPatcher struct{}
+
+func (tallyListQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -169,7 +186,7 @@ func TallyListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm
 		panic("TallyListQueryPatcher: $db is nil or wrong type in context")
 	}
 	// Always join the related user so table columns can access User.Name.
-	query = query.Joins("User")
+	query = query.Joins(clause.JoinTarget{Association: "User"}, nil)
 
 	// Restrict to the current session.
 	session := getSessionFromEnvironment(db, ctx)
@@ -229,6 +246,51 @@ func TallyListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm
 	return query
 }
 
+var TallyListQueryPatcher views.QueryPatcher[Tally] = tallyListQueryPatcher{}
+
+type tallyTimelineQueryPatcher struct{}
+
+func (tallyTimelineQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
+	ctx := r.Context()
+	query = scopeAppointmentsQueryToCurrentUser(r, query)
+
+	if get, ok := ctx.Value("$get").(map[string]any); ok {
+		if raw, exists := get["Date"]; exists && raw != nil {
+			switch d := raw.(type) {
+			case time.Time:
+				if !d.IsZero() {
+					return applyDateFilter(raw, query)
+				}
+			case string:
+				if d != "" {
+					return applyDateFilter(raw, query)
+				}
+			}
+		}
+	}
+	return applyDateFilter(time.Now(), query)
+}
+
+var AppointmentTimelineQueryPatcher views.QueryPatcher[Tally] = tallyTimelineQueryPatcher{}
+
+func applyDateFilter(raw any, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
+	switch d := raw.(type) {
+	case time.Time:
+		start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
+		end := start.Add(24 * time.Hour)
+		query = query.Where("date >= ? AND date < ?", start, end)
+	case string:
+		if d != "" {
+			if parsed, err := time.Parse("2006-01-02", d); err == nil {
+				start := time.Date(parsed.Year(), parsed.Month(), parsed.Day(), 0, 0, 0, 0, parsed.Location())
+				end := start.Add(24 * time.Hour)
+				query = query.Where("date >= ? AND date < ?", start, end)
+			}
+		}
+	}
+	return query
+}
+
 // TallyDailyFormHandler handles form submission for the logged-in user's daily tally.
 func TallyDailyFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -254,9 +316,10 @@ func TallyDailyFormHandler(v *views.View) http.Handler {
 			return
 		}
 
-		if v.HasErrors(fieldErrors) {
+		if len(fieldErrors) != 0 {
 			ctx := context.WithValue(r.Context(), "$in", map[string]any{"Tally": tally})
-			v.RenderWithErrors(w, r.WithContext(ctx), fieldErrors, values)
+			ctx = views.ContextWithErrorsAndValues(ctx, values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -284,40 +347,96 @@ func TallyDailyFormHandler(v *views.View) http.Handler {
 
 func init() {
 	lago.RegistryView.Register("tally.TallyDashboardView",
-		lago.GetPageView("tally.TallyDashboard").WithMethod(http.MethodGet, TallyDashboardHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("tally.TallyDashboard").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.dashboard", views.MethodMiddleware{
+				Method:  http.MethodGet,
+				Handler: TallyDashboardHandler,
+			}))
+
 	lago.RegistryView.Register("tally.TallyLeaderboardView",
-		lago.GetPageView("tally.TallyLeaderboard").WithMethod(http.MethodGet, TallyLeaderboardHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("tally.TallyLeaderboard").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.leaderboard", views.MethodMiddleware{
+				Method:  http.MethodGet,
+				Handler: TallyLeaderboardHandler,
+			}))
+
 	lago.RegistryView.Register("tally.TallyListView",
-		views.ListView[Tally]("Tallies")(lago.GetPageView("tally.TallyTable")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("tally.list", TallyListQueryPatcher))
+		lago.GetPageView("tally.TallyTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.list", views.MiddlewareList[Tally]{
+				Key: getters.Static("Tallies"),
+				QueryPatchers: views.QueryPatchers[Tally]{
+					{Key: "tally.list", Value: TallyListQueryPatcher},
+				},
+			}))
 
 	lago.RegistryView.Register("tally.TallyDailyFormView",
-		lago.GetPageView("tally.TallyDailyForm").WithMethod(http.MethodGet, TallyDailyFormHandler).WithMethod(http.MethodPost, TallyDailyFormHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("tally.TallyDailyForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.daily_form_get", views.MethodMiddleware{
+				Method:  http.MethodGet,
+				Handler: TallyDailyFormHandler,
+			}).
+			WithMiddleware("tally.daily_form_post", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: TallyDailyFormHandler,
+			}))
 
-	// Admin CRUD mappings using standard views
 	lago.RegistryView.Register("tally.TallyCreateView",
-		views.CreateView[Tally](lago.RoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyCreateForm")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("tally.admin", RequireAdmin))
-	lago.RegistryView.Register("tally.TallyUpdateView",
-		views.UpdateView[Tally]("id", lago.RoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyUpdateForm")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("tally.admin", RequireAdmin))
-	lago.RegistryView.Register("tally.TallyDeleteView",
-		views.DeleteView[Tally]("id", lago.RoutePath("tally.TallyListRoute", nil))(lago.GetPageView("tally.TallyDeleteForm")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("tally.admin", RequireAdmin))
+		lago.GetPageView("tally.TallyCreateForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.admin", requireAdminMiddleware{}).
+			WithMiddleware("tally.create", views.MiddlewareCreate[Tally]{
+				SuccessURL: lago.RoutePath("tally.TallyListRoute", nil),
+			}))
 
-	// Detail View allows access if user owns it or is admin. We reuse the
-	// generic DetailView[Tally] and apply TallyDetailQueryPatcher to enforce
-	// per-user access.
+	lago.RegistryView.Register("tally.TallyUpdateView",
+		lago.GetPageView("tally.TallyUpdateForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.admin", requireAdminMiddleware{}).
+			WithMiddleware("tally.detail", views.MiddlewareDetail[Tally]{
+				Key:          getters.Static("Tally"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("tally.update", views.MiddlewareUpdate[Tally]{
+				Key:        getters.Static("Tally"),
+				SuccessURL: lago.RoutePath("tally.TallyListRoute", nil),
+			}))
+
+	lago.RegistryView.Register("tally.TallyDeleteView",
+		lago.GetPageView("tally.TallyDeleteForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.admin", requireAdminMiddleware{}).
+			WithMiddleware("tally.detail", views.MiddlewareDetail[Tally]{
+				Key:          getters.Static("Tally"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("tally.delete", views.MiddlewareDelete[Tally]{
+				Key:        getters.Static("Tally"),
+				SuccessURL: lago.RoutePath("tally.TallyListRoute", nil),
+			}))
+
 	lago.RegistryView.Register("tally.TallyDetailView",
-		views.DetailView[Tally]("Tally", "id")(
-			lago.GetPageView("tally.TallyDetail")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithQueryPatcher("tally.detail", TallyDetailQueryPatcher))
+		lago.GetPageView("tally.TallyDetail").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.detail", views.MiddlewareDetail[Tally]{
+				Key:          getters.Static("Tally"),
+				PathParamKey: getters.Static("id"),
+				QueryPatchers: views.QueryPatchers[Tally]{
+					{Key: "tally.detail", Value: TallyDetailQueryPatcher},
+				},
+			}))
+
+	lago.RegistryView.Register("tally.CardTimelineView",
+		lago.GetPageView("tally.AppointmentCardTimeline").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("tally.timeline", views.MiddlewareList[Tally]{
+				Key: getters.Static("appointments"),
+				QueryPatchers: views.QueryPatchers[Tally]{
+					{Key: "appointments.timeline", Value: AppointmentTimelineQueryPatcher},
+					{Key: "appointments.timeline_order", Value: views.QueryPatcherOrderBy[Tally]{Order: "date ASC"}},
+				},
+			}))
 }

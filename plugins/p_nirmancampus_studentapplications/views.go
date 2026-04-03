@@ -7,24 +7,29 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
 )
 
 // studentApplicationsAccessMiddleware allows only admin, Unassigned, and (via bypass) superuser.
 // Student and other roles cannot use this app.
-var studentApplicationsAccessMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin", roleNameUnassigned})
+var studentApplicationsAccessMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin", roleNameUnassigned}}
 
 // studentApplicationsAdminMiddleware allows create/update/delete management (not for Unassigned except create is separate).
-var studentApplicationsAdminMiddleware = p_users.RoleAuthorizationMiddleware([]string{"admin"})
+var studentApplicationsAdminMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
 
-func applicationCreatedByFormPatcher(_ *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+type applicationCreatedByFormPatcher struct{}
+
+func (applicationCreatedByFormPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	user := r.Context().Value("$user").(p_users.User)
 	id := user.ID
 	formData["CreatedByID"] = &id
 	return formData, formErrors
 }
 
-func applicationDOBFormPatcher(_ *views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+type applicationDOBFormPatcher struct{}
+
+func (applicationDOBFormPatcher) Patch(_ views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	raw, ok := formData["DOB"]
 	if !ok {
 		return formData, formErrors
@@ -50,54 +55,91 @@ func applicationDOBFormPatcher(_ *views.View, _ *http.Request, formData map[stri
 
 func init() {
 	lago.RegistryView.Register("studentapplications.ListView",
-		views.ListView[StudentApplication]("studentapplications")(
-			lago.GetPageView("studentapplications.ApplicationTable")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+		lago.GetPageView("studentapplications.ApplicationTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
-			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole))
+			WithMiddleware("studentapplications.list", views.MiddlewareList[StudentApplication]{
+				Key: getters.Static("studentapplications"),
+				QueryPatchers: views.QueryPatchers[StudentApplication]{
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
+				},
+			}))
 
 	lago.RegistryView.Register("studentapplications.DetailView",
-		views.DetailView[StudentApplication]("studentapplication", "id")(
-			lago.GetPageView("studentapplications.ApplicationDetail")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).
+		lago.GetPageView("studentapplications.ApplicationDetail").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("studentapplications.path", views.PathMiddleware{Names: []string{"id"}}).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
-			WithQueryPatcher("studentapplications.preload_photo", views.QueryPatcherPreload("Photo")).
-			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")).
-			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole))
+			WithMiddleware("studentapplications.detail", views.MiddlewareDetail[StudentApplication]{
+				Key:          getters.Static("studentapplication"),
+				PathParamKey: getters.Static("id"),
+				QueryPatchers: views.QueryPatchers[StudentApplication]{
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_photo", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Photo"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_documents", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Documents"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
+				},
+			}))
 
 	lago.RegistryView.Register("studentapplications.CreateView",
-		views.CreateView[StudentApplication](lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
-			lago.GetPageView("studentapplications.ApplicationCreateForm")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
+		lago.GetPageView("studentapplications.ApplicationCreateForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithFormPatcher("studentapplications.form_created_by", applicationCreatedByFormPatcher).
-			WithFormPatcher("studentapplications.form_dob", applicationDOBFormPatcher))
+			WithMiddleware("studentapplications.create", views.MiddlewareCreate[StudentApplication]{
+				SuccessURL: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}),
+				FormPatchers: views.FormPatchers{
+					registry.Pair[string, views.FormPatcher]{Key: "studentapplications.form_created_by", Value: applicationCreatedByFormPatcher{}},
+					registry.Pair[string, views.FormPatcher]{Key: "studentapplications.form_dob", Value: applicationDOBFormPatcher{}},
+				},
+			}))
 
 	lago.RegistryView.Register("studentapplications.UpdateView",
-		views.DetailView[StudentApplication]("studentapplication", "id")(
-			views.UpdateView[StudentApplication]("id", lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
-				lago.GetPageView("studentapplications.ApplicationUpdateForm"))).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).
+		lago.GetPageView("studentapplications.ApplicationUpdateForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("studentapplications.path", views.PathMiddleware{Names: []string{"id"}}).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
 			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
-			WithQueryPatcher("studentapplications.preload_photo", views.QueryPatcherPreload("Photo")).
-			WithQueryPatcher("studentapplications.preload_documents", views.QueryPatcherPreload("Documents")).
-			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole).
-			WithFormPatcher("studentapplications.form_dob", applicationDOBFormPatcher))
+			WithMiddleware("studentapplications.detail", views.MiddlewareDetail[StudentApplication]{
+				Key:          getters.Static("studentapplication"),
+				PathParamKey: getters.Static("id"),
+				QueryPatchers: views.QueryPatchers[StudentApplication]{
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_photo", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Photo"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_documents", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Documents"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
+				},
+			}).
+			WithMiddleware("studentapplications.update", views.MiddlewareUpdate[StudentApplication]{
+				Key:        getters.Static("studentapplication"),
+				SuccessURL: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}),
+				QueryPatchers: views.QueryPatchers[StudentApplication]{
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
+				},
+				FormPatchers: views.FormPatchers{
+					registry.Pair[string, views.FormPatcher]{Key: "studentapplications.form_dob", Value: applicationDOBFormPatcher{}},
+				},
+			}))
 
 	lago.RegistryView.Register("studentapplications.DeleteView",
-		views.DetailView[StudentApplication]("studentapplication", "id")(
-			views.DeleteView[StudentApplication]("id", lago.RoutePath("studentapplications.DefaultRoute", nil))(
-				lago.GetPageView("studentapplications.ApplicationDeleteForm"))).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("studentapplications.path", views.PathMiddleware("id")).
+		lago.GetPageView("studentapplications.ApplicationDeleteForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("studentapplications.path", views.PathMiddleware{Names: []string{"id"}}).
 			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
 			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
-			WithQueryPatcher("studentapplications.preload_program", views.QueryPatcherPreload("Program")).
-			WithQueryPatcher("studentapplications.scope_by_role", StudentApplicationScopeByRole))
+			WithMiddleware("studentapplications.detail", views.MiddlewareDetail[StudentApplication]{
+				Key:          getters.Static("studentapplication"),
+				PathParamKey: getters.Static("id"),
+				QueryPatchers: views.QueryPatchers[StudentApplication]{
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
+				},
+			}).
+			WithMiddleware("studentapplications.delete", views.MiddlewareDelete[StudentApplication]{
+				Key:        getters.Static("studentapplication"),
+				SuccessURL: lago.RoutePath("studentapplications.DefaultRoute", nil),
+				QueryPatchers: views.QueryPatchers[StudentApplication]{
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
+				},
+			}))
 }

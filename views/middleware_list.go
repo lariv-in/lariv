@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"maps"
 	"net/http"
 	"reflect"
@@ -74,6 +75,7 @@ func (m MiddlewareList[T]) Next(view View, next http.Handler) http.Handler {
 		if m.PageSize != nil {
 			pageSize, err = m.PageSize(ctx)
 			if err != nil {
+				slog.Error("views: middleware list: resolve page size", "error", err)
 				ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 					"_global": fmt.Errorf("failed to resolve page size: %w", err),
 				})
@@ -95,7 +97,10 @@ func (m MiddlewareList[T]) Next(view View, next http.Handler) http.Handler {
 		if page, ok := view.GetPage(); ok {
 			if parent, ok := page.(components.ParentInterface); ok {
 				if forms := components.FindChildren[components.FormInterface](parent); len(forms) > 0 {
-					if values, _, err := forms[0].ParseForm(r); err == nil {
+					values, _, perr := forms[0].ParseForm(r)
+					if perr != nil {
+						slog.Error("views: middleware list: parse filter form", "error", perr)
+					} else {
 						maps.Copy(queryMap, values)
 					}
 				}
@@ -156,6 +161,7 @@ func (m MiddlewareList[T]) Next(view View, next http.Handler) http.Handler {
 		// see applyListViewSorts.
 		total, err := query.Count(ctx, "ID")
 		if err != nil {
+			slog.Error("views: middleware list: count records", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 				"_global": fmt.Errorf("failed to count records: %w", err),
 			})
@@ -166,6 +172,7 @@ func (m MiddlewareList[T]) Next(view View, next http.Handler) http.Handler {
 
 		results, err := query.Find(ctx)
 		if err != nil {
+			slog.Error("views: middleware list: query records", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 				"_global": fmt.Errorf("failed to query records: %w", err),
 			})

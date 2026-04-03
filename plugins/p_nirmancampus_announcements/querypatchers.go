@@ -11,20 +11,26 @@ import (
 	"gorm.io/gorm"
 )
 
+type announcementsOrderReleaseAtQueryPatcherType struct{}
+
 // announcementsOrderReleaseAtQueryPatcher defaults ordering to release_at ASC
 // when the request did not specify sort=.
-func announcementsOrderReleaseAtQueryPatcher(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+func (announcementsOrderReleaseAtQueryPatcherType) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Announcement]) gorm.ChainInterface[Announcement] {
 	if r.URL.Query().Get("sort") != "" {
 		return query
 	}
 	return query.Order("release_at ASC")
 }
 
+var announcementsOrderReleaseAtQueryPatcher views.QueryPatcher[Announcement] = announcementsOrderReleaseAtQueryPatcherType{}
+
 // AnnouncementScopeByRole restricts announcement queries:
 //   - superuser, admin: full queryset (all CRUD targets for those views)
 //   - student: rows where release_at <= now and (expiry_at IS NULL or expiry_at > now)
 //   - any other role: empty queryset
-func AnnouncementScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+type announcementScopeByRole struct{}
+
+func (announcementScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Announcement]) gorm.ChainInterface[Announcement] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -62,3 +68,5 @@ func AnnouncementScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *go
 		return query.Where("1 = 0")
 	}
 }
+
+var AnnouncementScopeByRole views.QueryPatcher[Announcement] = announcementScopeByRole{}

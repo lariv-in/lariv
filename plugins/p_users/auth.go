@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -98,7 +99,7 @@ func (u *User) GetJwt(currentTime, expiryTime time.Time) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS512, u.GetClaims(currentTime, expiryTime)).SignedString(signingKey[:])
 }
 
-func (u *User) Login(w http.ResponseWriter) {
+func (u *User) Login(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	nextDayTime := currentTime.Add(time.Hour * 24)
 	jwt, err := u.GetJwt(currentTime, nextDayTime)
@@ -106,11 +107,12 @@ func (u *User) Login(w http.ResponseWriter) {
 		http.Error(w, "Could not authenticate the user", http.StatusForbidden)
 		return
 	}
+	secure := r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https")
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth-token",
 		Value:    jwt,
 		Expires:  nextDayTime,
-		Secure:   true,
+		Secure:   secure,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",

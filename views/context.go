@@ -17,5 +17,5 @@ func ContextWithMap[K comparable, V any](ctx context.Context, m map[K]V, key any
 }
 
 func ContextWithErrorsAndValues(ctx context.Context, values map[string]any, errors map[string]error) context.Context {
-	return ContextWithMap(ContextWithMap(ctx, errors, getters.ContextKeyIn), values, getters.ContextKeyError)
+	return ContextWithMap(ContextWithMap(ctx, values, getters.ContextKeyIn), errors, getters.ContextKeyError)
 }

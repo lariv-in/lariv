@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"reflect"
 
@@ -24,21 +25,21 @@ import (
 // into getters.ContextKeyError under "_global" and next is called, never a raw
 // HTTP response.
 type MiddlewareDelete[T any] struct {
-	Key           getters.Getter[string]
-	SuccessURL    getters.Getter[string]
-	PatchParamKey getters.Getter[string]
+	Key        getters.Getter[string]
+	SuccessURL getters.Getter[string]
 	QueryPatchers QueryPatchers[T]
 }
 
 func (m MiddlewareDelete[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodDelete {
+		if r.Method != http.MethodPost {
 			next.ServeHTTP(w, r)
 			return
 		}
 		ctx := r.Context()
 		key, err := m.Key(ctx)
 		if err != nil {
+			slog.Error("views: middleware delete: resolve context key", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 				"_global": fmt.Errorf("failed to resolve context key: %w", err),
 			})
@@ -47,6 +48,7 @@ func (m MiddlewareDelete[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		record, ok := ctx.Value(key).(T)
 		if !ok {
+			slog.Error("views: middleware delete: record missing from context", "key", key)
 			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 				"_global": fmt.Errorf("record not found in context"),
 			})
@@ -59,6 +61,7 @@ func (m MiddlewareDelete[T]) Next(view View, next http.Handler) http.Handler {
 		query = m.QueryPatchers.Apply(view, r, query)
 		_, err = query.Delete(ctx)
 		if err != nil {
+			slog.Error("views: middleware delete: delete record", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 				"_global": fmt.Errorf("failed to delete record: %w", err),
 			})
@@ -71,6 +74,7 @@ func (m MiddlewareDelete[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		successUrl, err := m.SuccessURL(ctx)
 		if err != nil {
+			slog.Error("views: middleware delete: resolve success URL", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
 				"_global": fmt.Errorf("failed to resolve redirect URL: %w", err),
 			})

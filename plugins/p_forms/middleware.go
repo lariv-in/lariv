@@ -6,12 +6,15 @@ import (
 	"strconv"
 
 	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
 // AttachFormFieldsObjectListContext adds FormFieldsObjectListContextKey for the fields DataTable
 // when context already holds the loaded Form under key "form" (e.g. forms.DetailView GET).
-func AttachFormFieldsObjectListContext(next http.Handler) http.Handler {
+type AttachFormFieldsObjectListContext struct{}
+
+func (AttachFormFieldsObjectListContext) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		formAny := r.Context().Value("form")
 		form, ok := formAny.(Form)
@@ -25,7 +28,7 @@ func AttachFormFieldsObjectListContext(next http.Handler) http.Handler {
 			Items:    items,
 			Number:   1,
 			NumPages: 1,
-			Total:    int64(n),
+			Total:    uint64(n),
 		}
 		ctx := context.WithValue(r.Context(), FormFieldsObjectListContextKey, ol)
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -54,8 +57,10 @@ func formIDFromPathContext(ctx context.Context) (uint, bool) {
 }
 
 // AttachFormForParentFieldsPath loads Form into context as "form" for field create and submissions list
-// (routes without DetailView[Form] loading the parent form). Requires PathMiddleware so $path is populated.
-func AttachFormForParentFieldsPath(next http.Handler) http.Handler {
+// (routes without MiddlewareDetail[Form] loading the parent form). Requires PathMiddleware so $path is populated.
+type AttachFormForParentFieldsPath struct{}
+
+func (AttachFormForParentFieldsPath) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		formID, ok := formIDFromPathContext(r.Context())
 		if !ok {

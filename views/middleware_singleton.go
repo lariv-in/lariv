@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/lariv-in/lago/getters"
@@ -40,7 +41,14 @@ func (m MiddlewareSingleton[T]) Next(view View, next http.Handler) http.Handler 
 
 		if r.Method != http.MethodPost {
 			instance := new(T)
-			db.FirstOrCreate(instance)
+			if res := db.FirstOrCreate(instance); res.Error != nil {
+				slog.Error("views: middleware singleton: first or create", "error", res.Error)
+				ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+					"_global": fmt.Errorf("failed to load or create singleton: %w", res.Error),
+				})
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
 			ctx = context.WithValue(ctx, getters.ContextKeyIn, getters.MapFromStruct(instance))
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -48,6 +56,7 @@ func (m MiddlewareSingleton[T]) Next(view View, next http.Handler) http.Handler 
 
 		values, fieldErrors, err := view.ParseForm(w, r)
 		if err != nil {
+			slog.Error("views: middleware singleton: parse form", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})
@@ -55,6 +64,9 @@ func (m MiddlewareSingleton[T]) Next(view View, next http.Handler) http.Handler 
 			return
 		}
 		if len(fieldErrors) != 0 {
+			for fname, ferr := range fieldErrors {
+				slog.Error("views: middleware singleton: field error", "field", fname, "error", ferr)
+			}
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -79,6 +91,7 @@ func (m MiddlewareSingleton[T]) Next(view View, next http.Handler) http.Handler 
 			return applyAssociationReplacements(tx, instance, associationValues)
 		})
 		if err != nil {
+			slog.Error("views: middleware singleton: transaction", "error", err)
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -91,6 +104,7 @@ func (m MiddlewareSingleton[T]) Next(view View, next http.Handler) http.Handler 
 		}
 		successUrl, err := m.SuccessURL(ctx)
 		if err != nil {
+			slog.Error("views: middleware singleton: resolve success URL", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})

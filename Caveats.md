@@ -1,7 +1,7 @@
 # Caveats When Working On This Codebase
 
 - NEVER write go.mod or go.sum manually, use go mod init, go mod tidy -e, go work use for project management, If you can't run the required commands to manage go.mod and go.sum, then ask the user to run the commands.
-- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patcher.go` and CRUD helpers), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
+- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patchers.go`, middleware types, and helpers in `crud.go`), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
 - In nearly all cases, take the address of components before inserting them into something that requires `PageInterface`. Otherwise, the value will not implement `MutableParentInterface` and its children will not be patchable.
 
 - When you do add a component, it should implement at least `PageInterface` from `components/page.go`.
@@ -70,38 +70,35 @@ Existing registries:
 
 # Views
 
-A view is the primary HTTP handler here. A view keeps track of:
-   - which `PageInterface` to display
-   - which middlewares to run for the current route, excluding global middlewares
-   - custom functions for patching the query
-   - custom functions for handling form data after parsing and before it is used elsewhere
+A view is the primary HTTP handler for a route. A `*views.View` (`views/views.go`) is only:
 
-Currently, the following view factories exist in `views/crud.go`:
-   - `CreateView`
-   - `ListView`
-   - `DetailView`
-   - `UpdateView`
-   - `DeleteView`
-   - `SingletonView`
+- which `PageInterface` to render (`PageName` + `PageLookup`)
+- an **ordered** list of per-route middlewares (`Middlewares`), each implementing `views.Middleware` (`Next(View, http.Handler) http.Handler`)
 
-- `ListView` is used whenever we need an `ObjectList` of a model.
-- `DetailView` is used whenever we need a single instance of a model.
+Global HTTP concerns (DB, `$request`, etc.) live in `views.GlobalMiddleware` and app registration, not inside the view struct. Build routes from `lago.GetPageView("plugin.PageName")`, then chain `WithMiddleware("stable.key", middleware)`.
 
-- In most cases, `DetailView` needs to be chained with `UpdateView` and `DeleteView`.
+**Do not reintroduce removed APIs:** there are no `ListView` / `DetailView` / `CreateView` / `UpdateView` / `DeleteView` / `SingletonView` / `JsonImport` factories, no `WithMethod`, `WithQueryPatcher`, `WithFormPatcher`, `WithRenderMiddleware`, `Handlers`, or `lago.NewRedirectView`. Use ordered middlewares instead; for redirects use `lago.RedirectView` / `lago.Redirect`. See `ViewsApiMigrationGuide.md` for concrete replacements.
 
-- For common query patching behavior, prefer shared helpers in `views/query_patcher.go` over custom per-plugin functions:
-   - Use `views.QueryPatcherPreload("AssociationName")` for preloads.
-   - Use `views.QueryPatcherOrderBy("field ASC|DESC")` for ordering.
-   - Use `views.QueryPatcherJoinFilter[...]` when filtering a base list view through a separate join model.
+**Typed CRUD middleware** (each owns one concern; order matters):
 
-- Generic CRUD many-to-many support now exists in `views/crud.go`. `InputManyToMany.Parse` returns a typed `AssociationIDs` payload, and `CreateView` / `UpdateView` / `SingletonView` persist it through GORM associations after the base row save. Do not try to make many-to-many form inputs look like ordinary scalar columns.
+- `views.MiddlewareList[T]` — paginated list query from URL params; puts `components.ObjectList[T]` in context under `Key`; merges filter/query state into `$get` (and coerces types from the page’s first form when present). On failure it sets `_global` in `getters.ContextKeyError` and calls `next` (no direct error HTTP response).
+- `views.MiddlewareDetail[T]` — load one row by path param PK; place **before** update/delete middleware that needs the same record. Same error pattern as list on failure.
+- `views.MiddlewareCreate[T]` — POST create; sets `$id` on success.
+- `views.MiddlewareUpdate[T]` — POST update; expects the record already in context (usually after `MiddlewareDetail`).
+- `views.MiddlewareDelete[T]` — POST delete (not HTTP `DELETE`; matches confirmation forms).
+- `views.MiddlewareSingleton[T]` — singleton settings load/create on GET/POST.
+- `views.MiddlewareJsonImport[T]` — JSON file import.
+- `views.MethodMiddleware` — custom handler for a specific HTTP method.
 
-- When a plugin needs to show related data on another plugin's detail page (e.g. academic records on a student detail page), do **not** write a custom getter that manually pulls `$db` and `$in.ID` from context to run its own query. Instead, use `View.WithRenderMiddleware` (via `lago.RegistryView.Patch`) to load the data at the view level and store it in context, then read from that context key in the component's getter:
-  1. Define a package-level context key constant (e.g. `const myDataContextKey = "my_data_table"`).
-  2. Write a `RenderMiddleware` (`func(http.Handler) http.Handler`) that reads the parent object from context (e.g. `r.Context().Value("student")`), queries related rows, wraps them in `components.ObjectList[T]`, and stores the list under the context key via `context.WithValue`.
-  3. Patch the base plugin's view: `lago.RegistryView.Patch("base.DetailView", func(v *views.View) *views.View { return v.WithRenderMiddleware("myplugin.key", myMiddleware) })`.
-  4. In the `DataTable`, set `Data: getters.Key[components.ObjectList[T]](myDataContextKey)`.
-  - This follows the same pattern as `p_forms.AttachFormFieldsObjectListContext` and keeps data loading in the view layer where it belongs.
+**Query patching:** attach `views.QueryPatchers[T]` (named `registry.Pair`s) on `MiddlewareList`, `MiddlewareDetail`, or `MiddlewareUpdate`. Prefer the built-in patchers in `views/query_patchers.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T, TJoin]` (reads filter values from `$get`). Do not duplicate ad-hoc query logic when these suffice.
+
+**Form patching:** attach `views.FormPatchers` on `MiddlewareCreate` and `MiddlewareUpdate` (`views/form_patchers.go`). `InputManyToMany.Parse` still yields `AssociationIDs`; create/update/singleton middleware persists many-to-many via GORM after the row save—do not model those inputs as plain scalar columns.
+
+**Patching views across plugins:** give every middleware a stable string key (e.g. `"students.detail"`). Other packages should use `InsertMiddlewareBefore`, `InsertMiddlewareAfter`, or `PatchMiddleware` against those keys—not fragile positional assumptions.
+
+**Extra context on another plugin’s page** (e.g. related `ObjectList` on a base detail view): do **not** hide DB access inside a component getter. Implement a small type that satisfies `views.Middleware`, load data in `Next`, `context.WithValue` the result, and register or patch it onto the base view **after** the middleware that provides the parent record (e.g. `InsertMiddlewareAfter("base.detail", "myplugin.extra", myMiddleware{})`). Point `DataTable` (or similar) at that context key with `getters.Key[...]`.
+
+**Custom forms and errors:** use `view.ParseForm` and `views.ContextWithErrorsAndValues` to re-render with field/global errors; do not recreate removed helpers like `HasErrors` / `RenderWithErrors`.
 
 # Error handling
 

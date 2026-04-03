@@ -45,29 +45,31 @@ func parseUintPathValue(r *http.Request, name string) (uint, error) {
 	return uint(id), nil
 }
 
-func loadVNodeMiddleware(param string) views.Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			db, err := filesystemDB(r)
-			if err != nil {
-				slog.Error("filesystem: missing db while loading vnode", "param", param, "error", err)
-				http.Error(w, "internal server error", http.StatusInternalServerError)
-				return
-			}
-			id, err := parseUintPathValue(r, param)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			node, err := GetVNodeByID(db, id)
-			if err != nil {
-				http.NotFound(w, r)
-				return
-			}
-			ctx := context.WithValue(r.Context(), "vnode", *node)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
+type loadVNodeByPathParamMiddleware struct {
+	Param string
+}
+
+func (m loadVNodeByPathParamMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db, err := filesystemDB(r)
+		if err != nil {
+			slog.Error("filesystem: missing db while loading vnode", "param", m.Param, "error", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		id, err := parseUintPathValue(r, m.Param)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		node, err := GetVNodeByID(db, id)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "vnode", *node)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func vnodeFromContext(r *http.Request) (*VNode, error) {
@@ -107,24 +109,33 @@ func parentRedirect(ctx context.Context, node *VNode) (string, error) {
 	return lago.RoutePath("filesystem.ListRoute", nil)(ctx)
 }
 
-func rootVNodeQuery(_ *views.View, _ *http.Request, query *gorm.DB) *gorm.DB {
-	return ListChildrenForParent(query, nil)
+type rootVNodeQueryPatcher struct{}
+
+func (rootVNodeQueryPatcher) Patch(_ views.View, _ *http.Request, q gorm.ChainInterface[VNode]) gorm.ChainInterface[VNode] {
+	return q.Order("is_directory DESC").Order("name ASC").Where("parent_id IS NULL")
 }
 
-func browseVNodeQuery(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+type browseVNodeQueryPatcher struct{}
+
+func (browseVNodeQueryPatcher) Patch(_ views.View, r *http.Request, q gorm.ChainInterface[VNode]) gorm.ChainInterface[VNode] {
+	q = q.Order("is_directory DESC").Order("name ASC")
 	id, err := parseUintPathValue(r, "parent_id")
 	if err != nil {
-		return query.Where("1 = 0")
+		return q.Where("1 = 0")
 	}
-	return ListChildrenForParent(query, &id)
+	return q.Where("parent_id = ?", id)
 }
 
-func rootDirectoryQuery(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-	return rootVNodeQuery(v, r, query).Where("is_directory = ?", true)
+type rootDirectoryQueryPatcher struct{}
+
+func (rootDirectoryQueryPatcher) Patch(v views.View, r *http.Request, q gorm.ChainInterface[VNode]) gorm.ChainInterface[VNode] {
+	return rootVNodeQueryPatcher{}.Patch(v, r, q).Where("is_directory = ?", true)
 }
 
-func browseDirectoryQuery(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-	return browseVNodeQuery(v, r, query).Where("is_directory = ?", true)
+type browseDirectoryQueryPatcher struct{}
+
+func (browseDirectoryQueryPatcher) Patch(v views.View, r *http.Request, q gorm.ChainInterface[VNode]) gorm.ChainInterface[VNode] {
+	return browseVNodeQueryPatcher{}.Patch(v, r, q).Where("is_directory = ?", true)
 }
 
 func createHandler(v *views.View) http.Handler {
@@ -159,7 +170,8 @@ func createHandler(v *views.View) http.Handler {
 		parent, err := optionalNodeFromValue(db, values["ParentID"], fallbackParent)
 		if err != nil {
 			fieldErrors["ParentID"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -170,7 +182,8 @@ func createHandler(v *views.View) http.Handler {
 			} else {
 				fieldErrors["_form"] = err
 			}
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -205,7 +218,8 @@ func updateHandler(v *views.View) http.Handler {
 		file, _ := values["File"].(*multipart.FileHeader)
 		if strings.TrimSpace(name) == "" {
 			fieldErrors["Name"] = fmt.Errorf("name is required")
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -215,7 +229,8 @@ func updateHandler(v *views.View) http.Handler {
 			} else {
 				fieldErrors["_form"] = err
 			}
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -251,13 +266,15 @@ func moveHandler(v *views.View) http.Handler {
 		destination, err := optionalNodeFromValue(db, values["DestinationID"], nil)
 		if err != nil {
 			fieldErrors["DestinationID"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
 		if err := node.MoveToNode(db, destination); err != nil {
 			fieldErrors["DestinationID"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -312,7 +329,8 @@ func multiUploadHandler(v *views.View) http.Handler {
 		files, _ := values["Files"].([]*multipart.FileHeader)
 		if len(files) == 0 {
 			fieldErrors["Files"] = fmt.Errorf("at least one file is required")
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -323,7 +341,8 @@ func multiUploadHandler(v *views.View) http.Handler {
 		parent, err := optionalNodeFromValue(db, values["ParentID"], fallbackParent)
 		if err != nil {
 			fieldErrors["ParentID"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -351,7 +370,8 @@ func multiUploadHandler(v *views.View) http.Handler {
 			var existingCount int64
 			if err := query.Count(&existingCount).Error; err != nil {
 				fieldErrors["_form"] = err
-				v.RenderWithErrors(w, r, fieldErrors, values)
+				ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 				return
 			}
 			if existingCount > 0 {
@@ -360,7 +380,8 @@ func multiUploadHandler(v *views.View) http.Handler {
 		}
 		if len(conflicts) > 0 {
 			fieldErrors["Files"] = fmt.Errorf("these files already exist in this location: %s", strings.Join(conflicts, ", "))
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -371,7 +392,8 @@ func multiUploadHandler(v *views.View) http.Handler {
 				} else {
 					fieldErrors["_form"] = err
 				}
-				v.RenderWithErrors(w, r, fieldErrors, values)
+				ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 				return
 			}
 		}
@@ -410,98 +432,187 @@ func downloadHandler(_ *views.View) http.Handler {
 }
 
 func init() {
+	listRoot := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.root", Value: rootVNodeQueryPatcher{}},
+			},
+		}
+	}
+	listBrowse := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.browse", Value: browseVNodeQueryPatcher{}},
+			},
+		}
+	}
+	listSelectRoot := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.select.root", Value: rootDirectoryQueryPatcher{}},
+			},
+		}
+	}
+	listSelectChild := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.select.child", Value: browseDirectoryQueryPatcher{}},
+			},
+		}
+	}
+	listMultiRoot := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.multi.root", Value: rootVNodeQueryPatcher{}},
+			},
+		}
+	}
+	listMultiChild := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.multi.child", Value: browseVNodeQueryPatcher{}},
+			},
+		}
+	}
+	listMoveRoot := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.move-select.root", Value: rootDirectoryQueryPatcher{}},
+			},
+		}
+	}
+	listMoveChild := func() views.Middleware {
+		return views.MiddlewareList[VNode]{
+			Key: getters.Static("vnodes"),
+			QueryPatchers: views.QueryPatchers[VNode]{
+				{Key: "filesystem.move-select.child", Value: browseDirectoryQueryPatcher{}},
+			},
+		}
+	}
+
 	lago.RegistryView.Register("filesystem.ListView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.VNodeTable")).
-			WithQueryPatcher("filesystem.root", rootVNodeQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("filesystem.VNodeTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.list", listRoot()))
 
 	lago.RegistryView.Register("filesystem.BrowseView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.VNodeTable")).
-			WithQueryPatcher("filesystem.browse", browseVNodeQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.parent", loadVNodeMiddleware("parent_id")))
+		lago.GetPageView("filesystem.VNodeTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
+			WithMiddleware("filesystem.list", listBrowse()))
 
 	lago.RegistryView.Register("filesystem.DetailView",
 		lago.GetPageView("filesystem.VNodeDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.node", loadVNodeMiddleware("id")))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}))
 
 	lago.RegistryView.Register("filesystem.CreateView",
 		lago.GetPageView("filesystem.VNodeCreateForm").
-			WithMethod(http.MethodPost, createHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.create", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: createHandler,
+			}))
 
 	lago.RegistryView.Register("filesystem.CreateChildView",
 		lago.GetPageView("filesystem.VNodeCreateForm").
-			WithMethod(http.MethodPost, createHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.parent", loadVNodeMiddleware("parent_id")))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
+			WithMiddleware("filesystem.create", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: createHandler,
+			}))
 
 	lago.RegistryView.Register("filesystem.UpdateView",
 		lago.GetPageView("filesystem.VNodeUpdateForm").
-			WithMethod(http.MethodPost, updateHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.node", loadVNodeMiddleware("id")))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
+			WithMiddleware("filesystem.update", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: updateHandler,
+			}))
 
 	lago.RegistryView.Register("filesystem.DeleteView",
 		lago.GetPageView("filesystem.VNodeDeleteForm").
-			WithMethod(http.MethodPost, deleteHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.node", loadVNodeMiddleware("id")))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
+			WithMiddleware("filesystem.delete", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: deleteHandler,
+			}))
 
 	lago.RegistryView.Register("filesystem.MoveView",
 		lago.GetPageView("filesystem.VNodeMoveForm").
-			WithMethod(http.MethodPost, moveHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.node", loadVNodeMiddleware("id")))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
+			WithMiddleware("filesystem.move", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: moveHandler,
+			}))
 
 	lago.RegistryView.Register("filesystem.MultiUploadView",
 		lago.GetPageView("filesystem.VNodeMultiUploadForm").
-			WithMethod(http.MethodPost, multiUploadHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.multi_upload", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: multiUploadHandler,
+			}))
 
 	lago.RegistryView.Register("filesystem.MultiUploadChildView",
 		lago.GetPageView("filesystem.VNodeMultiUploadForm").
-			WithMethod(http.MethodPost, multiUploadHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.parent", loadVNodeMiddleware("parent_id")))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
+			WithMiddleware("filesystem.multi_upload", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: multiUploadHandler,
+			}))
 
 	lago.RegistryView.Register("filesystem.SelectView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.ParentSelectionTable")).
-			WithQueryPatcher("filesystem.select.root", rootDirectoryQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("filesystem.ParentSelectionTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.list", listSelectRoot()))
 
 	lago.RegistryView.Register("filesystem.SelectChildView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.ParentSelectionTable")).
-			WithQueryPatcher("filesystem.select.child", browseDirectoryQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.parent", loadVNodeMiddleware("parent_id")))
+		lago.GetPageView("filesystem.ParentSelectionTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
+			WithMiddleware("filesystem.list", listSelectChild()))
 
 	lago.RegistryView.Register("filesystem.MultiSelectView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.MultiSelectionTable")).
-			WithQueryPatcher("filesystem.multi.root", rootVNodeQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("filesystem.MultiSelectionTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.list", listMultiRoot()))
 
 	lago.RegistryView.Register("filesystem.MultiSelectChildView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.MultiSelectionTable")).
-			WithQueryPatcher("filesystem.multi.child", browseVNodeQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.parent", loadVNodeMiddleware("parent_id")))
+		lago.GetPageView("filesystem.MultiSelectionTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
+			WithMiddleware("filesystem.list", listMultiChild()))
 
 	lago.RegistryView.Register("filesystem.MoveSelectView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.DestinationSelectionTable")).
-			WithQueryPatcher("filesystem.move-select.root", rootDirectoryQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("filesystem.DestinationSelectionTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.list", listMoveRoot()))
 
 	lago.RegistryView.Register("filesystem.MoveSelectChildView",
-		views.ListView[VNode]("vnodes")(lago.GetPageView("filesystem.DestinationSelectionTable")).
-			WithQueryPatcher("filesystem.move-select.child", browseDirectoryQuery).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.parent", loadVNodeMiddleware("parent_id")))
+		lago.GetPageView("filesystem.DestinationSelectionTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
+			WithMiddleware("filesystem.list", listMoveChild()))
 
 	lago.RegistryView.Register("filesystem.DownloadView",
 		lago.GetPageView("filesystem.VNodeDetail").
-			WithMethod(http.MethodGet, downloadHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("filesystem.node", loadVNodeMiddleware("id")))
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
+			WithMiddleware("filesystem.download", views.MethodMiddleware{
+				Method:  http.MethodGet,
+				Handler: downloadHandler,
+			}))
 }

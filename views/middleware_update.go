@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"reflect"
 
@@ -44,6 +45,7 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 		ctx := r.Context()
 		values, fieldErrors, err := view.ParseForm(w, r)
 		if err != nil {
+			slog.Error("views: middleware update: parse form", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})
@@ -52,6 +54,9 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		values, fieldErrors = m.FormPatchers.Apply(view, r, values, fieldErrors)
 		if len(fieldErrors) != 0 {
+			for fname, ferr := range fieldErrors {
+				slog.Error("views: middleware update: field error", "field", fname, "error", ferr)
+			}
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -60,6 +65,7 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 		regularValues, associationValues := splitAssociationValues(values)
 		key, err := m.Key(ctx)
 		if err != nil {
+			slog.Error("views: middleware update: resolve context key", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_global": fmt.Errorf("failed to resolve context key: %w", err),
 			})
@@ -68,6 +74,7 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		record, ok := ctx.Value(key).(T)
 		if !ok {
+			slog.Error("views: middleware update: record missing from context", "key", key)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_global": fmt.Errorf("record not found in context"),
 			})
@@ -91,6 +98,7 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 			return applyAssociationReplacements(tx, record, associationValues)
 		})
 		if err != nil {
+			slog.Error("views: middleware update: transaction", "error", err)
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -103,6 +111,7 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		successUrl, err := m.SuccessURL(ctx)
 		if err != nil {
+			slog.Error("views: middleware update: resolve success URL", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})

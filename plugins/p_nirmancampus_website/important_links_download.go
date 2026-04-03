@@ -73,9 +73,5 @@ func init() {
 		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinkItemView"),
 	})
 
-	lago.RegistryView.Register("nirmancampus_website.ImportantLinkItemView", &views.View{
-		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: importantLinkItemHandler,
-		},
-	})
+	lago.RegistryView.Register("nirmancampus_website.ImportantLinkItemView", websiteGETOnlyView(importantLinkItemHandler))
 }

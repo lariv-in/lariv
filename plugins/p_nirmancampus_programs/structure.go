@@ -19,24 +19,21 @@ import (
 // ctxKeyStructureParentProgram marks the scoped program ID for structure routes (POST redirect, validation).
 type ctxKeyStructureParentProgram struct{}
 
-// queryPatcherStructureUnitForContextProgram restricts ProgramStructureUnit loads to the program in context.
-var queryPatcherStructureUnitForContextProgram views.QueryPatcher = func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-	stmt := &gorm.Statement{DB: query}
-	if err := stmt.Parse(&ProgramStructureUnit{}); err != nil {
-		return query
-	}
-	if stmt.Schema == nil || stmt.Schema.Table != "program_structure_units" {
-		return query
-	}
+// structureUnitScopeForContextProgram restricts ProgramStructureUnit loads to the program in context.
+type structureUnitScopeForContextProgram struct{}
+
+func (structureUnitScopeForContextProgram) Patch(_ views.View, r *http.Request, q gorm.ChainInterface[ProgramStructureUnit]) gorm.ChainInterface[ProgramStructureUnit] {
 	p, ok := r.Context().Value("program").(Program)
 	if !ok || p.ID == 0 {
-		return query.Where("1 = 0")
+		return q.Where("1 = 0")
 	}
-	return query.Where("program_id = ?", p.ID)
+	return q.Where("program_id = ?", p.ID)
 }
 
-// middlewareProgramsStructureLoadProgram loads the program from {id} with role scope and preloads structure units.
-func middlewareProgramsStructureLoadProgram(next http.Handler) http.Handler {
+// programsStructureLoadProgramMiddleware loads the program from {id} with role scope and preloads structure units.
+type programsStructureLoadProgramMiddleware struct{}
+
+func (programsStructureLoadProgramMiddleware) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)
@@ -45,11 +42,10 @@ func middlewareProgramsStructureLoadProgram(next http.Handler) http.Handler {
 			return
 		}
 		db := r.Context().Value("$db").(*gorm.DB)
-		q := db.Model(&Program{}).
-			Preload("ProgramStructureUnits", preloadProgramStructureUnitCourseAssociations)
-		q = ProgramScopeByRole(nil, r, q)
-		var p Program
-		if err := q.First(&p, id).Error; err != nil {
+		query := programScopeByRole{}.Patch(views.View{}, r, gorm.G[Program](db).Scopes())
+		query = queryPatcherPreloadProgramStructureUnits{}.Patch(views.View{}, r, query)
+		p, err := query.Where("id = ?", uint(id)).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -74,8 +70,10 @@ func structureEditRedirectURL(ctx context.Context) (string, error) {
 	})(ctx)
 }
 
-// formPatcherStructureUnitProgramIDFromPath forces ProgramID from the program path param (do not trust the client).
-func formPatcherStructureUnitProgramIDFromPath(_ *views.View, r *http.Request, m map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+// structureUnitProgramIDFromPathPatcher forces ProgramID from the program path param (do not trust the client).
+type structureUnitProgramIDFromPathPatcher struct{}
+
+func (structureUnitProgramIDFromPathPatcher) Patch(_ views.View, r *http.Request, m map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err == nil {
@@ -144,8 +142,11 @@ func handleStructureUnitCreate(v *views.View) http.Handler {
 		if err != nil {
 			return
 		}
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
+		var progPatch structureUnitProgramIDFromPathPatcher
+		values, fieldErrors = progPatch.Patch(*v, r, values, fieldErrors)
+		if len(fieldErrors) != 0 {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		parentID, ok := structureParentProgramID(r.Context())
@@ -159,12 +160,14 @@ func handleStructureUnitCreate(v *views.View) http.Handler {
 		record := new(ProgramStructureUnit)
 		if err := views.PopulateFromMap(record, vals); err != nil {
 			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		if record.ProgramID != parentID {
 			fieldErrors["ProgramID"] = fmt.Errorf("invalid program")
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -176,13 +179,15 @@ func handleStructureUnitCreate(v *views.View) http.Handler {
 		}); err != nil {
 			slog.Error("structure unit create failed", "err", err)
 			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		loc, err := structureEditRedirectURL(r.Context())
 		if err != nil {
 			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		lago.Redirect(w, r, loc)
@@ -195,8 +200,11 @@ func handleStructureUnitUpdate(v *views.View) http.Handler {
 		if err != nil {
 			return
 		}
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
+		var progPatch structureUnitProgramIDFromPathPatcher
+		values, fieldErrors = progPatch.Patch(*v, r, values, fieldErrors)
+		if len(fieldErrors) != 0 {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		parentID, ok := structureParentProgramID(r.Context())
@@ -222,7 +230,8 @@ func handleStructureUnitUpdate(v *views.View) http.Handler {
 		var patch ProgramStructureUnit
 		if err := views.PopulateFromMap(&patch, vals); err != nil {
 			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		existing.TermNumber = patch.TermNumber
@@ -236,13 +245,15 @@ func handleStructureUnitUpdate(v *views.View) http.Handler {
 		}); err != nil {
 			slog.Error("structure unit update failed", "err", err)
 			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		loc, err := structureEditRedirectURL(r.Context())
 		if err != nil {
 			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		lago.Redirect(w, r, loc)

@@ -10,11 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
+type studentScopeByRole struct{}
+
 // StudentScopeByRole restricts student queries:
 //   - superuser, admin: full queryset
 //   - student: only the row linked to the current user (user_id)
 //   - any other role: empty queryset
-func StudentScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+func (studentScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Student]) gorm.ChainInterface[Student] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -52,3 +54,5 @@ func StudentScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB
 		return query.Where("1 = 0")
 	}
 }
+
+var StudentScopeByRole views.QueryPatcher[Student] = studentScopeByRole{}

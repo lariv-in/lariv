@@ -10,10 +10,6 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-type Middleware interface {
-	Next(View, http.Handler) http.Handler
-}
-
 type View struct {
 	PageName    string
 	PageLookup  func(name string) (components.PageInterface, bool)

@@ -13,11 +13,13 @@ import (
 // Role name from p_users.Role{Name: "unassigned"} (see dashboard_patch.go).
 const roleNameUnassigned = "unassigned"
 
+type studentApplicationScopeByRole struct{}
+
 // StudentApplicationScopeByRole restricts application queries:
 //   - superuser, admin: full queryset
 //   - Unassigned: rows created by the current user (created_by_id)
 //   - student and any other role: empty queryset (routes should reject student via middleware)
-func StudentApplicationScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+func (studentApplicationScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[StudentApplication]) gorm.ChainInterface[StudentApplication] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -55,3 +57,5 @@ func StudentApplicationScopeByRole(_ *views.View, r *http.Request, query *gorm.D
 		return query.Where("1 = 0")
 	}
 }
+
+var StudentApplicationScopeByRole views.QueryPatcher[StudentApplication] = studentApplicationScopeByRole{}

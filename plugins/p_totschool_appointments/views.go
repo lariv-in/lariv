@@ -12,17 +12,16 @@ import (
 	"gorm.io/gorm"
 )
 
-// AppointmentDetailMiddleware enriches the detail view context for an appointment.
-// It expects DetailView to have already loaded the concrete Appointment into the
-// "appointment" context key.
-func AppointmentDetailMiddleware(next http.Handler) http.Handler {
+// AppointmentDetailCtxMiddleware enriches detail context after MiddlewareDetail loads "appointment".
+type AppointmentDetailCtxMiddleware struct{}
+
+func (AppointmentDetailCtxMiddleware) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		rawAppt := ctx.Value("appointment")
 		appointment, ok := rawAppt.(Appointment)
 		if !ok {
-			// If the appointment isn't present or has wrong type, fall back to the next handler.
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -52,12 +51,23 @@ func AppointmentDetailMiddleware(next http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, "OverlapWarningList", overlapList)
 			ctx = context.WithValue(ctx, "OverlapWarning", true)
 		} else {
-			// Ensure the key exists with a concrete bool so getters don't see a nil value.
 			ctx = context.WithValue(ctx, "OverlapWarning", false)
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func redirectAppointmentDetail(w http.ResponseWriter, r *http.Request, idStr string) bool {
+	url, err := getters.IfOr(lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{
+		"id": getters.Any(getters.Static(idStr)),
+	}), r.Context(), "")
+	if err != nil || url == "" {
+		http.NotFound(w, r)
+		return false
+	}
+	lago.Redirect(w, r, url)
+	return true
 }
 
 func generateHandler(v *views.View) http.Handler {
@@ -79,9 +89,7 @@ func generateHandler(v *views.View) http.Handler {
 		content, systemPrompt := buildLetterContent(db, &appointment, user.Name)
 		Generate(db, appointment.ID, content, systemPrompt)
 
-		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.Any(getters.Static(idStr)),
-		}).ServeHTTP(w, r)
+		redirectAppointmentDetail(w, r, idStr)
 	})
 }
 
@@ -104,9 +112,7 @@ func cancelHandler(v *views.View) http.Handler {
 			CancelGeneration(db, appointment.ID)
 		}
 
-		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.Any(getters.Static(idStr)),
-		}).ServeHTTP(w, r)
+		redirectAppointmentDetail(w, r, idStr)
 	})
 }
 
@@ -151,21 +157,19 @@ func aiEditHandler(v *views.View) http.Handler {
 		userPrompt := "Here is the current letter content:\n\n" + content + "\n\nPlease edit this letter according to these instructions: " + instructions + "\n\nOutput only the edited text, nothing else."
 		Generate(db, appointment.ID, userPrompt, letterEditorSystemPrompt)
 
-		lago.NewRedirectView("appointments.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.Any(getters.Static(idStr)),
-		}).ServeHTTP(w, r)
+		redirectAppointmentDetail(w, r, idStr)
 	})
 }
 
-func FormCreatedByPatcher(v *views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+type appointmentFormCreatedByPatcher struct{}
+
+func (appointmentFormCreatedByPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	user := r.Context().Value("$user").(p_users.User)
 	formData["CreatedByID"] = user.ID
 	return formData, formErrors
 }
 
-// scopeAppointmentsQueryToCurrentUser restricts the query to appointments created by
-// the logged-in user unless they are a superuser or have the totschool_admin role.
-func scopeAppointmentsQueryToCurrentUser(r *http.Request, query *gorm.DB) *gorm.DB {
+func scopeAppointmentsQueryToCurrentUser(r *http.Request, query gorm.ChainInterface[Appointment]) gorm.ChainInterface[Appointment] {
 	user := r.Context().Value("$user").(p_users.User)
 	role, _ := r.Context().Value("$role").(string)
 	if user.IsSuperuser || role == "totschool_admin" {
@@ -174,33 +178,29 @@ func scopeAppointmentsQueryToCurrentUser(r *http.Request, query *gorm.DB) *gorm.
 	return query.Where("created_by_id = ?", user.ID)
 }
 
-// AppointmentListQueryPatcher applies additional filtering based on query params,
-// such as the "Overlapping" checkbox in the filter form.
-func AppointmentListQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+type appointmentListQueryPatcher struct{}
+
+func (appointmentListQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Appointment]) gorm.ChainInterface[Appointment] {
 	ctx := r.Context()
 	query = scopeAppointmentsQueryToCurrentUser(r, query)
 
-	// If Overlapping=true in the parsed filter values, restrict to appointments
-	// that have at least one get neighbor (same CreatedByID and within the
-	// +/-30 minute window defined in GetOverlappingAppointments).
 	if get, ok := ctx.Value("$get").(map[string]any); ok {
 		if val, exists := get["Overlapping"]; exists {
 			if b, ok := val.(bool); ok && b {
-				query = WithOverlappingFilter(query)
+				query = WithOverlappingFilterChain(query)
 			}
 		}
 		if raw, exists := get["Date"]; exists && raw != nil {
-			query = applyDateFilter(raw, query)
+			query = applyDateFilterChain(raw, query)
 		}
 	}
 
 	return query
 }
 
-// AppointmentTimelineQueryPatcher filters appointments for the timeline view based on
-// the Date field from the timeline filter form ($get.Date). When no date is specified,
-// it filters to the current calendar day (same as time.Now()).
-func AppointmentTimelineQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+type appointmentTimelineQueryPatcher struct{}
+
+func (appointmentTimelineQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Appointment]) gorm.ChainInterface[Appointment] {
 	ctx := r.Context()
 	query = scopeAppointmentsQueryToCurrentUser(r, query)
 
@@ -209,22 +209,21 @@ func AppointmentTimelineQueryPatcher(v *views.View, r *http.Request, query *gorm
 			switch d := raw.(type) {
 			case time.Time:
 				if !d.IsZero() {
-					return applyDateFilter(raw, query)
+					return applyDateFilterChain(raw, query)
 				}
 			case string:
 				if d != "" {
-					return applyDateFilter(raw, query)
+					return applyDateFilterChain(raw, query)
 				}
 			}
 		}
 	}
-	return applyDateFilter(time.Now(), query)
+	return applyDateFilterChain(time.Now(), query)
 }
 
-func applyDateFilter(raw any, query *gorm.DB) *gorm.DB {
+func applyDateFilterChain(raw any, query gorm.ChainInterface[Appointment]) gorm.ChainInterface[Appointment] {
 	switch d := raw.(type) {
 	case time.Time:
-		// Filter by the same calendar day in the application's timezone.
 		start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
 		end := start.Add(24 * time.Hour)
 		query = query.Where("datetime >= ? AND datetime < ?", start, end)
@@ -242,55 +241,113 @@ func applyDateFilter(raw any, query *gorm.DB) *gorm.DB {
 
 func init() {
 	lago.RegistryView.Register("appointments.ListView",
-		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentTable")).
-			WithQueryPatcher("appointments.list", AppointmentListQueryPatcher).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AppointmentTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.list", views.MiddlewareList[Appointment]{
+				Key: getters.Static("appointments"),
+				QueryPatchers: views.QueryPatchers[Appointment]{
+					{Key: "appointments.list", Value: appointmentListQueryPatcher{}},
+				},
+			}))
 
 	lago.RegistryView.Register("appointments.DetailView",
-		views.DetailView[Appointment]("appointment", "id")(lago.GetPageView("appointments.AppointmentDetail")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware).
-			WithMiddleware("appointments.detail", AppointmentDetailMiddleware),
+		lago.GetPageView("appointments.AppointmentDetail").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.detail", views.MiddlewareDetail[Appointment]{
+				Key:          getters.Static("appointment"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("appointments.detail_ctx", AppointmentDetailCtxMiddleware{}),
 	)
 
 	lago.RegistryView.Register("appointments.CreateView",
-		views.CreateView[Appointment](lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentCreateForm")).
-			WithFormPatcher("appointments.form", FormCreatedByPatcher).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AppointmentCreateForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.create", views.MiddlewareCreate[Appointment]{
+				SuccessURL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$id")),
+				}),
+				FormPatchers: views.FormPatchers{
+					{Key: "appointments.form", Value: appointmentFormCreatedByPatcher{}},
+				},
+			}))
 
 	lago.RegistryView.Register("appointments.UpdateView",
-		views.DetailView[Appointment]("appointment", "id")(
-			views.UpdateView[Appointment]("id", lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(lago.GetPageView("appointments.AppointmentUpdateForm"))).
-			WithFormPatcher("appointments.form", FormCreatedByPatcher).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AppointmentUpdateForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.detail", views.MiddlewareDetail[Appointment]{
+				Key:          getters.Static("appointment"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("appointments.update", views.MiddlewareUpdate[Appointment]{
+				Key: getters.Static("appointment"),
+				SuccessURL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$id")),
+				}),
+				FormPatchers: views.FormPatchers{
+					{Key: "appointments.form", Value: appointmentFormCreatedByPatcher{}},
+				},
+			}))
 
 	lago.RegistryView.Register("appointments.DeleteView",
-		views.DetailView[Appointment]("appointment", "id")(
-			views.DeleteView[Appointment]("id", lago.RoutePath("appointments.ListRoute", nil))(lago.GetPageView("appointments.AppointmentDeleteForm")).
-				WithMiddleware("users.auth", p_users.AuthenticationMiddleware)))
+		lago.GetPageView("appointments.AppointmentDeleteForm").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.detail", views.MiddlewareDetail[Appointment]{
+				Key:          getters.Static("appointment"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("appointments.delete", views.MiddlewareDelete[Appointment]{
+				Key:        getters.Static("appointment"),
+				SuccessURL: lago.RoutePath("appointments.ListRoute", nil),
+			}))
 
 	lago.RegistryView.Register("appointments.GenerateView",
-		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, generateHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AppointmentDetail").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.generate", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: generateHandler,
+			}))
 
 	lago.RegistryView.Register("appointments.CancelView",
-		lago.GetPageView("appointments.AppointmentDetail").WithMethod(http.MethodPost, cancelHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AppointmentDetail").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.cancel", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: cancelHandler,
+			}))
 
 	lago.RegistryView.Register("appointments.AiEditFormView",
-		lago.GetPageView("appointments.AiEditModal").WithMethod(http.MethodGet, aiEditFormHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AiEditModal").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.ai_edit_form", views.MethodMiddleware{
+				Method:  http.MethodGet,
+				Handler: aiEditFormHandler,
+			}))
 
 	lago.RegistryView.Register("appointments.AiEditView",
-		lago.GetPageView("appointments.AiEditModal").WithMethod(http.MethodPost, aiEditHandler).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AiEditModal").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.ai_edit", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: aiEditHandler,
+			}))
 
 	lago.RegistryView.Register("appointments.SelectView",
-		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentSelectionTable")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AppointmentSelectionTable").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.select_list", views.MiddlewareList[Appointment]{
+				Key: getters.Static("appointments"),
+			}))
 
 	lago.RegistryView.Register("appointments.CardTimelineView",
-		views.ListView[Appointment]("appointments")(lago.GetPageView("appointments.AppointmentCardTimeline")).
-			WithQueryPatcher("appointments.timeline", AppointmentTimelineQueryPatcher).
-			WithQueryPatcher("appointments.timeline_order", views.QueryPatcherOrderBy("datetime ASC")).
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware))
+		lago.GetPageView("appointments.AppointmentCardTimeline").
+			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
+			WithMiddleware("appointments.timeline", views.MiddlewareList[Appointment]{
+				Key: getters.Static("appointments"),
+				QueryPatchers: views.QueryPatchers[Appointment]{
+					{Key: "appointments.timeline", Value: appointmentTimelineQueryPatcher{}},
+					{Key: "appointments.timeline_order", Value: views.QueryPatcherOrderBy[Appointment]{Order: "datetime ASC"}},
+				},
+			}))
 }

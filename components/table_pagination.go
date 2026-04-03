@@ -45,13 +45,13 @@ func (e TablePagination[T]) Build(ctx context.Context) Node {
 
 	var pages []Node
 
-	// Calculate window (similar to table_page_range in python but simpler logic)
-	// Just showing a window block
+	n := int(number)
+	np := int(numPages)
 	windowSize := 5
-	startPage := max(number-windowSize/2, 1)
+	startPage := max(n-windowSize/2, 1)
 	endPage := startPage + windowSize - 1
-	if endPage > numPages {
-		endPage = numPages
+	if endPage > np {
+		endPage = np
 		startPage = max(endPage-windowSize+1, 1)
 	}
 
@@ -61,12 +61,12 @@ func (e TablePagination[T]) Build(ctx context.Context) Node {
 	}
 
 	for p := startPage; p <= endPage; p++ {
-		pages = append(pages, e.pageButton(req, p, number == p))
+		pages = append(pages, e.pageButton(req, p, uint(p) == number))
 	}
 
-	if endPage < numPages {
+	if endPage < np {
 		pages = append(pages, Button(Disabled(), Class("join-item btn btn-sm"), Text("...")),
-			e.pageButton(req, numPages, number == numPages))
+			e.pageButton(req, np, number == numPages))
 	}
 
 	return Div(Class("flex flex-col justify-center items-center gap-2 p-4"),

@@ -13,11 +13,18 @@ import (
 	"gorm.io/gorm"
 )
 
-// --- Auth Handlers (user-specific, not generalizable) ---
-
-func SelfUserQueryPatcher(v *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-	user := r.Context().Value("$user").(User)
-	return query.Where("id = ?", user.ID)
+func redirectToRoute(w http.ResponseWriter, r *http.Request, routeKey string, args ...map[string]getters.Getter[any]) bool {
+	var routeArgs map[string]getters.Getter[any]
+	if len(args) > 0 {
+		routeArgs = args[0]
+	}
+	url, err := getters.IfOr(lago.RoutePath(routeKey, routeArgs), r.Context(), "")
+	if err != nil || url == "" {
+		http.NotFound(w, r)
+		return false
+	}
+	lago.Redirect(w, r, url)
+	return true
 }
 
 func changeUserPassword(db *gorm.DB, userID uint, newPassword string) error {
@@ -29,109 +36,73 @@ func changeUserPassword(db *gorm.DB, userID uint, newPassword string) error {
 	return db.Save(&targetUser).Error
 }
 
-func SelfDetailHandler(v *views.View) http.Handler {
+type authenticatedUserDetailMiddleware struct{}
+
+func (authenticatedUserDetailMiddleware) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value("$user").(User)
+		authUser := r.Context().Value("$user").(User)
 		db := r.Context().Value("$db").(*gorm.DB)
-
-		query := db.Model(new(User))
-		for _, queryPatcher := range v.QueryPatchers {
-			query = queryPatcher.Value(v, r, query)
-		}
-
-		var instance User
-		if err := query.First(&instance, user.ID).Error; err != nil {
+		user, err := gorm.G[User](db).Where("id = ?", authUser.ID).First(r.Context())
+		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
-
-		ctx := context.WithValue(r.Context(), "user", instance)
-		v.RenderPage(w, r.WithContext(ctx))
+		ctx := context.WithValue(r.Context(), "user", user)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func SelfUpdateHandler(v *views.View) http.Handler {
+func loginHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
-			v.RenderWithErrors(w, r, map[string]error{"_form": err}, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, map[string]error{"_form": err})
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
-
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
-			return
-		}
-
-		user := r.Context().Value("$user").(User)
-		db := r.Context().Value("$db").(*gorm.DB)
-		query := db.Model(new(User)).Where("id = ?", user.ID)
-		for _, queryPatcher := range v.QueryPatchers {
-			query = queryPatcher.Value(v, r, query)
-		}
-
-		if err := query.Updates(values).Error; err != nil {
-			fieldErrors["_form"] = err
-			v.RenderWithErrors(w, r, fieldErrors, values)
-			return
-		}
-
-		lago.NewRedirectView("users.SelfDetailRoute").ServeHTTP(w, r)
-	})
-}
-
-func LoginHandler(v *views.View) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		values, fieldErrors, err := v.ParseForm(w, r)
-		if err != nil {
-			fieldErrors["_form"] = fmt.Errorf("%v", err)
-			v.RenderWithErrors(w, r, fieldErrors, values)
-			return
-		}
-
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
+		if len(fieldErrors) != 0 {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
 		email, _ := values["Email"].(string)
 		password, _ := values["Password"].(string)
-
 		db := r.Context().Value("$db").(*gorm.DB)
 		user, err := Authenticate(db, email, password)
 		if err != nil {
-			fieldErrors["Password"] = fmt.Errorf("Invalid email or password")
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			fieldErrors["Password"] = fmt.Errorf("invalid email or password")
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
-		user.Login(w)
-		lago.NewRedirectView("users.LoginSuccessRoute").ServeHTTP(w, r)
+
+		user.Login(w, r)
+		_ = redirectToRoute(w, r, "users.LoginSuccessRoute")
 	})
 }
 
-func SignupHandler(v *views.View) http.Handler {
+func signupHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
-			fieldErrors["_form"] = fmt.Errorf("%v", err)
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, map[string]error{"_form": err})
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
-		password1Str, _ := values["password1"].(string)
-		password2Str, _ := values["password2"].(string)
-
-		termsAndConditions, _ := values["terms_accepted"].(bool)
-		if !termsAndConditions {
-			fieldErrors["terms_accepted"] = fmt.Errorf("Terms and conditions need to be accepted")
+		password1, _ := values["password1"].(string)
+		password2, _ := values["password2"].(string)
+		termsAccepted, _ := values["terms_accepted"].(bool)
+		if !termsAccepted {
+			fieldErrors["terms_accepted"] = fmt.Errorf("terms and conditions need to be accepted")
 		}
-
-		if password1Str != password2Str {
-			fieldErrors["password2"] = fmt.Errorf("Passwords do not match")
+		if password1 != password2 {
+			fieldErrors["password2"] = fmt.Errorf("passwords do not match")
 		}
-
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
+		if len(fieldErrors) != 0 {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
@@ -140,24 +111,24 @@ func SignupHandler(v *views.View) http.Handler {
 		phone, _ := values["Phone"].(string)
 		db := r.Context().Value("$db").(*gorm.DB)
 
-		// Check for existing user by email and phone to surface friendly errors
 		if _, err := gorm.G[User](db).Where("email = ?", email).Last(r.Context()); err == nil {
-			fieldErrors["Email"] = fmt.Errorf("An account with this email already exists")
+			fieldErrors["Email"] = fmt.Errorf("an account with this email already exists")
 		}
-
 		if _, err := gorm.G[User](db).Where("phone = ?", phone).Last(r.Context()); err == nil {
-			fieldErrors["Phone"] = fmt.Errorf("An account with this phone number already exists")
+			fieldErrors["Phone"] = fmt.Errorf("an account with this phone number already exists")
 		}
-
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
+		if len(fieldErrors) != 0 {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
-		var unassignedRole Role
-		unassignedRole.Name = "unassigned"
-		if err := db.Where(unassignedRole).Attrs(unassignedRole).FirstOrCreate(&unassignedRole).Error; err == nil {
-			fieldErrors["_form"] = fmt.Errorf("Unknown error with role %e", err)
+		unassignedRole := Role{Name: "unassigned"}
+		if err := db.Where(unassignedRole).Attrs(unassignedRole).FirstOrCreate(&unassignedRole).Error; err != nil {
+			fieldErrors["_form"] = fmt.Errorf("failed to load unassigned role: %v", err)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
 		}
 
 		user := User{
@@ -165,21 +136,22 @@ func SignupHandler(v *views.View) http.Handler {
 			Email:       email,
 			Phone:       phone,
 			IsSuperuser: false,
-			Password:    []byte(password1Str),
+			Password:    []byte(password1),
 			Role:        unassignedRole,
 		}
-		err = db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&user).Error
-		if err != nil {
+		if err := db.Session(&gorm.Session{FullSaveAssociations: true}).Create(&user).Error; err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
-		user.Login(w)
-		lago.NewRedirectView("users.LoginSuccessRoute").ServeHTTP(w, r)
+
+		user.Login(w, r)
+		_ = redirectToRoute(w, r, "users.LoginSuccessRoute")
 	})
 }
 
-func LogoutHandler(v *views.View) http.Handler {
+func logoutHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:    "auth-token",
@@ -187,231 +159,283 @@ func LogoutHandler(v *views.View) http.Handler {
 			Path:    "/",
 			Expires: time.Unix(0, 0),
 		})
-		lago.NewRedirectView("users.LoginRoute").ServeHTTP(w, r)
+		_ = redirectToRoute(w, r, "users.LoginRoute")
 	})
 }
 
-// ChangePasswordHandler is user-specific so it stays here.
-func ChangePasswordHandler(v *views.View) http.Handler {
+func changePasswordHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, map[string]error{"_form": err})
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
 		newPassword, _ := values["new_password"].(string)
 		confirmPassword, _ := values["confirm_password"].(string)
-
 		if newPassword != confirmPassword {
-			fieldErrors["confirm_password"] = fmt.Errorf("Passwords do not match")
+			fieldErrors["confirm_password"] = fmt.Errorf("passwords do not match")
 		}
-
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
+		if len(fieldErrors) != 0 {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
-		user := r.Context().Value("$user").(User)
+		authUser := r.Context().Value("$user").(User)
 		db := r.Context().Value("$db").(*gorm.DB)
-
-		id, err := strconv.Atoi(r.PathValue("id"))
+		id64, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
 		if err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+		targetID := uint(id64)
+
+		if !authUser.IsSuperuser && targetID != authUser.ID {
+			fieldErrors["_form"] = fmt.Errorf("unauthorized")
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
-		if !user.IsSuperuser {
-			if uint(id) != user.ID {
-				fieldErrors["_form"] = fmt.Errorf("Unauthorized")
-				v.RenderWithErrors(w, r, fieldErrors, values)
-				return
-
-			}
-		}
-
-		if err := changeUserPassword(db, uint(id), newPassword); err != nil {
+		if err := changeUserPassword(db, targetID, newPassword); err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "$id", fmt.Sprintf("%d", id))
-		lago.NewRedirectView("users.DetailRoute", map[string]getters.Getter[any]{
-			"id": getters.Any(getters.Key[string]("$id")),
-		}).ServeHTTP(w, r.WithContext(ctx))
+		_ = redirectToRoute(w, r, "users.DetailRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Static(targetID)),
+		})
 	})
 }
 
-func SelfChangePasswordHandler(v *views.View) http.Handler {
+func selfChangePasswordHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, map[string]error{"_form": err})
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
 		newPassword, _ := values["new_password"].(string)
 		confirmPassword, _ := values["confirm_password"].(string)
-
 		if newPassword != confirmPassword {
-			fieldErrors["confirm_password"] = fmt.Errorf("Passwords do not match")
+			fieldErrors["confirm_password"] = fmt.Errorf("passwords do not match")
 		}
-
-		if v.HasErrors(fieldErrors) {
-			v.RenderWithErrors(w, r, fieldErrors, values)
+		if len(fieldErrors) != 0 {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
 		user := r.Context().Value("$user").(User)
 		db := r.Context().Value("$db").(*gorm.DB)
-
 		if err := changeUserPassword(db, user.ID, newPassword); err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
-			v.RenderWithErrors(w, r, fieldErrors, values)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 
-		lago.NewRedirectView("users.SelfDetailRoute", nil).ServeHTTP(w, r)
+		_ = redirectToRoute(w, r, "users.SelfDetailRoute")
 	})
 }
 
-// --- View Registrations ---
-
 func init() {
-	// List view
 	lago.RegistryView.Register("users.ListView",
-		views.ListView[User]("users")(
-			lago.GetPageView("users.UserTable")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.UserTable").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.list", views.MiddlewareList[User]{
+				Key: getters.Static("users"),
+			}))
 
-	// Detail view
 	lago.RegistryView.Register("users.DetailView",
-		views.DetailView[User]("user", "id")(
-			lago.GetPageView("users.UserDetail")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.UserDetail").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+				Key:          getters.Static("user"),
+				PathParamKey: getters.Static("id"),
+			}))
 
-	// Create view
 	lago.RegistryView.Register("users.CreateView",
-		views.CreateView[User](lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
-			lago.GetPageView("users.UserCreateForm")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.UserCreateForm").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.create", views.MiddlewareCreate[User]{
+				SuccessURL: lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$id")),
+				}),
+			}))
 
-	// Update view
 	lago.RegistryView.Register("users.UpdateView",
-		views.DetailView[User]("user", "id")(
-			views.UpdateView[User]("id", lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
-				lago.GetPageView("users.UserUpdateForm"))).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.UserUpdateForm").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+				Key:          getters.Static("user"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("users.update", views.MiddlewareUpdate[User]{
+				Key: getters.Static("user"),
+				SuccessURL: lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$id")),
+				}),
+			}))
 
-	// Self detail view (only current user)
 	lago.RegistryView.Register("users.SelfDetailView",
 		lago.GetPageView("users.SelfDetail").
-			WithMethod(http.MethodGet, SelfDetailHandler).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithQueryPatcher("users.self_detail", SelfUserQueryPatcher))
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.self_detail", authenticatedUserDetailMiddleware{}))
 
-	// Self update view (only current user)
 	lago.RegistryView.Register("users.SelfUpdateView",
 		lago.GetPageView("users.SelfUpdateForm").
-			WithMethod(http.MethodGet, SelfDetailHandler).
-			WithMethod(http.MethodPost, SelfUpdateHandler).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithQueryPatcher("users.self_update", SelfUserQueryPatcher))
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.self_detail", authenticatedUserDetailMiddleware{}).
+			WithMiddleware("users.self_update", views.MiddlewareUpdate[User]{
+				Key:        getters.Static("user"),
+				SuccessURL: lago.RoutePath("users.SelfDetailRoute", nil),
+			}))
 
-	// Self change password (only current user)
 	lago.RegistryView.Register("users.SelfChangePasswordView",
 		lago.GetPageView("users.SelfChangePasswordForm").
-			WithMethod(http.MethodGet, SelfDetailHandler).
-			WithMethod(http.MethodPost, SelfChangePasswordHandler).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithQueryPatcher("users.self_change_password", SelfUserQueryPatcher))
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.self_detail", authenticatedUserDetailMiddleware{}).
+			WithMiddleware("users.self_change_password", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: selfChangePasswordHandler,
+			}))
 
-	// Delete view
 	lago.RegistryView.Register("users.DeleteView",
-		views.DetailView[User]("user", "id")(
-			views.DeleteView[User]("id", lago.RoutePath("users.ListRoute", nil))(
-				lago.GetPageView("users.UserDeleteForm"))).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.UserDeleteForm").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+				Key:          getters.Static("user"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("users.delete", views.MiddlewareDelete[User]{
+				Key:        getters.Static("user"),
+				SuccessURL: lago.RoutePath("users.ListRoute", nil),
+			}))
 
-	// Change password view (user-specific handler)
 	lago.RegistryView.Register("users.ChangePasswordView",
-		views.DetailView[User]("user", "id")(
-			lago.GetPageView("users.ChangePasswordForm").
-				WithMethod(http.MethodPost, ChangePasswordHandler)).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.ChangePasswordForm").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+				Key:          getters.Static("user"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("users.change_password", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: changePasswordHandler,
+			}))
 
-	// Selection views
 	lago.RegistryView.Register("users.SelectView",
-		views.ListView[User]("users")(
-			lago.GetPageView("users.UserSelectionTable")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.UserSelectionTable").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.select", views.MiddlewareList[User]{
+				Key: getters.Static("users"),
+			}))
 
 	lago.RegistryView.Register("users.RoleSelectView",
-		views.ListView[Role]("roles")(
-			lago.GetPageView("users.RoleSelectionTable")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.RoleSelectionTable").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.role_select", views.MiddlewareList[Role]{
+				Key: getters.Static("roles"),
+			}))
 
-	// Role CRUD views
 	lago.RegistryView.Register("users.RoleListView",
-		views.ListView[Role]("roles")(
-			lago.GetPageView("users.RoleTable")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.RoleTable").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.role_list", views.MiddlewareList[Role]{
+				Key: getters.Static("roles"),
+			}))
 
 	lago.RegistryView.Register("users.RoleDetailView",
-		views.DetailView[Role]("role", "id")(
-			lago.GetPageView("users.RoleDetail")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.RoleDetail").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.role_detail", views.MiddlewareDetail[Role]{
+				Key:          getters.Static("role"),
+				PathParamKey: getters.Static("id"),
+			}))
 
 	lago.RegistryView.Register("users.RoleCreateView",
-		views.CreateView[Role](lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
-			lago.GetPageView("users.RoleCreateForm")).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.RoleCreateForm").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.role_create", views.MiddlewareCreate[Role]{
+				SuccessURL: lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$id")),
+				}),
+			}))
 
 	lago.RegistryView.Register("users.RoleUpdateView",
-		views.DetailView[Role]("role", "id")(
-			views.UpdateView[Role]("id", lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}))(
-				lago.GetPageView("users.RoleUpdateForm"))).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.RoleUpdateForm").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.role_detail", views.MiddlewareDetail[Role]{
+				Key:          getters.Static("role"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("users.role_update", views.MiddlewareUpdate[Role]{
+				Key: getters.Static("role"),
+				SuccessURL: lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$id")),
+				}),
+			}))
 
 	lago.RegistryView.Register("users.RoleDeleteView",
-		views.DetailView[Role]("role", "id")(
-			views.DeleteView[Role]("id", lago.RoutePath("users.RoleListRoute", nil))(
-				lago.GetPageView("users.RoleDeleteForm"))).
-			WithMiddleware("users.auth", AuthenticationMiddleware).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware([]string{""})))
+		lago.GetPageView("users.RoleDeleteForm").
+			WithMiddleware("users.auth", AuthenticationMiddleware{}).
+			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
+			WithMiddleware("users.role_detail", views.MiddlewareDetail[Role]{
+				Key:          getters.Static("role"),
+				PathParamKey: getters.Static("id"),
+			}).
+			WithMiddleware("users.role_delete", views.MiddlewareDelete[Role]{
+				Key:        getters.Static("role"),
+				SuccessURL: lago.RoutePath("users.RoleListRoute", nil),
+			}))
 
-	// Auth views
 	lago.RegistryView.Register("users.LogoutView",
 		lago.GetPageView("users.UnauthenticatedPage").
-			WithMethod(http.MethodPost, LogoutHandler).
-			WithMethod(http.MethodGet, LogoutHandler))
+			WithMiddleware("users.logout_post", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: logoutHandler,
+			}).
+			WithMiddleware("users.logout_get", views.MethodMiddleware{
+				Method:  http.MethodGet,
+				Handler: logoutHandler,
+			}))
 
 	lago.RegistryView.Register("users.LoginView",
 		lago.GetPageView("users.LoginPage").
-			WithMethod(http.MethodPost, LoginHandler))
+			WithMiddleware("users.login", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: loginHandler,
+			}))
 
 	lago.RegistryView.Register("users.SignupView",
 		lago.GetPageView("users.SignupPage").
-			WithMethod(http.MethodPost, SignupHandler))
+			WithMiddleware("users.signup", views.MethodMiddleware{
+				Method:  http.MethodPost,
+				Handler: signupHandler,
+			}))
 
-	lago.RegistryView.Register("base.HomeView",
-		lago.NewRedirectView("users.LoginRoute"))
-
-	lago.RegistryView.Register("users.LoginSuccessView",
-		lago.NewRedirectView("users.LoginRoute"))
-
-	lago.RegistryView.Register("users.UnauthenticatedView",
-		lago.GetPageView("users.UnauthenticatedPage"))
+	lago.RegistryView.Register("base.HomeView", lago.RedirectView(lago.RoutePath("users.LoginRoute", nil)))
+	lago.RegistryView.Register("users.LoginSuccessView", lago.RedirectView(lago.RoutePath("users.LoginRoute", nil)))
+	lago.RegistryView.Register("users.UnauthenticatedView", lago.GetPageView("users.UnauthenticatedPage"))
 }

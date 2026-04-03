@@ -27,91 +27,92 @@ func fieldDBName[T any](db *gorm.DB, fieldName string) (string, bool) {
 	return field.DBName, true
 }
 
-func queryPatcherUniversity(param string) views.QueryPatcher {
-	return func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-		getMap, ok := r.Context().Value("$get").(map[string]any)
-		if !ok {
-			return query
-		}
+// queryPatcherUniversity filters Program list by University from $get[param].
+type queryPatcherUniversity struct {
+	Param string
+}
 
-		raw, ok := getMap[param]
-		if !ok {
-			return query
-		}
-		value, ok := raw.(string)
-		if !ok {
-			return query
-		}
-		value = strings.TrimSpace(value)
-		if value == "" {
-			return query
-		}
-
-		col, ok := fieldDBName[Program](query, "University")
-		if !ok {
-			return query
-		}
-
-		return query.Where(col+" = ?", value)
+func (p queryPatcherUniversity) Patch(_ views.View, r *http.Request, q gorm.ChainInterface[Program]) gorm.ChainInterface[Program] {
+	getMap, ok := r.Context().Value("$get").(map[string]any)
+	if !ok {
+		return q
 	}
-}
 
-func queryPatcherProgramType(param string) views.QueryPatcher {
-	return func(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
-		getMap, ok := r.Context().Value("$get").(map[string]any)
-		if !ok {
-			return query
-		}
-
-		raw, ok := getMap[param]
-		if !ok {
-			return query
-		}
-		value, ok := raw.(string)
-		if !ok {
-			return query
-		}
-		value = strings.TrimSpace(value)
-		if value == "" {
-			return query
-		}
-
-		col, ok := fieldDBName[Program](query, "ProgramType")
-		if !ok {
-			return query
-		}
-
-		return query.Where(col+" = ?", value)
+	raw, ok := getMap[p.Param]
+	if !ok {
+		return q
 	}
-}
-
-func preloadProgramStructureUnitCourseAssociations(db *gorm.DB) *gorm.DB {
-	return db.Order("term_number ASC").
-		Preload("CompulsoryCourses").
-		Preload("OptionalCourseSelectionPool")
-}
-
-// queryPatcherPreloadProgramStructureUnits loads structure units ordered by term for program detail/update.
-func queryPatcherPreloadProgramStructureUnits() views.QueryPatcher {
-	return func(_ *views.View, _ *http.Request, query *gorm.DB) *gorm.DB {
-		return query.Preload("ProgramStructureUnits", preloadProgramStructureUnitCourseAssociations)
+	value, ok := raw.(string)
+	if !ok {
+		return q
 	}
-}
-
-// queryPatcherPreloadStructureUnitCourseAssociations preloads m2m courses on a single structure unit (edit modal).
-func queryPatcherPreloadStructureUnitCourseAssociations() views.QueryPatcher {
-	return func(_ *views.View, _ *http.Request, query *gorm.DB) *gorm.DB {
-		return query.Preload("CompulsoryCourses").Preload("OptionalCourseSelectionPool")
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return q
 	}
+
+	db := r.Context().Value("$db").(*gorm.DB)
+	col, ok := fieldDBName[Program](db, "University")
+	if !ok {
+		return q
+	}
+
+	return q.Where(col+" = ?", value)
 }
 
-// ProgramScopeByRole restricts program queries:
-//   - superuser, admin: full queryset
-//   - student: programs referenced by any academic record for this user's student row
-//   - any other role: empty queryset
-//
-// Uses table name academic_records to avoid importing the academicrecords plugin (it imports programs).
-func ProgramScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+// queryPatcherProgramType filters Program list by ProgramType from $get[param].
+type queryPatcherProgramType struct {
+	Param string
+}
+
+func (p queryPatcherProgramType) Patch(_ views.View, r *http.Request, q gorm.ChainInterface[Program]) gorm.ChainInterface[Program] {
+	getMap, ok := r.Context().Value("$get").(map[string]any)
+	if !ok {
+		return q
+	}
+
+	raw, ok := getMap[p.Param]
+	if !ok {
+		return q
+	}
+	value, ok := raw.(string)
+	if !ok {
+		return q
+	}
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return q
+	}
+
+	db := r.Context().Value("$db").(*gorm.DB)
+	col, ok := fieldDBName[Program](db, "ProgramType")
+	if !ok {
+		return q
+	}
+
+	return q.Where(col+" = ?", value)
+}
+
+type queryPatcherPreloadProgramStructureUnits struct{}
+
+func (queryPatcherPreloadProgramStructureUnits) Patch(_ views.View, _ *http.Request, q gorm.ChainInterface[Program]) gorm.ChainInterface[Program] {
+	return q.Preload("ProgramStructureUnits", func(pb gorm.PreloadBuilder) error {
+		pb.Order("term_number ASC")
+		return nil
+	}).Preload("ProgramStructureUnits.CompulsoryCourses", nil).
+		Preload("ProgramStructureUnits.OptionalCourseSelectionPool", nil)
+}
+
+type queryPatcherPreloadStructureUnitCourseAssociations struct{}
+
+func (queryPatcherPreloadStructureUnitCourseAssociations) Patch(_ views.View, _ *http.Request, q gorm.ChainInterface[ProgramStructureUnit]) gorm.ChainInterface[ProgramStructureUnit] {
+	return q.Preload("CompulsoryCourses", nil).Preload("OptionalCourseSelectionPool", nil)
+}
+
+// ProgramScopeByRole restricts program queries by role (list/detail/update/delete).
+type programScopeByRole struct{}
+
+func (programScopeByRole) Patch(_ views.View, r *http.Request, q gorm.ChainInterface[Program]) gorm.ChainInterface[Program] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -151,8 +152,7 @@ func ProgramScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB
 
 	switch roleName {
 	case "superuser", "admin", "unassigned":
-		// Unassigned applicants need the full program list when choosing a program on applications.
-		return query
+		return q
 	case "student":
 		studentSub := db.Model(&p_nirmancampus_students.Student{}).
 			Select("id").
@@ -161,8 +161,8 @@ func ProgramScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB
 			Select("program_id").
 			Where("student_id IN (?)", studentSub).
 			Where("deleted_at IS NULL")
-		return query.Where("programs.id IN (?)", programSub)
+		return q.Where("programs.id IN (?)", programSub)
 	default:
-		return query.Where("1 = 0")
+		return q.Where("1 = 0")
 	}
 }

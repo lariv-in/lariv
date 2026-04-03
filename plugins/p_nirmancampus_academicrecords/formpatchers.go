@@ -15,7 +15,9 @@ import (
 
 // formPatcherAcademicRecordCreate sets Status (default) and CompulsoryCourses
 // from the program's ProgramStructureUnit for the submitted Term (TermNumber).
-func formPatcherAcademicRecordCreate(_ *views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+type formPatcherAcademicRecordCreate struct{}
+
+func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	if s, ok := values["Status"].(string); !ok || s == "" {
 		values["Status"] = AcademicRecordStatusEnrolled
 	}
@@ -66,7 +68,9 @@ func formPatcherAcademicRecordCreate(_ *views.View, r *http.Request, values map[
 
 // formPatcherAcademicRecordUpdate ensures OptionalCourses length matches
 // ProgramStructureUnit.OptionalCourseCount for this record's program and term.
-func formPatcherAcademicRecordUpdate(_ *views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+type formPatcherAcademicRecordUpdate struct{}
+
+func (formPatcherAcademicRecordUpdate) Patch(_ views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	if formErrors == nil {
 		formErrors = map[string]error{}
 	}

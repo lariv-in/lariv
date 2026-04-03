@@ -58,9 +58,5 @@ func websiteStaticHandler(_ *views.View) http.Handler {
 }
 
 func init() {
-	lago.RegistryView.Register("nirmancampus_website.StaticView", &views.View{
-		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: websiteStaticHandler,
-		},
-	})
+	lago.RegistryView.Register("nirmancampus_website.StaticView", websiteGETOnlyView(websiteStaticHandler))
 }

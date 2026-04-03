@@ -12,6 +12,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
@@ -79,7 +80,9 @@ func resolveAuth(r *http.Request) context.Context {
 
 // AuthenticationMiddleware requires a valid auth token. If the user is not
 // authenticated the request is redirected to the unauthenticated route.
-func AuthenticationMiddleware(next http.Handler) http.Handler {
+type AuthenticationMiddleware struct{}
+
+func (AuthenticationMiddleware) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := resolveAuth(r)
 		if ctx == nil {
@@ -94,7 +97,9 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 // OptionalAuthMiddleware enriches the request context with $user, $role, and
 // $tz when a valid auth token is present. If the user is not authenticated the
 // request continues without those context values.
-func OptionalAuthMiddleware(next http.Handler) http.Handler {
+type OptionalAuthMiddleware struct{}
+
+func (OptionalAuthMiddleware) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ctx := resolveAuth(r); ctx != nil {
 			r = r.WithContext(ctx)
@@ -103,38 +108,40 @@ func OptionalAuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func RoleAuthorizationMiddleware(roles []string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userObj := r.Context().Value("$user")
-			user, ok := userObj.(User)
-			if !ok {
-				slog.Error("RoleAuthorizationMiddleware: missing $user in context")
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
+type RoleAuthorizationMiddleware struct {
+	Roles []string
+}
 
-			var roleName string
-			db, ok := r.Context().Value("$db").(*gorm.DB)
-			if !ok {
-				slog.Error("RoleAuthorizationMiddleware: missing $db in context")
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
-			db.Model(&Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
+func (m RoleAuthorizationMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userObj := r.Context().Value("$user")
+		user, ok := userObj.(User)
+		if !ok {
+			slog.Error("RoleAuthorizationMiddleware: missing $user in context")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-			authorized := slices.Contains(roles, roleName)
-			if user.IsSuperuser {
-				authorized = true
-			}
+		var roleName string
+		db, ok := r.Context().Value("$db").(*gorm.DB)
+		if !ok {
+			slog.Error("RoleAuthorizationMiddleware: missing $db in context")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		db.Model(&Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
 
-			if !authorized {
-				slog.Error("RoleAuthorizationMiddleware: user is not authorized", "role", roleName, "roles", roles)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
+		authorized := slices.Contains(m.Roles, roleName)
+		if user.IsSuperuser {
+			authorized = true
+		}
 
-			next.ServeHTTP(w, r)
-		})
-	}
+		if !authorized {
+			slog.Error("RoleAuthorizationMiddleware: user is not authorized", "role", roleName, "roles", m.Roles)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

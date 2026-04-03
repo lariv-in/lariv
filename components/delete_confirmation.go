@@ -36,7 +36,11 @@ func (e DeleteConfirmation) Build(ctx context.Context) Node {
 		cancelUrl = url
 	}
 	var formErrNode Node
-	if errorMap, ok := ctx.Value(getters.ContextKeyError).(map[string]any); ok {
+	if errMap, ok := ctx.Value(getters.ContextKeyError).(map[string]error); ok {
+		if ferr := errMap["_form"]; ferr != nil {
+			formErrNode = P(Class("my-2 text-sm text-error"), Text(ferr.Error()))
+		}
+	} else if errorMap, ok := ctx.Value(getters.ContextKeyError).(map[string]any); ok {
 		if raw, exists := errorMap["_form"]; exists && raw != nil {
 			if ferr, ok := raw.(error); ok {
 				formErrNode = P(Class("my-2 text-sm text-error"), Text(ferr.Error()))

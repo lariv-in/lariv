@@ -16,7 +16,7 @@ var userViewsWithRoleMiddleware = []string{
 
 // Patch "users.role" middleware to allow admin in addition to existing roles.
 func patcher(current views.Middleware) views.Middleware {
-	return p_users.RoleAuthorizationMiddleware([]string{"admin"})
+	return p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
 }
 
 func init() {

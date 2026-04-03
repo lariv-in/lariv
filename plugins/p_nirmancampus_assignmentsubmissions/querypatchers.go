@@ -11,11 +11,13 @@ import (
 	"gorm.io/gorm"
 )
 
+type assignmentSubmissionScopeByRole struct{}
+
 // AssignmentSubmissionScopeByRole restricts queries:
 // - superuser/admin: full queryset
 // - student: submissions tied to this user's academic records
 // - any other role: empty queryset
-func AssignmentSubmissionScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+func (assignmentSubmissionScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[AssignmentSubmission]) gorm.ChainInterface[AssignmentSubmission] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -62,3 +64,5 @@ func AssignmentSubmissionScopeByRole(_ *views.View, r *http.Request, query *gorm
 		return query.Where("1 = 0")
 	}
 }
+
+var AssignmentSubmissionScopeByRole views.QueryPatcher[AssignmentSubmission] = assignmentSubmissionScopeByRole{}

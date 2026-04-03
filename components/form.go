@@ -83,7 +83,11 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	}
 
 	var formErrorNode gomponents.Node
-	if errorMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]any); ok {
+	if errMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]error); ok {
+		if formErr := errMap["_form"]; formErr != nil {
+			formErrorNode = html.Span(html.Class("text-sm text-error"), gomponents.Text(formErr.Error()))
+		}
+	} else if errorMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]any); ok {
 		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
 			if err, ok := formErr.(error); ok {
 				formErrorNode = html.Span(html.Class("text-sm text-error"), gomponents.Text(err.Error()))

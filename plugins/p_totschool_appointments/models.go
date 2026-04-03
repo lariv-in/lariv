@@ -42,7 +42,10 @@ func (a *Appointment) GetOverlappingAppointments(db *gorm.DB) []Appointment {
 // WithOverlappingFilter scopes an appointments query to only those rows that have
 // at least one overlapping appointment (same created_by_id within +/-30 minutes).
 func WithOverlappingFilter(db *gorm.DB) *gorm.DB {
-	return db.Where(`
+	return db.Where(overlappingAppointmentsWhereSQL)
+}
+
+const overlappingAppointmentsWhereSQL = `
 		EXISTS (
 			SELECT 1
 			FROM appointments a2
@@ -51,7 +54,11 @@ func WithOverlappingFilter(db *gorm.DB) *gorm.DB {
 			  AND a2.datetime BETWEEN appointments.datetime - interval '30 minutes'
 			                      AND appointments.datetime + interval '30 minutes'
 		)
-	`)
+	`
+
+// WithOverlappingFilterChain is the typed list-query equivalent of WithOverlappingFilter.
+func WithOverlappingFilterChain(q gorm.ChainInterface[Appointment]) gorm.ChainInterface[Appointment] {
+	return q.Where(overlappingAppointmentsWhereSQL)
 }
 
 func init() {

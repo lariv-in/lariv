@@ -1,6 +1,7 @@
 package p_pwa
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -9,7 +10,9 @@ import (
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
+	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
@@ -18,7 +21,38 @@ const (
 	serviceWorkerViewKey = "pwa.ServiceWorkerView"
 	offlineViewKey       = "pwa.OfflineView"
 	staticPwaViewKey     = "pwa.StaticPwaView"
+	pwaAssetPageName     = "pwa.AssetPlaceholder"
 )
+
+type pwaAssetPage struct {
+	components.Page
+}
+
+func (pwaAssetPage) Build(context.Context) Node {
+	return Group{}
+}
+
+func (p pwaAssetPage) GetKey() string {
+	return p.Page.Key
+}
+
+func (p pwaAssetPage) GetRoles() []string {
+	return p.Page.Roles
+}
+
+func pwaAssetPageLookup(string) (components.PageInterface, bool) {
+	return pwaAssetPage{Page: components.Page{Key: pwaAssetPageName}}, true
+}
+
+func pwaAssetView(method string, handler func(*views.View) http.Handler) *views.View {
+	return &views.View{
+		PageName:   pwaAssetPageName,
+		PageLookup: pwaAssetPageLookup,
+		Middlewares: []registry.Pair[string, views.Middleware]{
+			{Key: "pwa.asset", Value: views.MethodMiddleware{Method: method, Handler: handler}},
+		},
+	}
+}
 
 func manifestHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +73,6 @@ func manifestHandler(_ *views.View) http.Handler {
 			"shortcuts":        Config.AppShortcuts,
 			"screenshots":      Config.AppScreenshots,
 
-			// Custom keys (not part of the core W3C manifest spec)
 			"status_bar_color": Config.AppStatusBarColor,
 			"icons_apple":      Config.AppIconsApple,
 			"splash_screen":    Config.AppSplashScreen,
@@ -64,7 +97,6 @@ func serviceWorkerHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		// Minimal offline-first service worker.
 		w.Write([]byte(`/* lago p_pwa default service worker */
 const CACHE_NAME = "lago-pwa-v1";
 const OFFLINE_URL = "/offline";
@@ -161,27 +193,8 @@ func staticPwaHandler(_ *views.View) http.Handler {
 func init() {
 	_ = components.RegistryShellHeadNodes.Register("pwa.manifestLink", Link(Rel("manifest"), Href("/app.webmanifest")))
 
-	lago.RegistryView.Register(manifestViewKey, &views.View{
-		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: manifestHandler,
-		},
-	})
-
-	lago.RegistryView.Register(serviceWorkerViewKey, &views.View{
-		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: serviceWorkerHandler,
-		},
-	})
-
-	lago.RegistryView.Register(offlineViewKey, &views.View{
-		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: offlineHandler,
-		},
-	})
-
-	lago.RegistryView.Register(staticPwaViewKey, &views.View{
-		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: staticPwaHandler,
-		},
-	})
+	lago.RegistryView.Register(manifestViewKey, pwaAssetView(http.MethodGet, manifestHandler))
+	lago.RegistryView.Register(serviceWorkerViewKey, pwaAssetView(http.MethodGet, serviceWorkerHandler))
+	lago.RegistryView.Register(offlineViewKey, pwaAssetView(http.MethodGet, offlineHandler))
+	lago.RegistryView.Register(staticPwaViewKey, pwaAssetView(http.MethodGet, staticPwaHandler))
 }

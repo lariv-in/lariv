@@ -86,9 +86,5 @@ func init() {
 		Handler: lago.NewDynamicView("nirmancampus_website.StudentZoneItemView"),
 	})
 
-	lago.RegistryView.Register("nirmancampus_website.StudentZoneItemView", &views.View{
-		Handlers: map[string]func(*views.View) http.Handler{
-			http.MethodGet: studentZoneItemHandler,
-		},
-	})
+	lago.RegistryView.Register("nirmancampus_website.StudentZoneItemView", websiteGETOnlyView(studentZoneItemHandler))
 }

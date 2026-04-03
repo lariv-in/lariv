@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/lariv-in/lago/getters"
@@ -37,6 +38,7 @@ func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler
 		ctx := r.Context()
 		values, fieldErrors, err := view.ParseForm(w, r)
 		if err != nil {
+			slog.Error("views: middleware json import: parse form", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})
@@ -44,6 +46,9 @@ func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler
 			return
 		}
 		if len(fieldErrors) != 0 {
+			for fname, ferr := range fieldErrors {
+				slog.Error("views: middleware json import: field error", "field", fname, "error", ferr)
+			}
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -51,6 +56,7 @@ func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler
 
 		fileHeader, err := uploadedJSONFile(values, m.FileField)
 		if err != nil {
+			slog.Error("views: middleware json import: uploaded file", "error", err)
 			fieldErrors["_form"] = err
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -59,6 +65,7 @@ func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler
 
 		records, err := decodeJSONArrayFile[T](fileHeader)
 		if err != nil {
+			slog.Error("views: middleware json import: decode json", "error", err)
 			fieldErrors["_form"] = fmt.Errorf("invalid json import: %w", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -70,6 +77,7 @@ func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler
 			if err := db.Transaction(func(tx *gorm.DB) error {
 				return gorm.G[T](tx).CreateInBatches(r.Context(), &records, 100)
 			}); err != nil {
+				slog.Error("views: middleware json import: batch create", "error", err)
 				fieldErrors["_form"] = fmt.Errorf("%v", err)
 				ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 				next.ServeHTTP(w, r.WithContext(ctx))
@@ -84,6 +92,7 @@ func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler
 		}
 		successUrl, err := m.SuccessURL(ctx)
 		if err != nil {
+			slog.Error("views: middleware json import: resolve success URL", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/views"
 	"golang.org/x/net/websocket"
 	"gorm.io/gorm"
 )
@@ -25,7 +26,7 @@ func wsHTTPHandler() http.Handler {
 		// Skip default Origin check from websocket.Handler; AuthenticationMiddleware already ran.
 		Handshake: func(_ *websocket.Config, _ *http.Request) error { return nil },
 	}
-	return p_users.AuthenticationMiddleware(http.HandlerFunc(s.ServeHTTP))
+	return p_users.AuthenticationMiddleware{}.Next(views.View{}, http.HandlerFunc(s.ServeHTTP))
 }
 
 func chatSocketHandler(conn *websocket.Conn) {

@@ -5,4 +5,4 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-var RegistryMiddleware registry.Registry[views.Middleware] = registry.NewRegistry[views.Middleware]()
+var RegistryMiddleware registry.Registry[views.GlobalMiddleware] = registry.NewRegistry[views.GlobalMiddleware]()

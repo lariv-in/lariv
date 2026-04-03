@@ -3,6 +3,7 @@ package views
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"reflect"
 
@@ -39,6 +40,7 @@ func (m MiddlewareCreate[T]) Next(view View, next http.Handler) http.Handler {
 		ctx := r.Context()
 		values, fieldErrors, err := view.ParseForm(w, r)
 		if err != nil {
+			slog.Error("views: middleware create: parse form", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})
@@ -47,6 +49,9 @@ func (m MiddlewareCreate[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		values, fieldErrors = m.FormPatchers.Apply(view, r, values, fieldErrors)
 		if len(fieldErrors) != 0 {
+			for fname, ferr := range fieldErrors {
+				slog.Error("views: middleware create: field error", "field", fname, "error", ferr)
+			}
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
@@ -64,6 +69,7 @@ func (m MiddlewareCreate[T]) Next(view View, next http.Handler) http.Handler {
 			return applyAssociationReplacements(tx, record, associationValues)
 		})
 		if err != nil {
+			slog.Error("views: middleware create: transaction", "error", err)
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -78,6 +84,7 @@ func (m MiddlewareCreate[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		successUrl, err := m.SuccessURL(ctx)
 		if err != nil {
+			slog.Error("views: middleware create: resolve success URL", "error", err)
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})

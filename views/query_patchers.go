@@ -83,7 +83,7 @@ type QueryPatcherJoinFilter[T any, TJoin any] struct {
 	RelatedField string
 }
 
-func (p QueryPatcherJoinFilter[T, TJoin]) Patch(_ *View, r http.Request, db gorm.ChainInterface[T]) gorm.ChainInterface[T] {
+func (p QueryPatcherJoinFilter[T, TJoin]) Patch(_ View, r *http.Request, db gorm.ChainInterface[T]) gorm.ChainInterface[T] {
 	getMap, ok := r.Context().Value("$get").(map[string]any)
 	if !ok {
 		return db

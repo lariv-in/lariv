@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
+type courseScopeByRole struct{}
+
 // CourseScopeByRole restricts course queries:
 //   - superuser, admin: full queryset
 //   - student: courses linked to any of this user's academic records (compulsory or optional join tables)
@@ -20,7 +22,7 @@ import (
 //
 // Join table names match GORM tags on AcademicRecord; the academicrecords plugin is not imported here
 // to avoid a module import cycle (academicrecords → courses).
-func CourseScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+func (courseScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Course]) gorm.ChainInterface[Course] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
@@ -79,10 +81,14 @@ func CourseScopeByRole(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB 
 	}
 }
 
+var CourseScopeByRole views.QueryPatcher[Course] = courseScopeByRole{}
+
 // QueryPatcherMultiSelectPoolCourseIDs restricts the multi-select course list when the request includes
 // pool_course_ids (comma-separated course IDs). Used by academic record optional-course pickers. If the
 // parameter is present with an empty value, the list is empty. If the parameter is absent, no extra filter applies.
-func QueryPatcherMultiSelectPoolCourseIDs(_ *views.View, r *http.Request, query *gorm.DB) *gorm.DB {
+type queryPatcherMultiSelectPoolCourseIDs struct{}
+
+func (queryPatcherMultiSelectPoolCourseIDs) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Course]) gorm.ChainInterface[Course] {
 	raw, ok := r.URL.Query()["pool_course_ids"]
 	if !ok || len(raw) == 0 {
 		return query
@@ -110,3 +116,5 @@ func QueryPatcherMultiSelectPoolCourseIDs(_ *views.View, r *http.Request, query 
 	}
 	return query.Where("courses.id IN ?", ids)
 }
+
+var QueryPatcherMultiSelectPoolCourseIDs views.QueryPatcher[Course] = queryPatcherMultiSelectPoolCourseIDs{}

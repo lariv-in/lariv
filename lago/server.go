@@ -16,20 +16,20 @@ func StartServer(config LagoConfig) error {
 		return err
 	}
 
-	RegistryMiddleware.Register("core.AttachRequestMiddleware", views.AttachRequestMiddleware)
-	RegistryMiddleware.Register("core.DbMiddleware", MiddlewareDB(db))
-	RegistryMiddleware.Register("core.LoggingMiddlware", MiddlewareLogging)
-	RegistryMiddleware.Register("core.HtmxBoostMiddleware", MiddlewareHtmxBoost)
-	RegistryMiddleware.Register("core.EnvironmentMiddleware", MiddlewareEnvironment)
-	RegistryMiddleware.Register("core.CacheDisableMiddlware", MiddlewareCacheDisable)
+	RegistryMiddleware.Register("core.AttachRequestMiddleware", views.AttachRequestMiddleware{})
+	RegistryMiddleware.Register("core.DbMiddleware", DBMiddleware{DB: db})
+	RegistryMiddleware.Register("core.LoggingMiddlware", LoggingMiddleware{})
+	RegistryMiddleware.Register("core.HtmxBoostMiddleware", HtmxBoostMiddleware{})
+	RegistryMiddleware.Register("core.EnvironmentMiddleware", EnvironmentMiddleware{})
+	RegistryMiddleware.Register("core.CacheDisableMiddlware", CacheDisableMiddleware{})
 
 	BuildAllRegistries()
 
 	// Applying all middlewares
-	middlewares := RegistryMiddleware.All()
+	middlewares := *RegistryMiddleware.AllStable()
 	var router http.Handler = GetRouter(config)
 	for _, middleware := range middlewares {
-		router = middleware(router)
+		router = middleware.Value.Next(router)
 	}
 
 	slog.Warn("Using plain http without tls, ensure this is running in debug or behind a reverse proxy")
