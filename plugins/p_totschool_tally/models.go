@@ -266,10 +266,8 @@ func GetLeaderboards(db *gorm.DB, userID *uint, session *TotSchoolSession) map[s
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		err := d.AutoMigrate(&TotSchoolSession{}, &Tally{})
-		if err != nil {
-			panic(err)
-		}
+		lago.RegisterModel[TotSchoolSession](d)
+		lago.RegisterModel[Tally](d)
 		return d
 	})
 	lago.RegistryAdmin.Register("p_totschool_tally.TotSchoolSession", lago.AdminPanel[TotSchoolSession]{SearchField: "Name"})

@@ -2,7 +2,6 @@ package p_nirmancampus_sessions
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -49,9 +48,7 @@ func (s *Semester) BeforeSave(tx *gorm.DB) error {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Semester{}); err != nil {
-			log.Panicf("failed to migrate Semester model: %v", err)
-		}
+		lago.RegisterModel[Semester](d)
 		return d
 	})
 

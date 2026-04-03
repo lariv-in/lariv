@@ -4,6 +4,7 @@ toolchain go1.26.1
 
 use (
 	./components
+	./deployments/lariv
 	./deployments/nirmancampus
 	./deployments/totschool_lago
 	./getters

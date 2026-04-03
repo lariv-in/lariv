@@ -1,7 +1,6 @@
 package p_nirmancampus_assignmentsubmissions
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -29,9 +28,7 @@ type AssignmentSubmission struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&AssignmentSubmission{}); err != nil {
-			log.Panicf("failed to migrate AssignmentSubmission model: %v", err)
-		}
+		lago.RegisterModel[AssignmentSubmission](d)
 		return d
 	})
 

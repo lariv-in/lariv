@@ -169,9 +169,54 @@ func handleChatMessage(conn *websocket.Conn, db *gorm.DB, conv *Conversation, us
 		return err
 	}
 
-	// Simulated streamed assistant response (no LLM in this phase).
-	full := "This is a simulated assistant reply. Your message was received over the WebSocket. SQL tooling is not wired yet."
-	return streamAssistantReply(conn, db, &aiMsg, full)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	rt, err := loadADK(ctx)
+	if err != nil {
+		slog.Info("sqlagent: ADK unavailable, using simulated reply", "error", err)
+		full := "This is a simulated assistant reply. Set GOOGLE_API_KEY or GEMINI_API_KEY to use Gemini via ADK. Your message was received over the WebSocket. SQL tooling is not wired yet."
+		return streamAssistantReply(conn, db, &aiMsg, full)
+	}
+
+	if err := seedADKSessionFromDB(ctx, rt, db, userID, conv.ID, userMsg.SortOrder); err != nil {
+		return err
+	}
+
+	var lastText string
+	err = ForEachADKReplyChunk(ctx, rt, userID, conv.ID, content, func(text string) error {
+		if text == "" {
+			return nil
+		}
+		lastText = text
+		if err := db.Model(&AIMessage{}).Where("conversation_message_id = ?", aiMsg.ID).
+			Updates(map[string]any{"content": text}).Error; err != nil {
+			return err
+		}
+		aiMsg.AIMessage.Content = text
+		aiMsg.AIMessage.Status = AIStatusStreaming
+		return websocket.Message.Send(conn, OOBReplaceMessage(aiMsg))
+	})
+	if err != nil {
+		return err
+	}
+	if lastText == "" {
+		lastText = "(No response text from the model.)"
+		if err := db.Model(&AIMessage{}).Where("conversation_message_id = ?", aiMsg.ID).
+			Updates(map[string]any{"content": lastText}).Error; err != nil {
+			return err
+		}
+		aiMsg.AIMessage.Content = lastText
+		if err := websocket.Message.Send(conn, OOBReplaceMessage(aiMsg)); err != nil {
+			return err
+		}
+	}
+	if err := db.Model(&AIMessage{}).Where("conversation_message_id = ?", aiMsg.ID).
+		Updates(map[string]any{"status": AIStatusComplete}).Error; err != nil {
+		return err
+	}
+	aiMsg.AIMessage.Status = AIStatusComplete
+	return websocket.Message.Send(conn, OOBReplaceMessage(aiMsg))
 }
 
 func streamAssistantReply(conn *websocket.Conn, db *gorm.DB, aiEnvelope *ConversationMessage, full string) error {

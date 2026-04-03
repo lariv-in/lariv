@@ -51,7 +51,7 @@ func LoadPreferences(db *gorm.DB) OTPPreferences {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		d.AutoMigrate(OTPPreferences{})
+		lago.RegisterModel[OTPPreferences](d)
 		return d
 	})
 

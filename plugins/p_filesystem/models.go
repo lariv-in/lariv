@@ -348,9 +348,7 @@ func humanReadableSize(size int64) string {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&VNode{}); err != nil {
-			panic(err)
-		}
+		lago.RegisterModel[VNode](d)
 		// Replace the earlier index with a partial unique index so soft-deleted
 		// rows do not block re-creating files/folders with the same name.
 		if err := d.Exec(

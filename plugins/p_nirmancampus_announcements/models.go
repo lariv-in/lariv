@@ -1,7 +1,6 @@
 package p_nirmancampus_announcements
 
 import (
-	"log"
 	"time"
 
 	"github.com/lariv-in/lago/lago"
@@ -42,9 +41,7 @@ func (a *Announcement) BeforeSave(tx *gorm.DB) error {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Announcement{}); err != nil {
-			log.Panicf("failed to migrate Announcement model: %v", err)
-		}
+		lago.RegisterModel[Announcement](d)
 		return d
 	})
 

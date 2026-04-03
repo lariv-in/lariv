@@ -72,9 +72,7 @@ func (p *Proposal) FormatAnswersForAI() (string, error) {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Proposal{}); err != nil {
-			panic(err)
-		}
+		lago.RegisterModel[Proposal](d)
 		// Mark any stuck generating proposals as not generating on startup
 		d.Model(&Proposal{}).Where("generation_id IS NOT NULL").Update("generation_id", nil)
 		go runWorker(d)

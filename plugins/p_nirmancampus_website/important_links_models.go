@@ -1,7 +1,6 @@
 package p_nirmancampus_website
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -25,9 +24,7 @@ type ImportantLink struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&ImportantLink{}); err != nil {
-			log.Panicf("failed to migrate ImportantLink model: %v", err)
-		}
+		lago.RegisterModel[ImportantLink](d)
 		return d
 	})
 

@@ -1,7 +1,6 @@
 package p_nirmancampus_academicrecords
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
@@ -43,9 +42,7 @@ type AcademicRecord struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&AcademicRecord{}); err != nil {
-			log.Panicf("failed to migrate AcademicRecord: %v", err)
-		}
+		lago.RegisterModel[AcademicRecord](d)
 		return d
 	})
 

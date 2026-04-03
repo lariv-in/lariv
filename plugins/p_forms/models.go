@@ -2,7 +2,6 @@ package forms
 
 import (
 	"encoding/json"
-	"log"
 	"strings"
 
 	"github.com/lariv-in/lago/lago"
@@ -76,9 +75,9 @@ func (f *FormField) SelectOptionStrings() []string {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Form{}, &FormField{}, &FormSubmission{}); err != nil {
-			log.Panicf("forms: automigrate: %v", err)
-		}
+		lago.RegisterModel[Form](d)
+		lago.RegisterModel[FormField](d)
+		lago.RegisterModel[FormSubmission](d)
 		return d
 	})
 

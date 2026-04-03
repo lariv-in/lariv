@@ -1,7 +1,6 @@
 package p_nirmancampus_studentapplications
 
 import (
-	"log"
 	"time"
 
 	"github.com/lariv-in/lago/lago"
@@ -34,9 +33,7 @@ type StudentApplication struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&StudentApplication{}); err != nil {
-			log.Panicf("failed to migrate StudentApplication model: %v", err)
-		}
+		lago.RegisterModel[StudentApplication](d)
 		return d
 	})
 

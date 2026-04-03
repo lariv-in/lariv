@@ -26,7 +26,9 @@ func InitDB(config LagoConfig) (*gorm.DB, error) {
 		log.Panicf("Unrecognized db type %s", config.DBType)
 	}
 
-	db, err := gorm.Open(dialector, &gorm.Config{})
+	db, err := gorm.Open(dialector, &gorm.Config{
+		PrepareStmt: true,
+	})
 	if err != nil {
 		return nil, err
 	}
