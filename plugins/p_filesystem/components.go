@@ -293,18 +293,13 @@ func (e InputMultiVNode) ParseMultipart(uploadedFiles []*multipart.FileHeader, c
 			return components.AssociationIDs{Field: e.Name}, err
 		}
 
-		if e.Path == nil {
-			node, err := createComponentVNode(db, "", file)
+		path := ""
+		if e.Path != nil {
+			var err error
+			path, err = e.Path(ctx)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to get path: %w", err)
 			}
-
-			return node.ID, nil
-		}
-
-		path, err := e.Path(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get path: %w", err)
 		}
 
 		node, err := createComponentVNode(db, path, file)
