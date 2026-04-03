@@ -112,6 +112,7 @@ func (u *User) Login(w http.ResponseWriter) {
 		Expires:  nextDayTime,
 		Secure:   true,
 		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	})
 }

@@ -2,7 +2,7 @@ package components
 
 type ObjectList[T any] struct {
 	Items    []T
-	Number   int
-	NumPages int
-	Total    int64
+	Number   uint
+	NumPages uint
+	Total    uint64
 }

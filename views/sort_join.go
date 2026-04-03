@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 	"gorm.io/gorm/utils"
 )
@@ -16,7 +17,7 @@ import (
 // are qualified with the base table name so ORDER BY stays unambiguous.
 //
 // BelongsTo/HasOne joins do not multiply base rows, so Count + pagination stay correct.
-func applyListViewSorts(query *gorm.DB, root *schema.Schema, sortValues []string) *gorm.DB {
+func applyListViewSorts[T any](query gorm.ChainInterface[T], root *schema.Schema, sortValues []string) gorm.ChainInterface[T] {
 	if root == nil {
 		return query
 	}
@@ -89,7 +90,7 @@ func applyListViewSorts(query *gorm.DB, root *schema.Schema, sortValues []string
 	}
 
 	for _, jp := range joinOrder {
-		query = query.Joins(jp)
+		query = query.Joins(clause.Has(jp), nil)
 	}
 
 	anyJoin := len(joinOrder) > 0
