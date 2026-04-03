@@ -118,6 +118,56 @@ func termTypeChoices() []registry.Pair[string, string] {
 	}
 }
 
+func programAdmissionSessionsPairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.Key[string]("$in.AdmissionSessions")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range admissionSessionChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func programTermTypePairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.Key[string]("$in.TermType")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		for _, p := range termTypeChoices() {
+			if p.Key == s {
+				return p, nil
+			}
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
+func admissionSessionsFormSelect() *components.InputSelect[string] {
+	return &components.InputSelect[string]{
+		Label:    "Admission sessions",
+		Name:     "AdmissionSessions",
+		Required: false,
+		Choices:  getters.Static(admissionSessionChoices()),
+		Getter:   programAdmissionSessionsPairGetter(),
+	}
+}
+
+func termTypeFormSelect() *components.InputSelect[string] {
+	return &components.InputSelect[string]{
+		Label:    "Term type",
+		Name:     "TermType",
+		Required: false,
+		Choices:  getters.Static(termTypeChoices()),
+		Getter:   programTermTypePairGetter(),
+	}
+}
+
 func programAdmissionSessionsDisplayGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		s, err := getters.Key[string]("$in.AdmissionSessions")(ctx)
@@ -384,6 +434,23 @@ func programFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.ProgramType"),
 						Children: []components.PageInterface{
 							programTypeFormSelect(),
+						},
+					},
+				},
+			},
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.AdmissionSessions"),
+						Children: []components.PageInterface{
+							admissionSessionsFormSelect(),
+						},
+					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.TermType"),
+						Children: []components.PageInterface{
+							termTypeFormSelect(),
 						},
 					},
 				},
