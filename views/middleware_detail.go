@@ -10,6 +10,23 @@ import (
 	"gorm.io/gorm"
 )
 
+// MiddlewareDetail fetches a single record of type T by its primary key from a URL
+// path parameter and stores it in the request context under Key.
+//
+// This middleware is the sole owner of "load one record by URL PK" logic. Other
+// middlewares that need the record (MiddlewareUpdate, MiddlewareDelete) expect it
+// to already be in the context and should be composed after MiddlewareDetail.
+//
+// PathParamKey resolves to the name of the URL path parameter that carries the
+// primary key (e.g. "id"). Key resolves to the context key under which the
+// loaded T instance is stored for downstream handlers.
+//
+// QueryPatchers are applied to the query before executing it, allowing callers
+// to add preloads, scopes, or tenant filters.
+//
+// On any error (bad path param, record not found, getter failure) the middleware
+// sets a "_global" error in getters.ContextKeyError and calls next instead of
+// writing an HTTP response directly.
 type MiddlewareDetail[T any] struct {
 	Key, PathParamKey getters.Getter[string]
 

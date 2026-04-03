@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/registry"
@@ -26,10 +25,16 @@ func (e ShellBase) Body(ctx context.Context) Node {
 		group = append(group, Render(child, ctx))
 	}
 
-	ctxErrors := ctx.Value(getters.ContextKeyError).(map[string]error)
-	globalError, ok := ctxErrors["_global"]
-	if ok {
-		group = append(group, Text(fmt.Sprintf("%e", globalError)))
+	if ctxErrors, ok := ctx.Value(getters.ContextKeyError).(map[string]error); ok {
+		if globalError, ok := ctxErrors["_global"]; ok {
+			group = append(group, Div(
+				Class("toast toast-bottom toast-center z-50"),
+				Div(
+					Class("alert alert-error"),
+					Text(globalError.Error()),
+				),
+			))
+		}
 	}
 	return Body(
 		Class("hide-right font-sans"),

@@ -10,6 +10,21 @@ import (
 	"gorm.io/gorm"
 )
 
+// MiddlewareCreate handles row creation for type T on POST requests.
+// On non-POST methods it passes through to next unchanged.
+//
+// On POST it parses the view's form, applies FormPatchers, then within a
+// transaction populates a new T from the regular (non-association) values,
+// inserts it, and replaces any many-to-many associations. On success the
+// newly created record's ID is stored in the context as "$id".
+//
+// If SuccessURL is set, a successful create redirects to the resolved URL.
+// If SuccessURL is nil, next is called with the enriched context, allowing a
+// downstream handler to decide the response.
+//
+// All errors (form parsing, validation, DB) are placed into
+// getters.ContextKeyError ("_form" for form/field errors) and next is called,
+// so the page can re-render with error feedback.
 type MiddlewareCreate[T any] struct {
 	SuccessURL   getters.Getter[string]
 	FormPatchers FormPatchers

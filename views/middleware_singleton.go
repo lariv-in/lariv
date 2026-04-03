@@ -9,6 +9,26 @@ import (
 	"gorm.io/gorm"
 )
 
+// MiddlewareSingleton manages a single-row table of type T (e.g. site-wide
+// settings). It combines the roles of detail-loading and updating in one
+// middleware because there is no URL primary key — the record is always
+// obtained via FirstOrCreate.
+//
+// On GET (or any non-POST method) it loads or creates the singleton and places
+// its fields into the context as getters.ContextKeyIn so form components can
+// pre-fill values. Then it calls next.
+//
+// On POST it parses the view's form, then within a transaction loads the
+// singleton, updates its columns from the submitted values, and replaces any
+// many-to-many associations.
+//
+// If SuccessURL is set, a successful update redirects to the resolved URL.
+// If SuccessURL is nil, next is called so a downstream handler can decide the
+// response.
+//
+// All errors (form parsing, validation, DB) are placed into
+// getters.ContextKeyError ("_form" for form/field errors) and next is called,
+// so the page can re-render with error feedback.
 type MiddlewareSingleton[T any] struct {
 	SuccessURL getters.Getter[string]
 }
@@ -65,10 +85,6 @@ func (m MiddlewareSingleton[T]) Next(view View, next http.Handler) http.Handler 
 			return
 		}
 
-		if m.SuccessURL == nil {
-			next.ServeHTTP(w, r.WithContext(ctx))
-			return
-		}
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return

@@ -9,6 +9,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// MiddlewareJsonImport handles bulk creation of type T from a JSON file upload
+// on POST requests. On non-POST methods it passes through to next unchanged.
+//
+// On POST it parses the view's form, validates and extracts the uploaded file
+// from the field named FileField, decodes it as a JSON array of T, and inserts
+// all records in batches of 100 within a single transaction. On success the
+// number of imported records is stored in the context as "$count".
+//
+// If SuccessURL is set, a successful import redirects to the resolved URL.
+// If SuccessURL is nil, next is called with the enriched context.
+//
+// All errors (form parsing, file validation, JSON decoding, DB) are placed
+// into getters.ContextKeyError under "_form" and next is called, so the page
+// can re-render with error feedback.
 type MiddlewareJsonImport[T any] struct {
 	FileField  string
 	SuccessURL getters.Getter[string]

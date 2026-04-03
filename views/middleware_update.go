@@ -9,6 +9,25 @@ import (
 	"gorm.io/gorm"
 )
 
+// MiddlewareUpdate handles row updates for type T on POST requests.
+// On non-POST methods it passes through to next unchanged.
+//
+// It expects the record to already be in the context under Key, typically
+// placed there by a preceding MiddlewareDetail. On POST it parses the view's
+// form, applies FormPatchers, then within a transaction updates the record's
+// columns and replaces any many-to-many associations.
+//
+// QueryPatchers are applied to the UPDATE query, allowing callers to add
+// tenant filters or scopes.
+//
+// If SuccessURL is set, a successful update redirects to the resolved URL.
+// If SuccessURL is nil, next is called so a downstream handler can decide
+// the response.
+//
+// Form and field errors go into getters.ContextKeyError under "_form" or the
+// field name. Internal errors (missing context record, getter failures) go
+// under "_global". In all error cases next is called, never a raw HTTP
+// response.
 type MiddlewareUpdate[T any] struct {
 	Key           getters.Getter[string]
 	SuccessURL    getters.Getter[string]

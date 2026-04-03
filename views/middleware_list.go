@@ -15,6 +15,26 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// MiddlewareList is the sole owner of paginated list queries for type T. It
+// builds a filtered, sorted, paginated query from URL query parameters, executes
+// it, and stores the resulting components.ObjectList[T] in the context under Key.
+//
+// Filtering: query parameters whose names match a struct field name or DB column
+// of T are applied automatically — ILIKE for strings, equality for everything
+// else. Unknown parameters are silently ignored. The "sort" parameter applies
+// ORDER BY clauses, and "page" selects the page number.
+//
+// The parsed query parameters (with form-coerced types where a filter form
+// exists on the page) are also stored under "$get" in the context for use by
+// templates.
+//
+// PageSize defaults to 12 and can be overridden via the PageSize getter.
+// QueryPatchers are applied after built-in filtering, allowing callers to add
+// scopes, joins, or tenant filters.
+//
+// On query errors the middleware sets a "_global" error in
+// getters.ContextKeyError and calls next instead of writing an HTTP response
+// directly.
 type MiddlewareList[T any] struct {
 	Key           getters.Getter[string]
 	PageSize      getters.Getter[uint]

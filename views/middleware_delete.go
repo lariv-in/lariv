@@ -9,6 +9,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// MiddlewareDelete handles row deletion for type T on DELETE requests.
+// On non-DELETE methods it passes through to next unchanged.
+//
+// It expects the record to already be in the context under Key, typically
+// placed there by a preceding MiddlewareDetail. On DELETE it extracts the
+// record's ID and issues a DELETE query with any QueryPatchers applied.
+//
+// If SuccessURL is set, a successful delete redirects to the resolved URL.
+// If SuccessURL is nil, next is called so a downstream handler can decide
+// the response.
+//
+// All errors (missing context record, DB failures, getter failures) are placed
+// into getters.ContextKeyError under "_global" and next is called, never a raw
+// HTTP response.
 type MiddlewareDelete[T any] struct {
 	Key           getters.Getter[string]
 	SuccessURL    getters.Getter[string]
