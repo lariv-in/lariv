@@ -3,6 +3,7 @@ module github.com/lariv-in/lago/plugins/p_sqlagent
 go 1.26.1
 
 require (
+	github.com/d5/tengo/v2 v2.17.0
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
@@ -49,6 +50,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20260217112301-37c66b85d6ab // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/safehtml v0.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

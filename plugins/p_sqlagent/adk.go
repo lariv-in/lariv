@@ -14,6 +14,7 @@ import (
 	"google.golang.org/adk/model/gemini"
 	"google.golang.org/adk/runner"
 	"google.golang.org/adk/session"
+	"google.golang.org/adk/tool"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
@@ -60,10 +61,17 @@ func loadADK(ctx context.Context) (*adkRuntime, error) {
 	key := geminiAPIKey()
 	if key == "" {
 		adkInitErr = errors.New("no Gemini API key: set GOOGLE_API_KEY or GEMINI_API_KEY")
+		logError("sqlagent: load ADK", adkInitErr)
 		return nil, adkInitErr
 	}
 	modelID := geminiModelID()
 	m, err := gemini.NewModel(ctx, modelID, &genai.ClientConfig{APIKey: key})
+	if err != nil {
+		adkInitErr = err
+		logError("sqlagent: gemini NewModel", err, "model", modelID)
+		return nil, err
+	}
+	tengoT, err := newTengoTool()
 	if err != nil {
 		adkInitErr = err
 		return nil, err
@@ -71,13 +79,15 @@ func loadADK(ctx context.Context) (*adkRuntime, error) {
 	a, err := llmagent.New(llmagent.Config{
 		Name:        sqlAgentName,
 		Model:       m,
-		Description: "Assistant that discusses SQL and database tasks; tooling is not wired yet.",
+		Description: "Assistant that discusses SQL and database tasks and can run Tengo scripts.",
 		Instruction: `You are a helpful assistant embedded in a SQL agent chat UI.
 Be concise. You may explain SQL concepts and suggest query ideas.
-If asked to run queries or access data, say that execution tools are not connected yet and offer read-only guidance or example SQL instead.`,
+You have a tool "` + tengoToolName + `" that runs Tengo scripts (https://github.com/d5/tengo), not Go. Read that tool's description for rules and examples: use tx["Method"](...) for GORM, assign with "result = ..." (global "result" is predeclared), never use &, var, Go types, or interface{}. For *int64 out-parameters (e.g. Count) use gorm_ref_int64() then pass it to Count and read ["value"]. Each chat turn has "tx" on the request transaction.`,
+		Tools: []tool.Tool{tengoT},
 	})
 	if err != nil {
 		adkInitErr = err
+		logError("sqlagent: llmagent New", err)
 		return nil, err
 	}
 	sessSvc := session.InMemoryService()
@@ -89,6 +99,7 @@ If asked to run queries or access data, say that execution tools are not connect
 	})
 	if err != nil {
 		adkInitErr = err
+		logError("sqlagent: runner New", err)
 		return nil, err
 	}
 	adkRT = &adkRuntime{runner: r, sessions: sessSvc}
@@ -120,10 +131,12 @@ func seedADKSessionFromDB(ctx context.Context, rt *adkRuntime, db *gorm.DB, user
 	getResp, err := rt.sessions.Get(ctx, &session.GetRequest{AppName: adkAppName, UserID: uid, SessionID: sid})
 	if err != nil {
 		if _, cerr := rt.sessions.Create(ctx, &session.CreateRequest{AppName: adkAppName, UserID: uid, SessionID: sid}); cerr != nil {
+			logError("sqlagent: ADK session Create", cerr, "session_id", sid)
 			return cerr
 		}
 		getResp, err = rt.sessions.Get(ctx, &session.GetRequest{AppName: adkAppName, UserID: uid, SessionID: sid})
 		if err != nil {
+			logError("sqlagent: ADK session Get after Create", err, "session_id", sid)
 			return err
 		}
 	}
@@ -134,6 +147,7 @@ func seedADKSessionFromDB(ctx context.Context, rt *adkRuntime, db *gorm.DB, user
 
 	msgs, err := LoadMessagesForConversation(db, conversationID)
 	if err != nil {
+		logError("sqlagent: LoadMessagesForConversation (seed ADK)", err, "conversation_id", conversationID)
 		return err
 	}
 	for i := range msgs {
@@ -146,10 +160,36 @@ func seedADKSessionFromDB(ctx context.Context, rt *adkRuntime, db *gorm.DB, user
 			if m.UserMessage == nil {
 				continue
 			}
+			content := m.UserMessage.Content
+			if isRegistrySchemaBootstrapUserContent(content) {
+				body := strings.TrimSpace(strings.TrimPrefix(content, registrySchemaUserMessagePrefix))
+				if body == "" {
+					continue
+				}
+				content = "[Registry schema — internal context]\n" + body
+			}
 			ev := session.NewEvent("db-seed")
 			ev.Author = "user"
-			ev.LLMResponse = model.LLMResponse{Content: genai.NewContentFromText(m.UserMessage.Content, genai.RoleUser)}
+			ev.LLMResponse = model.LLMResponse{Content: genai.NewContentFromText(content, genai.RoleUser)}
 			if err := rt.sessions.AppendEvent(ctx, sess, ev); err != nil {
+				logError("sqlagent: ADK AppendEvent (user seed)", err, "conversation_id", conversationID)
+				return err
+			}
+		case MessageKindTool:
+			if !isRegistrySchemaToolMessage(m) {
+				continue
+			}
+			body := strings.TrimSpace(m.ToolMessage.Detail)
+			if body == "" {
+				continue
+			}
+			// Hidden from UI; inject as user-role context for the model.
+			text := "[Registry schema — internal context]\n" + body
+			ev := session.NewEvent("db-seed")
+			ev.Author = "user"
+			ev.LLMResponse = model.LLMResponse{Content: genai.NewContentFromText(text, genai.RoleUser)}
+			if err := rt.sessions.AppendEvent(ctx, sess, ev); err != nil {
+				logError("sqlagent: ADK AppendEvent (tool seed)", err, "conversation_id", conversationID)
 				return err
 			}
 		case MessageKindAI:
@@ -164,6 +204,7 @@ func seedADKSessionFromDB(ctx context.Context, rt *adkRuntime, db *gorm.DB, user
 			ev.Author = sqlAgentName
 			ev.LLMResponse = model.LLMResponse{Content: genai.NewContentFromText(body, genai.RoleModel)}
 			if err := rt.sessions.AppendEvent(ctx, sess, ev); err != nil {
+				logError("sqlagent: ADK AppendEvent (ai seed)", err, "conversation_id", conversationID)
 				return err
 			}
 		default:
@@ -187,6 +228,7 @@ func ForEachADKReplyChunk(
 	msg := genai.NewContentFromText(userText, genai.RoleUser)
 	for ev, err := range rt.runner.Run(ctx, uid, sid, msg, agent.RunConfig{StreamingMode: agent.StreamingModeSSE}) {
 		if err != nil {
+			logError("sqlagent: runner Run event", err, "session_id", sid)
 			return err
 		}
 		if ev == nil || ev.Author == "user" {
@@ -197,6 +239,7 @@ func ForEachADKReplyChunk(
 		}
 		text := genaiTextContent(ev.LLMResponse.Content)
 		if err := fn(text); err != nil {
+			logError("sqlagent: ADK reply chunk callback", err, "session_id", sid)
 			return err
 		}
 	}
