@@ -56,8 +56,8 @@ func (u *User) hashPassword() (err error) {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		d.AutoMigrate(User{})
-		d.AutoMigrate(Role{})
+		lago.RegisterModel[User](d)
+		lago.RegisterModel[Role](d)
 
 		// Ensure ID 1 is always the safe "Unassigned" fallback role (Attrs applies on insert only).
 		var unassigned Role

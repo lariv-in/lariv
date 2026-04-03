@@ -1,7 +1,6 @@
 package p_nirmancampus_students
 
 import (
-	"log"
 	"time"
 
 	"github.com/lariv-in/lago/lago"
@@ -41,9 +40,7 @@ type Student struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Student{}); err != nil {
-			log.Panicf("failed to migrate Student model: %v", err)
-		}
+		lago.RegisterModel[Student](d)
 		d.FirstOrCreate(&p_users.Role{}, p_users.Role{Name: "student"})
 		return d
 	})

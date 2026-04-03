@@ -3,7 +3,6 @@ package sqlagent
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
@@ -20,7 +19,7 @@ type queryPatcherScopeConversationByUser struct{}
 func (queryPatcherScopeConversationByUser) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Conversation]) gorm.ChainInterface[Conversation] {
 	u, ok := r.Context().Value("$user").(p_users.User)
 	if !ok {
-		slog.Error("sqlagent: missing $user in query patcher")
+		logError("sqlagent: missing $user in query patcher", errors.New("no $user"))
 		return query.Where("1 = 0")
 	}
 	return query.Where("created_by_id = ?", u.ID)
@@ -49,18 +48,29 @@ func (detailContextMiddleware) Next(_ views.View, next http.Handler) http.Handle
 		db := r.Context().Value("$db").(*gorm.DB)
 		u, ok := r.Context().Value("$user").(p_users.User)
 		if !ok {
-			slog.Error("sqlagent: detail render missing $user")
+			logError("sqlagent: detail render missing $user", errors.New("no $user"))
 			next.ServeHTTP(w, r)
 			return
 		}
 		msgs, err := LoadMessagesForConversation(db, conv.ID)
 		if err != nil {
-			slog.Error("sqlagent: load messages", "error", err, "conversation_id", conv.ID)
+			logError("sqlagent: load messages", err, "conversation_id", conv.ID)
 			msgs = []ConversationMessage{}
+		}
+		if len(msgs) == 0 {
+			if err := ensureRegistrySchemaFirstMessage(db, conv.ID); err != nil {
+				logError("sqlagent: registry schema first message", err, "conversation_id", conv.ID)
+			} else {
+				msgs, err = LoadMessagesForConversation(db, conv.ID)
+				if err != nil {
+					logError("sqlagent: reload messages after schema bootstrap", err, "conversation_id", conv.ID)
+					msgs = []ConversationMessage{}
+				}
+			}
 		}
 		convs, err := gorm.G[Conversation](db).Where("created_by_id = ?", u.ID).Order("updated_at DESC").Limit(200).Find(r.Context())
 		if err != nil {
-			slog.Error("sqlagent: load conversation list", "error", err)
+			logError("sqlagent: load conversation list", err, "conversation_id", conv.ID)
 			convs = nil
 		}
 		ol := components.ObjectList[Conversation]{

@@ -1,7 +1,6 @@
 package p_nirmancampus_programs
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
@@ -61,9 +60,8 @@ var programTypeChoices = map[string]string{
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Program{}, &ProgramStructureUnit{}); err != nil {
-			log.Panicf("failed to migrate Program / ProgramStructureUnit: %v", err)
-		}
+		lago.RegisterModel[Program](d)
+		lago.RegisterModel[ProgramStructureUnit](d)
 		return d
 	})
 

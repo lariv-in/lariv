@@ -1,7 +1,6 @@
 package sqlagent
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -84,16 +83,12 @@ type ErrorMessage struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(
-			&Conversation{},
-			&ConversationMessage{},
-			&UserMessage{},
-			&AIMessage{},
-			&ToolMessage{},
-			&ErrorMessage{},
-		); err != nil {
-			log.Panicf("sqlagent: automigrate: %v", err)
-		}
+		lago.RegisterModel[Conversation](d)
+		lago.RegisterModel[ConversationMessage](d)
+		lago.RegisterModel[UserMessage](d)
+		lago.RegisterModel[AIMessage](d)
+		lago.RegisterModel[ToolMessage](d)
+		lago.RegisterModel[ErrorMessage](d)
 		return d
 	})
 }

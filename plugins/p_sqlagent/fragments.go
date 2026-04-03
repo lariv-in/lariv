@@ -11,6 +11,12 @@ import (
 
 // RenderMessageBubble returns a single chat bubble as HTML (no full document).
 func RenderMessageBubble(msg ConversationMessage) string {
+	if isRegistrySchemaToolMessage(&msg) {
+		return ""
+	}
+	if msg.Kind == MessageKindUser && msg.UserMessage != nil && isRegistrySchemaBootstrapUserContent(msg.UserMessage.Content) {
+		return ""
+	}
 	id := fmt.Sprintf("sqlagent-msg-%d", msg.ID)
 	switch msg.Kind {
 	case MessageKindUser:
@@ -107,6 +113,12 @@ func OOBAppendTranscript(innerHTML string) string {
 
 // OOBReplaceMessage replaces the bubble by id (for streaming updates).
 func OOBReplaceMessage(msg ConversationMessage) string {
+	if isRegistrySchemaToolMessage(&msg) {
+		return ""
+	}
+	if msg.Kind == MessageKindUser && msg.UserMessage != nil && isRegistrySchemaBootstrapUserContent(msg.UserMessage.Content) {
+		return ""
+	}
 	id := fmt.Sprintf("sqlagent-msg-%d", msg.ID)
 	switch msg.Kind {
 	case MessageKindUser:

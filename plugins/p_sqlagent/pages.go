@@ -140,6 +140,7 @@ func (e conversationSidebarList) Build(ctx context.Context) Node {
 				"conversation_id": getters.Any(getters.Static(cid)),
 			})(ctx)
 			if err != nil {
+				logError("sqlagent: conversation detail route", err, "conversation_id", cid)
 				href = "#"
 			}
 			activeClass := ""

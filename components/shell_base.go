@@ -63,15 +63,11 @@ func (e ShellBase) Build(ctx context.Context) Node {
 		extraHeadGroup = append(extraHeadGroup, Render(child, ctx))
 	}
 
-	title, titlePresent := ctx.Value("PWA_APP_NAME").(string)
-
 	return Doctype(HTML(
 		Lang("en"),
 		Head(
 			Meta(Charset("UTF-8")),
 			Meta(Name("viewport"), Content("width=device-width, initial-scale=1.0")),
-			If(titlePresent, Title(title)),
-			If(!titlePresent, Title("Lago")),
 			Script(Src("https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js")),
 			Script(Src("https://cdn.jsdelivr.net/npm/htmx-ext-ws@2.0.4"), Integrity("sha384-1RwI/nvUSrMRuNj7hX1+27J8XDdCoSLf0EjEyF69nacuWyiJYoQ/j39RT1mSnd2G"), CrossOrigin("anonymous")),
 			Script(Src("https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js")),

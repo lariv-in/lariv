@@ -1,7 +1,6 @@
 package p_nirmancampus_website
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -32,12 +31,8 @@ type StudentZoneItem struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&StudentZoneSection{}); err != nil {
-			log.Panicf("failed to migrate StudentZoneSection model: %v", err)
-		}
-		if err := d.AutoMigrate(&StudentZoneItem{}); err != nil {
-			log.Panicf("failed to migrate StudentZoneItem model: %v", err)
-		}
+		lago.RegisterModel[StudentZoneSection](d)
+		lago.RegisterModel[StudentZoneItem](d)
 		return d
 	})
 

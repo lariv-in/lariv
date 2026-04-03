@@ -1,7 +1,6 @@
 package p_contacts
 
 import (
-	"log"
 
 	"github.com/lariv-in/lago/lago"
 	"gorm.io/gorm"
@@ -20,9 +19,7 @@ type Contact struct {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		if err := d.AutoMigrate(&Contact{}); err != nil {
-			log.Panicf("failed to migrate Contact model: %v", err)
-		}
+		lago.RegisterModel[Contact](d)
 		return d
 	})
 

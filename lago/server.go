@@ -18,10 +18,12 @@ func StartServer(config LagoConfig) error {
 
 	RegistryMiddleware.Register("core.AttachRequestMiddleware", views.AttachRequestMiddleware{})
 	RegistryMiddleware.Register("core.DbMiddleware", DBMiddleware{DB: db})
-	RegistryMiddleware.Register("core.LoggingMiddlware", LoggingMiddleware{})
+	if config.Debug {
+		RegistryMiddleware.Register("core.LoggingMiddlware", LoggingMiddleware{})
+		RegistryMiddleware.Register("core.CacheDisableMiddlware", CacheDisableMiddleware{})
+	}
 	RegistryMiddleware.Register("core.HtmxBoostMiddleware", HtmxBoostMiddleware{})
 	RegistryMiddleware.Register("core.EnvironmentMiddleware", EnvironmentMiddleware{})
-	RegistryMiddleware.Register("core.CacheDisableMiddlware", CacheDisableMiddleware{})
 
 	BuildAllRegistries()
 
