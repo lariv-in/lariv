@@ -38,7 +38,8 @@ func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	err := components.Render(page, r.Context()).Render(w)
+	ctx := r.Context()
+	err := components.Render(page, ctx).Render(w)
 	if err != nil {
 		panic(err)
 	}

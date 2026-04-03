@@ -190,7 +190,16 @@ func (m MiddlewareList[T]) Next(view View, next http.Handler) http.Handler {
 		}
 
 		// Add the object list to the enriched context and render the page.
-		ctx = context.WithValue(ctx, m.Key, objectList)
+		key, err := m.Key(ctx)
+		if err != nil {
+			slog.Error("views: middleware detail: resolve context key", "error", err)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": fmt.Errorf("failed to resolve context key: %w", err),
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ctx = context.WithValue(ctx, key, objectList)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})

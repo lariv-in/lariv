@@ -56,12 +56,14 @@ func loginHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, fieldErrors, err := v.ParseForm(w, r)
 		if err != nil {
+			fmt.Println(1)
 			ctx := views.ContextWithErrorsAndValues(r.Context(), values, map[string]error{"_form": err})
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
 		if len(fieldErrors) != 0 {
 			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			fmt.Println(2)
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
@@ -73,6 +75,7 @@ func loginHandler(v *views.View) http.Handler {
 		if err != nil {
 			fieldErrors["Password"] = fmt.Errorf("invalid email or password")
 			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			fmt.Println(3)
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}

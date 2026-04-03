@@ -159,12 +159,27 @@ func (e FormComponent[T]) ParseForm(r *http.Request) (map[string]any, map[string
 		name := input.GetName()
 		if isMultipart {
 			if multipartInput, ok := input.(MultipartInputInterface); ok {
-				inputValues[name], inputErrors[name] = multipartInput.ParseMultipart(r.MultipartForm.File[name], r.Context())
+				fieldVal, fieldErr := multipartInput.ParseMultipart(r.MultipartForm.File[name], r.Context())
+				inputValues[name] = fieldVal
+				if fieldErr != nil {
+					inputErrors[name] = fieldErr
+				}
+
 			} else {
-				inputValues[name], inputErrors[name] = input.Parse(r.MultipartForm.Value[name], r.Context())
+				fieldVal, fieldErr := input.Parse(r.MultipartForm.Value[name], r.Context())
+				inputValues[name] = fieldVal
+				if fieldErr != nil {
+					inputErrors[name] = fieldErr
+				}
+
 			}
 		} else {
-			inputValues[name], inputErrors[name] = input.Parse(r.Form[name], r.Context())
+			fieldVal, fieldErr := input.Parse(r.Form[name], r.Context())
+			inputValues[name] = fieldVal
+			if fieldErr != nil {
+				inputErrors[name] = fieldErr
+			}
+
 		}
 	}
 

@@ -8,8 +8,8 @@ import (
 )
 
 func ContextWithMap[K comparable, V any](ctx context.Context, m map[K]V, key any) context.Context {
-	ctxM, ok := ctx.Value(key).(map[K]V)
-	if !ok {
+	ctxM, _ := ctx.Value(key).(map[K]V)
+	if ctxM == nil {
 		ctxM = map[K]V{}
 	}
 	maps.Copy(ctxM, m)

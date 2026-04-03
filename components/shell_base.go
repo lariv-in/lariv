@@ -25,17 +25,18 @@ func (e ShellBase) Body(ctx context.Context) Node {
 		group = append(group, Render(child, ctx))
 	}
 
-	if ctxErrors, ok := ctx.Value(getters.ContextKeyError).(map[string]error); ok {
-		if globalError, ok := ctxErrors["_global"]; ok {
-			group = append(group, Div(
-				Class("toast toast-bottom toast-center z-50"),
-				Div(
-					Class("alert alert-error"),
-					Text(globalError.Error()),
-				),
-			))
-		}
+	globalError, _ := getters.Key[error]("$error._global")(ctx)
+
+	if globalError != nil {
+		group = append(group, Div(
+			Class("toast toast-bottom toast-center z-50"),
+			Div(
+				Class("alert alert-error"),
+				Text(globalError.Error()),
+			),
+		))
 	}
+	
 	return Body(
 		Class("hide-right font-sans"),
 		Attr("x-data", `{ theme: localStorage.getItem('theme') || 'light' }`),

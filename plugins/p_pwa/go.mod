@@ -5,6 +5,7 @@ go 1.26.1
 require (
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
+	github.com/lariv-in/lago/registry v0.5.9
 	github.com/lariv-in/lago/views v0.5.10
 	maragu.dev/gomponents v1.2.0
 )
@@ -42,7 +43,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lariv-in/lago/getters v0.5.9 // indirect
-	github.com/lariv-in/lago/registry v0.5.9 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
 	github.com/mattn/go-sqlite3 v1.14.37 // indirect
