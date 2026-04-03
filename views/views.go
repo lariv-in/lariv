@@ -15,27 +15,21 @@ type Middleware interface {
 }
 
 type View struct {
-	PageName     string
-	PageLookup   func(name string) (components.PageInterface, bool)
-	Middlewares  []registry.Pair[string, Middleware]
-	isBuilt      bool
-	handler      http.Handler
+	PageName    string
+	PageLookup  func(name string) (components.PageInterface, bool)
+	Middlewares []registry.Pair[string, Middleware]
 }
 
-func (v *View) build() {
+func (v *View) GetHandler() http.Handler {
 	var handler http.Handler = http.HandlerFunc(v.RenderPage)
 	for i := len(v.Middlewares) - 1; i >= 0; i-- {
 		handler = v.Middlewares[i].Value.Next(*v, handler)
 	}
-	v.handler = handler
-	v.isBuilt = true
+	return handler
 }
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !v.isBuilt {
-		v.build()
-	}
-	v.handler.ServeHTTP(w, r)
+	v.GetHandler().ServeHTTP(w, r)
 }
 
 func (v *View) GetPage() (components.PageInterface, bool) {
@@ -97,14 +91,10 @@ func (v *View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any
 	if fieldErrors == nil {
 		fieldErrors = make(map[string]error)
 	}
-	for _, formPatcher := range v.FormPatchers {
-		values, fieldErrors = formPatcher.Value.Patch(v, r, values, fieldErrors)
-	}
 	return values, fieldErrors, nil
 }
 
 func (v *View) WithMiddleware(name string, middleware Middleware) *View {
-	v.isBuilt = true
 	// Append middleware; keys are labels only and are not required to be unique.
 	v.Middlewares = append(v.Middlewares, registry.Pair[string, Middleware]{Key: name, Value: middleware})
 	return v
@@ -114,7 +104,6 @@ func (v *View) WithMiddleware(name string, middleware Middleware) *View {
 // before the first middleware whose Key matches beforeName. If no such
 // middleware exists, it appends it to the end.
 func (v *View) InsertMiddlewareBefore(beforeName, name string, middleware Middleware) *View {
-	v.isBuilt = true
 	p := registry.Pair[string, Middleware]{Key: name, Value: middleware}
 	for i, mw := range v.Middlewares {
 		if mw.Key == beforeName {
@@ -130,7 +119,6 @@ func (v *View) InsertMiddlewareBefore(beforeName, name string, middleware Middle
 // after the first middleware whose Key matches afterName. If no such
 // middleware exists, it appends it to the end.
 func (v *View) InsertMiddlewareAfter(afterName, name string, middleware Middleware) *View {
-	v.isBuilt = true
 	p := registry.Pair[string, Middleware]{Key: name, Value: middleware}
 	for i, mw := range v.Middlewares {
 		if mw.Key == afterName {
@@ -149,7 +137,6 @@ func (v *View) InsertMiddlewareAfter(afterName, name string, middleware Middlewa
 }
 
 func (v *View) WithMiddlewares(middlewares ...registry.Pair[string, Middleware]) *View {
-	v.isBuilt = true
 	for _, middleware := range middlewares {
 		v.WithMiddleware(middleware.Key, middleware.Value)
 	}
@@ -157,7 +144,6 @@ func (v *View) WithMiddlewares(middlewares ...registry.Pair[string, Middleware])
 }
 
 func (v *View) PatchMiddlewares(middlewares ...registry.Pair[string, func(Middleware) Middleware]) *View {
-	v.isBuilt = true
 	for _, middleware := range middlewares {
 		for i, mw := range v.Middlewares {
 			if mw.Key == middleware.Key {
@@ -169,7 +155,6 @@ func (v *View) PatchMiddlewares(middlewares ...registry.Pair[string, func(Middle
 }
 
 func (v *View) PatchMiddleware(name string, patcher func(Middleware) Middleware) *View {
-	v.isBuilt = true
 	for i, mw := range v.Middlewares {
 		if mw.Key == name {
 			v.Middlewares[i].Value = patcher(mw.Value)

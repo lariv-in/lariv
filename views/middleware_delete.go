@@ -25,27 +25,42 @@ func (m MiddlewareDelete[T]) Next(view View, next http.Handler) http.Handler {
 		ctx := r.Context()
 		key, err := m.Key(ctx)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": fmt.Errorf("failed to resolve context key: %w", err),
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		record, ok := ctx.Value(key).(T)
 		if !ok {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": fmt.Errorf("record not found in context"),
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		id := uint(reflect.ValueOf(record).FieldByName("ID").Uint())
-		db := r.Context().Value("$db").(*gorm.DB)
+		db := ctx.Value("$db").(*gorm.DB)
 		query := gorm.G[T](db).Where("id = ?", id)
 		query = m.QueryPatchers.Apply(view, r, query)
-		rowsAffected, err := query.Delete(ctx)
-		fmt.Printf("Rows Affected: %d", rowsAffected)
+		_, err = query.Delete(ctx)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": fmt.Errorf("failed to delete record: %w", err),
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		if m.SuccessURL == nil {
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		successUrl, err := m.SuccessURL(ctx)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": fmt.Errorf("failed to resolve redirect URL: %w", err),
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		http.Redirect(w, r, successUrl, http.StatusSeeOther)

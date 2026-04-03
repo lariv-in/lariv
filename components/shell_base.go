@@ -2,7 +2,9 @@ package components
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/registry"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -22,6 +24,12 @@ func (e ShellBase) Body(ctx context.Context) Node {
 	group := Group{}
 	for _, child := range e.Children {
 		group = append(group, Render(child, ctx))
+	}
+
+	ctxErrors := ctx.Value(getters.ContextKeyError).(map[string]error)
+	globalError, ok := ctxErrors["_global"]
+	if ok {
+		group = append(group, Text(fmt.Sprintf("%e", globalError)))
 	}
 	return Body(
 		Class("hide-right font-sans"),

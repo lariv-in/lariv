@@ -9,18 +9,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type MiddlewareJsonImport[T any] struct {
-	FileField  string
+type MiddlewareSingleton[T any] struct {
 	SuccessURL getters.Getter[string]
 }
 
-func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler {
+func (m MiddlewareSingleton[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		db := ctx.Value("$db").(*gorm.DB)
+
 		if r.Method != http.MethodPost {
-			next.ServeHTTP(w, r)
+			instance := new(T)
+			db.FirstOrCreate(instance)
+			ctx = context.WithValue(ctx, getters.ContextKeyIn, getters.MapFromStruct(instance))
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		ctx := r.Context()
+
 		values, fieldErrors, err := view.ParseForm(w, r)
 		if err != nil {
 			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
@@ -35,35 +40,35 @@ func (m MiddlewareJsonImport[T]) Next(view View, next http.Handler) http.Handler
 			return
 		}
 
-		fileHeader, err := uploadedJSONFile(values, m.FileField)
-		if err != nil {
-			fieldErrors["_form"] = err
-			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
-			next.ServeHTTP(w, r.WithContext(ctx))
-			return
-		}
+		regularValues, associationValues := splitAssociationValues(values)
 
-		records, err := decodeJSONArrayFile[T](fileHeader)
-		if err != nil {
-			fieldErrors["_form"] = fmt.Errorf("invalid json import: %w", err)
-			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
-			next.ServeHTTP(w, r.WithContext(ctx))
-			return
-		}
-
-		db := ctx.Value("$db").(*gorm.DB)
-		if len(records) > 0 {
-			if err := db.Transaction(func(tx *gorm.DB) error {
-				return gorm.G[T](tx).CreateInBatches(r.Context(), &records, 100)
-			}); err != nil {
-				fieldErrors["_form"] = fmt.Errorf("%v", err)
-				ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
+		instance := new(T)
+		err = db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.FirstOrCreate(instance).Error; err != nil {
+				return err
 			}
+			if len(regularValues) > 0 {
+				id, err := modelPrimaryKeyValue(instance)
+				if err != nil {
+					return err
+				}
+				if err := tx.Model(new(T)).Where("id = ?", id).Updates(regularValues).Error; err != nil {
+					return err
+				}
+			}
+			return applyAssociationReplacements(tx, instance, associationValues)
+		})
+		if err != nil {
+			fieldErrors["_form"] = fmt.Errorf("%v", err)
+			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
 		}
 
-		ctx = context.WithValue(ctx, "$count", len(records))
+		if m.SuccessURL == nil {
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return

@@ -57,7 +57,7 @@ func (m MiddlewareCreate[T]) Next(view View, next http.Handler) http.Handler {
 
 		id := uint(reflect.ValueOf(*record).FieldByName("ID").Uint())
 		ctx = context.WithValue(ctx, "$id", id)
-		if m.SuccessURL != nil {
+		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}

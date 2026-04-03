@@ -1,19 +1,16 @@
 package views
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"path/filepath"
 	"reflect"
 	"strings"
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -202,117 +199,6 @@ func decodeJSONArrayFile[T any](fileHeader *multipart.FileHeader) ([]T, error) {
 		return []T{}, nil
 	}
 	return records, nil
-}
-
-// JsonImport parses a multipart form, decodes one uploaded .json file into []T,
-// creates all rows in a single transaction, and redirects on success.
-func JsonImport[T any](fileField string, successURL getters.Getter[string]) func(*View) *View {
-	return func(v *View) *View {
-		return v.WithMethod(http.MethodPost, func(innerView *View) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				values, fieldErrors, err := innerView.ParseForm(w, r)
-				if err != nil {
-					renderWithErrorsWithMiddlewares(innerView, w, r, map[string]error{"_form": err}, values)
-					return
-				}
-
-				if innerView.HasErrors(fieldErrors) {
-					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
-					return
-				}
-
-				fileHeader, err := uploadedJSONFile(values, fileField)
-				if err != nil {
-					fieldErrors["_form"] = err
-					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
-					return
-				}
-
-				records, err := decodeJSONArrayFile[T](fileHeader)
-				if err != nil {
-					fieldErrors["_form"] = fmt.Errorf("invalid json import: %w", err)
-					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
-					return
-				}
-
-				db := r.Context().Value("$db").(*gorm.DB)
-				if len(records) > 0 {
-					if err := db.Transaction(func(tx *gorm.DB) error {
-						return gorm.G[T](tx).CreateInBatches(r.Context(), &records, 100)
-					}); err != nil {
-						fieldErrors["_form"] = fmt.Errorf("%v", err)
-						renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
-						return
-					}
-				}
-
-				ctx := context.WithValue(r.Context(), "$count", len(records))
-				redirectURL, _ := getters.IfOr(successURL, ctx, "")
-				http.Redirect(w, r, redirectURL, http.StatusSeeOther)
-			})
-		})
-	}
-}
-
-// --- Singleton Handler ---
-
-// SingletonView loads a singleton record of type T (via FirstOrCreate) into $in context for GET,
-// and parses the form + updates the record on POST, then redirects to the URL resolved by successUrl.
-func SingletonView[T any](successURL getters.Getter[string]) func(*View) *View {
-	return func(v *View) *View {
-		v.WithMethod(http.MethodGet, func(innerView *View) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				db := r.Context().Value("$db").(*gorm.DB)
-				instance := new(T)
-				db.FirstOrCreate(instance)
-				ctx := context.WithValue(r.Context(), getters.ContextKeyIn, getters.MapFromStruct(instance))
-				r = r.WithContext(ctx)
-				innerView.ServeRenderPage(w, r)
-			})
-		})
-
-		return v.WithMethod(http.MethodPost, func(innerView *View) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				values, fieldErrors, err := innerView.ParseForm(w, r)
-				if err != nil {
-					return
-				}
-
-				if innerView.HasErrors(fieldErrors) {
-					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
-					return
-				}
-
-				db := r.Context().Value("$db").(*gorm.DB)
-				regularValues, associationValues := splitAssociationValues(values)
-
-				instance := new(T)
-				err = db.Transaction(func(tx *gorm.DB) error {
-					if err := tx.FirstOrCreate(instance).Error; err != nil {
-						return err
-					}
-					if len(regularValues) > 0 {
-						id, err := modelPrimaryKeyValue(instance)
-						if err != nil {
-							return err
-						}
-						if err := tx.Model(new(T)).Where("id = ?", id).Updates(regularValues).Error; err != nil {
-							return err
-						}
-					}
-					return applyAssociationReplacements(tx, instance, associationValues)
-				})
-				if err != nil {
-					fieldErrors["_form"] = fmt.Errorf("%v", err)
-					renderWithErrorsWithMiddlewares(innerView, w, r, fieldErrors, values)
-					return
-				}
-
-				redirectUrl, _ := getters.IfOr(successURL, r.Context(), "")
-				http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
-			})
-		})
-	}
 }
 
 // sortQueryValueToOrder maps one URL sort value (e.g. "Name ASC", "User.Name DESC")

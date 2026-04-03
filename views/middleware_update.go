@@ -41,12 +41,18 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 		regularValues, associationValues := splitAssociationValues(values)
 		key, err := m.Key(ctx)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
+				"_global": fmt.Errorf("failed to resolve context key: %w", err),
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		record, ok := ctx.Value(key).(T)
 		if !ok {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
+				"_global": fmt.Errorf("record not found in context"),
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		id := uint(reflect.ValueOf(record).FieldByName("ID").Uint())
@@ -57,11 +63,10 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 				}
 				updateQuery := gorm.G[T](tx).Where("id = ?", id)
 				updateQuery = m.QueryPatchers.Apply(view, r, updateQuery)
-				rowsAffected, err := updateQuery.Updates(ctx, record)
+				_, err := updateQuery.Updates(ctx, record)
 				if err != nil {
 					return err
 				}
-				fmt.Printf("Updated %d rows\n", rowsAffected)
 			}
 
 			return applyAssociationReplacements(tx, record, associationValues)
@@ -73,13 +78,13 @@ func (m MiddlewareUpdate[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 
-		if m.SuccessURL != nil {
+		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 		successUrl, err := m.SuccessURL(ctx)
 		if err != nil {
-			ctx = ContextWithErrorsAndValues(ctx,values, map[string]error{
+			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
 				"_form": err,
 			})
 			next.ServeHTTP(w, r.WithContext(ctx))
