@@ -8,7 +8,7 @@ import (
 
 func init() {
 	lago.RegistryView.Register("dashboard.AppsView",
-		lago.GetPageView("dashboard.AppsPage").WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}))
+		lago.GetPageView("dashboard.AppsPage").WithLayer("users.auth", p_users.AuthenticationLayer{}))
 	lago.RegistryView.Patch("users.LoginSuccessView", func(_ *views.View) *views.View {
 		return lago.RedirectView(lago.RoutePath("dashboard.AppsPage", nil))
 	})

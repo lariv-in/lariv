@@ -48,19 +48,19 @@ func (proposalQueryPatcher) Patch(v views.View, r *http.Request, query gorm.Chai
 	return query.Where("created_by_id = ?", user.ID)
 }
 
-// proposalDetailCtxMiddleware enriches the detail view context for a proposal.
-// It expects MiddlewareDetail to have already loaded the Proposal under "proposal"
+// proposalDetailCtxLayer enriches the detail view context for a proposal.
+// It expects LayerDetail to have already loaded the Proposal under "proposal"
 // and sets GenerationPending from GenerationID.
-type proposalDetailCtxMiddleware struct{}
+type proposalDetailCtxLayer struct{}
 
-func (proposalDetailCtxMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (proposalDetailCtxLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		raw := ctx.Value("proposal")
 		proposal, ok := raw.(Proposal)
 		if !ok {
-			slog.Error("proposalDetailCtxMiddleware: missing or invalid proposal in context",
+			slog.Error("proposalDetailCtxLayer: missing or invalid proposal in context",
 				"proposalType", fmt.Sprintf("%T", raw))
 			next.ServeHTTP(w, r)
 			return
@@ -534,8 +534,8 @@ func exportPdfHandler(v *views.View) http.Handler {
 func init() {
 	lago.RegistryView.Register("proposals.ListView",
 		lago.GetPageView("proposals.ProposalTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.list", views.MiddlewareList[Proposal]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.list", views.LayerList[Proposal]{
 				Key: getters.Static("proposals"),
 				QueryPatchers: views.QueryPatchers[Proposal]{
 					{Key: "proposals.query", Value: proposalQueryPatcher{}},
@@ -544,17 +544,17 @@ func init() {
 
 	lago.RegistryView.Register("proposals.DetailView",
 		lago.GetPageView("proposals.ProposalDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.detail", views.MiddlewareDetail[Proposal]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.detail", views.LayerDetail[Proposal]{
 				Key:          getters.Static("proposal"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("proposals.detail_ctx", proposalDetailCtxMiddleware{}))
+			WithLayer("proposals.detail_ctx", proposalDetailCtxLayer{}))
 
 	lago.RegistryView.Register("proposals.CreateView",
 		lago.GetPageView("proposals.ProposalCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.create", views.MiddlewareCreate[Proposal]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.create", views.LayerCreate[Proposal]{
 				SuccessURL: lago.RoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -565,12 +565,12 @@ func init() {
 
 	lago.RegistryView.Register("proposals.UpdateView",
 		lago.GetPageView("proposals.ProposalUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.detail", views.MiddlewareDetail[Proposal]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.detail", views.LayerDetail[Proposal]{
 				Key:          getters.Static("proposal"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("proposals.update", views.MiddlewareUpdate[Proposal]{
+			WithLayer("proposals.update", views.LayerUpdate[Proposal]{
 				Key: getters.Static("proposal"),
 				SuccessURL: lago.RoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("proposal.ID")),
@@ -582,60 +582,60 @@ func init() {
 
 	lago.RegistryView.Register("proposals.DeleteView",
 		lago.GetPageView("proposals.ProposalDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.detail", views.MiddlewareDetail[Proposal]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.detail", views.LayerDetail[Proposal]{
 				Key:          getters.Static("proposal"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("proposals.delete", views.MiddlewareDelete[Proposal]{
+			WithLayer("proposals.delete", views.LayerDelete[Proposal]{
 				Key:        getters.Static("proposal"),
 				SuccessURL: lago.RoutePath("proposals.ListRoute", nil),
 			}))
 
 	lago.RegistryView.Register("proposals.GenerateView",
 		lago.GetPageView("proposals.ProposalDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.generate", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.generate", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: generateHandler,
 			}))
 
 	lago.RegistryView.Register("proposals.CancelView",
 		lago.GetPageView("proposals.ProposalDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.cancel", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.cancel", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: cancelHandler,
 			}))
 
 	lago.RegistryView.Register("proposals.AiEditFormView",
 		lago.GetPageView("proposals.AiEditModal").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.ai_edit_form", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.ai_edit_form", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: aiEditFormHandler,
 			}))
 
 	lago.RegistryView.Register("proposals.AiEditView",
 		lago.GetPageView("proposals.AiEditModal").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.ai_edit", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.ai_edit", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: aiEditHandler,
 			}))
 
 	lago.RegistryView.Register("proposals.ExportPdfView",
 		lago.GetPageView("proposals.ProposalDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.export_pdf", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.export_pdf", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: exportPdfHandler,
 			}))
 
 	lago.RegistryView.Register("proposals.ExportDocxView",
 		lago.GetPageView("proposals.ProposalDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("proposals.export_docx", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("proposals.export_docx", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: exportDocxHandler,
 			}))

@@ -22,7 +22,7 @@ func (assignmentSubmissionScopeByRole) Patch(_ views.View, r *http.Request, quer
 
 	rawUser := ctx.Value("$user")
 	if rawUser == nil {
-		slog.Error("AssignmentSubmissionScopeByRole: missing $user in context – auth middleware not applied?")
+		slog.Error("AssignmentSubmissionScopeByRole: missing $user in context – auth layer not applied?")
 		panic("AssignmentSubmissionScopeByRole: $user is nil in context")
 	}
 	user, ok := rawUser.(p_users.User)
@@ -33,7 +33,7 @@ func (assignmentSubmissionScopeByRole) Patch(_ views.View, r *http.Request, quer
 
 	rawRole := ctx.Value("$role")
 	if rawRole == nil {
-		slog.Error("AssignmentSubmissionScopeByRole: missing $role in context – auth middleware not applied?")
+		slog.Error("AssignmentSubmissionScopeByRole: missing $role in context – auth layer not applied?")
 		panic("AssignmentSubmissionScopeByRole: $role is nil in context")
 	}
 	roleName, ok := rawRole.(string)

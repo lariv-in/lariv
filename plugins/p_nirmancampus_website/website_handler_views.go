@@ -12,7 +12,7 @@ import (
 
 const websiteHandlerPlaceholderPageKey = "nirmancampus_website.handler_placeholder"
 
-// websiteHandlerPlaceholder is a minimal PageInterface for views that only use MethodMiddleware
+// websiteHandlerPlaceholder is a minimal PageInterface for views that only use MethodLayer
 // and never render a real page.
 type websiteHandlerPlaceholder struct {
 	components.Page
@@ -39,8 +39,8 @@ func websiteGETOnlyView(handler func(*views.View) http.Handler) *views.View {
 	return &views.View{
 		PageName:   websiteHandlerPlaceholderPageKey,
 		PageLookup: websiteHandlerPageLookup,
-		Middlewares: []registry.Pair[string, views.Middleware]{
-			{Key: "nirmancampus_website.get", Value: views.MethodMiddleware{
+		Layers: []registry.Pair[string, views.Layer]{
+			{Key: "nirmancampus_website.get", Value: views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: handler,
 			}},

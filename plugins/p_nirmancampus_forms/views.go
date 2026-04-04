@@ -12,8 +12,8 @@ func init() {
 		return "/"
 	}
 
-	// Superusers are allowed by RoleAuthorizationMiddleware; everyone else must have role "admin".
-	adminOnly := p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
+	// Superusers are allowed by RoleAuthorizationLayer; everyone else must have role "admin".
+	adminOnly := p_users.RoleAuthorizationLayer{Roles: []string{"admin"}}
 	for _, name := range []string{
 		"forms.ListView",
 		"forms.DetailView",
@@ -30,7 +30,7 @@ func init() {
 	} {
 		viewName := name
 		lago.RegistryView.Patch(viewName, func(v *views.View) *views.View {
-			return v.InsertMiddlewareAfter("users.auth", "p_nirmancampus_forms.admin", adminOnly)
+			return v.InsertLayerAfter("users.auth", "p_nirmancampus_forms.admin", adminOnly)
 		})
 	}
 }

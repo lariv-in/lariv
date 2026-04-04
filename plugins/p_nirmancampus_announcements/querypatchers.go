@@ -35,7 +35,7 @@ func (announcementScopeByRole) Patch(_ views.View, r *http.Request, query gorm.C
 
 	rawUser := ctx.Value("$user")
 	if rawUser == nil {
-		slog.Error("AnnouncementScopeByRole: missing $user in context – auth middleware not applied?")
+		slog.Error("AnnouncementScopeByRole: missing $user in context – auth layer not applied?")
 		panic("AnnouncementScopeByRole: $user is nil in context")
 	}
 	if _, ok := rawUser.(p_users.User); !ok {
@@ -47,7 +47,7 @@ func (announcementScopeByRole) Patch(_ views.View, r *http.Request, query gorm.C
 
 	rawRole := ctx.Value("$role")
 	if rawRole == nil {
-		slog.Error("AnnouncementScopeByRole: missing $role in context – auth middleware not applied?")
+		slog.Error("AnnouncementScopeByRole: missing $role in context – auth layer not applied?")
 		panic("AnnouncementScopeByRole: $role is nil in context")
 	}
 	roleName, ok := rawRole.(string)

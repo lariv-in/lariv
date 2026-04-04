@@ -48,8 +48,8 @@ func pwaAssetView(method string, handler func(*views.View) http.Handler) *views.
 	return &views.View{
 		PageName:   pwaAssetPageName,
 		PageLookup: pwaAssetPageLookup,
-		Middlewares: []registry.Pair[string, views.Middleware]{
-			{Key: "pwa.asset", Value: views.MethodMiddleware{Method: method, Handler: handler}},
+		Layers: []registry.Pair[string, views.Layer]{
+			{Key: "pwa.asset", Value: views.MethodLayer{Method: method, Handler: handler}},
 		},
 	}
 }

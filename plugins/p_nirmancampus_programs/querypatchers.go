@@ -117,7 +117,7 @@ func (programScopeByRole) Patch(_ views.View, r *http.Request, q gorm.ChainInter
 
 	rawUser := ctx.Value("$user")
 	if rawUser == nil {
-		slog.Error("ProgramScopeByRole: missing $user in context – auth middleware not applied?")
+		slog.Error("ProgramScopeByRole: missing $user in context – auth layer not applied?")
 		panic("ProgramScopeByRole: $user is nil in context")
 	}
 	user, ok := rawUser.(p_users.User)
@@ -130,7 +130,7 @@ func (programScopeByRole) Patch(_ views.View, r *http.Request, q gorm.ChainInter
 
 	rawRole := ctx.Value("$role")
 	if rawRole == nil {
-		slog.Error("ProgramScopeByRole: missing $role in context – auth middleware not applied?")
+		slog.Error("ProgramScopeByRole: missing $role in context – auth layer not applied?")
 		panic("ProgramScopeByRole: $role is nil in context")
 	}
 	roleName, ok := rawRole.(string)

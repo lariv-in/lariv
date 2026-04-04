@@ -24,9 +24,9 @@ func init() {
 // current academic record (from the "academicrecord" context key set by
 // DetailView) and stores them as an ObjectList under
 // academicRecordDetailSubmissionsContextKey.
-type academicRecordSubmissionsContextMiddleware struct{}
+type academicRecordSubmissionsContextLayer struct{}
 
-func (academicRecordSubmissionsContextMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (academicRecordSubmissionsContextLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		record, ok := r.Context().Value("academicrecord").(p_nirmancampus_academicrecords.AcademicRecord)
 		if !ok || record.ID == 0 {
@@ -116,7 +116,7 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 
 func registerAcademicRecordDetailPatch() {
 	lago.RegistryView.Patch("academicrecords.DetailView", func(v *views.View) *views.View {
-		return v.InsertMiddlewareAfter("academicrecords.detail", "assignmentsubmissions.academic_record_detail", academicRecordSubmissionsContextMiddleware{})
+		return v.InsertLayerAfter("academicrecords.detail", "assignmentsubmissions.academic_record_detail", academicRecordSubmissionsContextLayer{})
 	})
 
 	lago.RegistryPage.Patch("academicrecords.AcademicRecordDetail", func(page components.PageInterface) components.PageInterface {

@@ -1,7 +1,7 @@
 # Caveats When Working On This Codebase
 
 - NEVER write go.mod or go.sum manually, use go mod init, go mod tidy -e, go work use for project management, If you can't run the required commands to manage go.mod and go.sum, then ask the user to run the commands.
-- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patchers.go`, middleware types, and helpers in `crud.go`), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
+- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patchers.go`, layer types, and helpers in `crud.go`), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
 - In nearly all cases, take the address of components before inserting them into something that requires `PageInterface`. Otherwise, the value will not implement `MutableParentInterface` and its children will not be patchable.
 
 - When you do add a component, it should implement at least `PageInterface` from `components/page.go`.
@@ -39,6 +39,8 @@
    - `filesystem.SelectRoute` and `filesystem.MoveSelectRoute` are directory pickers; directories are selectable.
    - `filesystem.MultiSelectRoute` is a file picker for asset-style many-to-many fields; files are selectable, but clicking a directory should browse into it instead of selecting it.
 
+- time.Time should always be handled with consideration to the timezone, timezone is injected into the context in $tz key (*time.Location).
+
 # Environment selector
 
 - `components.Environment[T]` (`components/environment.go`) renders a `<select>` that reads and writes the `environment` JSON cookie; the parsed map is available as `$environment` (`map[string]string`) on the request context.
@@ -61,7 +63,7 @@ Existing registries:
    - `lago/registry_commands.go` for adding custom commands
    - `lago/registry_config.go` for adding config fields to `totschool.toml`
    - `lago/registry_generators.go` for adding generators that run when the `generate` command is run
-   - `lago/registry_middlewares.go` for adding global middlewares, generally not needed
+   - `lago/registry_layers.go` for adding global layers, generally not needed
    - `lago/registry_pages.go` for adding pages; always insert a pointer to a `PageInterface` implementer
    - `lago/registry_plugins.go` for adding plugin information, primarily used by `p_dashboard/components/apps_grid.go`
    - `lago/registry_routes.go` for adding HTTP routes
@@ -81,30 +83,30 @@ When a plugin mounts HTTP routes under another plugin's `AppUrl` (e.g. Students 
 A view is the primary HTTP handler for a route. A `*views.View` (`views/views.go`) is only:
 
 - which `PageInterface` to render (`PageName` + `PageLookup`)
-- an **ordered** list of per-route middlewares (`Middlewares`), each implementing `views.Middleware` (`Next(View, http.Handler) http.Handler`)
+- an **ordered** list of per-route layers (`Layers`), each implementing `views.Layer` (`Next(View, http.Handler) http.Handler`)
 
-Global HTTP concerns (DB, `$request`, etc.) live in `views.GlobalMiddleware` and app registration, not inside the view struct. Build routes from `lago.GetPageView("plugin.PageName")`, then chain `WithMiddleware("stable.key", middleware)`.
+Global HTTP concerns (DB, `$request`, etc.) live in `views.GlobalLayer` and app registration, not inside the view struct. Build routes from `lago.GetPageView("plugin.PageName")`, then chain `WithLayer("stable.key", layer)`.
 
-**Do not reintroduce removed APIs:** there are no `ListView` / `DetailView` / `CreateView` / `UpdateView` / `DeleteView` / `SingletonView` / `JsonImport` factories, no `WithMethod`, `WithQueryPatcher`, `WithFormPatcher`, `WithRenderMiddleware`, `Handlers`, or `lago.NewRedirectView`. Use ordered middlewares instead; for redirects use `lago.RedirectView` / `lago.Redirect`. See `ViewsApiMigrationGuide.md` for concrete replacements.
+**Do not reintroduce removed APIs:** there are no `ListView` / `DetailView` / `CreateView` / `UpdateView` / `DeleteView` / `SingletonView` / `JsonImport` factories, no `WithMethod`, `WithQueryPatcher`, `WithFormPatcher`, `WithRenderLayer`, `Handlers`, or `lago.NewRedirectView`. Use ordered layers instead; for redirects use `lago.RedirectView` / `lago.Redirect`. See `ViewsApiMigrationGuide.md` for concrete replacements.
 
-**Typed CRUD middleware** (each owns one concern; order matters):
+**Typed CRUD layer** (each owns one concern; order matters):
 
-- `views.MiddlewareList[T]` — paginated list query from URL params; puts `components.ObjectList[T]` in context under `Key`; merges filter/query state into `$get` (and coerces types from the page’s first form when present). On failure it sets `_global` in `getters.ContextKeyError` and calls `next` (no direct error HTTP response).
-- `views.MiddlewareDetail[T]` — load one row by path param PK; place **before** update/delete middleware that needs the same record. Same error pattern as list on failure.
-- `views.MiddlewareCreate[T]` — POST create; sets `$id` on success.
-- `views.MiddlewareUpdate[T]` — POST update; expects the record already in context (usually after `MiddlewareDetail`).
-- `views.MiddlewareDelete[T]` — POST delete (not HTTP `DELETE`; matches confirmation forms).
-- `views.MiddlewareSingleton[T]` — singleton settings load/create on GET/POST.
-- `views.MiddlewareJsonImport[T]` — JSON file import.
-- `views.MethodMiddleware` — custom handler for a specific HTTP method.
+- `views.LayerList[T]` — paginated list query from URL params; puts `components.ObjectList[T]` in context under `Key`; merges filter/query state into `$get` (and coerces types from the page’s first form when present). On failure it sets `_global` in `getters.ContextKeyError` and calls `next` (no direct error HTTP response).
+- `views.LayerDetail[T]` — load one row by path param PK; place **before** update/delete layer that needs the same record. Same error pattern as list on failure.
+- `views.LayerCreate[T]` — POST create; sets `$id` on success.
+- `views.LayerUpdate[T]` — POST update; expects the record already in context (usually after `LayerDetail`).
+- `views.LayerDelete[T]` — POST delete (not HTTP `DELETE`; matches confirmation forms).
+- `views.LayerSingleton[T]` — singleton settings load/create on GET/POST.
+- `views.LayerJsonImport[T]` — JSON file import.
+- `views.MethodLayer` — custom handler for a specific HTTP method.
 
-**Query patching:** attach `views.QueryPatchers[T]` (named `registry.Pair`s) on `MiddlewareList`, `MiddlewareDetail`, or `MiddlewareUpdate`. Prefer the built-in patchers in `views/query_patchers.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T, TJoin]` (reads filter values from `$get`). Do not duplicate ad-hoc query logic when these suffice.
+**Query patching:** attach `views.QueryPatchers[T]` (named `registry.Pair`s) on `LayerList`, `LayerDetail`, or `LayerUpdate`. Prefer the built-in patchers in `views/query_patchers.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T, TJoin]` (reads filter values from `$get`). Do not duplicate ad-hoc query logic when these suffice.
 
-**Form patching:** attach `views.FormPatchers` on `MiddlewareCreate` and `MiddlewareUpdate` (`views/form_patchers.go`). `InputManyToMany.Parse` still yields `AssociationIDs`; create/update/singleton middleware persists many-to-many via GORM after the row save—do not model those inputs as plain scalar columns.
+**Form patching:** attach `views.FormPatchers` on `LayerCreate` and `LayerUpdate` (`views/form_patchers.go`). `InputManyToMany.Parse` still yields `AssociationIDs`; create/update/singleton layer persists many-to-many via GORM after the row save—do not model those inputs as plain scalar columns.
 
-**Patching views across plugins:** give every middleware a stable string key (e.g. `"students.detail"`). Other packages should use `InsertMiddlewareBefore`, `InsertMiddlewareAfter`, or `PatchMiddleware` against those keys—not fragile positional assumptions.
+**Patching views across plugins:** give every layer a stable string key (e.g. `"students.detail"`). Other packages should use `InsertLayerBefore`, `InsertLayerAfter`, or `PatchLayer` against those keys—not fragile positional assumptions.
 
-**Extra context on another plugin’s page** (e.g. related `ObjectList` on a base detail view): do **not** hide DB access inside a component getter. Implement a small type that satisfies `views.Middleware`, load data in `Next`, `context.WithValue` the result, and register or patch it onto the base view **after** the middleware that provides the parent record (e.g. `InsertMiddlewareAfter("base.detail", "myplugin.extra", myMiddleware{})`). Point `DataTable` (or similar) at that context key with `getters.Key[...]`.
+**Extra context on another plugin’s page** (e.g. related `ObjectList` on a base detail view): do **not** hide DB access inside a component getter. Implement a small type that satisfies `views.Layer`, load data in `Next`, `context.WithValue` the result, and register or patch it onto the base view **after** the layer that provides the parent record (e.g. `InsertLayerAfter("base.detail", "myplugin.extra", myLayer{})`). Point `DataTable` (or similar) at that context key with `getters.Key[...]`.
 
 **Custom forms and errors:** use `view.ParseForm` and `views.ContextWithErrorsAndValues` to re-render with field/global errors; do not recreate removed helpers like `HasErrors` / `RenderWithErrors`.
 

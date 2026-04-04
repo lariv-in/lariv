@@ -7,11 +7,11 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-// assignmentSubmissionCreateQueryDefaultsMiddleware merges query params into $in on GET
+// assignmentSubmissionCreateQueryDefaultsLayer merges query params into $in on GET
 // (e.g. ?AcademicRecordID= from the academic record detail table pre-fills the create modal).
-type assignmentSubmissionCreateQueryDefaultsMiddleware struct{}
+type assignmentSubmissionCreateQueryDefaultsLayer struct{}
 
-func (assignmentSubmissionCreateQueryDefaultsMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (assignmentSubmissionCreateQueryDefaultsLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			next.ServeHTTP(w, r)

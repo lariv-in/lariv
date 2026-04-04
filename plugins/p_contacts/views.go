@@ -11,8 +11,8 @@ import (
 func init() {
 	lago.RegistryView.Register("contacts.ListView",
 		lago.GetPageView("contacts.ContactTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("contacts.list", views.MiddlewareList[Contact]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("contacts.list", views.LayerList[Contact]{
 				Key: getters.Static("contacts"),
 				QueryPatchers: views.QueryPatchers[Contact]{
 					{Key: "contacts.order_name", Value: views.QueryPatcherOrderBy[Contact]{Order: "name ASC"}},
@@ -21,16 +21,16 @@ func init() {
 
 	lago.RegistryView.Register("contacts.DetailView",
 		lago.GetPageView("contacts.ContactDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("contacts.detail", views.MiddlewareDetail[Contact]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("contacts.detail", views.LayerDetail[Contact]{
 				Key:          getters.Static("contact"),
 				PathParamKey: getters.Static("id"),
 			}))
 
 	lago.RegistryView.Register("contacts.CreateView",
 		lago.GetPageView("contacts.ContactCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("contacts.create", views.MiddlewareCreate[Contact]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("contacts.create", views.LayerCreate[Contact]{
 				SuccessURL: lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -38,12 +38,12 @@ func init() {
 
 	lago.RegistryView.Register("contacts.UpdateView",
 		lago.GetPageView("contacts.ContactUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("contacts.detail", views.MiddlewareDetail[Contact]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("contacts.detail", views.LayerDetail[Contact]{
 				Key:          getters.Static("contact"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("contacts.update", views.MiddlewareUpdate[Contact]{
+			WithLayer("contacts.update", views.LayerUpdate[Contact]{
 				Key: getters.Static("contact"),
 				SuccessURL: lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("contact.ID")),
@@ -52,20 +52,20 @@ func init() {
 
 	lago.RegistryView.Register("contacts.DeleteView",
 		lago.GetPageView("contacts.ContactDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("contacts.detail", views.MiddlewareDetail[Contact]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("contacts.detail", views.LayerDetail[Contact]{
 				Key:          getters.Static("contact"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("contacts.delete", views.MiddlewareDelete[Contact]{
+			WithLayer("contacts.delete", views.LayerDelete[Contact]{
 				Key:        getters.Static("contact"),
 				SuccessURL: lago.RoutePath("contacts.DefaultRoute", nil),
 			}))
 
 	lago.RegistryView.Register("contacts.SelectView",
 		lago.GetPageView("contacts.ContactSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("contacts.select", views.MiddlewareList[Contact]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("contacts.select", views.LayerList[Contact]{
 				Key: getters.Static("contacts"),
 				QueryPatchers: views.QueryPatchers[Contact]{
 					registry.Pair[string, views.QueryPatcher[Contact]]{

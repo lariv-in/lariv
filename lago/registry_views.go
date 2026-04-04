@@ -60,11 +60,11 @@ func Redirect(w http.ResponseWriter, r *http.Request, url string) {
 	}
 }
 
-type RedirectMiddleware struct {
+type RedirectLayer struct {
 	URLGetter getters.Getter[string]
 }
 
-func (m RedirectMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (m RedirectLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		url, err := getters.IfOr(m.URLGetter, r.Context(), "")
 		if err != nil || url == "" {
@@ -79,8 +79,8 @@ func RedirectView(urlGetter getters.Getter[string]) *views.View {
 	return &views.View{
 		PageName:   "redirect",
 		PageLookup: redirectPageLookup,
-		Middlewares: []registry.Pair[string, views.Middleware]{
-			{Key: "redirect", Value: RedirectMiddleware{URLGetter: urlGetter}},
+		Layers: []registry.Pair[string, views.Layer]{
+			{Key: "redirect", Value: RedirectLayer{URLGetter: urlGetter}},
 		},
 	}
 }

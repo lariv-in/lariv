@@ -3,7 +3,7 @@ package lago
 func BuildAllRegistries() {
 	RegistryCommand.Build()
 	RegistryGenerator.Build()
-	RegistryMiddleware.Build()
+	RegistryLayer.Build()
 	RegistryPage.Build()
 	RegistryPlugin.Build()
 	RegistryRoute.Build()

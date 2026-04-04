@@ -125,9 +125,9 @@ func (tallyDetailQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.C
 
 var TallyDetailQueryPatcher views.QueryPatcher[Tally] = tallyDetailQueryPatcher{}
 
-type requireAdminMiddleware struct{}
+type requireAdminLayer struct{}
 
-func (requireAdminMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (requireAdminLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := r.Context().Value("$user").(p_users.User)
 		if !ok {
@@ -157,7 +157,7 @@ func (tallyListQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.Cha
 
 	rawUser := ctx.Value("$user")
 	if rawUser == nil {
-		slog.Error("TallyListQueryPatcher: missing $user in context – auth middleware not applied?")
+		slog.Error("TallyListQueryPatcher: missing $user in context – auth layer not applied?")
 		panic("TallyListQueryPatcher: $user is nil in context")
 	}
 	user, ok := rawUser.(p_users.User)
@@ -296,24 +296,24 @@ func TallyDailyFormHandler(v *views.View) http.Handler {
 func init() {
 	lago.RegistryView.Register("tally.TallyDashboardView",
 		lago.GetPageView("tally.TallyDashboard").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.dashboard", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.dashboard", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: TallyDashboardHandler,
 			}))
 
 	lago.RegistryView.Register("tally.TallyLeaderboardView",
 		lago.GetPageView("tally.TallyLeaderboard").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.leaderboard", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.leaderboard", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: TallyLeaderboardHandler,
 			}))
 
 	lago.RegistryView.Register("tally.TallyListView",
 		lago.GetPageView("tally.TallyTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.list", views.MiddlewareList[Tally]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.list", views.LayerList[Tally]{
 				Key: getters.Static("Tallies"),
 				QueryPatchers: views.QueryPatchers[Tally]{
 					{Key: "tally.list", Value: TallyListQueryPatcher},
@@ -322,54 +322,54 @@ func init() {
 
 	lago.RegistryView.Register("tally.TallyDailyFormView",
 		lago.GetPageView("tally.TallyDailyForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.daily_form_get", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.daily_form_get", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: TallyDailyFormHandler,
 			}).
-			WithMiddleware("tally.daily_form_post", views.MethodMiddleware{
+			WithLayer("tally.daily_form_post", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: TallyDailyFormHandler,
 			}))
 
 	lago.RegistryView.Register("tally.TallyCreateView",
 		lago.GetPageView("tally.TallyCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.admin", requireAdminMiddleware{}).
-			WithMiddleware("tally.create", views.MiddlewareCreate[Tally]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.admin", requireAdminLayer{}).
+			WithLayer("tally.create", views.LayerCreate[Tally]{
 				SuccessURL: lago.RoutePath("tally.TallyListRoute", nil),
 			}))
 
 	lago.RegistryView.Register("tally.TallyUpdateView",
 		lago.GetPageView("tally.TallyUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.admin", requireAdminMiddleware{}).
-			WithMiddleware("tally.detail", views.MiddlewareDetail[Tally]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.admin", requireAdminLayer{}).
+			WithLayer("tally.detail", views.LayerDetail[Tally]{
 				Key:          getters.Static("Tally"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("tally.update", views.MiddlewareUpdate[Tally]{
+			WithLayer("tally.update", views.LayerUpdate[Tally]{
 				Key:        getters.Static("Tally"),
 				SuccessURL: lago.RoutePath("tally.TallyListRoute", nil),
 			}))
 
 	lago.RegistryView.Register("tally.TallyDeleteView",
 		lago.GetPageView("tally.TallyDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.admin", requireAdminMiddleware{}).
-			WithMiddleware("tally.detail", views.MiddlewareDetail[Tally]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.admin", requireAdminLayer{}).
+			WithLayer("tally.detail", views.LayerDetail[Tally]{
 				Key:          getters.Static("Tally"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("tally.delete", views.MiddlewareDelete[Tally]{
+			WithLayer("tally.delete", views.LayerDelete[Tally]{
 				Key:        getters.Static("Tally"),
 				SuccessURL: lago.RoutePath("tally.TallyListRoute", nil),
 			}))
 
 	lago.RegistryView.Register("tally.TallyDetailView",
 		lago.GetPageView("tally.TallyDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.detail", views.MiddlewareDetail[Tally]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("tally.detail", views.LayerDetail[Tally]{
 				Key:          getters.Static("Tally"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Tally]{

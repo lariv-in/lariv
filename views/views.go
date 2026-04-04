@@ -13,13 +13,13 @@ import (
 type View struct {
 	PageName    string
 	PageLookup  func(name string) (components.PageInterface, bool)
-	Middlewares []registry.Pair[string, Middleware]
+	Layers []registry.Pair[string, Layer]
 }
 
 func (v *View) GetHandler() http.Handler {
 	var handler http.Handler = http.HandlerFunc(v.RenderPage)
-	for i := len(v.Middlewares) - 1; i >= 0; i-- {
-		handler = v.Middlewares[i].Value.Next(*v, handler)
+	for i := len(v.Layers) - 1; i >= 0; i-- {
+		handler = v.Layers[i].Value.Next(*v, handler)
 	}
 	return handler
 }
@@ -91,70 +91,70 @@ func (v *View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any
 	return values, fieldErrors, nil
 }
 
-func (v *View) WithMiddleware(name string, middleware Middleware) *View {
-	// Append middleware; keys are labels only and are not required to be unique.
-	v.Middlewares = append(v.Middlewares, registry.Pair[string, Middleware]{Key: name, Value: middleware})
+func (v *View) WithLayer(name string, layer Layer) *View {
+	// Append layer; keys are labels only and are not required to be unique.
+	v.Layers = append(v.Layers, registry.Pair[string, Layer]{Key: name, Value: layer})
 	return v
 }
 
-// InsertMiddlewareBefore inserts a middleware with the given name immediately
-// before the first middleware whose Key matches beforeName. If no such
-// middleware exists, it appends it to the end.
-func (v *View) InsertMiddlewareBefore(beforeName, name string, middleware Middleware) *View {
-	p := registry.Pair[string, Middleware]{Key: name, Value: middleware}
-	for i, mw := range v.Middlewares {
+// InsertLayerBefore inserts a layer with the given name immediately
+// before the first layer whose Key matches beforeName. If no such
+// layer exists, it appends it to the end.
+func (v *View) InsertLayerBefore(beforeName, name string, layer Layer) *View {
+	p := registry.Pair[string, Layer]{Key: name, Value: layer}
+	for i, mw := range v.Layers {
 		if mw.Key == beforeName {
-			v.Middlewares = append(v.Middlewares[:i], append([]registry.Pair[string, Middleware]{p}, v.Middlewares[i:]...)...)
+			v.Layers = append(v.Layers[:i], append([]registry.Pair[string, Layer]{p}, v.Layers[i:]...)...)
 			return v
 		}
 	}
-	// Fallback: behave like WithMiddleware when beforeName is not found.
-	return v.WithMiddleware(name, middleware)
+	// Fallback: behave like WithLayer when beforeName is not found.
+	return v.WithLayer(name, layer)
 }
 
-// InsertMiddlewareAfter inserts a middleware with the given name immediately
-// after the first middleware whose Key matches afterName. If no such
-// middleware exists, it appends it to the end.
-func (v *View) InsertMiddlewareAfter(afterName, name string, middleware Middleware) *View {
-	p := registry.Pair[string, Middleware]{Key: name, Value: middleware}
-	for i, mw := range v.Middlewares {
+// InsertLayerAfter inserts a layer with the given name immediately
+// after the first layer whose Key matches afterName. If no such
+// layer exists, it appends it to the end.
+func (v *View) InsertLayerAfter(afterName, name string, layer Layer) *View {
+	p := registry.Pair[string, Layer]{Key: name, Value: layer}
+	for i, mw := range v.Layers {
 		if mw.Key == afterName {
 			// Insert after index i.
 			pos := i + 1
-			if pos >= len(v.Middlewares) {
-				v.Middlewares = append(v.Middlewares, p)
+			if pos >= len(v.Layers) {
+				v.Layers = append(v.Layers, p)
 			} else {
-				v.Middlewares = append(v.Middlewares[:pos], append([]registry.Pair[string, Middleware]{p}, v.Middlewares[pos:]...)...)
+				v.Layers = append(v.Layers[:pos], append([]registry.Pair[string, Layer]{p}, v.Layers[pos:]...)...)
 			}
 			return v
 		}
 	}
-	// Fallback: behave like WithMiddleware when afterName is not found.
-	return v.WithMiddleware(name, middleware)
+	// Fallback: behave like WithLayer when afterName is not found.
+	return v.WithLayer(name, layer)
 }
 
-func (v *View) WithMiddlewares(middlewares ...registry.Pair[string, Middleware]) *View {
-	for _, middleware := range middlewares {
-		v.WithMiddleware(middleware.Key, middleware.Value)
+func (v *View) WithLayers(layers ...registry.Pair[string, Layer]) *View {
+	for _, layer := range layers {
+		v.WithLayer(layer.Key, layer.Value)
 	}
 	return v
 }
 
-func (v *View) PatchMiddlewares(middlewares ...registry.Pair[string, func(Middleware) Middleware]) *View {
-	for _, middleware := range middlewares {
-		for i, mw := range v.Middlewares {
-			if mw.Key == middleware.Key {
-				v.Middlewares[i].Value = middleware.Value(mw.Value)
+func (v *View) PatchLayers(layers ...registry.Pair[string, func(Layer) Layer]) *View {
+	for _, layer := range layers {
+		for i, mw := range v.Layers {
+			if mw.Key == layer.Key {
+				v.Layers[i].Value = layer.Value(mw.Value)
 			}
 		}
 	}
 	return v
 }
 
-func (v *View) PatchMiddleware(name string, patcher func(Middleware) Middleware) *View {
-	for i, mw := range v.Middlewares {
+func (v *View) PatchLayer(name string, patcher func(Layer) Layer) *View {
+	for i, mw := range v.Layers {
 		if mw.Key == name {
-			v.Middlewares[i].Value = patcher(mw.Value)
+			v.Layers[i].Value = patcher(mw.Value)
 		}
 	}
 	return v

@@ -22,7 +22,7 @@ func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm
 
 	rawUser := ctx.Value("$user")
 	if rawUser == nil {
-		slog.Error("AcademicRecordScopeByRole: missing $user in context – auth middleware not applied?")
+		slog.Error("AcademicRecordScopeByRole: missing $user in context – auth layer not applied?")
 		panic("AcademicRecordScopeByRole: $user is nil in context")
 	}
 	user, ok := rawUser.(p_users.User)
@@ -35,7 +35,7 @@ func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm
 
 	rawRole := ctx.Value("$role")
 	if rawRole == nil {
-		slog.Error("AcademicRecordScopeByRole: missing $role in context – auth middleware not applied?")
+		slog.Error("AcademicRecordScopeByRole: missing $role in context – auth layer not applied?")
 		panic("AcademicRecordScopeByRole: $role is nil in context")
 	}
 	roleName, ok := rawRole.(string)
@@ -55,7 +55,7 @@ func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm
 		panic("AcademicRecordScopeByRole: $db is nil or wrong type in context")
 	}
 
-	// AuthenticationMiddleware sets $role to "superuser" for superusers, else Role.name from DB.
+	// AuthenticationLayer sets $role to "superuser" for superusers, else Role.name from DB.
 	switch roleName {
 	case "superuser":
 		return query

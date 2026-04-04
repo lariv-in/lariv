@@ -25,9 +25,9 @@ func (queryPatcherScopeConversationByUser) Patch(_ views.View, r *http.Request, 
 	return query.Where("created_by_id = ?", u.ID)
 }
 
-type listContextMiddleware struct{}
+type listContextLayer struct{}
 
-func (listContextMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (listContextLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, ContextKeyMessages, []ConversationMessage{})
@@ -36,9 +36,9 @@ func (listContextMiddleware) Next(_ views.View, next http.Handler) http.Handler 
 	})
 }
 
-type detailContextMiddleware struct{}
+type detailContextLayer struct{}
 
-func (detailContextMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (detailContextLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conv, ok := r.Context().Value("conversation").(Conversation)
 		if !ok {
@@ -104,32 +104,32 @@ func init() {
 
 	lago.RegistryView.Register("sqlagent.ListView",
 		lago.GetPageView("sqlagent.ConversationListPage").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sqlagent.list", views.MiddlewareList[Conversation]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("sqlagent.list", views.LayerList[Conversation]{
 				Key: getters.Static("conversations"),
 				QueryPatchers: views.QueryPatchers[Conversation]{
 					registry.Pair[string, views.QueryPatcher[Conversation]]{Key: "sqlagent.scope_user", Value: queryPatcherScopeConversationByUser{}},
 					registry.Pair[string, views.QueryPatcher[Conversation]]{Key: "sqlagent.order", Value: views.QueryPatcherOrderBy[Conversation]{Order: "updated_at DESC"}},
 				},
 			}).
-			WithMiddleware("sqlagent.list_ctx", listContextMiddleware{}))
+			WithLayer("sqlagent.list_ctx", listContextLayer{}))
 
 	lago.RegistryView.Register("sqlagent.ConversationDetailView",
 		lago.GetPageView("sqlagent.ConversationDetailPage").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sqlagent.detail", views.MiddlewareDetail[Conversation]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("sqlagent.detail", views.LayerDetail[Conversation]{
 				Key:          getters.Static("conversation"),
 				PathParamKey: getters.Static("conversation_id"),
 				QueryPatchers: views.QueryPatchers[Conversation]{
 					registry.Pair[string, views.QueryPatcher[Conversation]]{Key: "sqlagent.scope_user", Value: queryPatcherScopeConversationByUser{}},
 				},
 			}).
-			WithMiddleware("sqlagent.detail_ctx", detailContextMiddleware{}))
+			WithLayer("sqlagent.detail_ctx", detailContextLayer{}))
 
 	lago.RegistryView.Register("sqlagent.ConversationCreateView",
 		lago.GetPageView("sqlagent.ConversationCreateForm").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sqlagent.create", views.MiddlewareCreate[Conversation]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("sqlagent.create", views.LayerCreate[Conversation]{
 				SuccessURL: lago.RoutePath("sqlagent.ConversationDetailRoute", map[string]getters.Getter[any]{
 					"conversation_id": getters.Any(getters.Key[uint]("$id")),
 				}),
