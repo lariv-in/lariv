@@ -13,6 +13,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	sessions "github.com/lariv-in/lago/plugins/p_nirmancampus_sessions"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/registry"
 )
@@ -38,6 +39,9 @@ func tableColumns() []components.TableColumn {
 		}},
 		{Label: "Program", Name: "Program.Name", Children: []components.PageInterface{
 			&components.FieldText{Getter: getters.Key[string]("$row.Program.Name")},
+		}},
+		{Label: "Session", Name: "Session.Name", Children: []components.PageInterface{
+			&components.FieldText{Getter: getters.Key[string]("$row.Session.Name")},
 		}},
 		{Label: "Status", Name: "Status", Children: []components.PageInterface{
 			&components.FieldText{Getter: getters.Key[string]("$row.Status")},
@@ -238,6 +242,27 @@ func createFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
 				Children: []components.PageInterface{
 					&components.ContainerError{
+						Error: getters.Key[error]("$error.SessionID"),
+						Children: []components.PageInterface{
+							&components.InputForeignKey[sessions.Session]{
+								Label:       "Session",
+								Name:        "SessionID",
+								Required:    true,
+								Url:         lago.RoutePath("sessions.SelectRoute", nil),
+								Display:     getters.Key[string]("$in.Name"),
+								Placeholder: "Select a session…",
+								Getter: getters.Association[sessions.Session](
+									getters.Key[uint]("$in.SessionID"),
+								),
+							},
+						},
+					},
+				},
+			},
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
+				Children: []components.PageInterface{
+					&components.ContainerError{
 						Error: getters.Key[error]("$error.Term"),
 						Children: []components.PageInterface{
 							&components.InputNumber[uint]{
@@ -314,6 +339,12 @@ func editFormFields() components.ContainerColumn {
 						},
 					},
 					&components.LabelInline{
+						Title: "Session",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$in.Session.Name")},
+						},
+					},
+					&components.LabelInline{
 						Title: "Term",
 						Children: []components.PageInterface{
 							&components.FieldText{
@@ -335,6 +366,13 @@ func editFormFields() components.ContainerColumn {
 				Name:   "ProgramID",
 				Getter: getters.Association[p_nirmancampus_programs.Program](
 					getters.Key[uint]("$in.ProgramID"),
+				),
+			},
+			&components.InputForeignKey[sessions.Session]{
+				Hidden: true,
+				Name:   "SessionID",
+				Getter: getters.Association[sessions.Session](
+					getters.Key[uint]("$in.SessionID"),
 				),
 			},
 			&components.InputNumber[uint]{
@@ -465,11 +503,18 @@ func registerFormPages() {
 // --- Tables ---
 
 func registerTablePages() {
+	academicRecordsSessionEnvironment := &components.Environment[uint]{
+		Label:   "Session",
+		Key:     getters.Static(academicRecordsEnvironmentSessionKey),
+		Options: AcademicSessionsListGetter,
+		Default: academicRecordsSessionEnvironmentDefault,
+	}
 	lago.RegistryPage.Register("academicrecords.AcademicRecordTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "students.StudentMenu"},
 		},
 		Children: []components.PageInterface{
+			academicRecordsSessionEnvironment,
 			&components.DataTable[AcademicRecord]{
 				Page:    components.Page{Key: "academicrecords.AcademicRecordTableBody"},
 				UID:     "academicrecords-table",
@@ -518,6 +563,12 @@ func registerDetailPages() {
 								Title: "Program",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.Program.Name")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Session",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string]("$in.Session.Name")},
 								},
 							},
 							&components.LabelInline{

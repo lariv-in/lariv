@@ -9,12 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// Semester represents an academic semester window.
+// Session represents an academic session window.
 //
 // Source parity notes (Django):
 // - code is optional on create, auto-generated on save
 // - code is unique
-type Semester struct {
+type Session struct {
 	gorm.Model
 
 	Name     string
@@ -24,7 +24,7 @@ type Semester struct {
 	IsActive bool `gorm:"default:true"`
 }
 
-func (s *Semester) BeforeSave(tx *gorm.DB) error {
+func (s *Session) BeforeSave(tx *gorm.DB) error {
 	if strings.TrimSpace(s.Code) != "" || s.Start.IsZero() {
 		return nil
 	}
@@ -34,7 +34,7 @@ func (s *Semester) BeforeSave(tx *gorm.DB) error {
 	monthEnd := monthStart.AddDate(0, 1, 0)
 
 	var count int64
-	if err := tx.Model(&Semester{}).
+	if err := tx.Model(&Session{}).
 		Where("start >= ? AND start < ?", monthStart, monthEnd).
 		Where("id <> ?", s.ID).
 		Count(&count).Error; err != nil {
@@ -48,11 +48,11 @@ func (s *Semester) BeforeSave(tx *gorm.DB) error {
 
 func init() {
 	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
-		lago.RegisterModel[Semester](d)
+		lago.RegisterModel[Session](d)
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_nirmancampus_sessions", lago.AdminPanel[Semester]{
+	lago.RegistryAdmin.Register("p_nirmancampus_sessions", lago.AdminPanel[Session]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "Code", "Start", "End", "IsActive"},
 	})

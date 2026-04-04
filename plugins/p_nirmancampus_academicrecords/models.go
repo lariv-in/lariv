@@ -1,10 +1,10 @@
 package p_nirmancampus_academicrecords
 
 import (
-
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	sessions "github.com/lariv-in/lago/plugins/p_nirmancampus_sessions"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"gorm.io/gorm"
 )
@@ -34,6 +34,8 @@ type AcademicRecord struct {
 	Student           p_nirmancampus_students.Student `gorm:"constraint:OnDelete:CASCADE;foreignKey:StudentID;references:ID"`
 	ProgramID         uint                            `gorm:"not null;index"`
 	Program           p_nirmancampus_programs.Program `gorm:"constraint:OnDelete:RESTRICT;foreignKey:ProgramID;references:ID"`
+	SessionID         uint                            `gorm:"not null;index"`
+	Session           sessions.Session               `gorm:"constraint:OnDelete:RESTRICT;foreignKey:SessionID;references:ID"`
 	Term              uint                            `gorm:"not null;index"`
 	Status            string                          `gorm:"type:varchar(50);notnull"`
 	CompulsoryCourses []courses.Course                `gorm:"many2many:academic_record_compulsory_courses;"`
@@ -48,7 +50,7 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_academicrecords", lago.AdminPanel[AcademicRecord]{
 		SearchField: "Status",
-		ListFields:  []string{"Status", "Term", "Program.Name", "Student.StudentNo", "UpdatedAt"},
-		Preload:     []string{"Student.User", "Program", "CompulsoryCourses", "OptionalCourses"},
+		ListFields:  []string{"Status", "Term", "Session.Name", "Program.Name", "Student.StudentNo", "UpdatedAt"},
+		Preload:     []string{"Student.User", "Program", "Session", "CompulsoryCourses", "OptionalCourses"},
 	})
 }

@@ -8,6 +8,7 @@ require (
 	github.com/lariv-in/lago/lago v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_courses v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_programs v0.5.10
+	github.com/lariv-in/lago/plugins/p_nirmancampus_sessions v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_students v0.5.10
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/registry v0.5.10

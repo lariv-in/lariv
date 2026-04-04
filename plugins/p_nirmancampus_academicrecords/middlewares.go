@@ -66,19 +66,25 @@ func (academicRecordCreateQueryDefaultsMiddleware) Next(_ views.View, next http.
 			next.ServeHTTP(w, r)
 			return
 		}
-		sid := r.URL.Query().Get("StudentID")
-		if sid == "" {
+		vals := map[string]any{}
+		if sid := r.URL.Query().Get("StudentID"); sid != "" {
+			if id64, err := strconv.ParseUint(sid, 10, 32); err == nil && id64 != 0 {
+				vals["StudentID"] = uint(id64)
+			}
+		}
+		if r.URL.Query().Get("SessionID") == "" {
+			if db, ok := r.Context().Value("$db").(*gorm.DB); ok && db != nil {
+				sessionID, restrict := selectedAcademicRecordSessionFilter(db, r.Context())
+				if restrict && sessionID > 0 {
+					vals["SessionID"] = sessionID
+				}
+			}
+		}
+		if len(vals) == 0 {
 			next.ServeHTTP(w, r)
 			return
 		}
-		id64, err := strconv.ParseUint(sid, 10, 32)
-		if err != nil || id64 == 0 {
-			next.ServeHTTP(w, r)
-			return
-		}
-		ctx := views.ContextWithErrorsAndValues(r.Context(), map[string]any{
-			"StudentID": uint(id64),
-		}, nil)
+		ctx := views.ContextWithErrorsAndValues(r.Context(), vals, nil)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

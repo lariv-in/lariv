@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
+	sessions "github.com/lariv-in/lago/plugins/p_nirmancampus_sessions"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"gorm.io/gorm"
 )
@@ -40,6 +41,14 @@ func init() {
 				return fmt.Errorf("need at least one program before generating academic records")
 			}
 
+			sessions, err := gorm.G[sessions.Session](db).Order("id ASC").Find(context.Background())
+			if err != nil {
+				return fmt.Errorf("failed to load sessions: %w", err)
+			}
+			if len(sessions) == 0 {
+				return fmt.Errorf("need at least one session (sessions plugin) before generating academic records")
+			}
+
 			courses, err := gorm.G[p_nirmancampus_courses.Course](db).Order("id ASC").Find(context.Background())
 			if err != nil {
 				return fmt.Errorf("failed to load courses: %w", err)
@@ -53,6 +62,7 @@ func init() {
 				rec := AcademicRecord{
 					StudentID: st.ID,
 					ProgramID: programs[k%len(programs)].ID,
+					SessionID: sessions[k%len(sessions)].ID,
 					Term:      sampleTerms[k%len(sampleTerms)],
 					Status:    sampleStatuses[k%len(sampleStatuses)],
 				}

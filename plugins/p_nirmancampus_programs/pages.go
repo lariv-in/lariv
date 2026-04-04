@@ -114,7 +114,7 @@ func admissionSessionChoices() []registry.Pair[string, string] {
 func termTypeChoices() []registry.Pair[string, string] {
 	return []registry.Pair[string, string]{
 		{Key: TermTypeYear, Value: "Year"},
-		{Key: TermTypeSemester, Value: "Semester"},
+		{Key: TermTypeSession, Value: "Session"},
 	}
 }
 

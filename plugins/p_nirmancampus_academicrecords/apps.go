@@ -8,8 +8,8 @@ import (
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 )
 
-// AppUrl is the academic records area inside the Students app (not a standalone dashboard app).
-var AppUrl = p_nirmancampus_students.AppUrl + "academicrecords/"
+// AppUrl is under the Students app; see Caveats.md ("HTTP routes nested under another app's prefix").
+var AppUrl = p_nirmancampus_students.AppUrl + "plugin/academicrecords/"
 
 func init() {
 	u, err := url.Parse(AppUrl)

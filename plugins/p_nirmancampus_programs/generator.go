@@ -30,7 +30,7 @@ var sampleProgramSeeds = []struct {
 			University:        "IGNOU",
 			ProgramType:       "bachelor",
 			AdmissionSessions: AdmissionSessionBoth,
-			TermType:          TermTypeSemester,
+			TermType:          TermTypeSession,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-CS101"}, OptionalPoolCodes: []string{"GEN-MTH101", "GEN-ENG205"}},
@@ -46,7 +46,7 @@ var sampleProgramSeeds = []struct {
 			University:        "MRSPTU",
 			ProgramType:       "bachelor",
 			AdmissionSessions: AdmissionSessionBoth,
-			TermType:          TermTypeSemester,
+			TermType:          TermTypeSession,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-ENG205"}, OptionalPoolCodes: []string{"GEN-MTH101", "GEN-CS101"}},
@@ -76,7 +76,7 @@ var sampleProgramSeeds = []struct {
 			University:        "MRSPTU",
 			ProgramType:       "bachelor",
 			AdmissionSessions: AdmissionSessionJuly,
-			TermType:          TermTypeSemester,
+			TermType:          TermTypeSession,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 0, CompulsoryCodes: []string{"GEN-MTH101", "GEN-PHY301"}, OptionalPoolCodes: nil},
@@ -91,7 +91,7 @@ var sampleProgramSeeds = []struct {
 			University:        "IGNOU",
 			ProgramType:       "diploma",
 			AdmissionSessions: AdmissionSessionJan,
-			TermType:          TermTypeSemester,
+			TermType:          TermTypeSession,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-MTH101"}, OptionalPoolCodes: []string{"GEN-ENG205"}},

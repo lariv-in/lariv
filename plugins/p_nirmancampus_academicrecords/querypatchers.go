@@ -70,3 +70,25 @@ func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm
 }
 
 var AcademicRecordScopeByRole views.QueryPatcher[AcademicRecord] = academicRecordScopeByRole{}
+
+type academicRecordListSessionFilter struct{}
+
+func (academicRecordListSessionFilter) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[AcademicRecord]) gorm.ChainInterface[AcademicRecord] {
+	dbVal := r.Context().Value("$db")
+	db, ok := dbVal.(*gorm.DB)
+	if !ok || db == nil {
+		slog.Error("academicRecordListSessionFilter: missing or invalid $db in context",
+			"type", fmt.Sprintf("%T", dbVal),
+		)
+		return query
+	}
+	id, restrict := selectedAcademicRecordSessionFilter(db, r.Context())
+	if !restrict {
+		return query
+	}
+	return query.Where("session_id = ?", id)
+}
+
+// AcademicRecordListSessionFilter scopes list/select queries to the session chosen in
+// the environment cookie (or the default active / latest session).
+var AcademicRecordListSessionFilter views.QueryPatcher[AcademicRecord] = academicRecordListSessionFilter{}

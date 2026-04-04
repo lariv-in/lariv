@@ -43,6 +43,7 @@ func (studentAcademicRecordsContextMiddleware) Next(_ views.View, next http.Hand
 		var rows []AcademicRecord
 		if err := db.Model(&AcademicRecord{}).
 			Preload("Program").
+			Preload("Session").
 			Preload("CompulsoryCourses").
 			Preload("OptionalCourses").
 			Where("student_id = ?", student.ID).
@@ -92,6 +93,13 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 				Name:  "Program.Name",
 				Children: []components.PageInterface{
 					&components.FieldText{Getter: getters.Key[string]("$row.Program.Name")},
+				},
+			},
+			{
+				Label: "Session",
+				Name:  "Session.Name",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: getters.Key[string]("$row.Session.Name")},
 				},
 			},
 			{

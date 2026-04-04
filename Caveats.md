@@ -68,6 +68,14 @@ Existing registries:
    - `lago/registry_views.go` for adding views (see the views section below)
    - `lago/regsitry_dbinit.go` for adding functions that run after the database is initialized; run model automigrations here
 
+# HTTP routes nested under another app's prefix
+
+When a plugin mounts HTTP routes under another plugin's `AppUrl` (e.g. Students at `/students/`), use a **`plugin/<slug>/`** segment after that base so your subtree does not structurally overlap the host's dynamic routes.
+
+- **Convention:** `HostAppUrl + "plugin/" + <short-slug> + "/"` as the route prefix for the nested feature (e.g. `p_nirmancampus_students.AppUrl + "plugin/academicrecords/"` → `/students/plugin/academicrecords/`).
+- **Why:** `http.ServeMux` rejects patterns that both match some paths. A host app often has `/prefix/{id}/`, `/prefix/{id}/edit/`, `/prefix/{id}/delete/`, etc. A naive path like `/prefix/academicrecords/...` can match those patterns with `id` interpreted as `academicrecords`, or collide with `/prefix/{id}/delete/` when a segment is `delete`. The fixed `plugin/` segment keeps the nested plugin's paths longer and unambiguous relative to `{id}` routes.
+- Prefer **`PluginTypeAddon`** in `registry_plugins.go` when the nested feature is not its own dashboard app tile; link into it from the host app's menu or UI.
+
 # Views
 
 A view is the primary HTTP handler for a route. A `*views.View` (`views/views.go`) is only:

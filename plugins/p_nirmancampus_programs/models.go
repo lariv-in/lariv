@@ -1,7 +1,6 @@
 package p_nirmancampus_programs
 
 import (
-
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"gorm.io/gorm"
@@ -15,7 +14,7 @@ const (
 
 const (
 	TermTypeYear     = "year"
-	TermTypeSemester = "semester"
+	TermTypeSession = "session"
 )
 
 // ProgramStructureUnit is one term of a program's structure.

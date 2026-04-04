@@ -28,7 +28,7 @@ func init() {
 			futureStart := currentEnd.AddDate(0, 0, 1)
 			futureEnd := futureStart.AddDate(0, 6, 0)
 
-			rows := []Semester{
+			rows := []Session{
 				{
 					Name:     fmt.Sprintf("%s – %s", pastStart.Format("Jan 2006"), pastEnd.Format("Jan 2006")),
 					Start:    pastStart,
@@ -50,8 +50,8 @@ func init() {
 			}
 
 			for i := range rows {
-				if err := gorm.G[Semester](db).Create(context.Background(), &rows[i]); err != nil {
-					return fmt.Errorf("failed to create semester %q: %w", rows[i].Name, err)
+				if err := gorm.G[Session](db).Create(context.Background(), &rows[i]); err != nil {
+					return fmt.Errorf("failed to create session %q: %w", rows[i].Name, err)
 				}
 			}
 
@@ -60,7 +60,7 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
-			return db.Unscoped().Where("1=1").Delete(&Semester{}).Error
+			return db.Unscoped().Where("1=1").Delete(&Session{}).Error
 		},
 	})
 }

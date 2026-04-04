@@ -11,9 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type semesterIsActiveFilterQueryPatcher struct{}
+type sessionIsActiveFilterQueryPatcher struct{}
 
-func (semesterIsActiveFilterQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Semester]) gorm.ChainInterface[Semester] {
+func (sessionIsActiveFilterQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Session]) gorm.ChainInterface[Session] {
 	getMap, ok := r.Context().Value("$get").(map[string]any)
 	if !ok {
 		return query
@@ -42,32 +42,32 @@ func (semesterIsActiveFilterQueryPatcher) Patch(_ views.View, r *http.Request, q
 func init() {
 	// List view.
 	lago.RegistryView.Register("sessions.ListView",
-		lago.GetPageView("sessions.SemesterTable").
+		lago.GetPageView("sessions.SessionTable").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.list", views.MiddlewareList[Semester]{
+			WithMiddleware("sessions.list", views.MiddlewareList[Session]{
 				Key: getters.Static("sessions"),
-				QueryPatchers: views.QueryPatchers[Semester]{
-					registry.Pair[string, views.QueryPatcher[Semester]]{
+				QueryPatchers: views.QueryPatchers[Session]{
+					registry.Pair[string, views.QueryPatcher[Session]]{
 						Key:   "sessions.filter_is_active",
-						Value: semesterIsActiveFilterQueryPatcher{},
+						Value: sessionIsActiveFilterQueryPatcher{},
 					},
 				},
 			}))
 
 	// Detail view.
 	lago.RegistryView.Register("sessions.DetailView",
-		lago.GetPageView("sessions.SemesterDetail").
+		lago.GetPageView("sessions.SessionDetail").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.detail", views.MiddlewareDetail[Semester]{
-				Key:          getters.Static("semester"),
+			WithMiddleware("sessions.detail", views.MiddlewareDetail[Session]{
+				Key:          getters.Static("session"),
 				PathParamKey: getters.Static("id"),
 			}))
 
 	// Create view.
 	lago.RegistryView.Register("sessions.CreateView",
-		lago.GetPageView("sessions.SemesterCreateForm").
+		lago.GetPageView("sessions.SessionCreateForm").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.create", views.MiddlewareCreate[Semester]{
+			WithMiddleware("sessions.create", views.MiddlewareCreate[Session]{
 				SuccessURL: lago.RoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -75,29 +75,29 @@ func init() {
 
 	// Update view.
 	lago.RegistryView.Register("sessions.UpdateView",
-		lago.GetPageView("sessions.SemesterUpdateForm").
+		lago.GetPageView("sessions.SessionUpdateForm").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.detail", views.MiddlewareDetail[Semester]{
-				Key:          getters.Static("semester"),
+			WithMiddleware("sessions.detail", views.MiddlewareDetail[Session]{
+				Key:          getters.Static("session"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("sessions.update", views.MiddlewareUpdate[Semester]{
-				Key: getters.Static("semester"),
+			WithMiddleware("sessions.update", views.MiddlewareUpdate[Session]{
+				Key: getters.Static("session"),
 				SuccessURL: lago.RoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("semester.ID")),
+					"id": getters.Any(getters.Key[uint]("session.ID")),
 				}),
 			}))
 
 	// Delete view.
 	lago.RegistryView.Register("sessions.DeleteView",
-		lago.GetPageView("sessions.SemesterDeleteForm").
+		lago.GetPageView("sessions.SessionDeleteForm").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.detail", views.MiddlewareDetail[Semester]{
-				Key:          getters.Static("semester"),
+			WithMiddleware("sessions.detail", views.MiddlewareDetail[Session]{
+				Key:          getters.Static("session"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("sessions.delete", views.MiddlewareDelete[Semester]{
-				Key:        getters.Static("semester"),
+			WithMiddleware("sessions.delete", views.MiddlewareDelete[Session]{
+				Key:        getters.Static("session"),
 				SuccessURL: lago.RoutePath("sessions.DefaultRoute", nil),
 			}))
 
@@ -105,12 +105,12 @@ func init() {
 	lago.RegistryView.Register("sessions.SelectView",
 		lago.GetPageView("sessions.sessionselectionTable").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.select", views.MiddlewareList[Semester]{
+			WithMiddleware("sessions.select", views.MiddlewareList[Session]{
 				Key: getters.Static("sessions"),
-				QueryPatchers: views.QueryPatchers[Semester]{
-					registry.Pair[string, views.QueryPatcher[Semester]]{
+				QueryPatchers: views.QueryPatchers[Session]{
+					registry.Pair[string, views.QueryPatcher[Session]]{
 						Key:   "sessions.filter_is_active",
-						Value: semesterIsActiveFilterQueryPatcher{},
+						Value: sessionIsActiveFilterQueryPatcher{},
 					},
 				},
 			}))
