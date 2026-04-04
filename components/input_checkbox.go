@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strconv"
 
@@ -34,9 +33,9 @@ func (e InputCheckbox) Build(ctx context.Context) Node {
 		}
 	}
 	return Div(
-		Class(fmt.Sprintf("mt-3 %s", e.Classes)),
+		Class(e.Classes),
 		Label(
-			Class("label cursor-pointer justify-start gap-1 flex flex-col items-start"),
+			Class("label text-sm font-bold cursor-pointer justify-start gap-1 flex flex-col items-start"),
 			Span(Class("label-text"), Text(e.Label)),
 			Input(
 				Type("checkbox"),
