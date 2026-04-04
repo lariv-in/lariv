@@ -4,11 +4,41 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
+
+type userPickForStudentQueryPatcher struct{}
+
+// UserPickForStudentQueryPatcher limits the user picker to accounts with the
+// student role that are not already linked to a Student row. Optional query
+// param allow_user_id includes that user so edit forms can keep the current link.
+func (userPickForStudentQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[p_users.User]) gorm.ChainInterface[p_users.User] {
+	db, ok := r.Context().Value("$db").(*gorm.DB)
+	if !ok || db == nil {
+		return query
+	}
+	noStudentSub := db.Model(&Student{}).Select("user_id")
+	allowStr := r.URL.Query().Get("allow_user_id")
+	if allowStr != "" {
+		id, err := strconv.ParseUint(allowStr, 10, 32)
+		if err == nil && id > 0 {
+			return query.Where(
+				"(role_id = (SELECT id FROM roles WHERE name = ? LIMIT 1) AND id NOT IN (?)) OR id = ?",
+				"student",
+				noStudentSub,
+				uint(id),
+			)
+		}
+	}
+	return query.Where("role_id = (SELECT id FROM roles WHERE name = ? LIMIT 1) AND id NOT IN (?)", "student", noStudentSub)
+}
+
+// UserPickForStudentQueryPatcher is the query patcher for students.UserPickView.
+var UserPickForStudentQueryPatcher views.QueryPatcher[p_users.User] = userPickForStudentQueryPatcher{}
 
 type studentScopeByRole struct{}
 

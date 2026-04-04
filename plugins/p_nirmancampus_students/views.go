@@ -100,4 +100,15 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
 				},
 			}))
+
+	lago.RegistryView.Register("students.UserPickView",
+		lago.GetPageView("students.UserPickTable").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("students.user_pick_admin", studentsAdminRoleLayer).
+			WithLayer("students.user_pick_list", views.LayerList[p_users.User]{
+				Key: getters.Static("users"),
+				QueryPatchers: views.QueryPatchers[p_users.User]{
+					registry.Pair[string, views.QueryPatcher[p_users.User]]{Key: "students.user_pick_scope", Value: UserPickForStudentQueryPatcher},
+				},
+			}))
 }
