@@ -203,10 +203,11 @@ func selfFormFields() components.ContainerColumn {
 func registerFormPages() {
 	lago.RegistryPage.Register("users.UserFormFields", userFormFields())
 
-	lago.RegistryPage.Register("users.UserCreateForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserMenu"},
+	lago.RegistryPage.Register("users.UserCreateForm", &components.Modal{
+		Page: components.Page{
+			Key: "users.UserCreateModal",
 		},
+		UID: "user-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
 				Url:      lago.RoutePath("users.CreateRoute", nil),
@@ -218,7 +219,12 @@ func registerFormPages() {
 					userFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save User"},
+					&components.ContainerRow{
+						Classes: "flex justify-end gap-2 mt-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Save User", Classes: "btn-primary"},
+						},
+					},
 				},
 			},
 		},
@@ -349,7 +355,11 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[User]]("users"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserFilter"}},
-					&components.TableButtonCreate{Link: lago.RoutePath("users.CreateRoute", nil)},
+					&components.ButtonModal{
+						Url:     lago.RoutePath("users.CreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
+					},
 				},
 				OnClick: getters.NavigateGetter(lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
@@ -603,6 +613,11 @@ func registerSelectionPages() {
 				OnClick: getters.Select("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserSelectionFilter"}},
+					&components.ButtonModal{
+						Url:     lago.RoutePath("users.CreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
+					},
 				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
@@ -629,6 +644,11 @@ func registerSelectionPages() {
 				OnClick: getters.Select("RoleID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleSelectionFilter"}},
+					&components.ButtonModal{
+						Url:     lago.RoutePath("users.RoleCreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
+					},
 				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
@@ -693,7 +713,11 @@ func registerRolePages() {
 				Data:    getters.Key[components.ObjectList[Role]]("roles"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleFilter"}},
-					&components.TableButtonCreate{Link: lago.RoutePath("users.RoleCreateRoute", nil)},
+					&components.ButtonModal{
+						Url:     lago.RoutePath("users.RoleCreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
+					},
 				},
 				OnClick: getters.NavigateGetter(lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
@@ -706,10 +730,11 @@ func registerRolePages() {
 	})
 
 	// Role Create Form
-	lago.RegistryPage.Register("users.RoleCreateForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserMenu"},
+	lago.RegistryPage.Register("users.RoleCreateForm", &components.Modal{
+		Page: components.Page{
+			Key: "users.RoleCreateModal",
 		},
+		UID: "role-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[Role]{
 				Url:      lago.RoutePath("users.RoleCreateRoute", nil),
@@ -725,7 +750,12 @@ func registerRolePages() {
 					},
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save Role"},
+					&components.ContainerRow{
+						Classes: "flex justify-end gap-2 mt-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Save Role", Classes: "btn-primary"},
+						},
+					},
 				},
 			},
 		},

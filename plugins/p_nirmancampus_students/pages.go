@@ -368,7 +368,14 @@ func registerTablePages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[Student]]("students"),
 				Actions: []components.PageInterface{
-					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentFilter"}, Page: components.Page{Roles: []string{"admin", "superuser"}}},
+					&components.TableButtonFilter{
+						Child: lago.DynamicPage{Name: "students.StudentFilter"},
+						Page:  components.Page{Roles: []string{"admin", "superuser"}},
+					},
+					&components.TableButtonCreate{
+						Link: lago.RoutePath("students.CreateRoute", nil),
+						Page: components.Page{Roles: []string{"admin", "superuser"}},
+					},
 				},
 				OnClick: getters.NavigateGetter(lago.RoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
