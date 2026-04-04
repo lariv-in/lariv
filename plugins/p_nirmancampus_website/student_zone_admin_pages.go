@@ -581,12 +581,12 @@ func registerStudentZoneAdminDetailPages() {
 
 func registerStudentZoneAdminSelectionPages() {
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionSelectionTable", &components.Modal{
-		UID:   "section-selection-modal",
-		Title: "Select Section",
+		UID: "section-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[StudentZoneSection]{
-				UID:  "section-selection-table",
-				Data: getters.Key[components.ObjectList[StudentZoneSection]]("sections"),
+				UID:   "section-selection-table",
+				Title: "Select Section",
+				Data:  getters.Key[components.ObjectList[StudentZoneSection]]("sections"),
 				OnClick: getters.Select("StudentZoneSectionID",
 					getters.Key[uint]("$row.ID"),
 					getters.Key[string]("$row.Title"),

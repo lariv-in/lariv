@@ -10,6 +10,7 @@ import (
 
 func init() {
 	registerMenuPages()
+	registerProgramsMenuCoursesEntry()
 	registerFilterPages()
 	registerFormPages()
 	registerTablePages()
@@ -17,27 +18,27 @@ func init() {
 	registerSelectionPages()
 }
 
+func registerProgramsMenuCoursesEntry() {
+	lago.RegistryPage.Patch("programs.ProgramMenu", func(page components.PageInterface) components.PageInterface {
+		menu, ok := page.(*components.SidebarMenu)
+		if !ok {
+			return page
+		}
+		menu.Children = append(menu.Children, &components.SidebarMenuItem{
+			Title: getters.Static("Courses"),
+			Url:   lago.RoutePath("courses.DefaultRoute", nil),
+		})
+		return menu
+	})
+}
+
 // --- Menus ---
 
 func registerMenuPages() {
-	lago.RegistryPage.Register("courses.CourseMenu", &components.SidebarMenu{
-		Title: getters.Static("Courses"),
-		Back: &components.SidebarMenuItem{
-			Title: getters.Static("Back to Home"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
-		},
-		Children: []components.PageInterface{
-			&components.SidebarMenuItem{
-				Title: getters.Static("All Courses"),
-				Url:   lago.RoutePath("courses.DefaultRoute", nil),
-			},
-		},
-	})
-
 	lago.RegistryPage.Register("courses.CourseDetailMenu", &components.SidebarMenu{
 		Title: getters.Format("Course: %s", getters.Any(getters.Key[string]("course.Name"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.Static("Back to All Courses"),
+			Title: getters.Static("Back to courses"),
 			Url:   lago.RoutePath("courses.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
@@ -186,11 +187,12 @@ func courseFormFields() *components.ContainerColumn {
 func registerFormPages() {
 	lago.RegistryPage.Register("courses.CourseFormFields", courseFormFields())
 
-	lago.RegistryPage.Register("courses.CourseCreateForm", &components.ShellScaffold{
-		Page: components.Page{Roles: []string{"admin", "superuser"}},
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "courses.CourseMenu"},
+	lago.RegistryPage.Register("courses.CourseCreateForm", &components.Modal{
+		Page: components.Page{
+			Key:   "courses.CourseCreateModal",
+			Roles: []string{"admin", "superuser"},
 		},
+		UID: "courses-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[Course]{
 				Url:      lago.RoutePath("courses.CreateRoute", nil),
@@ -202,7 +204,12 @@ func registerFormPages() {
 					courseFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save Course"},
+					&components.ContainerRow{
+						Classes: "flex justify-end gap-2 mt-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Save Course", Classes: "btn-primary"},
+						},
+					},
 				},
 			},
 		},
@@ -237,18 +244,21 @@ func registerFormPages() {
 func registerTablePages() {
 	lago.RegistryPage.Register("courses.CourseTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "courses.CourseMenu"},
+			lago.DynamicPage{Name: "programs.ProgramMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Course]{
+				Page:    components.Page{Key: "courses.CourseTableBody"},
 				UID:     "course-table",
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[Course]]("courses"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseFilter"}},
-					&components.TableButtonCreate{
-						Page: components.Page{Roles: []string{"admin", "superuser"}},
-						Link: lago.RoutePath("courses.CreateRoute", nil),
+					&components.ButtonModal{
+						Page:    components.Page{Roles: []string{"admin", "superuser"}},
+						Url:     lago.RoutePath("courses.CreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
 					},
 				},
 				OnClick: getters.NavigateGetter(lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
@@ -334,11 +344,11 @@ func registerDetailPages() {
 
 func registerSelectionPages() {
 	lago.RegistryPage.Register("courses.CourseSelectionTable", &components.Modal{
-		UID:   "course-selection-modal",
-		Title: "Select Course",
+		UID: "course-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[Course]{
 				UID:     "course-selection-table",
+				Title:   "Select Course",
 				Data:    getters.Key[components.ObjectList[Course]]("courses"),
 				OnClick: getters.Select("CourseID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
@@ -357,12 +367,12 @@ func registerSelectionPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseMultiSelectionTable", &components.Modal{
-		UID:   "course-multi-selection-modal",
-		Title: "Select Courses",
+		UID: "course-multi-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[Course]{
-				UID:  "course-multi-selection-table",
-				Data: getters.Key[components.ObjectList[Course]]("courses"),
+				UID:   "course-multi-selection-table",
+				Title: "Select Courses",
+				Data:  getters.Key[components.ObjectList[Course]]("courses"),
 				OnClick: getters.SelectMulti(
 					getters.IfOrElse(
 						getters.Key[string]("$get.target_input"),

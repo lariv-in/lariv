@@ -7,7 +7,9 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
-const AppUrl = "/courses/"
+// AppUrl is under the Programs app; keep in sync with p_nirmancampus_programs.AppUrl + "addon/courses/"
+// (courses cannot import programs — import cycle — so the prefix is spelled out here).
+var AppUrl = "/programs/addon/courses/"
 
 func init() {
 	u, err := url.Parse(AppUrl)
@@ -16,7 +18,7 @@ func init() {
 	}
 
 	err = lago.RegistryPlugin.Register("p_nirmancampus_courses", lago.Plugin{
-		Type:        lago.PluginTypeApp,
+		Type:        lago.PluginTypeAddon,
 		Icon:        "book-open",
 		URL:         u,
 		VerboseName: "Courses",

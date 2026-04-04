@@ -346,12 +346,12 @@ func registerDetailPages() {
 
 func registerSelectionPages() {
 	lago.RegistryPage.Register("contacts.ContactSelectionTable", &components.Modal{
-		UID:   "contact-selection-modal",
-		Title: "Select Contact",
+		UID: "contact-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[Contact]{
 				Page:    components.Page{Key: "contacts.ContactSelectionTableBody"},
 				UID:     "contact-selection-table",
+				Title:   "Select Contact",
 				Data:    getters.Key[components.ObjectList[Contact]]("contacts"),
 				OnClick: getters.Select("ContactID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{

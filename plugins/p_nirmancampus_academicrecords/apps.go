@@ -9,7 +9,7 @@ import (
 )
 
 // AppUrl is under the Students app; see Caveats.md ("HTTP routes nested under another app's prefix").
-var AppUrl = p_nirmancampus_students.AppUrl + "plugin/academicrecords/"
+var AppUrl = p_nirmancampus_students.AppUrl + "addon/academicrecords/"
 
 func init() {
 	u, err := url.Parse(AppUrl)

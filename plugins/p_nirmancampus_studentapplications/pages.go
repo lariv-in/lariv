@@ -485,23 +485,22 @@ func registerDetailPages() {
 									&components.FieldText{Getter: getters.Key[string]("$in.Email")},
 								},
 							},
-							&components.LabelInline{
-								Title:   "Complete address",
-								Classes: "mt-2",
+							&components.LabelNewline{
+								Title: "Complete address",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.CompleteAddress")},
 								},
 							},
-							&components.LabelInline{
+							&components.LabelNewline{
 								Title: "Photo",
 								Children: []components.PageInterface{
 									&p_filesystem.FieldPhoto{
 										VNode:   getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$in.PhotoID"))),
-										Classes: "w-48 rounded",
+										Classes: "w-42 rounded",
 									},
 								},
 							},
-							&components.LabelInline{
+							&components.LabelNewline{
 								Title: "Documents",
 								Children: []components.PageInterface{
 									&p_filesystem.FieldManyFile{

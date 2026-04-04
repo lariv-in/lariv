@@ -202,6 +202,27 @@ func createFormFields() components.ContainerColumn {
 		},
 		Children: []components.PageInterface{
 			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.SessionID"),
+						Children: []components.PageInterface{
+							&components.InputForeignKey[sessions.Session]{
+								Label:       "Session",
+								Name:        "SessionID",
+								Required:    true,
+								Url:         lago.RoutePath("sessions.SelectRoute", nil),
+								Display:     getters.Key[string]("$in.Name"),
+								Placeholder: "Select a session…",
+								Getter: getters.Association[sessions.Session](
+									getters.Key[uint]("$in.SessionID"),
+								),
+							},
+						},
+					},
+				},
+			},
+			&components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
@@ -232,27 +253,6 @@ func createFormFields() components.ContainerColumn {
 								Placeholder: "Select a program...",
 								Getter: getters.Association[p_nirmancampus_programs.Program](
 									getters.Key[uint]("$in.ProgramID"),
-								),
-							},
-						},
-					},
-				},
-			},
-			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
-				Children: []components.PageInterface{
-					&components.ContainerError{
-						Error: getters.Key[error]("$error.SessionID"),
-						Children: []components.PageInterface{
-							&components.InputForeignKey[sessions.Session]{
-								Label:       "Session",
-								Name:        "SessionID",
-								Required:    true,
-								Url:         lago.RoutePath("sessions.SelectRoute", nil),
-								Display:     getters.Key[string]("$in.Name"),
-								Placeholder: "Select a session…",
-								Getter: getters.Association[sessions.Session](
-									getters.Key[uint]("$in.SessionID"),
 								),
 							},
 						},
@@ -368,13 +368,6 @@ func editFormFields() components.ContainerColumn {
 					getters.Key[uint]("$in.ProgramID"),
 				),
 			},
-			&components.InputForeignKey[sessions.Session]{
-				Hidden: true,
-				Name:   "SessionID",
-				Getter: getters.Association[sessions.Session](
-					getters.Key[uint]("$in.SessionID"),
-				),
-			},
 			&components.InputNumber[uint]{
 				Hidden:   true,
 				Name:     "Term",
@@ -452,12 +445,12 @@ func registerFormPages() {
 		Page: components.Page{
 			Key: "academicrecords.AcademicRecordCreateModal",
 		},
-		UID:   "academicrecords-create-modal",
-		Title: "Create Academic Record",
+		UID: "academicrecords-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
 				Url:      lago.RoutePath("academicrecords.CreateRoute", nil),
 				Method:   http.MethodPost,
+				Title:    "Create Academic Record",
 				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
@@ -634,13 +627,13 @@ func registerDetailPages() {
 
 func registerSelectionPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordSelectionTable", &components.Modal{
-		UID:   "academicrecords-selection-modal",
-		Title: "Select Academic Record",
+		UID: "academicrecords-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[AcademicRecord]{
-				Page: components.Page{Key: "academicrecords.AcademicRecordSelectionTableBody"},
-				UID:  "academicrecords-selection-table",
-				Data: getters.Key[components.ObjectList[AcademicRecord]]("academicrecords"),
+				Page:  components.Page{Key: "academicrecords.AcademicRecordSelectionTableBody"},
+				UID:   "academicrecords-selection-table",
+				Title: "Select Academic Record",
+				Data:  getters.Key[components.ObjectList[AcademicRecord]]("academicrecords"),
 				OnClick: getters.Select("AcademicRecordID", getters.Key[uint]("$row.ID"), getters.Format(
 					"%s (%s) · term %s",
 					getters.Any(getters.Key[string]("$row.Program.Name")),

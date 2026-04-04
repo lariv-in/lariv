@@ -408,12 +408,12 @@ func registerDetailPages() {
 
 func registerSelectionPages() {
 	lago.RegistryPage.Register("sessions.sessionselectionTable", &components.Modal{
-		UID:   "session-selection-modal",
-		Title: "Select Session",
+		UID: "session-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[Session]{
 				Page:    components.Page{Key: "sessions.sessionselectionTableBody"},
 				UID:     "session-selection-table",
+				Title:   "Select Session",
 				Data:    getters.Key[components.ObjectList[Session]]("sessions"),
 				OnClick: getters.Select("SessionID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{

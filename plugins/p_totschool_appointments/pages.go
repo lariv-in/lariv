@@ -330,13 +330,13 @@ func getterIdleGeneration() getters.Getter[bool] {
 
 func registerModal() {
 	lago.RegistryPage.Register("appointments.AiEditModal", components.Modal{
-		UID:   "ai-edit-modal",
-		Title: "Edit with AI",
+		UID: "ai-edit-modal",
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
 				Getter: getters.Key[Appointment]("appointment"),
 				Url:    lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 				Method: http.MethodPost,
+				Title:  "Edit with AI",
 				ChildrenInput: []components.PageInterface{
 					components.ContainerError{
 						Error: getters.Key[error]("$error.generated_letter"),
@@ -378,11 +378,11 @@ func registerDelete() {
 
 func registerSelectionPages() {
 	lago.RegistryPage.Register("appointments.AppointmentSelectionTable", components.Modal{
-		UID:   "appointment-selection-modal",
-		Title: "Select Appointment",
+		UID: "appointment-selection-modal",
 		Children: []components.PageInterface{
 			components.DataTable[Appointment]{
 				UID:     "appointment-selection-table",
+				Title:   "Select Appointment",
 				Data:    getters.Key[components.ObjectList[Appointment]]("appointments"),
 				OnClick: getters.Select("appointment", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{

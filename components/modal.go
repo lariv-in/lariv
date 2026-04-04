@@ -10,7 +10,6 @@ import (
 type Modal struct {
 	Page
 	UID      string
-	Title    string
 	Children []PageInterface
 	Classes  string
 }
@@ -23,11 +22,6 @@ func (e Modal) Build(ctx context.Context) Node {
 
 	uid := e.UID
 
-	var titleNode Node
-	if e.Title != "" {
-		titleNode = H3(Class("font-bold text-lg mb-4"), Text(e.Title))
-	}
-
 	return El("dialog",
 		ID(uid), Class("modal modal-open"),
 		Attr("hx-push-url", "false"),
@@ -39,7 +33,6 @@ func (e Modal) Build(ctx context.Context) Node {
 					Attr("onclick", "document.getElementById('"+uid+"').remove()"), Render(Icon{Name: "x-mark"}, ctx),
 				),
 			),
-			If(titleNode != nil, titleNode),
 			Group(childNodes),
 		),
 		FormEl(Method("dialog"), Class("modal-backdrop"),

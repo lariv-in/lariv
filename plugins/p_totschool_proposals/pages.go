@@ -274,13 +274,13 @@ func getterIdleGeneration() getters.Getter[bool] {
 
 func registerModal() {
 	lago.RegistryPage.Register("proposals.AiEditModal", components.Modal{
-		UID:   "ai-edit-modal",
-		Title: "Edit with AI",
+		UID: "ai-edit-modal",
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
 				Getter: getters.Key[Proposal]("proposal"),
 				Url:    lago.RoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
 				Method: http.MethodPost,
+				Title:  "Edit with AI",
 				ChildrenInput: []components.PageInterface{
 					components.InputTextarea{Name: "GeneratedContent", Label: "Current Proposal Markdown", Getter: getters.Key[string]("$in.GeneratedContent"), Rows: 8},
 					components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Getter: getters.Key[string]("$in.instructions"), Rows: 4, Required: true},

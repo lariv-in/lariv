@@ -43,6 +43,7 @@ func init() {
 		lago.GetPageView("assignmentsubmissions.CreateForm").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
 			WithMiddleware("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleMiddleware).
+			WithMiddleware("assignmentsubmissions.create_query_defaults", assignmentSubmissionCreateQueryDefaultsMiddleware{}).
 			WithMiddleware("assignmentsubmissions.create", views.MiddlewareCreate[AssignmentSubmission]{
 				SuccessURL: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),

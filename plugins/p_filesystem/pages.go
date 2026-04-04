@@ -737,14 +737,13 @@ func selectionTable(name, filterName, childRoute string, multi, selectDirectorie
 	}
 
 	return &components.Modal{
-		UID:   modalID,
-		Title: title,
+		UID: modalID,
 		Children: []components.PageInterface{
 			&components.DataTable[VNode]{
 				UID:      "filesystem-selection-table-" + name,
-				Data:     getters.Key[components.ObjectList[VNode]]("vnodes"),
 				Title:    title,
 				Subtitle: subtitle,
+				Data:     getters.Key[components.ObjectList[VNode]]("vnodes"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: filterName}},
 				},

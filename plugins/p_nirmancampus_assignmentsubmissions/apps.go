@@ -5,9 +5,11 @@ import (
 	"net/url"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 )
 
-const AppUrl = "/assignment-submissions/"
+// AppUrl is under the Students app; see Caveats.md ("HTTP routes nested under another app's prefix").
+var AppUrl = p_nirmancampus_students.AppUrl + "addon/assignmentsubmissions/"
 
 func init() {
 	u, err := url.Parse(AppUrl)
@@ -16,7 +18,7 @@ func init() {
 	}
 
 	err = lago.RegistryPlugin.Register("p_nirmancampus_assignmentsubmissions", lago.Plugin{
-		Type:        lago.PluginTypeApp,
+		Type:        lago.PluginTypeAddon,
 		Icon:        "document-check",
 		URL:         u,
 		VerboseName: "Assignment Submissions",

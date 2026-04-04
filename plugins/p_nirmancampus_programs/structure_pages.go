@@ -219,12 +219,12 @@ func registerStructurePages() {
 	}
 
 	lago.RegistryPage.Register("programs.StructureUnitCreateModal", components.Modal{
-		UID:   "structure-unit-create-modal",
-		Title: "Add structure unit",
+		UID: "structure-unit-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
 				Url:    lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 				Method: http.MethodPost,
+				Title:  "Add structure unit",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
 						Hidden: true,
@@ -246,8 +246,7 @@ func registerStructurePages() {
 	})
 
 	lago.RegistryPage.Register("programs.StructureUnitEditModal", components.Modal{
-		UID:   "structure-unit-edit-modal",
-		Title: "Edit structure unit",
+		UID: "structure-unit-edit-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
 				Getter: getters.Key[ProgramStructureUnit]("unit"),
@@ -256,6 +255,7 @@ func registerStructurePages() {
 					"unitId": getters.Any(getters.Key[uint]("unit.ID")),
 				}),
 				Method: http.MethodPost,
+				Title:  "Edit structure unit",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
 						Hidden: true,

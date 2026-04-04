@@ -2,7 +2,8 @@ package p_nirmancampus_assignmentsubmissions
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
@@ -11,35 +12,37 @@ import (
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
+	"gorm.io/gorm"
 )
 
 func init() {
 	registerMenuPages()
+	registerStudentsMenuAssignmentSubmissionsEntry()
 	registerFilterPages()
 	registerFormPages()
 	registerTablePages()
 	registerDetailPages()
 }
 
-func registerMenuPages() {
-	lago.RegistryPage.Register("assignmentsubmissions.Menu", &components.SidebarMenu{
-		Title: getters.Static("Assignment Submissions"),
-		Back: &components.SidebarMenuItem{
-			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
-		},
-		Children: []components.PageInterface{
-			&components.SidebarMenuItem{
-				Title: getters.Static("All Submissions"),
-				Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
-			},
-		},
+func registerStudentsMenuAssignmentSubmissionsEntry() {
+	lago.RegistryPage.Patch("students.StudentMenu", func(page components.PageInterface) components.PageInterface {
+		menu, ok := page.(*components.SidebarMenu)
+		if !ok {
+			return page
+		}
+		menu.Children = append(menu.Children, &components.SidebarMenuItem{
+			Title: getters.Static("Assignment Submissions"),
+			Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
+		})
+		return menu
 	})
+}
 
+func registerMenuPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.DetailMenu", &components.SidebarMenu{
 		Title: getters.Format("Submission: %s", getters.Any(getters.Key[string]("assignmentsubmission.AssignmentTitle"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.Static("Back to all submissions"),
+			Title: getters.Static("Back to assignment submissions"),
 			Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
 		},
 		Children: []components.PageInterface{
@@ -93,6 +96,32 @@ func registerFilterPages() {
 			},
 		},
 	})
+}
+
+// assignmentSubmissionFormAcademicRecordGetter loads the academic record for the FK input with
+// preloads so Display (Student.StudentNo) works; plain getters.Association does not preload Student.
+func assignmentSubmissionFormAcademicRecordGetter() getters.Getter[p_nirmancampus_academicrecords.AcademicRecord] {
+	return func(ctx context.Context) (p_nirmancampus_academicrecords.AcademicRecord, error) {
+		var zero p_nirmancampus_academicrecords.AcademicRecord
+		id, err := getters.Key[uint]("$in.AcademicRecordID")(ctx)
+		if err != nil || id == 0 {
+			return zero, nil
+		}
+		db, ok := ctx.Value("$db").(*gorm.DB)
+		if !ok || db == nil {
+			return zero, nil
+		}
+		var rec p_nirmancampus_academicrecords.AcademicRecord
+		err = db.Preload("Student").Preload("Program").First(&rec, id).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return zero, nil
+			}
+			slog.Error("assignmentSubmissionFormAcademicRecordGetter: load failed", "error", err, "id", id)
+			return zero, err
+		}
+		return rec, nil
+	}
 }
 
 func assignmentSubmissionFormFields() *components.ContainerColumn {
@@ -177,9 +206,7 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 								Url:         lago.RoutePath("academicrecords.SelectRoute", nil),
 								Display:     getters.Key[string]("$in.Student.StudentNo"),
 								Placeholder: "Select an academic record...",
-								Getter: getters.Association[p_nirmancampus_academicrecords.AcademicRecord](
-									getters.Key[uint]("$in.AcademicRecordID"),
-								),
+								Getter:      assignmentSubmissionFormAcademicRecordGetter(),
 							},
 						},
 					},
@@ -200,27 +227,15 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 	}
 }
 
-func assignmentSubmissionCreateURLGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if role == "superuser" || role == "admin" {
-			return lago.RoutePath("assignmentsubmissions.CreateRoute", nil)(ctx)
-		}
-		return "", fmt.Errorf("you do not have permission to do this action")
-	}
-}
-
 func registerFormPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.FormFields", assignmentSubmissionFormFields())
 
-	lago.RegistryPage.Register("assignmentsubmissions.CreateForm", &components.ShellScaffold{
-		Page: components.Page{Roles: []string{"admin", "superuser"}},
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "assignmentsubmissions.Menu"},
+	lago.RegistryPage.Register("assignmentsubmissions.CreateForm", &components.Modal{
+		Page: components.Page{
+			Key:   "assignmentsubmissions.CreateModal",
+			Roles: []string{"admin", "superuser"},
 		},
+		UID: "assignmentsubmissions-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
 				Url:      lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
@@ -232,7 +247,12 @@ func registerFormPages() {
 					assignmentSubmissionFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save submission"},
+					&components.ContainerRow{
+						Classes: "flex justify-end gap-2 mt-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Save submission", Classes: "btn-primary"},
+						},
+					},
 				},
 			},
 		},
@@ -267,7 +287,7 @@ func registerFormPages() {
 func registerTablePages() {
 	lago.RegistryPage.Register("assignmentsubmissions.Table", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "assignmentsubmissions.Menu"},
+			lago.DynamicPage{Name: "students.StudentMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[AssignmentSubmission]{
@@ -277,7 +297,12 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[AssignmentSubmission]]("assignmentsubmissions"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "assignmentsubmissions.Filter"}},
-					&components.TableButtonCreate{Link: assignmentSubmissionCreateURLGetter()},
+					&components.ButtonModal{
+						Page:    components.Page{Roles: []string{"admin", "superuser"}},
+						Url:     lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
+					},
 				},
 				OnClick: getters.NavigateGetter(lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{

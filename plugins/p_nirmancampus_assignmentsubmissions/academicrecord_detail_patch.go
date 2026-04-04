@@ -72,13 +72,15 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 		Data:        getters.Key[components.ObjectList[AssignmentSubmission]](academicRecordDetailSubmissionsContextKey),
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
-			&components.TableButtonCreate{
+			&components.ButtonModal{
 				Page: components.Page{Roles: []string{"admin", "superuser"}},
-				Link: getters.Format(
+				Url: getters.Format(
 					"%s?AcademicRecordID=%d",
 					getters.Any(lago.RoutePath("assignmentsubmissions.CreateRoute", nil)),
 					getters.Any(getters.Key[uint]("$in.ID")),
 				),
+				Icon:    "plus",
+				Classes: "btn-square btn-outline btn-sm",
 			},
 		},
 		OnClick: getters.NavigateGetter(

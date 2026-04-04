@@ -594,11 +594,11 @@ func registerAuthPages() {
 
 func registerSelectionPages() {
 	lago.RegistryPage.Register("users.UserSelectionTable", &components.Modal{
-		UID:   "user-selection-modal",
-		Title: "Select User",
+		UID: "user-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[User]{
 				UID:     "user-selection-table",
+				Title:   "Select User",
 				Data:    getters.Key[components.ObjectList[User]]("users"),
 				OnClick: getters.Select("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
@@ -620,11 +620,11 @@ func registerSelectionPages() {
 	})
 
 	lago.RegistryPage.Register("users.RoleSelectionTable", &components.Modal{
-		UID:   "role-selection-modal",
-		Title: "Select Role",
+		UID: "role-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[Role]{
 				UID:     "role-selection-table",
+				Title:   "Select Role",
 				Data:    getters.Key[components.ObjectList[Role]]("roles"),
 				OnClick: getters.Select("RoleID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
