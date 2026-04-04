@@ -54,7 +54,7 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 		pool := joinCourseCodes(u.OptionalCourseSelectionPool)
 		comp := joinCourseCodes(u.CompulsoryCourses)
 		nodes = append(nodes,
-			Div(Class("rounded-box border border-base-300 p-4 flex flex-col gap-2 @md:flex-row @md:items-start @md:justify-between"),
+			Div(Class("rounded-box border border-base-300 p-2 flex flex-col gap-2 @md:flex-row @md:items-start @md:justify-between"),
 				Div(Class("flex flex-col gap-1 min-w-0"),
 					Div(Class("font-semibold"), Text(fmt.Sprintf("Term %d", u.TermNumber))),
 					Div(Class("text-sm text-base-content/80"), Text("Compulsory: "+comp)),
@@ -69,7 +69,7 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 			),
 		)
 	}
-	return Div(Class("flex flex-col gap-3"), Group(nodes))
+	return Div(Class("flex flex-col gap-2 my-4"), Group(nodes))
 }
 
 func registerStructurePages() {
