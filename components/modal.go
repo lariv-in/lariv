@@ -7,6 +7,13 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
+// HTMXTargetBodyModal / HTMXSwapBodyModal append modal markup as a direct child of document.body so
+// overlays stack above parent stacking contexts (nested modals, selector inside a dialog, etc.).
+const (
+	HTMXTargetBodyModal = "body"
+	HTMXSwapBodyModal   = "beforeend"
+)
+
 type Modal struct {
 	Page
 	UID      string
@@ -23,7 +30,7 @@ func (e Modal) Build(ctx context.Context) Node {
 	uid := e.UID
 
 	return El("dialog",
-		ID(uid), Class("modal modal-open"),
+		ID(uid), Class("modal modal-open fk-modal-container"),
 		Attr("hx-push-url", "false"),
 		Attr("hx-target", "this"),
 		Attr("hx-swap", "outerHTML"),

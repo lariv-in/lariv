@@ -51,11 +51,10 @@ func (e ButtonModal) Build(ctx context.Context) Node {
 			Type("button"),
 			Class(buttonClasses),
 			Attr("hx-get", url),
-			Attr("hx-target", "next .modal-container"),
-			Attr("hx-swap", "innerHTML"),
+			Attr("hx-target", HTMXTargetBodyModal),
+			Attr("hx-swap", HTMXSwapBodyModal),
 			Attr("hx-push-url", "false"),
 			content,
 		),
-		Div(Class("modal-container")),
 	)
 }

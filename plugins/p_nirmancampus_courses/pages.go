@@ -353,6 +353,12 @@ func registerSelectionPages() {
 				OnClick: getters.Select("CourseID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseSelectionFilter"}},
+					&components.ButtonModal{
+						Page:    components.Page{Roles: []string{"admin", "superuser"}},
+						Url:     lago.RoutePath("courses.CreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
+					},
 				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
@@ -390,6 +396,12 @@ func registerSelectionPages() {
 				),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
+					&components.ButtonModal{
+						Page:    components.Page{Roles: []string{"admin", "superuser"}},
+						Url:     lago.RoutePath("courses.CreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
+					},
 				},
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{

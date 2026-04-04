@@ -79,7 +79,6 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	nameJSON, _ := json.Marshal(e.Name)
 	placeholderJSON, _ := json.Marshal(placeholder)
 
-	modalContainerID := fmt.Sprintf("m2m-modal-%s", e.Name)
 	alpineData := fmt.Sprintf(`{
 		items: %s,
 		placeholder: %s,
@@ -133,8 +132,8 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 				Class("input input-bordered w-full min-h-12 h-auto flex flex-wrap items-center gap-2 cursor-pointer"),
 				Attr(":class", "items.length ? '' : 'opacity-50'"),
 				Attr("hx-get", urlStr),
-				Attr("hx-target", fmt.Sprintf("#%s", modalContainerID)),
-				Attr("hx-swap", "innerHTML"),
+				Attr("hx-target", HTMXTargetBodyModal),
+				Attr("hx-swap", HTMXSwapBodyModal),
 				Attr("hx-push-url", "false"),
 				Span(
 					Attr("x-show", "items.length === 0"),
@@ -158,11 +157,6 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 					),
 				),
 			),
-		),
-		Div(
-			ID(modalContainerID),
-			Class("fk-modal-container"),
-			Attr("x-init", "document.body.appendChild($el)"),
 		),
 	)
 }
