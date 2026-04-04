@@ -149,15 +149,6 @@ func (requireAdminMiddleware) Next(_ views.View, next http.Handler) http.Handler
 	})
 }
 
-func scopeAppointmentsQueryToCurrentUser(r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
-	user := r.Context().Value("$user").(p_users.User)
-	role, _ := r.Context().Value("$role").(string)
-	if user.IsSuperuser || role == "totschool_admin" {
-		return query
-	}
-	return query.Where("user_id = ?", user.ID)
-}
-
 // TallyListQueryPatcher scopes and filters the tallies list for the generic ListView.
 type tallyListQueryPatcher struct{}
 
@@ -247,49 +238,6 @@ func (tallyListQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.Cha
 }
 
 var TallyListQueryPatcher views.QueryPatcher[Tally] = tallyListQueryPatcher{}
-
-type tallyTimelineQueryPatcher struct{}
-
-func (tallyTimelineQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
-	ctx := r.Context()
-	query = scopeAppointmentsQueryToCurrentUser(r, query)
-
-	if get, ok := ctx.Value("$get").(map[string]any); ok {
-		if raw, exists := get["Date"]; exists && raw != nil {
-			switch d := raw.(type) {
-			case time.Time:
-				if !d.IsZero() {
-					return applyDateFilter(raw, query)
-				}
-			case string:
-				if d != "" {
-					return applyDateFilter(raw, query)
-				}
-			}
-		}
-	}
-	return applyDateFilter(time.Now(), query)
-}
-
-var AppointmentTimelineQueryPatcher views.QueryPatcher[Tally] = tallyTimelineQueryPatcher{}
-
-func applyDateFilter(raw any, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
-	switch d := raw.(type) {
-	case time.Time:
-		start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
-		end := start.Add(24 * time.Hour)
-		query = query.Where("date >= ? AND date < ?", start, end)
-	case string:
-		if d != "" {
-			if parsed, err := time.Parse("2006-01-02", d); err == nil {
-				start := time.Date(parsed.Year(), parsed.Month(), parsed.Day(), 0, 0, 0, 0, parsed.Location())
-				end := start.Add(24 * time.Hour)
-				query = query.Where("date >= ? AND date < ?", start, end)
-			}
-		}
-	}
-	return query
-}
 
 // TallyDailyFormHandler handles form submission for the logged-in user's daily tally.
 func TallyDailyFormHandler(v *views.View) http.Handler {
@@ -426,17 +374,6 @@ func init() {
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Tally]{
 					{Key: "tally.detail", Value: TallyDetailQueryPatcher},
-				},
-			}))
-
-	lago.RegistryView.Register("tally.CardTimelineView",
-		lago.GetPageView("tally.AppointmentCardTimeline").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("tally.timeline", views.MiddlewareList[Tally]{
-				Key: getters.Static("appointments"),
-				QueryPatchers: views.QueryPatchers[Tally]{
-					{Key: "appointments.timeline", Value: AppointmentTimelineQueryPatcher},
-					{Key: "appointments.timeline_order", Value: views.QueryPatcherOrderBy[Tally]{Order: "date ASC"}},
 				},
 			}))
 }

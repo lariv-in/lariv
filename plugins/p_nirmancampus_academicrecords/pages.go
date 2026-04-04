@@ -19,6 +19,7 @@ import (
 
 func init() {
 	registerMenuPages()
+	registerStudentsMenuAcademicRecordsEntry()
 	registerFilterPages()
 	registerFormPages()
 	registerTablePages()
@@ -92,21 +93,21 @@ func optionalCoursesMultiSelectURLGetter() getters.Getter[string] {
 
 // --- Menus ---
 
-func registerMenuPages() {
-	lago.RegistryPage.Register("academicrecords.AcademicRecordMenu", &components.SidebarMenu{
-		Title: getters.Static("Academic Records"),
-		Back: &components.SidebarMenuItem{
-			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
-		},
-		Children: []components.PageInterface{
-			&components.SidebarMenuItem{
-				Title: getters.Static("All Academic Records"),
-				Url:   lago.RoutePath("academicrecords.DefaultRoute", nil),
-			},
-		},
+func registerStudentsMenuAcademicRecordsEntry() {
+	lago.RegistryPage.Patch("students.StudentMenu", func(page components.PageInterface) components.PageInterface {
+		menu, ok := page.(*components.SidebarMenu)
+		if !ok {
+			return page
+		}
+		menu.Children = append(menu.Children, &components.SidebarMenuItem{
+			Title: getters.Static("Academic Records"),
+			Url:   lago.RoutePath("academicrecords.DefaultRoute", nil),
+		})
+		return menu
 	})
+}
 
+func registerMenuPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordDetailMenu", &components.SidebarMenu{
 		Title: getters.Format("Record: %s", getters.Any(getters.Key[string]("academicrecord.Student.User.Name"))),
 		Back: &components.SidebarMenuItem{
@@ -409,22 +410,28 @@ func registerFormPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordFormFields", editFormFields())
 	lago.RegistryPage.Register("academicrecords.AcademicRecordCreateFormFields", createFormFields())
 
-	lago.RegistryPage.Register("academicrecords.AcademicRecordCreateForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "academicrecords.AcademicRecordMenu"},
+	lago.RegistryPage.Register("academicrecords.AcademicRecordCreateForm", &components.Modal{
+		Page: components.Page{
+			Key: "academicrecords.AcademicRecordCreateModal",
 		},
+		UID:   "academicrecords-create-modal",
+		Title: "Create Academic Record",
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
 				Url:      lago.RoutePath("academicrecords.CreateRoute", nil),
 				Method:   http.MethodPost,
-				Title:    "Create Academic Record",
 				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
 					createFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save Academic Record"},
+					&components.ContainerRow{
+						Classes: "flex justify-end gap-2 mt-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Save Academic Record", Classes: "btn-primary"},
+						},
+					},
 				},
 			},
 		},
@@ -460,7 +467,7 @@ func registerFormPages() {
 func registerTablePages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "academicrecords.AcademicRecordMenu"},
+			lago.DynamicPage{Name: "students.StudentMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[AcademicRecord]{
@@ -473,9 +480,11 @@ func registerTablePages() {
 						Child: lago.DynamicPage{Name: "academicrecords.AcademicRecordFilter"},
 						Page:  components.Page{Roles: []string{"admin", "superuser"}},
 					},
-					&components.TableButtonCreate{
-						Link: lago.RoutePath("academicrecords.CreateRoute", nil),
-						Page: components.Page{Roles: []string{"admin", "superuser"}},
+					&components.ButtonModal{
+						Page:    components.Page{Roles: []string{"admin", "superuser"}},
+						Url:     lago.RoutePath("academicrecords.CreateRoute", nil),
+						Icon:    "plus",
+						Classes: "btn-square btn-outline btn-sm",
 					},
 				},
 				OnClick: getters.NavigateGetter(

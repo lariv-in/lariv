@@ -49,6 +49,7 @@ func init() {
 		lago.GetPageView("academicrecords.AcademicRecordCreateForm").
 			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
 			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
+			WithMiddleware("academicrecords.create_query_defaults", academicRecordCreateQueryDefaultsMiddleware{}).
 			WithMiddleware("academicrecords.create", views.MiddlewareCreate[AcademicRecord]{
 				SuccessURL: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),

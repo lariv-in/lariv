@@ -5,9 +5,11 @@ import (
 	"net/url"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 )
 
-const AppUrl = "/academicrecords/"
+// AppUrl is the academic records area inside the Students app (not a standalone dashboard app).
+var AppUrl = p_nirmancampus_students.AppUrl + "academicrecords/"
 
 func init() {
 	u, err := url.Parse(AppUrl)
@@ -16,7 +18,7 @@ func init() {
 	}
 
 	err = lago.RegistryPlugin.Register("p_nirmancampus_academicrecords", lago.Plugin{
-		Type:        lago.PluginTypeApp,
+		Type:        lago.PluginTypeAddon,
 		Icon:        "book-open",
 		URL:         u,
 		VerboseName: "Academic Records",

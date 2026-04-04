@@ -73,12 +73,14 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 		Data:        getters.Key[components.ObjectList[AcademicRecord]](studentDetailAcademicRecordsContextKey),
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
-			&components.TableButtonCreate{
-				Link: getters.Format(
+			&components.ButtonModal{
+				Url: getters.Format(
 					"%s?StudentID=%d",
 					getters.Any(lago.RoutePath("academicrecords.CreateRoute", nil)),
 					getters.Any(getters.Key[uint]("$in.ID")),
 				),
+				Icon:    "plus",
+				Classes: "btn-square btn-outline btn-sm",
 			},
 		},
 		OnClick: getters.NavigateGetter(lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/views"
@@ -51,6 +52,33 @@ func (academicRecordProgramStructureUnitContextMiddleware) Next(_ views.View, ne
 		}
 
 		ctx := context.WithValue(r.Context(), academicRecordProgramStructureUnitContextKey, psu)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// academicRecordCreateQueryDefaultsMiddleware merges select query params into $in on GET
+// so e.g. ?StudentID= from the student detail table pre-fills the create form.
+type academicRecordCreateQueryDefaultsMiddleware struct{}
+
+func (academicRecordCreateQueryDefaultsMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			next.ServeHTTP(w, r)
+			return
+		}
+		sid := r.URL.Query().Get("StudentID")
+		if sid == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		id64, err := strconv.ParseUint(sid, 10, 32)
+		if err != nil || id64 == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+		ctx := views.ContextWithErrorsAndValues(r.Context(), map[string]any{
+			"StudentID": uint(id64),
+		}, nil)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

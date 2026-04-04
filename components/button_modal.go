@@ -41,7 +41,7 @@ func (e ButtonModal) Build(ctx context.Context) Node {
 		content = append(content, Text(e.Label))
 	}
 
-	buttonClasses := "btn w-full " + e.Classes
+	buttonClasses := "btn " + e.Classes
 	if e.Icon != "" && e.Label != "" {
 		buttonClasses += " inline-flex items-center gap-2"
 	}
