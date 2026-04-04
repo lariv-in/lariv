@@ -320,8 +320,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("programs.ProgramFilter", &components.FormComponent[Program]{
-		Url:    lago.RoutePath("programs.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("programs.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -348,8 +348,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramSelectionFilter", &components.FormComponent[Program]{
-		Url:    lago.RoutePath("programs.SelectRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("programs.SelectRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -486,7 +486,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Program]{
-				Url:      lago.RoutePath("programs.CreateRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("programs.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create Program",
 				Subtitle: "Create a new program",
@@ -509,9 +509,9 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Program]{
 				Getter: getters.Key[Program]("program"),
-				Url: lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Edit Program",
 				Subtitle: "Update program details",

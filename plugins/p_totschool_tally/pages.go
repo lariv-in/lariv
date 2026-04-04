@@ -139,7 +139,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				Url:           lago.RoutePath("tally.TallyDailyFormRoute", nil),
+				OnSubmit:      getters.FormSubmit(lago.RoutePath("tally.TallyDailyFormRoute", nil)),
 				Method:        "POST",
 				Title:         "Daily Tally",
 				Subtitle:      "Submit or update your tally for today",
@@ -176,7 +176,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				Url:           lago.RoutePath("tally.TallyCreateRoute", nil),
+				OnSubmit:      getters.FormSubmit(lago.RoutePath("tally.TallyCreateRoute", nil)),
 				Method:        "POST",
 				Title:         "Create Tally",
 				Subtitle:      "Create a tally record for a specific user and date",
@@ -193,7 +193,7 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				Url:           lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				OnSubmit:      getters.FormSubmit(lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
 				Method:        "POST",
 				Title:         "Update Tally",
 				Subtitle:      "Edit tally details",
@@ -347,8 +347,8 @@ func init() {
 
 	// Tally Filter
 	tallyFilter := components.FormComponent[Tally]{
-		Url:    lago.RoutePath("tally.TallyListRoute", nil),
-		Method: "GET",
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("tally.TallyListRoute", nil)),
+		Method:   "GET",
 		ChildrenInput: []components.PageInterface{
 			components.InputForeignKey[uint]{
 				Page: components.Page{Roles: []string{"totschool_admin", "superuser"}},

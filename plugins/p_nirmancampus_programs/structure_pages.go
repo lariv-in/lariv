@@ -222,9 +222,9 @@ func registerStructurePages() {
 		UID: "structure-unit-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
-				Url:    lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
-				Method: http.MethodPost,
-				Title:  "Add structure unit",
+				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))})),
+				Method:   http.MethodPost,
+				Title:    "Add structure unit",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
 						Hidden: true,
@@ -250,10 +250,10 @@ func registerStructurePages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
 				Getter: getters.Key[ProgramStructureUnit]("unit"),
-				Url: lago.RoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
 					"id":     getters.Any(getters.Key[uint]("program.ID")),
 					"unitId": getters.Any(getters.Key[uint]("unit.ID")),
-				}),
+				})),
 				Method: http.MethodPost,
 				Title:  "Edit structure unit",
 				ChildrenInput: []components.PageInterface{

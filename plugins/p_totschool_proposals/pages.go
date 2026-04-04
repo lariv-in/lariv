@@ -51,8 +51,8 @@ func registerMenus() {
 
 func registerFilter() {
 	lago.RegistryPage.Register("proposals.ProposalFilter", components.FormComponent[Proposal]{
-		Url:    lago.RoutePath("proposals.ListRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("proposals.ListRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			components.InputText{Label: "Title", Name: "Title", Getter: getters.Key[string]("$get.Title")},
 		},
@@ -76,7 +76,7 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
-				Url:            lago.RoutePath("proposals.CreateRoute", nil),
+				OnSubmit:       getters.FormSubmit(lago.RoutePath("proposals.CreateRoute", nil)),
 				Method:         http.MethodPost,
 				Title:          "Create Proposal",
 				Subtitle:       "Fill in the questionnaire answers",
@@ -91,7 +91,7 @@ func registerForms() {
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
 				Getter:   getters.Key[Proposal]("proposal"),
-				Url:      lago.RoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
 				Method:   http.MethodPost,
 				Title:    "Edit Proposal",
 				Subtitle: "Update questionnaire answers",
@@ -277,10 +277,10 @@ func registerModal() {
 		UID: "ai-edit-modal",
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
-				Getter: getters.Key[Proposal]("proposal"),
-				Url:    lago.RoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
-				Method: http.MethodPost,
-				Title:  "Edit with AI",
+				Getter:   getters.Key[Proposal]("proposal"),
+				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))})),
+				Method:   http.MethodPost,
+				Title:    "Edit with AI",
 				ChildrenInput: []components.PageInterface{
 					components.InputTextarea{Name: "GeneratedContent", Label: "Current Proposal Markdown", Getter: getters.Key[string]("$in.GeneratedContent"), Rows: 8},
 					components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Getter: getters.Key[string]("$in.instructions"), Rows: 4, Required: true},

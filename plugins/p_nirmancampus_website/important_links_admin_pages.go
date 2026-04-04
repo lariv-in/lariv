@@ -39,8 +39,8 @@ func init() {
 
 func registerImportantLinksAdminFilterPages() {
 	lago.RegistryPage.Register("nirmancampus_website.ImportantLinksFilter", &components.FormComponent[ImportantLink]{
-		Url:    lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -146,7 +146,7 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[ImportantLink]{
-				Url:      lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create Important Link",
 				Subtitle: "Create a new important link entry",
@@ -167,7 +167,7 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[map[string]any]{
-				Url:      lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Import Important Links",
 				Subtitle: "Upload a .json file containing an array of important link objects.",
@@ -204,9 +204,9 @@ func registerImportantLinksAdminFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ImportantLink]{
 				Getter: getters.Key[ImportantLink]("link"),
-				Url: lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Edit Important Link",
 				Subtitle: "Update important link details",

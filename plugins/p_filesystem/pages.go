@@ -500,8 +500,8 @@ func registerMenus() {
 
 func registerFilters() {
 	lago.RegistryPage.Register("filesystem.VNodeFilter", &components.FormComponent[VNode]{
-		Url:    listOrBrowseRoute("filesystem.ListRoute", "filesystem.BrowseRoute"),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(listOrBrowseRoute("filesystem.ListRoute", "filesystem.BrowseRoute")),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -514,8 +514,8 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.ParentSelectionFilter", &components.FormComponent[VNode]{
-		Url:    withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute")),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute"))),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -528,8 +528,8 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.DestinationSelectionFilter", &components.FormComponent[VNode]{
-		Url:    withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute")),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute"))),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -547,7 +547,7 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
-				Url:      listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute"),
+				OnSubmit: getters.FormSubmit(listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute")),
 				Method:   http.MethodPost,
 				Enctype:  "multipart/form-data",
 				Title:    "Create Item",
@@ -564,7 +564,7 @@ func registerForms() {
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
 				Getter:   getters.Key[VNode]("vnode"),
-				Url:      currentVNodeEditRoute(),
+				OnSubmit: getters.FormSubmit(currentVNodeEditRoute()),
 				Method:   http.MethodPost,
 				Enctype:  "multipart/form-data",
 				Title:    "Edit Item",
@@ -606,7 +606,7 @@ func registerForms() {
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
 				Getter:   getters.Key[VNode]("vnode"),
-				Url:      currentVNodeMoveRoute(),
+				OnSubmit: getters.FormSubmit(currentVNodeMoveRoute()),
 				Method:   http.MethodPost,
 				Title:    "Move Item",
 				Subtitle: "Select the destination directory",
@@ -636,7 +636,7 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
-				Url:      listOrBrowseRoute("filesystem.MultiUploadRoute", "filesystem.MultiUploadChildRoute"),
+				OnSubmit: getters.FormSubmit(listOrBrowseRoute("filesystem.MultiUploadRoute", "filesystem.MultiUploadChildRoute")),
 				Method:   http.MethodPost,
 				Enctype:  "multipart/form-data",
 				Title:    "Bulk Upload",

@@ -147,8 +147,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordFilter", &components.FormComponent[AcademicRecord]{
-		Url:    lago.RoutePath("academicrecords.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("academicrecords.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputSelect[string]{
 				Label:   "Status",
@@ -448,7 +448,7 @@ func registerFormPages() {
 		UID: "academicrecords-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
-				Url:      lago.RoutePath("academicrecords.CreateRoute", nil),
+				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("academicrecords.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create Academic Record",
 				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
@@ -475,9 +475,9 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
 				Getter: getters.Key[AcademicRecord]("academicrecord"),
-				Url: lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Edit Academic Record",
 				Subtitle: "Update status or course selections. Student, program, and term cannot be changed here.",

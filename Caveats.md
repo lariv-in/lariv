@@ -1,7 +1,7 @@
 # Caveats When Working On This Codebase
 
 - NEVER write go.mod or go.sum manually, use go mod init, go mod tidy -e, go work use for project management, If you can't run the required commands to manage go.mod and go.sum, then ask the user to run the commands.
-- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patchers.go`, layer types, and helpers in `crud.go`), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
+- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patcher*.go`, layer types, and helpers in `crud.go`), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
 - In nearly all cases, take the address of components before inserting them into something that requires `PageInterface`. Otherwise, the value will not implement `MutableParentInterface` and its children will not be patchable.
 
 - When you do add a component, it should implement at least `PageInterface` from `components/page.go`.
@@ -87,7 +87,8 @@ A view is the primary HTTP handler for a route. A `*views.View` (`views/views.go
 
 Global HTTP concerns (DB, `$request`, etc.) live in `views.GlobalLayer` and app registration, not inside the view struct. Build routes from `lago.GetPageView("plugin.PageName")`, then chain `WithLayer("stable.key", layer)`.
 
-**Do not reintroduce removed APIs:** there are no `ListView` / `DetailView` / `CreateView` / `UpdateView` / `DeleteView` / `SingletonView` / `JsonImport` factories, no `WithMethod`, `WithQueryPatcher`, `WithFormPatcher`, `WithRenderLayer`, `Handlers`, or `lago.NewRedirectView`. Use ordered layers instead; for redirects use `lago.RedirectView` / `lago.Redirect`. See `ViewsApiMigrationGuide.md` for concrete replacements.
+
+**HTMX redirects:** use `views.HtmxRedirect(w, r, url, code)` (`views/htmx_redirect.go`) anywhere you would call `http.Redirect` for user-visible navigation. When `HX-Request` is `true`, it sets the `HX-Redirect` header and responds with `200`; otherwise it calls `http.Redirect` with the same `code` you pass (e.g. `http.StatusSeeOther` after POST, `http.StatusMovedPermanently` where appropriate). Do not call `http.Redirect` directly in app or plugin handlers unless you have a rare reason to bypass HTMX. `lago.RedirectView` registers a view whose `RedirectLayer` resolves a URL getter and ends with `views.HtmxRedirect(..., http.StatusMovedPermanently)`.
 
 **Typed CRUD layer** (each owns one concern; order matters):
 
@@ -100,7 +101,7 @@ Global HTTP concerns (DB, `$request`, etc.) live in `views.GlobalLayer` and app 
 - `views.LayerJsonImport[T]` — JSON file import.
 - `views.MethodLayer` — custom handler for a specific HTTP method.
 
-**Query patching:** attach `views.QueryPatchers[T]` (named `registry.Pair`s) on `LayerList`, `LayerDetail`, or `LayerUpdate`. Prefer the built-in patchers in `views/query_patchers.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T, TJoin]` (reads filter values from `$get`). Do not duplicate ad-hoc query logic when these suffice.
+**Query patching:** attach `views.QueryPatchers[T]` (named `registry.Pair`s) on `LayerList`, `LayerDetail`, or `LayerUpdate`. Prefer the built-in patchers in `views/query_patcher_*.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T, TJoin]` (reads filter values from `$get`). Do not duplicate ad-hoc query logic when these suffice.
 
 **Form patching:** attach `views.FormPatchers` on `LayerCreate` and `LayerUpdate` (`views/form_patchers.go`). `InputManyToMany.Parse` still yields `AssociationIDs`; create/update/singleton layer persists many-to-many via GORM after the row save—do not model those inputs as plain scalar columns.
 

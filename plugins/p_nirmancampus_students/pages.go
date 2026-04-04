@@ -110,8 +110,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("students.StudentFilter", &components.FormComponent[Student]{
-		Url:    lago.RoutePath("students.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("students.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Student Number",
@@ -161,8 +161,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("students.StudentSelectionFilter", &components.FormComponent[Student]{
-		Url:    lago.RoutePath("students.SelectRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("students.SelectRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -358,7 +358,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Student]{
-				Url:      lago.RoutePath("students.CreateRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("students.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create Student",
 				Subtitle: "Create a new student",
@@ -381,7 +381,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Student]{
 				Getter:   getters.Key[Student]("student"),
-				Url:      lago.RoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
 				Method:   http.MethodPost,
 				Title:    "Edit Student",
 				Subtitle: "Update student details",
@@ -676,8 +676,8 @@ func registerSelectionPages() {
 
 func registerStudentUserPickPages() {
 	lago.RegistryPage.Register("students.UserPickFilter", &components.FormComponent[p_users.User]{
-		Url:    lago.RoutePath("students.UserPickRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("students.UserPickRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Name:   "allow_user_id",

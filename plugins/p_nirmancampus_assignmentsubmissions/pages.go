@@ -72,8 +72,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.Filter", &components.FormComponent[AssignmentSubmission]{
-		Url:    lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("assignmentsubmissions.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Assignment title",
@@ -238,7 +238,7 @@ func registerFormPages() {
 		UID: "assignmentsubmissions-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
-				Url:      lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
+				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("assignmentsubmissions.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create submission",
 				Subtitle: "Create a new assignment submission",
@@ -266,9 +266,9 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
 				Getter: getters.Key[AssignmentSubmission]("assignmentsubmission"),
-				Url: lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Edit submission",
 				Subtitle: "Update assignment submission details",

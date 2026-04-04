@@ -16,7 +16,7 @@ import (
 type FormComponent[T any] struct {
 	Page
 	Getter         getters.Getter[T]
-	Url            getters.Getter[string]
+	OnSubmit       getters.Getter[string]
 	Method         string
 	ChildrenInput  []PageInterface
 	ChildrenAction []PageInterface
@@ -54,14 +54,15 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	for _, child := range e.ChildrenAction {
 		submitGroup = append(submitGroup, Render(child, childCtx))
 	}
-	urlString := ""
-	if e.Url != nil {
-		u, err := e.Url(childCtx)
+
+	var onSubmitHandler string
+	if e.OnSubmit != nil {
+		var err error
+		onSubmitHandler, err = e.OnSubmit(childCtx)
 		if err != nil {
-			slog.Error("FormComponent Url getter failed", "error", err, "key", e.Key)
+			slog.Error("FormComponent OnSubmit getter failed", "error", err, "key", e.Key)
 			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
-		urlString = u
 	}
 
 	var headerNodes []gomponents.Node
@@ -95,15 +96,21 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 		}
 	}
 
-	return html.Form(
+	formNodes := []gomponents.Node{
 		html.Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
+	}
+	if e.OnSubmit != nil {
+		formNodes = append(formNodes, gomponents.Attr("@submit.prevent", onSubmitHandler))
+	}
+	formNodes = append(formNodes,
 		gomponents.If(e.Method != "", html.Method(e.Method)),
-		gomponents.If(urlString != "", html.Action(urlString)),
 		gomponents.If(enctype != "", gomponents.Attr("enctype", enctype)),
 		gomponents.Group(headerNodes),
 		inputGroup,
 		formErrorNode,
-		submitGroup)
+		submitGroup,
+	)
+	return html.Form(formNodes...)
 }
 
 func (e FormComponent[T]) GetKey() string {

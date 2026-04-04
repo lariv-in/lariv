@@ -96,8 +96,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("studentapplications.ApplicationFilter", &components.FormComponent[StudentApplication]{
-		Url:    lago.RoutePath("studentapplications.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("studentapplications.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Email",
@@ -327,7 +327,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
-				Url:      lago.RoutePath("studentapplications.CreateRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("studentapplications.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create application",
 				Subtitle: "Record a new student application",
@@ -350,7 +350,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
 				Getter: getters.Key[StudentApplication]("studentapplication"),
-				Url: lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(
@@ -358,7 +358,7 @@ func registerFormPages() {
 							getters.ParseUint(getters.Key[string]("$path.id")),
 						),
 					)),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Edit application",
 				Subtitle: "Update application details",

@@ -5,40 +5,8 @@ import (
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
-
-type QueryPatchers[T any] []registry.Pair[string, QueryPatcher[T]]
-
-func (q QueryPatchers[T]) Apply(view View, r *http.Request, query gorm.ChainInterface[T]) gorm.ChainInterface[T] {
-	for _, queryPatcher := range q {
-		query = queryPatcher.Value.Patch(view, r, query)
-	}
-	return query
-}
-
-type QueryPatcher[T any] interface {
-	Patch(View, *http.Request, gorm.ChainInterface[T]) gorm.ChainInterface[T]
-}
-
-// QueryPatcherPreload preloads an association on the list/detail query.
-type QueryPatcherPreload[T any] struct {
-	Field string
-}
-
-func (p QueryPatcherPreload[T]) Patch(_ View, _ *http.Request, db gorm.ChainInterface[T]) gorm.ChainInterface[T] {
-	return db.Preload(p.Field, nil)
-}
-
-// QueryPatcherOrderBy applies ORDER BY (e.g. "name ASC").
-type QueryPatcherOrderBy[T any] struct {
-	Order string
-}
-
-func (p QueryPatcherOrderBy[T]) Patch(_ View, _ *http.Request, db gorm.ChainInterface[T]) gorm.ChainInterface[T] {
-	return db.Order(p.Order)
-}
 
 func joinFilterFieldDBName[T any](db *gorm.DB, fieldName string) (string, bool) {
 	stmt := &gorm.Statement{DB: db}

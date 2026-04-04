@@ -217,7 +217,6 @@ func TestFormComponentParseFormMultipartUsesFileHeaders(t *testing.T) {
 
 func TestFormComponentBuildAddsMultipartEnctype(t *testing.T) {
 	form := FormComponent[struct{}]{
-		Method: http.MethodPost,
 		ChildrenInput: []PageInterface{
 			InputFile{Name: "Attachment"},
 		},

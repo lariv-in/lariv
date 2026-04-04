@@ -49,8 +49,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("courses.CourseFilter", &components.FormComponent[Course]{
-		Url:    lago.RoutePath("courses.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("courses.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 			&components.InputText{Label: "Code", Name: "Code", Getter: getters.Key[string]("$get.Code")},
@@ -73,8 +73,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseSelectionFilter", &components.FormComponent[Course]{
-		Url:    lago.RoutePath("courses.SelectRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("courses.SelectRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 			&components.InputText{Label: "Code", Name: "Code", Getter: getters.Key[string]("$get.Code")},
@@ -88,8 +88,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseMultiSelectionFilter", &components.FormComponent[Course]{
-		Url:    lago.RoutePath("courses.MultiSelectRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("courses.MultiSelectRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
 			&components.InputText{Hidden: true, Name: "pool_course_ids", Getter: getters.Key[string]("$get.pool_course_ids")},
@@ -180,7 +180,7 @@ func registerFormPages() {
 		UID: "courses-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[Course]{
-				Url:      lago.RoutePath("courses.CreateRoute", nil),
+				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("courses.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create Course",
 				Subtitle: "Create a new course",
@@ -208,7 +208,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Course]{
 				Getter:   getters.Key[Course]("course"),
-				Url:      lago.RoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
 				Method:   http.MethodPost,
 				Title:    "Edit Course",
 				Subtitle: "Update course details",

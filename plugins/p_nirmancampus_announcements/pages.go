@@ -72,8 +72,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementFilter", &components.FormComponent[Announcement]{
-		Url:    lago.RoutePath("announcements.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("announcements.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -98,8 +98,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("announcements.AnnouncementSelectionFilter", &components.FormComponent[Announcement]{
-		Url:    lago.RoutePath("announcements.SelectRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("announcements.SelectRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -212,7 +212,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Announcement]{
-				Url:      lago.RoutePath("announcements.CreateRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("announcements.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create Announcement",
 				Subtitle: "Create a new announcement",
@@ -235,9 +235,9 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Announcement]{
 				Getter: getters.Key[Announcement]("announcement"),
-				Url: lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Edit Announcement",
 				Subtitle: "Update announcement details",

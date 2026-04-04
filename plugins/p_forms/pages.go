@@ -231,7 +231,7 @@ func registerFormCRUDPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Form]{
-				Url:      lago.RoutePath("forms.CreateRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create form",
 				Subtitle: "The public URL slug is generated from the title",
@@ -314,9 +314,9 @@ func registerFormCRUDPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Form]{
 				Getter: getters.Key[Form]("form"),
-				Url: lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("$in.ID")),
-				}),
+				})),
 				Method: http.MethodPost,
 				Title:  "Edit form",
 				ChildrenInput: []components.PageInterface{
@@ -413,9 +413,9 @@ func registerFieldPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[FormField]{
-				Url: lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Add field",
 				Subtitle: "Define name, label, and type",
@@ -436,10 +436,10 @@ func registerFieldPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[FormField]{
 				Getter: getters.Key[FormField]("form_field"),
-				Url: lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
-				}),
+				})),
 				Method: http.MethodPost,
 				Title:  "Edit field",
 				ChildrenInput: []components.PageInterface{

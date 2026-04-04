@@ -63,8 +63,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("contacts.ContactFilter", &components.FormComponent[Contact]{
-		Url:    lago.RoutePath("contacts.DefaultRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("contacts.DefaultRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -89,8 +89,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("contacts.ContactSelectionFilter", &components.FormComponent[Contact]{
-		Url:    lago.RoutePath("contacts.SelectRoute", nil),
-		Method: http.MethodGet,
+		OnSubmit: getters.FormSubmitGet(lago.RoutePath("contacts.SelectRoute", nil)),
+		Method:   http.MethodGet,
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -190,7 +190,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Contact]{
-				Url:      lago.RoutePath("contacts.CreateRoute", nil),
+				OnSubmit: getters.FormSubmit(lago.RoutePath("contacts.CreateRoute", nil)),
 				Method:   http.MethodPost,
 				Title:    "Create Contact",
 				Subtitle: "Add a new contact",
@@ -212,9 +212,9 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Contact]{
 				Getter: getters.Key[Contact]("contact"),
-				Url: lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
+				OnSubmit: getters.FormSubmit(lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}),
+				})),
 				Method:   http.MethodPost,
 				Title:    "Edit Contact",
 				Subtitle: "Update contact details",
