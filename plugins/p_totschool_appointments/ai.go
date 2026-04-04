@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lariv-in/lago/components"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
@@ -152,11 +153,15 @@ See you as per the decided schedule and thank you once again
 Family Wealth Educator
 `
 
-func buildLetterContent(_ *gorm.DB, appointment *Appointment, userName string) (userContent, systemPrompt string) {
+func buildLetterContent(_ *gorm.DB, ctx context.Context, appointment *Appointment, userName string) (userContent, systemPrompt string) {
+	timezone, _ := ctx.Value("$tz").(*time.Location)
+	if timezone == nil {
+		timezone = components.DefaultTimeZone
+	}
 	replacements := map[string]string{
 		"{{appointment_name}}":            appointment.Name,
-		"{{appointment_datetime}}":        appointment.Datetime.Format("January 02, 2006 03:04 PM"),
-		"{{appointment_created_at_date}}": appointment.CreatedAt.Format("January 02, 2006"),
+		"{{appointment_datetime}}":        appointment.Datetime.In(timezone).Format("January 02, 2006 03:04 PM"),
+		"{{appointment_created_at_date}}": appointment.CreatedAt.In(timezone).Format("January 02, 2006"),
 		"{{user_name}}":                   userName,
 	}
 	content := letterTemplate

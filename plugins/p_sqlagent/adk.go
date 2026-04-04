@@ -71,7 +71,7 @@ func loadADK(ctx context.Context) (*adkRuntime, error) {
 		logError("sqlagent: gemini NewModel", err, "model", modelID)
 		return nil, err
 	}
-	tengoT, err := newTengoTool()
+	sqlT, err := newSQLTool()
 	if err != nil {
 		adkInitErr = err
 		return nil, err
@@ -79,11 +79,11 @@ func loadADK(ctx context.Context) (*adkRuntime, error) {
 	a, err := llmagent.New(llmagent.Config{
 		Name:        sqlAgentName,
 		Model:       m,
-		Description: "Assistant that discusses SQL and database tasks and can run Tengo scripts.",
+		Description: "Assistant that discusses SQL and database tasks and can run raw SQL via a single tool.",
 		Instruction: `You are a helpful assistant embedded in a SQL agent chat UI.
 Be concise. You may explain SQL concepts and suggest query ideas.
-You have a tool "` + tengoToolName + `" that runs Tengo scripts (https://github.com/d5/tengo), not Go. Read that tool's description for rules and examples: use tx["Method"](...) for GORM, assign with "result = ..." (global "result" is predeclared), never use &, var, Go types, or interface{}. For *int64 out-parameters (e.g. Count) use gorm_ref_int64() then pass it to Count and read ["value"]. Each chat turn has "tx" on the request transaction.`,
-		Tools: []tool.Tool{tengoT},
+You have a tool "` + sqlToolName + `" that runs one raw SQL string per call on the same database transaction as the chat turn. Read that tool's description for input shape and result format.`,
+		Tools: []tool.Tool{sqlT},
 	})
 	if err != nil {
 		adkInitErr = err

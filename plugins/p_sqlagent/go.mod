@@ -3,7 +3,6 @@ module github.com/lariv-in/lago/plugins/p_sqlagent
 go 1.26.1
 
 require (
-	github.com/d5/tengo/v2 v2.17.0
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10

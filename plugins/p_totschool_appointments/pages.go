@@ -241,7 +241,7 @@ func registerDetail() {
 										components.ContainerRow{Classes: "items-center gap-2", Children: []components.PageInterface{
 											components.ButtonLink{GetterLabel: getters.Key[string]("$row.Name"), Link: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})},
 											components.FieldText{Getter: getters.Static(" — ")},
-											components.FieldText{Getter: getters.Key[string]("$row.Date")},
+											components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Date")},
 										}},
 									},
 								},

@@ -190,7 +190,7 @@ func handleChatMessage(conn *websocket.Conn, db *gorm.DB, conv *Conversation, us
 	if err != nil {
 		logError("sqlagent: load ADK", err, "conversation_id", conv.ID)
 		slog.Info("sqlagent: ADK unavailable, using simulated reply", "error", err)
-		full := "This is a simulated assistant reply. Set GOOGLE_API_KEY or GEMINI_API_KEY to use Gemini via ADK. Your message was received over the WebSocket. SQL tooling is not wired yet."
+		full := "This is a simulated assistant reply. Set GOOGLE_API_KEY or GEMINI_API_KEY to use Gemini via ADK (the live assistant can run raw SQL with the execute_sql tool). Your message was received over the WebSocket."
 		if err := streamAssistantReply(conn, db, &aiMsg, full); err != nil {
 			logError("sqlagent: simulated stream reply", err, "conversation_id", conv.ID)
 			return err
