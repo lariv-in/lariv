@@ -83,7 +83,7 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 				Classes: "btn-square btn-outline btn-sm",
 			},
 		},
-		OnClick: getters.NavigateGetter(
+		RowAttr: getters.RowAttrNavigate(
 			lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 				"id": getters.Any(getters.Key[uint]("$row.ID")),
 			}),

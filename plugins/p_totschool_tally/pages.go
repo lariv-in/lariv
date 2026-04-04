@@ -442,7 +442,7 @@ func init() {
 						},
 					},
 				},
-				OnClick: getters.Navigate("/tally/%v/", getters.Any(getters.Key[uint]("$row.ID"))),
+				RowAttr: getters.RowAttrNavigateFormat("/tally/%v/", getters.Any(getters.Key[uint]("$row.ID"))),
 			},
 		},
 	})

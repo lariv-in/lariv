@@ -245,7 +245,7 @@ func registerTablePages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "contacts.ContactFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("contacts.CreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(
+				RowAttr: getters.RowAttrNavigate(
 					lago.RoutePath("contacts.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
@@ -353,7 +353,7 @@ func registerSelectionPages() {
 				UID:     "contact-selection-table",
 				Title:   "Select Contact",
 				Data:    getters.Key[components.ObjectList[Contact]]("contacts"),
-				OnClick: getters.Select("ContactID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				RowAttr: getters.RowAttrSelect("ContactID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "contacts.ContactSelectionFilter"}},
 				},

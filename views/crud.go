@@ -16,7 +16,7 @@ import (
 )
 
 func PopulateFromMap[T any](v *T, values map[string]any) error {
-	decodeConfig := mapstructure.DecoderConfig{Result: v, Deep: true, Squash: true}
+	decodeConfig := mapstructure.DecoderConfig{Result: v, Deep: true, Squash: true, WeaklyTypedInput: true}
 	decoder, err := mapstructure.NewDecoder(&decodeConfig)
 	if err != nil {
 		return err

@@ -247,7 +247,7 @@ func registerImportantLinksAdminTablePages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{

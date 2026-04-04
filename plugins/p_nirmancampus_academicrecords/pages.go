@@ -525,7 +525,7 @@ func registerTablePages() {
 						Classes: "btn-square btn-outline btn-sm",
 					},
 				},
-				OnClick: getters.NavigateGetter(
+				RowAttr: getters.RowAttrNavigate(
 					lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
@@ -634,7 +634,7 @@ func registerSelectionPages() {
 				UID:   "academicrecords-selection-table",
 				Title: "Select Academic Record",
 				Data:  getters.Key[components.ObjectList[AcademicRecord]]("academicrecords"),
-				OnClick: getters.Select("AcademicRecordID", getters.Key[uint]("$row.ID"), getters.Format(
+				RowAttr: getters.RowAttrSelect("AcademicRecordID", getters.Key[uint]("$row.ID"), getters.Format(
 					"%s (%s) · term %s",
 					getters.Any(getters.Key[string]("$row.Program.Name")),
 					getters.Any(getters.Key[string]("$row.Status")),

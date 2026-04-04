@@ -84,7 +84,7 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 				Classes: "btn-square btn-outline btn-sm",
 			},
 		},
-		OnClick: getters.NavigateGetter(lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+		RowAttr: getters.RowAttrNavigate(lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Key[uint]("$row.ID")),
 		})),
 		Columns: []components.TableColumn{

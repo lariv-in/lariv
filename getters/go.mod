@@ -6,6 +6,7 @@ require (
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90
 	gorm.io/datatypes v1.2.7
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.2.0
 )
 
 require (

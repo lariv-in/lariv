@@ -15,6 +15,7 @@ type ButtonModal struct {
 	Icon        string
 	IconClasses string
 	Classes     string
+	Attr        getters.Getter[Node]
 }
 
 func (e ButtonModal) GetKey() string {
@@ -46,15 +47,26 @@ func (e ButtonModal) Build(ctx context.Context) Node {
 		buttonClasses += " inline-flex items-center gap-2"
 	}
 
+	buttonAttrs := []Node{
+		Type("button"),
+		Class(buttonClasses),
+		Attr("hx-get", url),
+		Attr("hx-target", HTMXTargetBodyModal),
+		Attr("hx-swap", HTMXSwapBodyModal),
+		Attr("hx-push-url", "false"),
+	}
+	if e.Attr != nil {
+		extra, err := e.Attr(ctx)
+		if err != nil {
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		}
+		if extra != nil {
+			buttonAttrs = append(buttonAttrs, extra)
+		}
+	}
+	buttonAttrs = append(buttonAttrs, content)
+
 	return Div(Class("w-full"),
-		Button(
-			Type("button"),
-			Class(buttonClasses),
-			Attr("hx-get", url),
-			Attr("hx-target", HTMXTargetBodyModal),
-			Attr("hx-swap", HTMXSwapBodyModal),
-			Attr("hx-push-url", "false"),
-			content,
-		),
+		Button(Group(buttonAttrs)),
 	)
 }

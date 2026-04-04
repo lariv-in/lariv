@@ -300,7 +300,7 @@ func registerTablePages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "sessions.SessionFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("sessions.CreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(
+				RowAttr: getters.RowAttrNavigate(
 					lago.RoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
@@ -415,7 +415,7 @@ func registerSelectionPages() {
 				UID:     "session-selection-table",
 				Title:   "Select Session",
 				Data:    getters.Key[components.ObjectList[Session]]("sessions"),
-				OnClick: getters.Select("SessionID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				RowAttr: getters.RowAttrSelect("SessionID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "sessions.sessionselectionFilter"}},
 				},

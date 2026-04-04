@@ -361,7 +361,7 @@ func registerTablePages() {
 						Classes: "btn-square btn-outline btn-sm",
 					},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.Key[string]("$row.Name")},
@@ -610,13 +610,14 @@ func registerSelectionPages() {
 				UID:     "user-selection-table",
 				Title:   "Select User",
 				Data:    getters.Key[components.ObjectList[User]]("users"),
-				OnClick: getters.Select("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				RowAttr: getters.RowAttrSelect("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserSelectionFilter"}},
 					&components.ButtonModal{
 						Url:     lago.RoutePath("users.CreateRoute", nil),
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
+						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#user-selection-table")),
 					},
 				},
 				Columns: []components.TableColumn{
@@ -641,13 +642,14 @@ func registerSelectionPages() {
 				UID:     "role-selection-table",
 				Title:   "Select Role",
 				Data:    getters.Key[components.ObjectList[Role]]("roles"),
-				OnClick: getters.Select("RoleID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				RowAttr: getters.RowAttrSelect("RoleID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleSelectionFilter"}},
 					&components.ButtonModal{
 						Url:     lago.RoutePath("users.RoleCreateRoute", nil),
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
+						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#role-selection-table")),
 					},
 				},
 				Columns: []components.TableColumn{
@@ -719,7 +721,7 @@ func registerRolePages() {
 						Classes: "btn-square btn-outline btn-sm",
 					},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.Key[string]("$row.Name")},

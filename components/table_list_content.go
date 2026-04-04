@@ -13,10 +13,9 @@ import (
 
 type TableListContent[T any] struct {
 	Page
-	Columns  []TableColumn
-	Data     getters.Getter[ObjectList[T]]
-	OnClick  getters.Getter[string]
-	RowClass getters.Getter[string]
+	Columns []TableColumn
+	Data    getters.Getter[ObjectList[T]]
+	RowAttr getters.Getter[Node]
 }
 
 func (e TableListContent[T]) Build(ctx context.Context) Node {
@@ -59,6 +58,7 @@ func (e TableListContent[T]) Build(ctx context.Context) Node {
 		for i, row := range data.Items {
 			rowMap := getters.MapFromStruct(row)
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
+			rowCtx = context.WithValue(rowCtx, getters.ContextKeyTableDisplay, getters.TableDisplayList)
 			// Per-row list position for cell components (int; 0-based).
 			rowCtx = context.WithValue(rowCtx, "$rowIndex", i)
 			rowCtx = context.WithValue(rowCtx, "$isFirstRow", i == 0)
@@ -73,35 +73,20 @@ func (e TableListContent[T]) Build(ctx context.Context) Node {
 				tds = append(tds, g_html.Td(g_html.Class("whitespace-nowrap truncate max-w-xs min-w-[100px]"), Group(cellNodes)))
 			}
 
-			rowClassExpr := ""
-			if e.RowClass != nil {
-				expr, err := e.RowClass(rowCtx)
-				if err == nil {
-					rowClassExpr = expr
+			var rowNodes []Node
+			if e.RowAttr != nil {
+				extra, err := e.RowAttr(rowCtx)
+				if err != nil {
+					return ContainerError{Error: getters.Static(err)}.Build(ctx)
 				}
-			}
-
-			rowNodes := []Node{}
-			switch {
-			case e.OnClick != nil && rowClassExpr != "":
-				rowNodes = append(rowNodes, g_html.Class("cursor-pointer transition-colors"), Attr(":class", rowClassExpr))
-			case e.OnClick != nil:
-				rowNodes = append(rowNodes, g_html.Class("cursor-pointer hover:bg-base-200 transition-colors"))
-			case rowClassExpr != "":
-				rowNodes = append(rowNodes, g_html.Class("transition-colors"), Attr(":class", rowClassExpr))
-			default:
+				if extra != nil {
+					rowNodes = append(rowNodes, extra)
+				} else {
+					rowNodes = append(rowNodes, g_html.Class("hover:bg-base-200 transition-colors"))
+				}
+			} else {
 				rowNodes = append(rowNodes, g_html.Class("hover:bg-base-200 transition-colors"))
 			}
-
-			if e.OnClick != nil {
-				expr, err := e.OnClick(rowCtx)
-				if err == nil && expr != "" {
-					rowNodes = append(rowNodes, Attr("@click", expr), Group(tds))
-					trs = append(trs, g_html.Tr(rowNodes...))
-					continue
-				}
-			}
-
 			rowNodes = append(rowNodes, Group(tds))
 			trs = append(trs, g_html.Tr(rowNodes...))
 		}

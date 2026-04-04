@@ -288,7 +288,7 @@ func registerTablePages() {
 						Page: components.Page{Roles: []string{"admin", "superuser"}},
 					},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$row.ID")),
 				})),
 				Columns: []components.TableColumn{
@@ -403,7 +403,7 @@ func registerSelectionPages() {
 				UID:   "announcement-selection-table",
 				Title: "Select Announcement",
 				Data:  getters.Key[components.ObjectList[Announcement]]("announcements"),
-				OnClick: getters.Select("AnnouncementID",
+				RowAttr: getters.RowAttrSelect("AnnouncementID",
 					getters.Key[uint]("$row.ID"),
 					getters.Key[string]("$row.Title"),
 				),

@@ -304,7 +304,7 @@ func registerTablePages() {
 						Classes: "btn-square btn-outline btn-sm",
 					},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Assignment",

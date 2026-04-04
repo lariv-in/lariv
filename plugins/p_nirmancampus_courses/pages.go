@@ -244,9 +244,10 @@ func registerTablePages() {
 						Url:     lago.RoutePath("courses.CreateRoute", nil),
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
+						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#course-table")),
 					},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("courses.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.Key[string]("$row.Name")},
@@ -335,7 +336,7 @@ func registerSelectionPages() {
 				UID:     "course-selection-table",
 				Title:   "Select Course",
 				Data:    getters.Key[components.ObjectList[Course]]("courses"),
-				OnClick: getters.Select("CourseID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				RowAttr: getters.RowAttrSelect("CourseID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseSelectionFilter"}},
 					&components.ButtonModal{
@@ -343,6 +344,7 @@ func registerSelectionPages() {
 						Url:     lago.RoutePath("courses.CreateRoute", nil),
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
+						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#course-selection-table")),
 					},
 				},
 				Columns: []components.TableColumn{
@@ -364,20 +366,13 @@ func registerSelectionPages() {
 				UID:   "course-multi-selection-table",
 				Title: "Select Courses",
 				Data:  getters.Key[components.ObjectList[Course]]("courses"),
-				OnClick: getters.SelectMulti(
+				RowAttr: getters.RowAttrSelectMulti(
 					getters.IfOrElse(
 						getters.Key[string]("$get.target_input"),
 						getters.Static("Courses"),
 					),
 					getters.Key[uint]("$row.ID"),
 					getters.Key[string]("$row.Name"),
-				),
-				RowClass: getters.SelectMultiRowClass(
-					getters.IfOrElse(
-						getters.Key[string]("$get.target_input"),
-						getters.Static("Courses"),
-					),
-					getters.Key[uint]("$row.ID"),
 				),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
@@ -386,6 +381,7 @@ func registerSelectionPages() {
 						Url:     lago.RoutePath("courses.CreateRoute", nil),
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
+						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#course-multi-selection-table")),
 					},
 				},
 				Columns: []components.TableColumn{

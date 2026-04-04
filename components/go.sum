@@ -31,9 +31,11 @@ github.com/lariv-in/lago/getters v0.5.10/go.mod h1:6wEjjeBr5CRR1Iwz+rjsIGoZPnpoj
 github.com/lariv-in/lago/registry v0.5.10 h1:JD/CHKsbP8tfTTEc8bIpK5to56RL1Za3Lsi1mJVm5GA=
 github.com/lariv-in/lago/registry v0.5.10/go.mod h1:qKZwGoydu2JWbLI/uRGH6xO7ixF1qwNnhZmaG2CFdvE=
 github.com/mattn/go-sqlite3 v1.14.40 h1:f7+saIsbq4EF86mUqe0uiecQOJYMOdfi5uATADmUG94=
+github.com/mattn/go-sqlite3 v1.14.40/go.mod h1:pjEuOr8IwzLJP2MfGeTb0A35jauH+C2kbHKBr7yXKVQ=
 github.com/microsoft/go-mssqldb v1.7.2 h1:CHkFJiObW7ItKTJfHo1QX7QBBD1iV+mn1eOyRP3b/PA=
 github.com/microsoft/go-mssqldb v1.7.2/go.mod h1:kOvZKUdrhhFQmxLZqbwUV0rHkNkZpthMITIb2Ko1IoA=
 github.com/nyaruka/phonenumbers v1.7.1 h1:k8FHBMLegwW2tEIhsurC5YJk5Dix++H1k6liu1LUruY=
+github.com/nyaruka/phonenumbers v1.7.1/go.mod h1:fsKPJ70O9JetEA4ggnJadYTFWwtGPvu/lETTXNXq6Cs=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=

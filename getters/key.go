@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -53,8 +54,59 @@ func Key[T any](key string) Getter[T] {
 		}
 		v, ok := value.(T)
 		if !ok {
+			if coerced, ok2 := coerceKeyValue[T](value); ok2 {
+				return coerced, nil
+			}
 			return zero, fmt.Errorf("Value for key %s found, but the type of value in context was %v, expected %v", key, reflect.TypeOf(value), reflect.TypeOf(zero))
 		}
 		return v, nil
+	}
+}
+
+// coerceKeyValue maps common form round-trip cases (e.g. $in.UserID as string) for numeric T.
+func coerceKeyValue[T any](value any) (T, bool) {
+	var zero T
+	switch any(zero).(type) {
+	case uint:
+		u, ok := uintFromFormAny(value)
+		if !ok {
+			return zero, false
+		}
+		return any(u).(T), true
+	default:
+		return zero, false
+	}
+}
+
+func uintFromFormAny(value any) (uint, bool) {
+	switch v := value.(type) {
+	case uint:
+		return v, true
+	case string:
+		if strings.TrimSpace(v) == "" {
+			return 0, true
+		}
+		n, err := strconv.ParseUint(strings.TrimSpace(v), 10, 64)
+		if err != nil {
+			return 0, false
+		}
+		return uint(n), true
+	case float64:
+		if v < 0 || v > float64(^uint(0)) {
+			return 0, false
+		}
+		return uint(v), true
+	case int:
+		if v < 0 {
+			return 0, false
+		}
+		return uint(v), true
+	case int64:
+		if v < 0 {
+			return 0, false
+		}
+		return uint(v), true
+	default:
+		return 0, false
 	}
 }

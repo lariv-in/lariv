@@ -671,7 +671,7 @@ func registerTables() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "filesystem.VNodeFilter"}},
 					&components.TableButtonCreate{Link: listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute")},
 				},
-				OnClick: getters.NavigateGetter(rowOpenRoute()),
+				RowAttr: getters.RowAttrNavigate(rowOpenRoute()),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Type", Name: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$row")}}},
@@ -747,8 +747,7 @@ func selectionTable(name, filterName, childRoute string, multi, selectDirectorie
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: filterName}},
 				},
-				OnClick:  onClick,
-				RowClass: rowClass,
+				RowAttr: getters.RowAttrClickWithClass(onClick, rowClass),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Type", Name: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$row")}}},

@@ -21,6 +21,7 @@ github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkr
 github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
 github.com/jinzhu/now v1.1.5/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
 github.com/mattn/go-sqlite3 v1.14.40 h1:f7+saIsbq4EF86mUqe0uiecQOJYMOdfi5uATADmUG94=
+github.com/mattn/go-sqlite3 v1.14.40/go.mod h1:pjEuOr8IwzLJP2MfGeTb0A35jauH+C2kbHKBr7yXKVQ=
 github.com/microsoft/go-mssqldb v1.7.2 h1:CHkFJiObW7ItKTJfHo1QX7QBBD1iV+mn1eOyRP3b/PA=
 github.com/microsoft/go-mssqldb v1.7.2/go.mod h1:kOvZKUdrhhFQmxLZqbwUV0rHkNkZpthMITIb2Ko1IoA=
 golang.org/x/crypto v0.49.0 h1:+Ng2ULVvLHnJ/ZFEq4KdcDd/cfjrrjjNSXNzxg0Y4U4=
@@ -43,3 +44,5 @@ gorm.io/driver/sqlserver v1.6.0 h1:VZOBQVsVhkHU/NzNhRJKoANt5pZGQAS1Bwc6m6dgfnc=
 gorm.io/driver/sqlserver v1.6.0/go.mod h1:WQzt4IJo/WHKnckU9jXBLMJIVNMVeTu25dnOzehntWw=
 gorm.io/gorm v1.31.1 h1:7CA8FTFz/gRfgqgpeKIBcervUn3xSyPUmr6B2WXJ7kg=
 gorm.io/gorm v1.31.1/go.mod h1:XyQVbO2k6YkOis7C2437jSit3SsDK72s7n7rsSHd+Gs=
+maragu.dev/gomponents v1.2.0 h1:H7/N5htz1GCnhu0HB1GasluWeU2rJZOYztVEyN61iTc=
+maragu.dev/gomponents v1.2.0/go.mod h1:oEDahza2gZoXDoDHhw8jBNgH+3UR5ni7Ur648HORydM=

@@ -10,10 +10,9 @@ import (
 
 type TableGridContent[T any] struct {
 	Page
-	Columns  []TableColumn
-	Data     getters.Getter[ObjectList[T]]
-	OnClick  getters.Getter[string]
-	RowClass getters.Getter[string]
+	Columns []TableColumn
+	Data    getters.Getter[ObjectList[T]]
+	RowAttr getters.Getter[Node]
 }
 
 func (e TableGridContent[T]) Build(ctx context.Context) Node {
@@ -33,6 +32,7 @@ func (e TableGridContent[T]) Build(ctx context.Context) Node {
 		for i, row := range data.Items {
 			rowMap := getters.MapFromStruct(row)
 			rowCtx := context.WithValue(ctx, "$row", rowMap)
+			rowCtx = context.WithValue(rowCtx, getters.ContextKeyTableDisplay, getters.TableDisplayGrid)
 			rowCtx = context.WithValue(rowCtx, "$rowIndex", i)
 			rowCtx = context.WithValue(rowCtx, "$isFirstRow", i == 0)
 			rowCtx = context.WithValue(rowCtx, "$isLastRow", i == n-1)
@@ -59,35 +59,20 @@ func (e TableGridContent[T]) Build(ctx context.Context) Node {
 				))
 			}
 
-			rowClassExpr := ""
-			if e.RowClass != nil {
-				expr, err := e.RowClass(rowCtx)
-				if err == nil {
-					rowClassExpr = expr
+			var cardNodes []Node
+			if e.RowAttr != nil {
+				extra, err := e.RowAttr(rowCtx)
+				if err != nil {
+					return ContainerError{Error: getters.Static(err)}.Build(ctx)
 				}
-			}
-
-			cardNodes := []Node{}
-			switch {
-			case e.OnClick != nil && rowClassExpr != "":
-				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer transition-colors"), Attr(":class", rowClassExpr))
-			case e.OnClick != nil:
-				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200 transition-colors"))
-			case rowClassExpr != "":
-				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 transition-colors"), Attr(":class", rowClassExpr))
-			default:
+				if extra != nil {
+					cardNodes = append(cardNodes, extra)
+				} else {
+					cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 hover:bg-base-200 transition-colors"))
+				}
+			} else {
 				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 hover:bg-base-200 transition-colors"))
 			}
-
-			if e.OnClick != nil {
-				expr, err := e.OnClick(rowCtx)
-				if err == nil && expr != "" {
-					cardNodes = append(cardNodes, Attr("@click", expr), Group(contentNodes))
-					cards = append(cards, g_html.Div(cardNodes...))
-					continue
-				}
-			}
-
 			cardNodes = append(cardNodes, Group(contentNodes))
 			cards = append(cards, g_html.Div(cardNodes...))
 		}

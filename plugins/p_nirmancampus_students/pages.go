@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -44,6 +45,13 @@ func studentFormUserPickURL(ctx context.Context) (string, error) {
 	case int64:
 		if v > 0 {
 			uid = uint(v)
+		}
+	case string:
+		s := strings.TrimSpace(v)
+		if s != "" {
+			if n, err := strconv.ParseUint(s, 10, 64); err == nil {
+				uid = uint(n)
+			}
 		}
 	}
 	if uid != 0 {
@@ -418,7 +426,7 @@ func registerTablePages() {
 						Page: components.Page{Roles: []string{"admin", "superuser"}},
 					},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
@@ -609,7 +617,7 @@ func registerSelectionPages() {
 				UID:     "student-selection-table",
 				Title:   "Select Student",
 				Data:    getters.Key[components.ObjectList[Student]]("students"),
-				OnClick: getters.Select("StudentID", getters.Key[uint]("$row.ID"), getters.ForeignKey[Student, uint, string](getters.Key[uint]("$row.ID"), "StudentNo")),
+				RowAttr: getters.RowAttrSelect("StudentID", getters.Key[uint]("$row.ID"), getters.ForeignKey[Student, uint, string](getters.Key[uint]("$row.ID"), "StudentNo")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentSelectionFilter"}},
 				},
@@ -702,13 +710,14 @@ func registerStudentUserPickPages() {
 				UID:     "student-user-pick-table",
 				Title:   "Select User",
 				Data:    getters.Key[components.ObjectList[p_users.User]]("users"),
-				OnClick: getters.Select("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				RowAttr: getters.RowAttrSelect("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.UserPickFilter"}},
 					&components.ButtonModal{
 						Url:     lago.RoutePath("users.CreateRoute", nil),
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
+						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#student-user-pick-table")),
 					},
 				},
 				Columns: []components.TableColumn{

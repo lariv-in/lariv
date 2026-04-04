@@ -9,6 +9,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/registry"
+	gomponents "maragu.dev/gomponents"
 )
 
 func init() {
@@ -105,7 +106,7 @@ func registerFormListPages() {
 						Link: lago.RoutePath("forms.CreateRoute", nil),
 					},
 				},
-				OnClick: getters.NavigateGetter(
+				RowAttr: getters.RowAttrNavigate(
 					lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 						"form_id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
@@ -131,8 +132,8 @@ func registerFormListPages() {
 	})
 }
 
-func fieldTableRowNavigateEdit() getters.Getter[string] {
-	return getters.NavigateGetter(
+func fieldTableRowNavigateEdit() getters.Getter[gomponents.Node] {
+	return getters.RowAttrNavigate(
 		lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 			"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
 			"id":      getters.Any(getters.Key[uint]("$row.ID")),
@@ -297,7 +298,7 @@ func registerFormCRUDPages() {
 										}),
 									},
 								},
-								OnClick: fieldTableRowNavigateEdit(),
+								RowAttr: fieldTableRowNavigateEdit(),
 								Columns: formFieldTableColumns(),
 							},
 						},
@@ -479,7 +480,7 @@ func registerSubmissionPages() {
 				UID:     "form-submissions-table",
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[FormSubmission]]("form_submissions"),
-				OnClick: getters.NavigateGetter(
+				RowAttr: getters.RowAttrNavigate(
 					lago.RoutePath("forms.SubmissionDetailRoute", map[string]getters.Getter[any]{
 						"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
 						"id":      getters.Any(getters.Key[uint]("$row.ID")),

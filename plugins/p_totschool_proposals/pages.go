@@ -122,7 +122,7 @@ func registerTable() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "proposals.ProposalFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("proposals.CreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Title", Name: "Title", Children: []components.PageInterface{components.FieldText{Getter: getters.Key[string]("$row.Title")}}},
 					{Label: "Created At", Name: "CreatedAt", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.Key[time.Time]("$row.CreatedAt")}}},

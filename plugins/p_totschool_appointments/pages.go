@@ -172,7 +172,7 @@ func registerTable() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "appointments.AppointmentFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("appointments.CreateRoute", nil)},
 				},
-				OnClick: getters.NavigateGetter(lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Location", Name: "Location", Children: []components.PageInterface{components.FieldText{Getter: getters.Key[string]("$row.Location")}}},
@@ -384,7 +384,7 @@ func registerSelectionPages() {
 				UID:     "appointment-selection-table",
 				Title:   "Select Appointment",
 				Data:    getters.Key[components.ObjectList[Appointment]]("appointments"),
-				OnClick: getters.Select("appointment", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				RowAttr: getters.RowAttrSelect("appointment", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "appointments.AppointmentFilter"}},
 				},

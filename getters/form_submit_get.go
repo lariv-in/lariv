@@ -7,7 +7,9 @@ import (
 )
 
 // FormSubmitGet returns an Alpine @submit.prevent expression for GET filter forms: it resolves field
-// values with htmx.values and issues a boosted GET via htmx.ajax (target body, outerHTML swap).
+// values with htmx.values and issues a boosted GET via htmx.ajax (outerHTML swap). When the form is
+// inside a modal (dialog.modal), the swap target is that dialog so the list modal is
+// refreshed in place; otherwise the target is body for full-page list filters.
 func FormSubmitGet(path Getter[string]) Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		url, err := IfOr(path, ctx, "")
@@ -19,7 +21,7 @@ func FormSubmitGet(path Getter[string]) Getter[string] {
 			return "", err
 		}
 		return fmt.Sprintf(
-			"(function(evt){var t=evt&&evt.target;var f=t&&t.closest&&t.closest('form');if(!f)return;htmx.ajax('GET',%s,{source:f,target:'body',swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}})})($event)",
+			"(function(evt){var t=evt&&evt.target;var f=t&&t.closest&&t.closest('form');if(!f)return;var m=f.closest('dialog.modal');var o={source:f,swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}};o.target=m||'body';htmx.ajax('GET',%s,o)})($event)",
 			urlLit,
 		), nil
 	}
