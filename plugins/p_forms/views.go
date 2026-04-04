@@ -403,10 +403,10 @@ func redirectAfterFieldMove(w http.ResponseWriter, r *http.Request, formID uint)
 		"form_id": getters.Any(getters.Static(formID)),
 	})(ctx)
 	if err != nil || u == "" {
-		http.Redirect(w, r, AppURL, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, AppURL, http.StatusSeeOther)
 		return
 	}
-	http.Redirect(w, r, u, http.StatusSeeOther)
+	views.HtmxRedirect(w, r, u, http.StatusSeeOther)
 }
 
 func fieldMoveHandler(moveUp bool) func(*views.View) http.Handler {
@@ -548,7 +548,7 @@ func publicSubmitView() *views.View {
 							loc = u
 						}
 					}
-					http.Redirect(w, r, loc, http.StatusSeeOther)
+					views.HtmxRedirect(w, r, loc, http.StatusSeeOther)
 				})
 			},
 		})

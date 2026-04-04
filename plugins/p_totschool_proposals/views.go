@@ -99,7 +99,7 @@ func redirectProposalDetail(w http.ResponseWriter, r *http.Request, idStr string
 		http.NotFound(w, r)
 		return false
 	}
-	lago.Redirect(w, r, url)
+	views.HtmxRedirect(w, r, url, http.StatusMovedPermanently)
 	return true
 }
 

@@ -23,7 +23,7 @@ func redirectToRoute(w http.ResponseWriter, r *http.Request, routeKey string, ar
 		http.NotFound(w, r)
 		return false
 	}
-	lago.Redirect(w, r, url)
+	views.HtmxRedirect(w, r, url, http.StatusMovedPermanently)
 	return true
 }
 

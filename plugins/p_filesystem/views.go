@@ -192,7 +192,7 @@ func createHandler(v *views.View) http.Handler {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, redirectURL, http.StatusSeeOther)
 	})
 }
 
@@ -241,7 +241,7 @@ func updateHandler(v *views.View) http.Handler {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, redirectURL, http.StatusSeeOther)
 	})
 }
 
@@ -283,7 +283,7 @@ func moveHandler(v *views.View) http.Handler {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, redirectURL, http.StatusSeeOther)
 	})
 }
 
@@ -309,7 +309,7 @@ func deleteHandler(_ *views.View) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, redirectURL, http.StatusSeeOther)
 	})
 }
 
@@ -403,7 +403,7 @@ func multiUploadHandler(v *views.View) http.Handler {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+		views.HtmxRedirect(w, r, redirectURL, http.StatusSeeOther)
 	})
 }
 

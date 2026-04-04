@@ -50,16 +50,6 @@ func redirectPageLookup(string) (components.PageInterface, bool) {
 	return redirectPage{Page: components.Page{Key: "redirect"}}, true
 }
 
-// Redirect performs an HTTP redirect that is HTMX-aware.
-func Redirect(w http.ResponseWriter, r *http.Request, url string) {
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", url)
-		w.WriteHeader(http.StatusOK)
-	} else {
-		http.Redirect(w, r, url, http.StatusSeeOther)
-	}
-}
-
 type RedirectLayer struct {
 	URLGetter getters.Getter[string]
 }
@@ -71,7 +61,7 @@ func (m RedirectLayer) Next(_ views.View, next http.Handler) http.Handler {
 			http.NotFound(w, r)
 			return
 		}
-		Redirect(w, r, url)
+		views.HtmxRedirect(w, r, url, http.StatusMovedPermanently)
 	})
 }
 

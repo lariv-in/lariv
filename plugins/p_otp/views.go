@@ -25,7 +25,7 @@ func redirectToRoute(w http.ResponseWriter, r *http.Request, routeKey string, ar
 		http.NotFound(w, r)
 		return false
 	}
-	lago.Redirect(w, r, urlValue)
+	views.HtmxRedirect(w, r, urlValue, http.StatusMovedPermanently)
 	return true
 }
 
@@ -69,7 +69,7 @@ func phoneOtpRequestHandler(v *views.View) http.Handler {
 				fieldErrors["Identifier"] = fmt.Errorf("no user found with this phone number")
 			} else if SendSmsOtp(db, identifier) {
 				verifyPath, _ := getters.IfOr(lago.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
-				lago.Redirect(w, r, verifyPath+"?identifier="+url.QueryEscape(identifier))
+				views.HtmxRedirect(w, r, verifyPath+"?identifier="+url.QueryEscape(identifier), http.StatusMovedPermanently)
 				return
 			} else {
 				slog.Error("PhoneOtpRequestHandler: failed to send SMS OTP", "identifier", identifier)
@@ -122,7 +122,7 @@ func emailOtpRequestHandler(v *views.View) http.Handler {
 				fieldErrors["Identifier"] = fmt.Errorf("no user found with this email")
 			} else if SendEmailOtp(db, identifier) {
 				verifyPath, _ := getters.IfOr(lago.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
-				lago.Redirect(w, r, verifyPath+"?identifier="+url.QueryEscape(identifier))
+				views.HtmxRedirect(w, r, verifyPath+"?identifier="+url.QueryEscape(identifier), http.StatusMovedPermanently)
 				return
 			} else {
 				slog.Error("EmailOtpRequestHandler: failed to send email OTP", "identifier", identifier)

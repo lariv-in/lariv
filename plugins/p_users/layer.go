@@ -87,7 +87,7 @@ func (AuthenticationLayer) Next(_ views.View, next http.Handler) http.Handler {
 		ctx := resolveAuth(r)
 		if ctx == nil {
 			unauthenticatedRoute, _ := lago.RegistryRoute.Get("users.UnauthenticatedRoute")
-			http.Redirect(w, r, unauthenticatedRoute.Path, http.StatusMovedPermanently)
+			views.HtmxRedirect(w, r, unauthenticatedRoute.Path, http.StatusMovedPermanently)
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))

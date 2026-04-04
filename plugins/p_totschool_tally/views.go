@@ -289,7 +289,7 @@ func TallyDailyFormHandler(v *views.View) http.Handler {
 			db.Save(&tally)
 		}
 
-		http.Redirect(w, r, "/tally/", http.StatusSeeOther)
+		views.HtmxRedirect(w, r, "/tally/", http.StatusSeeOther)
 	})
 }
 

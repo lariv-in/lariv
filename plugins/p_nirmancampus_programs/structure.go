@@ -190,7 +190,7 @@ func handleStructureUnitCreate(v *views.View) http.Handler {
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
-		lago.Redirect(w, r, loc)
+		views.HtmxRedirect(w, r, loc, http.StatusMovedPermanently)
 	})
 }
 
@@ -256,6 +256,6 @@ func handleStructureUnitUpdate(v *views.View) http.Handler {
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
-		lago.Redirect(w, r, loc)
+		views.HtmxRedirect(w, r, loc, http.StatusMovedPermanently)
 	})
 }

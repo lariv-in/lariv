@@ -33,7 +33,7 @@ func importantLinkItemHandler(_ *views.View) http.Handler {
 		}
 
 		if item.IsLink {
-			htmxRedirect(w, r, item.Link, http.StatusFound)
+			views.HtmxRedirect(w, r, item.Link, http.StatusFound)
 			return
 		}
 

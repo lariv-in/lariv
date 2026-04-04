@@ -16,15 +16,6 @@ func isHtmxRequest(r *http.Request) bool {
 	return r.Header.Get("HX-Request") == "true"
 }
 
-func htmxRedirect(w http.ResponseWriter, r *http.Request, url string, code int) {
-	if isHtmxRequest(r) {
-		w.Header().Set("HX-Redirect", url)
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	http.Redirect(w, r, url, code)
-}
-
 func studentZoneItemHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
@@ -47,7 +38,7 @@ func studentZoneItemHandler(_ *views.View) http.Handler {
 		}
 
 		if item.IsLink {
-			htmxRedirect(w, r, item.Link, http.StatusFound)
+			views.HtmxRedirect(w, r, item.Link, http.StatusFound)
 			return
 		}
 

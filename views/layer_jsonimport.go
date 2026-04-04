@@ -99,6 +99,6 @@ func (m LayerJsonImport[T]) Next(view View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		http.Redirect(w, r, successUrl, http.StatusSeeOther)
+		HtmxRedirect(w, r, successUrl, http.StatusSeeOther)
 	})
 }
