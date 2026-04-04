@@ -45,7 +45,7 @@ func (AppointmentDetailCtxMiddleware) Next(_ views.View, next http.Handler) http
 				overlapList = append(overlapList, map[string]any{
 					"ID":   o.ID,
 					"Name": o.Name,
-					"Date": o.Datetime.Format("Jan 02, 15:04"),
+					"Date": o.Datetime,
 				})
 			}
 			ctx = context.WithValue(ctx, "OverlapWarningList", overlapList)
@@ -86,7 +86,7 @@ func generateHandler(v *views.View) http.Handler {
 			return
 		}
 
-		content, systemPrompt := buildLetterContent(db, &appointment, user.Name)
+		content, systemPrompt := buildLetterContent(db, r.Context(), &appointment, user.Name)
 		Generate(db, appointment.ID, content, systemPrompt)
 
 		redirectAppointmentDetail(w, r, idStr)
