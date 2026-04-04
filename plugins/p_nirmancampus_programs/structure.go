@@ -30,10 +30,10 @@ func (structureUnitScopeForContextProgram) Patch(_ views.View, r *http.Request, 
 	return q.Where("program_id = ?", p.ID)
 }
 
-// programsStructureLoadProgramMiddleware loads the program from {id} with role scope and preloads structure units.
-type programsStructureLoadProgramMiddleware struct{}
+// programsStructureLoadProgramLayer loads the program from {id} with role scope and preloads structure units.
+type programsStructureLoadProgramLayer struct{}
 
-func (programsStructureLoadProgramMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (programsStructureLoadProgramLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.Atoi(idStr)

@@ -36,9 +36,9 @@ func changeUserPassword(db *gorm.DB, userID uint, newPassword string) error {
 	return db.Save(&targetUser).Error
 }
 
-type authenticatedUserDetailMiddleware struct{}
+type authenticatedUserDetailLayer struct{}
 
-func (authenticatedUserDetailMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (authenticatedUserDetailLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authUser := r.Context().Value("$user").(User)
 		db := r.Context().Value("$db").(*gorm.DB)
@@ -253,26 +253,26 @@ func selfChangePasswordHandler(v *views.View) http.Handler {
 func init() {
 	lago.RegistryView.Register("users.ListView",
 		lago.GetPageView("users.UserTable").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.list", views.MiddlewareList[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.list", views.LayerList[User]{
 				Key: getters.Static("users"),
 			}))
 
 	lago.RegistryView.Register("users.DetailView",
 		lago.GetPageView("users.UserDetail").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.detail", views.LayerDetail[User]{
 				Key:          getters.Static("user"),
 				PathParamKey: getters.Static("id"),
 			}))
 
 	lago.RegistryView.Register("users.CreateView",
 		lago.GetPageView("users.UserCreateForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.create", views.MiddlewareCreate[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.create", views.LayerCreate[User]{
 				SuccessURL: lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -280,13 +280,13 @@ func init() {
 
 	lago.RegistryView.Register("users.UpdateView",
 		lago.GetPageView("users.UserUpdateForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.detail", views.LayerDetail[User]{
 				Key:          getters.Static("user"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("users.update", views.MiddlewareUpdate[User]{
+			WithLayer("users.update", views.LayerUpdate[User]{
 				Key: getters.Static("user"),
 				SuccessURL: lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("user.ID")),
@@ -295,91 +295,91 @@ func init() {
 
 	lago.RegistryView.Register("users.SelfDetailView",
 		lago.GetPageView("users.SelfDetail").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.self_detail", authenticatedUserDetailMiddleware{}))
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.self_detail", authenticatedUserDetailLayer{}))
 
 	lago.RegistryView.Register("users.SelfUpdateView",
 		lago.GetPageView("users.SelfUpdateForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.self_detail", authenticatedUserDetailMiddleware{}).
-			WithMiddleware("users.self_update", views.MiddlewareUpdate[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.self_detail", authenticatedUserDetailLayer{}).
+			WithLayer("users.self_update", views.LayerUpdate[User]{
 				Key:        getters.Static("user"),
 				SuccessURL: lago.RoutePath("users.SelfDetailRoute", nil),
 			}))
 
 	lago.RegistryView.Register("users.SelfChangePasswordView",
 		lago.GetPageView("users.SelfChangePasswordForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.self_detail", authenticatedUserDetailMiddleware{}).
-			WithMiddleware("users.self_change_password", views.MethodMiddleware{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.self_detail", authenticatedUserDetailLayer{}).
+			WithLayer("users.self_change_password", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: selfChangePasswordHandler,
 			}))
 
 	lago.RegistryView.Register("users.DeleteView",
 		lago.GetPageView("users.UserDeleteForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.detail", views.LayerDetail[User]{
 				Key:          getters.Static("user"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("users.delete", views.MiddlewareDelete[User]{
+			WithLayer("users.delete", views.LayerDelete[User]{
 				Key:        getters.Static("user"),
 				SuccessURL: lago.RoutePath("users.ListRoute", nil),
 			}))
 
 	lago.RegistryView.Register("users.ChangePasswordView",
 		lago.GetPageView("users.ChangePasswordForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.detail", views.MiddlewareDetail[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.detail", views.LayerDetail[User]{
 				Key:          getters.Static("user"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("users.change_password", views.MethodMiddleware{
+			WithLayer("users.change_password", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: changePasswordHandler,
 			}))
 
 	lago.RegistryView.Register("users.SelectView",
 		lago.GetPageView("users.UserSelectionTable").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.select", views.MiddlewareList[User]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.select", views.LayerList[User]{
 				Key: getters.Static("users"),
 			}))
 
 	lago.RegistryView.Register("users.RoleSelectView",
 		lago.GetPageView("users.RoleSelectionTable").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.role_select", views.MiddlewareList[Role]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.role_select", views.LayerList[Role]{
 				Key: getters.Static("roles"),
 			}))
 
 	lago.RegistryView.Register("users.RoleListView",
 		lago.GetPageView("users.RoleTable").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.role_list", views.MiddlewareList[Role]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.role_list", views.LayerList[Role]{
 				Key: getters.Static("roles"),
 			}))
 
 	lago.RegistryView.Register("users.RoleDetailView",
 		lago.GetPageView("users.RoleDetail").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.role_detail", views.MiddlewareDetail[Role]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.role_detail", views.LayerDetail[Role]{
 				Key:          getters.Static("role"),
 				PathParamKey: getters.Static("id"),
 			}))
 
 	lago.RegistryView.Register("users.RoleCreateView",
 		lago.GetPageView("users.RoleCreateForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.role_create", views.MiddlewareCreate[Role]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.role_create", views.LayerCreate[Role]{
 				SuccessURL: lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -387,13 +387,13 @@ func init() {
 
 	lago.RegistryView.Register("users.RoleUpdateView",
 		lago.GetPageView("users.RoleUpdateForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.role_detail", views.MiddlewareDetail[Role]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.role_detail", views.LayerDetail[Role]{
 				Key:          getters.Static("role"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("users.role_update", views.MiddlewareUpdate[Role]{
+			WithLayer("users.role_update", views.LayerUpdate[Role]{
 				Key: getters.Static("role"),
 				SuccessURL: lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("role.ID")),
@@ -402,38 +402,38 @@ func init() {
 
 	lago.RegistryView.Register("users.RoleDeleteView",
 		lago.GetPageView("users.RoleDeleteForm").
-			WithMiddleware("users.auth", AuthenticationMiddleware{}).
-			WithMiddleware("users.role", RoleAuthorizationMiddleware{Roles: []string{""}}).
-			WithMiddleware("users.role_detail", views.MiddlewareDetail[Role]{
+			WithLayer("users.auth", AuthenticationLayer{}).
+			WithLayer("users.role", RoleAuthorizationLayer{Roles: []string{""}}).
+			WithLayer("users.role_detail", views.LayerDetail[Role]{
 				Key:          getters.Static("role"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("users.role_delete", views.MiddlewareDelete[Role]{
+			WithLayer("users.role_delete", views.LayerDelete[Role]{
 				Key:        getters.Static("role"),
 				SuccessURL: lago.RoutePath("users.RoleListRoute", nil),
 			}))
 
 	lago.RegistryView.Register("users.LogoutView",
 		lago.GetPageView("users.UnauthenticatedPage").
-			WithMiddleware("users.logout_post", views.MethodMiddleware{
+			WithLayer("users.logout_post", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: logoutHandler,
 			}).
-			WithMiddleware("users.logout_get", views.MethodMiddleware{
+			WithLayer("users.logout_get", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: logoutHandler,
 			}))
 
 	lago.RegistryView.Register("users.LoginView",
 		lago.GetPageView("users.LoginPage").
-			WithMiddleware("users.login", views.MethodMiddleware{
+			WithLayer("users.login", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: loginHandler,
 			}))
 
 	lago.RegistryView.Register("users.SignupView",
 		lago.GetPageView("users.SignupPage").
-			WithMiddleware("users.signup", views.MethodMiddleware{
+			WithLayer("users.signup", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: signupHandler,
 			}))

@@ -23,10 +23,10 @@ type wsPayload map[string]json.RawMessage
 func wsHTTPHandler() http.Handler {
 	s := websocket.Server{
 		Handler: chatSocketHandler,
-		// Skip default Origin check from websocket.Handler; AuthenticationMiddleware already ran.
+		// Skip default Origin check from websocket.Handler; AuthenticationLayer already ran.
 		Handshake: func(_ *websocket.Config, _ *http.Request) error { return nil },
 	}
-	return p_users.AuthenticationMiddleware{}.Next(views.View{}, http.HandlerFunc(s.ServeHTTP))
+	return p_users.AuthenticationLayer{}.Next(views.View{}, http.HandlerFunc(s.ServeHTTP))
 }
 
 func chatSocketHandler(conn *websocket.Conn) {

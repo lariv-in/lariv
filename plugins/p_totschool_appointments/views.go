@@ -12,10 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// AppointmentDetailCtxMiddleware enriches detail context after MiddlewareDetail loads "appointment".
-type AppointmentDetailCtxMiddleware struct{}
+// AppointmentDetailCtxLayer enriches detail context after LayerDetail loads "appointment".
+type AppointmentDetailCtxLayer struct{}
 
-func (AppointmentDetailCtxMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (AppointmentDetailCtxLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -242,8 +242,8 @@ func applyDateFilterChain(raw any, query gorm.ChainInterface[Appointment]) gorm.
 func init() {
 	lago.RegistryView.Register("appointments.ListView",
 		lago.GetPageView("appointments.AppointmentTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.list", views.MiddlewareList[Appointment]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.list", views.LayerList[Appointment]{
 				Key: getters.Static("appointments"),
 				QueryPatchers: views.QueryPatchers[Appointment]{
 					{Key: "appointments.list", Value: appointmentListQueryPatcher{}},
@@ -252,18 +252,18 @@ func init() {
 
 	lago.RegistryView.Register("appointments.DetailView",
 		lago.GetPageView("appointments.AppointmentDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.detail", views.MiddlewareDetail[Appointment]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.detail", views.LayerDetail[Appointment]{
 				Key:          getters.Static("appointment"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("appointments.detail_ctx", AppointmentDetailCtxMiddleware{}),
+			WithLayer("appointments.detail_ctx", AppointmentDetailCtxLayer{}),
 	)
 
 	lago.RegistryView.Register("appointments.CreateView",
 		lago.GetPageView("appointments.AppointmentCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.create", views.MiddlewareCreate[Appointment]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.create", views.LayerCreate[Appointment]{
 				SuccessURL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -274,12 +274,12 @@ func init() {
 
 	lago.RegistryView.Register("appointments.UpdateView",
 		lago.GetPageView("appointments.AppointmentUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.detail", views.MiddlewareDetail[Appointment]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.detail", views.LayerDetail[Appointment]{
 				Key:          getters.Static("appointment"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("appointments.update", views.MiddlewareUpdate[Appointment]{
+			WithLayer("appointments.update", views.LayerUpdate[Appointment]{
 				Key: getters.Static("appointment"),
 				SuccessURL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("appointment.ID")),
@@ -291,59 +291,59 @@ func init() {
 
 	lago.RegistryView.Register("appointments.DeleteView",
 		lago.GetPageView("appointments.AppointmentDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.detail", views.MiddlewareDetail[Appointment]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.detail", views.LayerDetail[Appointment]{
 				Key:          getters.Static("appointment"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("appointments.delete", views.MiddlewareDelete[Appointment]{
+			WithLayer("appointments.delete", views.LayerDelete[Appointment]{
 				Key:        getters.Static("appointment"),
 				SuccessURL: lago.RoutePath("appointments.ListRoute", nil),
 			}))
 
 	lago.RegistryView.Register("appointments.GenerateView",
 		lago.GetPageView("appointments.AppointmentDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.generate", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.generate", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: generateHandler,
 			}))
 
 	lago.RegistryView.Register("appointments.CancelView",
 		lago.GetPageView("appointments.AppointmentDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.cancel", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.cancel", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: cancelHandler,
 			}))
 
 	lago.RegistryView.Register("appointments.AiEditFormView",
 		lago.GetPageView("appointments.AiEditModal").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.ai_edit_form", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.ai_edit_form", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: aiEditFormHandler,
 			}))
 
 	lago.RegistryView.Register("appointments.AiEditView",
 		lago.GetPageView("appointments.AiEditModal").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.ai_edit", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.ai_edit", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: aiEditHandler,
 			}))
 
 	lago.RegistryView.Register("appointments.SelectView",
 		lago.GetPageView("appointments.AppointmentSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.select_list", views.MiddlewareList[Appointment]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.select_list", views.LayerList[Appointment]{
 				Key: getters.Static("appointments"),
 			}))
 
 	lago.RegistryView.Register("appointments.CardTimelineView",
 		lago.GetPageView("appointments.AppointmentCardTimeline").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("appointments.timeline", views.MiddlewareList[Appointment]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("appointments.timeline", views.LayerList[Appointment]{
 				Key: getters.Static("appointments"),
 				QueryPatchers: views.QueryPatchers[Appointment]{
 					{Key: "appointments.timeline", Value: appointmentTimelineQueryPatcher{}},

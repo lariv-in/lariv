@@ -8,13 +8,13 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-var assignmentSubmissionsAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
+var assignmentSubmissionsAdminRoleLayer = p_users.RoleAuthorizationLayer{Roles: []string{"admin"}}
 
 func init() {
 	lago.RegistryView.Register("assignmentsubmissions.ListView",
 		lago.GetPageView("assignmentsubmissions.Table").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("assignmentsubmissions.list", views.MiddlewareList[AssignmentSubmission]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.list", views.LayerList[AssignmentSubmission]{
 				Key: getters.Static("assignmentsubmissions"),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.preload_course", Value: views.QueryPatcherPreload[AssignmentSubmission]{Field: "Course"}},
@@ -25,8 +25,8 @@ func init() {
 
 	lago.RegistryView.Register("assignmentsubmissions.DetailView",
 		lago.GetPageView("assignmentsubmissions.Detail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("assignmentsubmissions.detail", views.MiddlewareDetail[AssignmentSubmission]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.detail", views.LayerDetail[AssignmentSubmission]{
 				Key:          getters.Static("assignmentsubmission"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
@@ -41,10 +41,10 @@ func init() {
 
 	lago.RegistryView.Register("assignmentsubmissions.CreateView",
 		lago.GetPageView("assignmentsubmissions.CreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleMiddleware).
-			WithMiddleware("assignmentsubmissions.create_query_defaults", assignmentSubmissionCreateQueryDefaultsMiddleware{}).
-			WithMiddleware("assignmentsubmissions.create", views.MiddlewareCreate[AssignmentSubmission]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleLayer).
+			WithLayer("assignmentsubmissions.create_query_defaults", assignmentSubmissionCreateQueryDefaultsLayer{}).
+			WithLayer("assignmentsubmissions.create", views.LayerCreate[AssignmentSubmission]{
 				SuccessURL: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -53,9 +53,9 @@ func init() {
 
 	lago.RegistryView.Register("assignmentsubmissions.UpdateView",
 		lago.GetPageView("assignmentsubmissions.UpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleMiddleware).
-			WithMiddleware("assignmentsubmissions.detail", views.MiddlewareDetail[AssignmentSubmission]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleLayer).
+			WithLayer("assignmentsubmissions.detail", views.LayerDetail[AssignmentSubmission]{
 				Key:          getters.Static("assignmentsubmission"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
@@ -66,7 +66,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.scope_by_role", Value: AssignmentSubmissionScopeByRole},
 				},
 			}).
-			WithMiddleware("assignmentsubmissions.update", views.MiddlewareUpdate[AssignmentSubmission]{
+			WithLayer("assignmentsubmissions.update", views.LayerUpdate[AssignmentSubmission]{
 				Key: getters.Static("assignmentsubmission"),
 				SuccessURL: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
@@ -79,9 +79,9 @@ func init() {
 
 	lago.RegistryView.Register("assignmentsubmissions.DeleteView",
 		lago.GetPageView("assignmentsubmissions.DeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleMiddleware).
-			WithMiddleware("assignmentsubmissions.detail", views.MiddlewareDetail[AssignmentSubmission]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleLayer).
+			WithLayer("assignmentsubmissions.detail", views.LayerDetail[AssignmentSubmission]{
 				Key:          getters.Static("assignmentsubmission"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
@@ -89,7 +89,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.scope_by_role", Value: AssignmentSubmissionScopeByRole},
 				},
 			}).
-			WithMiddleware("assignmentsubmissions.delete", views.MiddlewareDelete[AssignmentSubmission]{
+			WithLayer("assignmentsubmissions.delete", views.LayerDelete[AssignmentSubmission]{
 				Key:        getters.Static("assignmentsubmission"),
 				SuccessURL: lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{

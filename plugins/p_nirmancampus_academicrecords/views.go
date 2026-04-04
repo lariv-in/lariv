@@ -8,16 +8,16 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-// academicRecordsAdminRoleMiddleware restricts create/update/delete to admin;
-// superusers are always allowed (see p_users.RoleAuthorizationMiddleware).
-var academicRecordsAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
+// academicRecordsAdminRoleLayer restricts create/update/delete to admin;
+// superusers are always allowed (see p_users.RoleAuthorizationLayer).
+var academicRecordsAdminRoleLayer = p_users.RoleAuthorizationLayer{Roles: []string{"admin"}}
 
 func init() {
 	// List view
 	lago.RegistryView.Register("academicrecords.ListView",
 		lago.GetPageView("academicrecords.AcademicRecordTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("academicrecords.list", views.MiddlewareList[AcademicRecord]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.list", views.LayerList[AcademicRecord]{
 				Key: getters.Static("academicrecords"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload_student_user", Value: views.QueryPatcherPreload[AcademicRecord]{Field: "Student.User"}},
@@ -32,8 +32,8 @@ func init() {
 	// Detail view
 	lago.RegistryView.Register("academicrecords.DetailView",
 		lago.GetPageView("academicrecords.AcademicRecordDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("academicrecords.detail", views.MiddlewareDetail[AcademicRecord]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.detail", views.LayerDetail[AcademicRecord]{
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
@@ -50,10 +50,10 @@ func init() {
 	// Create view
 	lago.RegistryView.Register("academicrecords.CreateView",
 		lago.GetPageView("academicrecords.AcademicRecordCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
-			WithMiddleware("academicrecords.create_query_defaults", academicRecordCreateQueryDefaultsMiddleware{}).
-			WithMiddleware("academicrecords.create", views.MiddlewareCreate[AcademicRecord]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.admin_role", academicRecordsAdminRoleLayer).
+			WithLayer("academicrecords.create_query_defaults", academicRecordCreateQueryDefaultsLayer{}).
+			WithLayer("academicrecords.create", views.LayerCreate[AcademicRecord]{
 				SuccessURL: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -66,9 +66,9 @@ func init() {
 	// Update view
 	lago.RegistryView.Register("academicrecords.UpdateView",
 		lago.GetPageView("academicrecords.AcademicRecordUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
-			WithMiddleware("academicrecords.detail", views.MiddlewareDetail[AcademicRecord]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.admin_role", academicRecordsAdminRoleLayer).
+			WithLayer("academicrecords.detail", views.LayerDetail[AcademicRecord]{
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
@@ -80,8 +80,8 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}).
-			WithMiddleware("academicrecords.program_structure_unit", academicRecordProgramStructureUnitContextMiddleware{}).
-			WithMiddleware("academicrecords.update", views.MiddlewareUpdate[AcademicRecord]{
+			WithLayer("academicrecords.program_structure_unit", academicRecordProgramStructureUnitContextLayer{}).
+			WithLayer("academicrecords.update", views.LayerUpdate[AcademicRecord]{
 				Key: getters.Static("academicrecord"),
 				SuccessURL: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
@@ -98,9 +98,9 @@ func init() {
 	// Delete view
 	lago.RegistryView.Register("academicrecords.DeleteView",
 		lago.GetPageView("academicrecords.AcademicRecordDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("academicrecords.admin_role", academicRecordsAdminRoleMiddleware).
-			WithMiddleware("academicrecords.detail", views.MiddlewareDetail[AcademicRecord]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.admin_role", academicRecordsAdminRoleLayer).
+			WithLayer("academicrecords.detail", views.LayerDetail[AcademicRecord]{
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
@@ -112,7 +112,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}).
-			WithMiddleware("academicrecords.delete", views.MiddlewareDelete[AcademicRecord]{
+			WithLayer("academicrecords.delete", views.LayerDelete[AcademicRecord]{
 				Key:        getters.Static("academicrecord"),
 				SuccessURL: lago.RoutePath("academicrecords.DefaultRoute", nil),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
@@ -124,8 +124,8 @@ func init() {
 	// Selection view
 	lago.RegistryView.Register("academicrecords.SelectView",
 		lago.GetPageView("academicrecords.AcademicRecordSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("academicrecords.select", views.MiddlewareList[AcademicRecord]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.select", views.LayerList[AcademicRecord]{
 				Key: getters.Static("academicrecords"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload_student_user", Value: views.QueryPatcherPreload[AcademicRecord]{Field: "Student.User"}},

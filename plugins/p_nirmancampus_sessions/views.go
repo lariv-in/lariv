@@ -43,8 +43,8 @@ func init() {
 	// List view.
 	lago.RegistryView.Register("sessions.ListView",
 		lago.GetPageView("sessions.SessionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.list", views.MiddlewareList[Session]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("sessions.list", views.LayerList[Session]{
 				Key: getters.Static("sessions"),
 				QueryPatchers: views.QueryPatchers[Session]{
 					registry.Pair[string, views.QueryPatcher[Session]]{
@@ -57,8 +57,8 @@ func init() {
 	// Detail view.
 	lago.RegistryView.Register("sessions.DetailView",
 		lago.GetPageView("sessions.SessionDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.detail", views.MiddlewareDetail[Session]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("sessions.detail", views.LayerDetail[Session]{
 				Key:          getters.Static("session"),
 				PathParamKey: getters.Static("id"),
 			}))
@@ -66,8 +66,8 @@ func init() {
 	// Create view.
 	lago.RegistryView.Register("sessions.CreateView",
 		lago.GetPageView("sessions.SessionCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.create", views.MiddlewareCreate[Session]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("sessions.create", views.LayerCreate[Session]{
 				SuccessURL: lago.RoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -76,12 +76,12 @@ func init() {
 	// Update view.
 	lago.RegistryView.Register("sessions.UpdateView",
 		lago.GetPageView("sessions.SessionUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.detail", views.MiddlewareDetail[Session]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("sessions.detail", views.LayerDetail[Session]{
 				Key:          getters.Static("session"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("sessions.update", views.MiddlewareUpdate[Session]{
+			WithLayer("sessions.update", views.LayerUpdate[Session]{
 				Key: getters.Static("session"),
 				SuccessURL: lago.RoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("session.ID")),
@@ -91,12 +91,12 @@ func init() {
 	// Delete view.
 	lago.RegistryView.Register("sessions.DeleteView",
 		lago.GetPageView("sessions.SessionDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.detail", views.MiddlewareDetail[Session]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("sessions.detail", views.LayerDetail[Session]{
 				Key:          getters.Static("session"),
 				PathParamKey: getters.Static("id"),
 			}).
-			WithMiddleware("sessions.delete", views.MiddlewareDelete[Session]{
+			WithLayer("sessions.delete", views.LayerDelete[Session]{
 				Key:        getters.Static("session"),
 				SuccessURL: lago.RoutePath("sessions.DefaultRoute", nil),
 			}))
@@ -104,8 +104,8 @@ func init() {
 	// Selection view.
 	lago.RegistryView.Register("sessions.SelectView",
 		lago.GetPageView("sessions.sessionselectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("sessions.select", views.MiddlewareList[Session]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("sessions.select", views.LayerList[Session]{
 				Key: getters.Static("sessions"),
 				QueryPatchers: views.QueryPatchers[Session]{
 					registry.Pair[string, views.QueryPatcher[Session]]{

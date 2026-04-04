@@ -21,7 +21,7 @@ func (studentScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainI
 
 	rawUser := ctx.Value("$user")
 	if rawUser == nil {
-		slog.Error("StudentScopeByRole: missing $user in context – auth middleware not applied?")
+		slog.Error("StudentScopeByRole: missing $user in context – auth layer not applied?")
 		panic("StudentScopeByRole: $user is nil in context")
 	}
 	user, ok := rawUser.(p_users.User)
@@ -34,7 +34,7 @@ func (studentScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainI
 
 	rawRole := ctx.Value("$role")
 	if rawRole == nil {
-		slog.Error("StudentScopeByRole: missing $role in context – auth middleware not applied?")
+		slog.Error("StudentScopeByRole: missing $role in context – auth layer not applied?")
 		panic("StudentScopeByRole: $role is nil in context")
 	}
 	roleName, ok := rawRole.(string)

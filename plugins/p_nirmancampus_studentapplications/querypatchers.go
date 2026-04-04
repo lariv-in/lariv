@@ -18,13 +18,13 @@ type studentApplicationScopeByRole struct{}
 // StudentApplicationScopeByRole restricts application queries:
 //   - superuser, admin: full queryset
 //   - Unassigned: rows created by the current user (created_by_id)
-//   - student and any other role: empty queryset (routes should reject student via middleware)
+//   - student and any other role: empty queryset (routes should reject student via layer)
 func (studentApplicationScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[StudentApplication]) gorm.ChainInterface[StudentApplication] {
 	ctx := r.Context()
 
 	rawUser := ctx.Value("$user")
 	if rawUser == nil {
-		slog.Error("StudentApplicationScopeByRole: missing $user in context – auth middleware not applied?")
+		slog.Error("StudentApplicationScopeByRole: missing $user in context – auth layer not applied?")
 		panic("StudentApplicationScopeByRole: $user is nil in context")
 	}
 	user, ok := rawUser.(p_users.User)
@@ -37,7 +37,7 @@ func (studentApplicationScopeByRole) Patch(_ views.View, r *http.Request, query 
 
 	rawRole := ctx.Value("$role")
 	if rawRole == nil {
-		slog.Error("StudentApplicationScopeByRole: missing $role in context – auth middleware not applied?")
+		slog.Error("StudentApplicationScopeByRole: missing $role in context – auth layer not applied?")
 		panic("StudentApplicationScopeByRole: $role is nil in context")
 	}
 	roleName, ok := rawRole.(string)

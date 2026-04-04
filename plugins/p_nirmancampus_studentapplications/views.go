@@ -11,12 +11,12 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-// studentApplicationsAccessMiddleware allows only admin, Unassigned, and (via bypass) superuser.
+// studentApplicationsAccessLayer allows only admin, Unassigned, and (via bypass) superuser.
 // Student and other roles cannot use this app.
-var studentApplicationsAccessMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin", roleNameUnassigned}}
+var studentApplicationsAccessLayer = p_users.RoleAuthorizationLayer{Roles: []string{"admin", roleNameUnassigned}}
 
-// studentApplicationsAdminMiddleware allows create/update/delete management (not for Unassigned except create is separate).
-var studentApplicationsAdminMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
+// studentApplicationsAdminLayer allows create/update/delete management (not for Unassigned except create is separate).
+var studentApplicationsAdminLayer = p_users.RoleAuthorizationLayer{Roles: []string{"admin"}}
 
 type applicationCreatedByFormPatcher struct{}
 
@@ -56,9 +56,9 @@ func (applicationDOBFormPatcher) Patch(_ views.View, _ *http.Request, formData m
 func init() {
 	lago.RegistryView.Register("studentapplications.ListView",
 		lago.GetPageView("studentapplications.ApplicationTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithMiddleware("studentapplications.list", views.MiddlewareList[StudentApplication]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("studentapplications.access", studentApplicationsAccessLayer).
+			WithLayer("studentapplications.list", views.LayerList[StudentApplication]{
 				Key: getters.Static("studentapplications"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
@@ -68,10 +68,10 @@ func init() {
 
 	lago.RegistryView.Register("studentapplications.DetailView",
 		lago.GetPageView("studentapplications.ApplicationDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("studentapplications.path", views.PathMiddleware{Names: []string{"id"}}).
-			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithMiddleware("studentapplications.detail", views.MiddlewareDetail[StudentApplication]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("studentapplications.path", views.PathLayer{Names: []string{"id"}}).
+			WithLayer("studentapplications.access", studentApplicationsAccessLayer).
+			WithLayer("studentapplications.detail", views.LayerDetail[StudentApplication]{
 				Key:          getters.Static("studentapplication"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
@@ -84,9 +84,9 @@ func init() {
 
 	lago.RegistryView.Register("studentapplications.CreateView",
 		lago.GetPageView("studentapplications.ApplicationCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithMiddleware("studentapplications.create", views.MiddlewareCreate[StudentApplication]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("studentapplications.access", studentApplicationsAccessLayer).
+			WithLayer("studentapplications.create", views.LayerCreate[StudentApplication]{
 				SuccessURL: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$id"))}),
 				FormPatchers: views.FormPatchers{
 					registry.Pair[string, views.FormPatcher]{Key: "studentapplications.form_created_by", Value: applicationCreatedByFormPatcher{}},
@@ -96,11 +96,11 @@ func init() {
 
 	lago.RegistryView.Register("studentapplications.UpdateView",
 		lago.GetPageView("studentapplications.ApplicationUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("studentapplications.path", views.PathMiddleware{Names: []string{"id"}}).
-			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
-			WithMiddleware("studentapplications.detail", views.MiddlewareDetail[StudentApplication]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("studentapplications.path", views.PathLayer{Names: []string{"id"}}).
+			WithLayer("studentapplications.access", studentApplicationsAccessLayer).
+			WithLayer("studentapplications.admin_role", studentApplicationsAdminLayer).
+			WithLayer("studentapplications.detail", views.LayerDetail[StudentApplication]{
 				Key:          getters.Static("studentapplication"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
@@ -110,7 +110,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
 				},
 			}).
-			WithMiddleware("studentapplications.update", views.MiddlewareUpdate[StudentApplication]{
+			WithLayer("studentapplications.update", views.LayerUpdate[StudentApplication]{
 				Key:        getters.Static("studentapplication"),
 				SuccessURL: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("studentapplication.ID"))}),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
@@ -123,11 +123,11 @@ func init() {
 
 	lago.RegistryView.Register("studentapplications.DeleteView",
 		lago.GetPageView("studentapplications.ApplicationDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("studentapplications.path", views.PathMiddleware{Names: []string{"id"}}).
-			WithMiddleware("studentapplications.access", studentApplicationsAccessMiddleware).
-			WithMiddleware("studentapplications.admin_role", studentApplicationsAdminMiddleware).
-			WithMiddleware("studentapplications.detail", views.MiddlewareDetail[StudentApplication]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("studentapplications.path", views.PathLayer{Names: []string{"id"}}).
+			WithLayer("studentapplications.access", studentApplicationsAccessLayer).
+			WithLayer("studentapplications.admin_role", studentApplicationsAdminLayer).
+			WithLayer("studentapplications.detail", views.LayerDetail[StudentApplication]{
 				Key:          getters.Static("studentapplication"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
@@ -135,7 +135,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
 				},
 			}).
-			WithMiddleware("studentapplications.delete", views.MiddlewareDelete[StudentApplication]{
+			WithLayer("studentapplications.delete", views.LayerDelete[StudentApplication]{
 				Key:        getters.Static("studentapplication"),
 				SuccessURL: lago.RoutePath("studentapplications.DefaultRoute", nil),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{

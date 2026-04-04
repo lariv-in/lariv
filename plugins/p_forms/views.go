@@ -247,8 +247,8 @@ func init() {
 
 	lago.RegistryView.Register("forms.ListView",
 		lago.GetPageView("forms.FormTable").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.list", views.MiddlewareList[Form]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.list", views.LayerList[Form]{
 				Key: getters.Static("forms"),
 				QueryPatchers: views.QueryPatchers[Form]{
 					{Key: "forms.order", Value: views.QueryPatcherOrderBy[Form]{Order: "title ASC"}},
@@ -257,20 +257,20 @@ func init() {
 
 	lago.RegistryView.Register("forms.DetailView",
 		lago.GetPageView("forms.FormDetail").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.detail", views.MiddlewareDetail[Form]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.detail", views.LayerDetail[Form]{
 				Key:          getters.Static("form"),
 				PathParamKey: getters.Static("form_id"),
 				QueryPatchers: views.QueryPatchers[Form]{
 					{Key: "forms.detail_preload_fields", Value: formDetailPreloadFields{}},
 				},
 			}).
-			WithMiddleware("forms.fields_object_list", AttachFormFieldsObjectListContext{}))
+			WithLayer("forms.fields_object_list", AttachFormFieldsObjectListContext{}))
 
 	lago.RegistryView.Register("forms.CreateView",
 		lago.GetPageView("forms.FormCreateForm").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.create", views.MiddlewareCreate[Form]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.create", views.LayerCreate[Form]{
 				SuccessURL: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -281,12 +281,12 @@ func init() {
 
 	lago.RegistryView.Register("forms.UpdateView",
 		lago.GetPageView("forms.FormUpdateForm").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.detail", views.MiddlewareDetail[Form]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.detail", views.LayerDetail[Form]{
 				Key:          getters.Static("form"),
 				PathParamKey: getters.Static("form_id"),
 			}).
-			WithMiddleware("forms.update", views.MiddlewareUpdate[Form]{
+			WithLayer("forms.update", views.LayerUpdate[Form]{
 				Key: getters.Static("form"),
 				SuccessURL: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
@@ -298,25 +298,25 @@ func init() {
 
 	lago.RegistryView.Register("forms.DeleteView",
 		lago.GetPageView("forms.FormDeleteForm").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.detail", views.MiddlewareDetail[Form]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.detail", views.LayerDetail[Form]{
 				Key:          getters.Static("form"),
 				PathParamKey: getters.Static("form_id"),
 			}).
-			WithMiddleware("forms.delete", views.MiddlewareDelete[Form]{
+			WithLayer("forms.delete", views.LayerDelete[Form]{
 				Key:        getters.Static("form"),
 				SuccessURL: lago.RoutePath("forms.DefaultRoute", nil),
 			}))
 
 	lago.RegistryView.Register("forms.FieldCreateView",
 		lago.GetPageView("forms.FieldCreateForm").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.path_params", views.PathMiddleware{Names: []string{"form_id", "id"}}).
-			WithMiddleware("forms.detail_form", views.MiddlewareDetail[Form]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.path_params", views.PathLayer{Names: []string{"form_id", "id"}}).
+			WithLayer("forms.detail_form", views.LayerDetail[Form]{
 				Key:          getters.Static("form"),
 				PathParamKey: getters.Static("form_id"),
 			}).
-			WithMiddleware("forms.field_create", views.MiddlewareCreate[FormField]{
+			WithLayer("forms.field_create", views.LayerCreate[FormField]{
 				SuccessURL: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.ParseUint(getters.Key[string]("$path.form_id"))),
 				}),
@@ -325,16 +325,16 @@ func init() {
 
 	lago.RegistryView.Register("forms.FieldUpdateView",
 		lago.GetPageView("forms.FieldUpdateForm").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.path_params", views.PathMiddleware{Names: []string{"form_id", "id"}}).
-			WithMiddleware("forms.field_detail", views.MiddlewareDetail[FormField]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.path_params", views.PathLayer{Names: []string{"form_id", "id"}}).
+			WithLayer("forms.field_detail", views.LayerDetail[FormField]{
 				Key:          getters.Static("form_field"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[FormField]{
 					{Key: "forms.field_form_scope", Value: formFieldScopeByFormPath{}},
 				},
 			}).
-			WithMiddleware("forms.field_update", views.MiddlewareUpdate[FormField]{
+			WithLayer("forms.field_update", views.LayerUpdate[FormField]{
 				Key: getters.Static("form_field"),
 				SuccessURL: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
@@ -344,16 +344,16 @@ func init() {
 
 	lago.RegistryView.Register("forms.FieldDeleteView",
 		lago.GetPageView("forms.FieldDeleteForm").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.path_params", views.PathMiddleware{Names: []string{"form_id", "id"}}).
-			WithMiddleware("forms.field_detail", views.MiddlewareDetail[FormField]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.path_params", views.PathLayer{Names: []string{"form_id", "id"}}).
+			WithLayer("forms.field_detail", views.LayerDetail[FormField]{
 				Key:          getters.Static("form_field"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[FormField]{
 					{Key: "forms.field_form_scope", Value: formFieldScopeByFormPath{}},
 				},
 			}).
-			WithMiddleware("forms.field_delete", views.MiddlewareDelete[FormField]{
+			WithLayer("forms.field_delete", views.LayerDelete[FormField]{
 				Key: getters.Static("form_field"),
 				SuccessURL: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.ParseUint(getters.Key[string]("$path.form_id"))),
@@ -365,10 +365,10 @@ func init() {
 
 	lago.RegistryView.Register("forms.SubmissionsListView",
 		lago.GetPageView("forms.SubmissionTable").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.path_params", views.PathMiddleware{Names: []string{"form_id"}}).
-			WithMiddleware("forms.form_parent_fields_ctx", AttachFormForParentFieldsPath{}).
-			WithMiddleware("forms.submissions_list", views.MiddlewareList[FormSubmission]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.path_params", views.PathLayer{Names: []string{"form_id"}}).
+			WithLayer("forms.form_parent_fields_ctx", AttachFormForParentFieldsPath{}).
+			WithLayer("forms.submissions_list", views.LayerList[FormSubmission]{
 				Key: getters.Static("form_submissions"),
 				QueryPatchers: views.QueryPatchers[FormSubmission]{
 					{Key: "forms.submission_scope", Value: formSubmissionScopeByFormID{}},
@@ -377,15 +377,15 @@ func init() {
 
 	lago.RegistryView.Register("forms.SubmissionDetailView",
 		lago.GetPageView("forms.SubmissionDetail").
-			WithMiddleware(auth, p_users.AuthenticationMiddleware{}).
-			WithMiddleware("forms.submission_outer", views.MiddlewareDetail[Form]{
+			WithLayer(auth, p_users.AuthenticationLayer{}).
+			WithLayer("forms.submission_outer", views.LayerDetail[Form]{
 				Key:          getters.Static("form"),
 				PathParamKey: getters.Static("form_id"),
 				QueryPatchers: views.QueryPatchers[Form]{
 					{Key: "forms.submission_outer_preloads", Value: formDetailPreloadFields{}},
 				},
 			}).
-			WithMiddleware("forms.submission_inner", views.MiddlewareDetail[FormSubmission]{
+			WithLayer("forms.submission_inner", views.LayerDetail[FormSubmission]{
 				Key:          getters.Static("form_submission"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[FormSubmission]{
@@ -447,9 +447,9 @@ func fieldMoveHandler(moveUp bool) func(*views.View) http.Handler {
 
 func fieldMovePostView(moveUp bool) *views.View {
 	return lago.GetPageView("forms.FormDetail").
-		WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-		WithMiddleware("forms.path_params", views.PathMiddleware{Names: []string{"form_id", "id"}}).
-		WithMiddleware("forms.field_move_get", views.MethodMiddleware{
+		WithLayer("users.auth", p_users.AuthenticationLayer{}).
+		WithLayer("forms.path_params", views.PathLayer{Names: []string{"form_id", "id"}}).
+		WithLayer("forms.field_move_get", views.MethodLayer{
 			Method: http.MethodGet,
 			Handler: func(_ *views.View) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -457,7 +457,7 @@ func fieldMovePostView(moveUp bool) *views.View {
 				})
 			},
 		}).
-		WithMiddleware("forms.field_move_post", views.MethodMiddleware{
+		WithLayer("forms.field_move_post", views.MethodLayer{
 			Method:  http.MethodPost,
 			Handler: fieldMoveHandler(moveUp),
 		})
@@ -465,7 +465,7 @@ func fieldMovePostView(moveUp bool) *views.View {
 
 func publicSubmitView() *views.View {
 	return lago.GetPageView("forms.PublicSubmitPage").
-		WithMiddleware("forms.public_get", views.MethodMiddleware{
+		WithLayer("forms.public_get", views.MethodLayer{
 			Method: http.MethodGet,
 			Handler: func(inner *views.View) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -492,7 +492,7 @@ func publicSubmitView() *views.View {
 				})
 			},
 		}).
-		WithMiddleware("forms.public_post", views.MethodMiddleware{
+		WithLayer("forms.public_post", views.MethodLayer{
 			Method: http.MethodPost,
 			Handler: func(inner *views.View) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

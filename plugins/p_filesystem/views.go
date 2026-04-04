@@ -45,11 +45,11 @@ func parseUintPathValue(r *http.Request, name string) (uint, error) {
 	return uint(id), nil
 }
 
-type loadVNodeByPathParamMiddleware struct {
+type loadVNodeByPathParamLayer struct {
 	Param string
 }
 
-func (m loadVNodeByPathParamMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (m loadVNodeByPathParamLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		db, err := filesystemDB(r)
 		if err != nil {
@@ -432,64 +432,64 @@ func downloadHandler(_ *views.View) http.Handler {
 }
 
 func init() {
-	listRoot := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listRoot := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.root", Value: rootVNodeQueryPatcher{}},
 			},
 		}
 	}
-	listBrowse := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listBrowse := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.browse", Value: browseVNodeQueryPatcher{}},
 			},
 		}
 	}
-	listSelectRoot := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listSelectRoot := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.select.root", Value: rootDirectoryQueryPatcher{}},
 			},
 		}
 	}
-	listSelectChild := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listSelectChild := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.select.child", Value: browseDirectoryQueryPatcher{}},
 			},
 		}
 	}
-	listMultiRoot := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listMultiRoot := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.multi.root", Value: rootVNodeQueryPatcher{}},
 			},
 		}
 	}
-	listMultiChild := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listMultiChild := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.multi.child", Value: browseVNodeQueryPatcher{}},
 			},
 		}
 	}
-	listMoveRoot := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listMoveRoot := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.move-select.root", Value: rootDirectoryQueryPatcher{}},
 			},
 		}
 	}
-	listMoveChild := func() views.Middleware {
-		return views.MiddlewareList[VNode]{
+	listMoveChild := func() views.Layer {
+		return views.LayerList[VNode]{
 			Key: getters.Static("vnodes"),
 			QueryPatchers: views.QueryPatchers[VNode]{
 				{Key: "filesystem.move-select.child", Value: browseDirectoryQueryPatcher{}},
@@ -499,119 +499,119 @@ func init() {
 
 	lago.RegistryView.Register("filesystem.ListView",
 		lago.GetPageView("filesystem.VNodeTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.list", listRoot()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.list", listRoot()))
 
 	lago.RegistryView.Register("filesystem.BrowseView",
 		lago.GetPageView("filesystem.VNodeTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
-			WithMiddleware("filesystem.list", listBrowse()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+			WithLayer("filesystem.list", listBrowse()))
 
 	lago.RegistryView.Register("filesystem.DetailView",
 		lago.GetPageView("filesystem.VNodeDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}))
 
 	lago.RegistryView.Register("filesystem.CreateView",
 		lago.GetPageView("filesystem.VNodeCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.create", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.create", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: createHandler,
 			}))
 
 	lago.RegistryView.Register("filesystem.CreateChildView",
 		lago.GetPageView("filesystem.VNodeCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
-			WithMiddleware("filesystem.create", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+			WithLayer("filesystem.create", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: createHandler,
 			}))
 
 	lago.RegistryView.Register("filesystem.UpdateView",
 		lago.GetPageView("filesystem.VNodeUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
-			WithMiddleware("filesystem.update", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
+			WithLayer("filesystem.update", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: updateHandler,
 			}))
 
 	lago.RegistryView.Register("filesystem.DeleteView",
 		lago.GetPageView("filesystem.VNodeDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
-			WithMiddleware("filesystem.delete", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
+			WithLayer("filesystem.delete", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: deleteHandler,
 			}))
 
 	lago.RegistryView.Register("filesystem.MoveView",
 		lago.GetPageView("filesystem.VNodeMoveForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
-			WithMiddleware("filesystem.move", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
+			WithLayer("filesystem.move", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: moveHandler,
 			}))
 
 	lago.RegistryView.Register("filesystem.MultiUploadView",
 		lago.GetPageView("filesystem.VNodeMultiUploadForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.multi_upload", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.multi_upload", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: multiUploadHandler,
 			}))
 
 	lago.RegistryView.Register("filesystem.MultiUploadChildView",
 		lago.GetPageView("filesystem.VNodeMultiUploadForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
-			WithMiddleware("filesystem.multi_upload", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+			WithLayer("filesystem.multi_upload", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: multiUploadHandler,
 			}))
 
 	lago.RegistryView.Register("filesystem.SelectView",
 		lago.GetPageView("filesystem.ParentSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.list", listSelectRoot()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.list", listSelectRoot()))
 
 	lago.RegistryView.Register("filesystem.SelectChildView",
 		lago.GetPageView("filesystem.ParentSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
-			WithMiddleware("filesystem.list", listSelectChild()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+			WithLayer("filesystem.list", listSelectChild()))
 
 	lago.RegistryView.Register("filesystem.MultiSelectView",
 		lago.GetPageView("filesystem.MultiSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.list", listMultiRoot()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.list", listMultiRoot()))
 
 	lago.RegistryView.Register("filesystem.MultiSelectChildView",
 		lago.GetPageView("filesystem.MultiSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
-			WithMiddleware("filesystem.list", listMultiChild()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+			WithLayer("filesystem.list", listMultiChild()))
 
 	lago.RegistryView.Register("filesystem.MoveSelectView",
 		lago.GetPageView("filesystem.DestinationSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.list", listMoveRoot()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.list", listMoveRoot()))
 
 	lago.RegistryView.Register("filesystem.MoveSelectChildView",
 		lago.GetPageView("filesystem.DestinationSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.parent", loadVNodeByPathParamMiddleware{Param: "parent_id"}).
-			WithMiddleware("filesystem.list", listMoveChild()))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+			WithLayer("filesystem.list", listMoveChild()))
 
 	lago.RegistryView.Register("filesystem.DownloadView",
 		lago.GetPageView("filesystem.VNodeDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("filesystem.node", loadVNodeByPathParamMiddleware{Param: "id"}).
-			WithMiddleware("filesystem.download", views.MethodMiddleware{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
+			WithLayer("filesystem.download", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: downloadHandler,
 			}))

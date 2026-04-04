@@ -9,9 +9,9 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-// programsAdminRoleMiddleware limits create/update/delete to the admin role;
-// superusers are always allowed (see p_users.RoleAuthorizationMiddleware).
-var programsAdminRoleMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
+// programsAdminRoleLayer limits create/update/delete to the admin role;
+// superusers are always allowed (see p_users.RoleAuthorizationLayer).
+var programsAdminRoleLayer = p_users.RoleAuthorizationLayer{Roles: []string{"admin"}}
 
 func init() {
 	univPatcher := queryPatcherUniversity{Param: "University"}
@@ -25,16 +25,16 @@ func init() {
 
 	lago.RegistryView.Register("programs.ListView",
 		lago.GetPageView("programs.ProgramTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("programs.list", views.MiddlewareList[Program]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("programs.list", views.LayerList[Program]{
 				Key:           getters.Static("programs"),
 				QueryPatchers: programListQueryPatchers,
 			}))
 
 	lago.RegistryView.Register("programs.DetailView",
 		lago.GetPageView("programs.ProgramDetail").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("programs.detail", views.MiddlewareDetail[Program]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("programs.detail", views.LayerDetail[Program]{
 				Key:          getters.Static("program"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Program]{
@@ -45,9 +45,9 @@ func init() {
 
 	lago.RegistryView.Register("programs.CreateView",
 		lago.GetPageView("programs.ProgramCreateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("programs.admin_role", programsAdminRoleMiddleware).
-			WithMiddleware("programs.create", views.MiddlewareCreate[Program]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("programs.admin_role", programsAdminRoleLayer).
+			WithLayer("programs.create", views.LayerCreate[Program]{
 				SuccessURL: lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
@@ -55,9 +55,9 @@ func init() {
 
 	lago.RegistryView.Register("programs.UpdateView",
 		lago.GetPageView("programs.ProgramUpdateForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("programs.admin_role", programsAdminRoleMiddleware).
-			WithMiddleware("programs.detail", views.MiddlewareDetail[Program]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("programs.admin_role", programsAdminRoleLayer).
+			WithLayer("programs.detail", views.LayerDetail[Program]{
 				Key:          getters.Static("program"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Program]{
@@ -65,7 +65,7 @@ func init() {
 					{Key: "programs.preload_structure_units", Value: queryPatcherPreloadProgramStructureUnits{}},
 				},
 			}).
-			WithMiddleware("programs.update", views.MiddlewareUpdate[Program]{
+			WithLayer("programs.update", views.LayerUpdate[Program]{
 				Key: getters.Static("program"),
 				SuccessURL: lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
@@ -78,16 +78,16 @@ func init() {
 
 	lago.RegistryView.Register("programs.DeleteView",
 		lago.GetPageView("programs.ProgramDeleteForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("programs.admin_role", programsAdminRoleMiddleware).
-			WithMiddleware("programs.detail", views.MiddlewareDetail[Program]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("programs.admin_role", programsAdminRoleLayer).
+			WithLayer("programs.detail", views.LayerDetail[Program]{
 				Key:          getters.Static("program"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Program]{
 					{Key: "programs.scope_by_role", Value: programScopeByRole{}},
 				},
 			}).
-			WithMiddleware("programs.delete", views.MiddlewareDelete[Program]{
+			WithLayer("programs.delete", views.LayerDelete[Program]{
 				Key:        getters.Static("program"),
 				SuccessURL: lago.RoutePath("programs.DefaultRoute", nil),
 				QueryPatchers: views.QueryPatchers[Program]{
@@ -97,29 +97,29 @@ func init() {
 
 	lago.RegistryView.Register("programs.SelectView",
 		lago.GetPageView("programs.ProgramSelectionTable").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("programs.select_list", views.MiddlewareList[Program]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("programs.select_list", views.LayerList[Program]{
 				Key:           getters.Static("programs"),
 				QueryPatchers: programListQueryPatchers,
 			}))
 
-	structureMiddlewares := []struct {
+	structureLayers := []struct {
 		key string
-		val views.Middleware
+		val views.Layer
 	}{
-		{"users.auth", p_users.AuthenticationMiddleware{}},
-		{"programs.admin_role", programsAdminRoleMiddleware},
-		{"programs.structure_load_program", programsStructureLoadProgramMiddleware{}},
+		{"users.auth", p_users.AuthenticationLayer{}},
+		{"programs.admin_role", programsAdminRoleLayer},
+		{"programs.structure_load_program", programsStructureLoadProgramLayer{}},
 	}
 	applyStructure := func(v *views.View) *views.View {
-		for _, m := range structureMiddlewares {
-			v = v.WithMiddleware(m.key, m.val)
+		for _, m := range structureLayers {
+			v = v.WithLayer(m.key, m.val)
 		}
 		return v
 	}
 
 	structureEditView := applyStructure(lago.GetPageView("programs.ProgramStructureEditPage")).
-		WithMiddleware("programs.structure_edit_get", views.MethodMiddleware{
+		WithLayer("programs.structure_edit_get", views.MethodLayer{
 			Method: http.MethodGet,
 			Handler: func(v *views.View) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +134,7 @@ func init() {
 
 	lago.RegistryView.Register("programs.StructureUnitCreateView",
 		applyStructure(lago.GetPageView("programs.StructureUnitCreateModal")).
-			WithMiddleware("programs.structure_unit_create", views.MethodMiddleware{
+			WithLayer("programs.structure_unit_create", views.MethodLayer{
 				Method: http.MethodPost,
 				Handler: func(v *views.View) http.Handler {
 					return handleStructureUnitCreate(v)
@@ -143,7 +143,7 @@ func init() {
 
 	lago.RegistryView.Register("programs.StructureUnitEditModalView",
 		applyStructure(lago.GetPageView("programs.StructureUnitEditModal")).
-			WithMiddleware("programs.structure_unit_detail", views.MiddlewareDetail[ProgramStructureUnit]{
+			WithLayer("programs.structure_unit_detail", views.LayerDetail[ProgramStructureUnit]{
 				Key:          getters.Static("unit"),
 				PathParamKey: getters.Static("unitId"),
 				QueryPatchers: views.QueryPatchers[ProgramStructureUnit]{
@@ -154,7 +154,7 @@ func init() {
 
 	lago.RegistryView.Register("programs.StructureUnitUpdateView",
 		applyStructure(lago.GetPageView("programs.StructureUnitEditModal")).
-			WithMiddleware("programs.structure_unit_detail", views.MiddlewareDetail[ProgramStructureUnit]{
+			WithLayer("programs.structure_unit_detail", views.LayerDetail[ProgramStructureUnit]{
 				Key:          getters.Static("unit"),
 				PathParamKey: getters.Static("unitId"),
 				QueryPatchers: views.QueryPatchers[ProgramStructureUnit]{
@@ -162,7 +162,7 @@ func init() {
 					{Key: "programs.structure_unit_preload_courses", Value: queryPatcherPreloadStructureUnitCourseAssociations{}},
 				},
 			}).
-			WithMiddleware("programs.structure_unit_update", views.MethodMiddleware{
+			WithLayer("programs.structure_unit_update", views.MethodLayer{
 				Method: http.MethodPost,
 				Handler: func(v *views.View) http.Handler {
 					return handleStructureUnitUpdate(v)

@@ -238,45 +238,45 @@ func init() {
 
 	lago.RegistryView.Register("otp.PhoneOtpRequestView",
 		lago.GetPageView("otp.PhoneOtpRequestForm").
-			WithMiddleware("users.optional_auth", p_users.OptionalAuthMiddleware{}).
-			WithMiddleware("otp.phone_get", views.MethodMiddleware{
+			WithLayer("users.optional_auth", p_users.OptionalAuthLayer{}).
+			WithLayer("otp.phone_get", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: phoneOtpRequestHandler,
 			}).
-			WithMiddleware("otp.phone_post", views.MethodMiddleware{
+			WithLayer("otp.phone_post", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: phoneOtpRequestHandler,
 			}))
 
 	lago.RegistryView.Register("otp.EmailOtpRequestView",
 		lago.GetPageView("otp.EmailOtpRequestForm").
-			WithMiddleware("users.optional_auth", p_users.OptionalAuthMiddleware{}).
-			WithMiddleware("otp.email_get", views.MethodMiddleware{
+			WithLayer("users.optional_auth", p_users.OptionalAuthLayer{}).
+			WithLayer("otp.email_get", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: emailOtpRequestHandler,
 			}).
-			WithMiddleware("otp.email_post", views.MethodMiddleware{
+			WithLayer("otp.email_post", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: emailOtpRequestHandler,
 			}))
 
 	lago.RegistryView.Register("otp.OtpVerifyView",
 		lago.GetPageView("otp.OtpVerifyForm").
-			WithMiddleware("users.optional_auth", p_users.OptionalAuthMiddleware{}).
-			WithMiddleware("otp.verify_get", views.MethodMiddleware{
+			WithLayer("users.optional_auth", p_users.OptionalAuthLayer{}).
+			WithLayer("otp.verify_get", views.MethodLayer{
 				Method:  http.MethodGet,
 				Handler: otpVerifyHandler,
 			}).
-			WithMiddleware("otp.verify_post", views.MethodMiddleware{
+			WithLayer("otp.verify_post", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: otpVerifyHandler,
 			}))
 
 	lago.RegistryView.Register("otp.OTPPreferencesView",
 		lago.GetPageView("otp.OTPPreferencesForm").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("users.role", p_users.RoleAuthorizationMiddleware{Roles: []string{"superuser"}}).
-			WithMiddleware("otp.preferences", views.MiddlewareSingleton[OTPPreferences]{
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("users.role", p_users.RoleAuthorizationLayer{Roles: []string{"superuser"}}).
+			WithLayer("otp.preferences", views.LayerSingleton[OTPPreferences]{
 				SuccessURL: lago.RoutePath("otp.OTPPreferencesRoute", nil),
 			}))
 }

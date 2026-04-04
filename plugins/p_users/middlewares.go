@@ -78,11 +78,11 @@ func resolveAuth(r *http.Request) context.Context {
 	return ctx
 }
 
-// AuthenticationMiddleware requires a valid auth token. If the user is not
+// AuthenticationLayer requires a valid auth token. If the user is not
 // authenticated the request is redirected to the unauthenticated route.
-type AuthenticationMiddleware struct{}
+type AuthenticationLayer struct{}
 
-func (AuthenticationMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (AuthenticationLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := resolveAuth(r)
 		if ctx == nil {
@@ -94,12 +94,12 @@ func (AuthenticationMiddleware) Next(_ views.View, next http.Handler) http.Handl
 	})
 }
 
-// OptionalAuthMiddleware enriches the request context with $user, $role, and
+// OptionalAuthLayer enriches the request context with $user, $role, and
 // $tz when a valid auth token is present. If the user is not authenticated the
 // request continues without those context values.
-type OptionalAuthMiddleware struct{}
+type OptionalAuthLayer struct{}
 
-func (OptionalAuthMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (OptionalAuthLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ctx := resolveAuth(r); ctx != nil {
 			r = r.WithContext(ctx)
@@ -108,16 +108,16 @@ func (OptionalAuthMiddleware) Next(_ views.View, next http.Handler) http.Handler
 	})
 }
 
-type RoleAuthorizationMiddleware struct {
+type RoleAuthorizationLayer struct {
 	Roles []string
 }
 
-func (m RoleAuthorizationMiddleware) Next(_ views.View, next http.Handler) http.Handler {
+func (m RoleAuthorizationLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userObj := r.Context().Value("$user")
 		user, ok := userObj.(User)
 		if !ok {
-			slog.Error("RoleAuthorizationMiddleware: missing $user in context")
+			slog.Error("RoleAuthorizationLayer: missing $user in context")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -125,7 +125,7 @@ func (m RoleAuthorizationMiddleware) Next(_ views.View, next http.Handler) http.
 		var roleName string
 		db, ok := r.Context().Value("$db").(*gorm.DB)
 		if !ok {
-			slog.Error("RoleAuthorizationMiddleware: missing $db in context")
+			slog.Error("RoleAuthorizationLayer: missing $db in context")
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
@@ -137,7 +137,7 @@ func (m RoleAuthorizationMiddleware) Next(_ views.View, next http.Handler) http.
 		}
 
 		if !authorized {
-			slog.Error("RoleAuthorizationMiddleware: user is not authorized", "role", roleName, "roles", m.Roles)
+			slog.Error("RoleAuthorizationLayer: user is not authorized", "role", roleName, "roles", m.Roles)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

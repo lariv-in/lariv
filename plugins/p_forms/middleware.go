@@ -35,7 +35,7 @@ func (AttachFormFieldsObjectListContext) Next(_ views.View, next http.Handler) h
 	})
 }
 
-// formIDFromPathContext returns the parent form id from $path.form_id (see views.PathMiddleware).
+// formIDFromPathContext returns the parent form id from $path.form_id (see views.PathLayer).
 func formIDFromPathContext(ctx context.Context) (uint, bool) {
 	m, ok := ctx.Value("$path").(map[string]any)
 	if !ok || m == nil {
@@ -57,7 +57,7 @@ func formIDFromPathContext(ctx context.Context) (uint, bool) {
 }
 
 // AttachFormForParentFieldsPath loads Form into context as "form" for field create and submissions list
-// (routes without MiddlewareDetail[Form] loading the parent form). Requires PathMiddleware so $path is populated.
+// (routes without LayerDetail[Form] loading the parent form). Requires PathLayer so $path is populated.
 type AttachFormForParentFieldsPath struct{}
 
 func (AttachFormForParentFieldsPath) Next(_ views.View, next http.Handler) http.Handler {

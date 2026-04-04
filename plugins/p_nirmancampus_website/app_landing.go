@@ -10,7 +10,7 @@ import (
 	"maragu.dev/gomponents"
 )
 
-var websiteAppRoleMiddleware = p_users.RoleAuthorizationMiddleware{Roles: []string{"admin"}}
+var websiteAppRoleLayer = p_users.RoleAuthorizationLayer{Roles: []string{"admin"}}
 
 type websiteAppLandingPage struct {
 	components.Page
@@ -82,6 +82,6 @@ func init() {
 
 	lago.RegistryView.Register("nirmancampus_website.AppLandingView",
 		lago.GetPageView("nirmancampus_website.AppLandingPage").
-			WithMiddleware("users.auth", p_users.AuthenticationMiddleware{}).
-			WithMiddleware("website.role", websiteAppRoleMiddleware))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("website.role", websiteAppRoleLayer))
 }
