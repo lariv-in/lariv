@@ -9,33 +9,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// Student is the single students row for Nirmancampus (replaces p_students.Student + NirmancampusStudentDetails).
-//
-// If you already had nirmancampus_student_details, after AutoMigrate adds columns on students (PostgreSQL):
-//
-//	UPDATE students AS s
-//	SET
-//	  fathers_name = d.fathers_name,
-//	  category = d.category,
-//	  address = d.address
-//	FROM nirmancampus_student_details AS d
-//	WHERE d.student_id = s.id AND d.deleted_at IS NULL;
-//	DROP TABLE nirmancampus_student_details;
-//
-// Confirm table/column names in your database before running.
 type Student struct {
 	gorm.Model
 
 	UserID    uint         `gorm:"uniqueIndex;notnull"`
 	User      p_users.User `gorm:"constraint:OnDelete:CASCADE"`
 	StudentNo string       `gorm:"uniqueIndex;notnull"`
-	DOB       *time.Time
+	DOB       *time.Time   `gorm:"type:date"`
 
-	Assets []p_filesystem.VNode `gorm:"many2many:student_assets;"`
-
-	FathersName string `gorm:"type:varchar(255);default:''"`
-	Category    string `gorm:"type:varchar(100);default:''"`
-	Address     string `gorm:"type:text"`
+	MotherName string `gorm:"type:varchar(255);default:''"`
+	FatherName string `gorm:"column:fathers_name;type:varchar(255);default:''"`
+	Category   string `gorm:"type:varchar(100);default:''"`
+	Address    string `gorm:"type:text"`
+	PhotoID    *uint
+	Photo      p_filesystem.VNode
+	Documents  []p_filesystem.VNode `gorm:"many2many:student_documents;"`
 }
 
 func init() {
@@ -47,7 +35,17 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_students", lago.AdminPanel[Student]{
 		SearchField: "StudentNo",
-		ListFields:  []string{"StudentNo", "User.Name", "DOB", "FathersName", "Category", "UpdatedAt"},
-		Preload:     []string{"User"},
+		ListFields: []string{
+			"StudentNo",
+			"User.Name",
+			"User.Email",
+			"User.Phone",
+			"DOB",
+			"MotherName",
+			"FatherName",
+			"Category",
+			"UpdatedAt",
+		},
+		Preload: []string{"User"},
 	})
 }

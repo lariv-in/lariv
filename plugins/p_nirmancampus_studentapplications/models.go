@@ -14,21 +14,21 @@ import (
 type StudentApplication struct {
 	gorm.Model
 
-	ProgramID       uint `gorm:"notnull"`
-	Program         p_nirmancampus_programs.Program
-	CreatedByID     *uint
-	CreatedBy       *p_users.User `gorm:"constraint:OnDelete:SET NULL;foreignKey:CreatedByID;references:ID"`
-	StudentName     string        `gorm:"notnull"`
-	Email           string
-	DOB             *time.Time `gorm:"type:date"`
-	MotherName      string
-	FatherName      string
-	Category        string
-	CompleteAddress string
-	Mobile          string
-	PhotoID         *uint
-	Photo           p_filesystem.VNode
-	Documents       []p_filesystem.VNode `gorm:"many2many:student_application_documents;"`
+	ProgramID   uint `gorm:"notnull"`
+	Program     p_nirmancampus_programs.Program
+	CreatedByID *uint
+	CreatedBy   *p_users.User `gorm:"constraint:OnDelete:SET NULL;foreignKey:CreatedByID;references:ID"`
+	StudentName string        `gorm:"notnull"`
+	Email       string
+	DOB         *time.Time `gorm:"type:date"`
+	MotherName  string
+	FatherName  string
+	Category    string
+	Address     string `gorm:"type:text"`
+	Mobile      string
+	PhotoID     *uint
+	Photo       p_filesystem.VNode
+	Documents   []p_filesystem.VNode `gorm:"many2many:student_application_documents;"`
 }
 
 func init() {

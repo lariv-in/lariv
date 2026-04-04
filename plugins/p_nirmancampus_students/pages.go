@@ -2,7 +2,6 @@ package p_nirmancampus_students
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -12,26 +11,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_users"
 )
-
-func dobGetter() getters.Getter[time.Time] {
-	return func(ctx context.Context) (time.Time, error) {
-		dobPtr, err := getters.Key[*time.Time]("$in.DOB")(ctx)
-		if err != nil || dobPtr == nil {
-			return time.Time{}, nil
-		}
-		return *dobPtr, nil
-	}
-}
-
-func dobDetailGetter() getters.Getter[time.Time] {
-	return func(ctx context.Context) (time.Time, error) {
-		dobPtr, err := getters.Key[*time.Time]("$in.DOB")(ctx)
-		if err != nil || dobPtr == nil {
-			return time.Time{}, nil
-		}
-		return *dobPtr, nil
-	}
-}
 
 func init() {
 	registerMenuPages()
@@ -104,9 +83,24 @@ func registerFilterPages() {
 				Getter: getters.Key[string]("$get.User.Name"),
 			},
 			&components.InputText{
+				Label:  "Email",
+				Name:   "User.Email",
+				Getter: getters.Key[string]("$get.User.Email"),
+			},
+			&components.InputText{
+				Label:  "Phone",
+				Name:   "User.Phone",
+				Getter: getters.Key[string]("$get.User.Phone"),
+			},
+			&components.InputText{
+				Label:  "Mother's Name",
+				Name:   "MotherName",
+				Getter: getters.Key[string]("$get.MotherName"),
+			},
+			&components.InputText{
 				Label:  "Father's Name",
-				Name:   "FathersName",
-				Getter: getters.Key[string]("$get.FathersName"),
+				Name:   "FatherName",
+				Getter: getters.Key[string]("$get.FatherName"),
 			},
 			&components.InputText{
 				Label:  "Category",
@@ -138,6 +132,11 @@ func registerFilterPages() {
 				Label:  "Student No",
 				Name:   "StudentNo",
 				Getter: getters.Key[string]("$get.StudentNo"),
+			},
+			&components.InputText{
+				Label:  "Phone",
+				Name:   "User.Phone",
+				Getter: getters.Key[string]("$get.User.Phone"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -194,7 +193,7 @@ func studentFormFields() components.ContainerColumn {
 					&components.InputDate{
 						Label:  "Date of Birth",
 						Name:   "DOB",
-						Getter: dobGetter(),
+						Getter: getters.Deref(getters.Key[*time.Time]("$in.DOB")),
 					},
 				},
 			},
@@ -202,12 +201,22 @@ func studentFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.FathersName"),
+						Error: getters.Key[error]("$error.MotherName"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "Mother's Name",
+								Name:   "MotherName",
+								Getter: getters.Key[string]("$in.MotherName"),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.FatherName"),
 						Children: []components.PageInterface{
 							&components.InputText{
 								Label:  "Father's Name",
-								Name:   "FathersName",
-								Getter: getters.Key[string]("$in.FathersName"),
+								Name:   "FatherName",
+								Getter: getters.Key[string]("$in.FatherName"),
 							},
 						},
 					},
@@ -229,38 +238,72 @@ func studentFormFields() components.ContainerColumn {
 					&components.InputTextarea{
 						Label:  "Address",
 						Name:   "Address",
-						Rows:   3,
+						Rows:   4,
 						Getter: getters.Key[string]("$in.Address"),
 					},
 				},
 			},
-			&components.ContainerError{
-				Error: getters.Key[error]("$error.Assets"),
+			components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
-					&components.InputManyToMany[p_filesystem.VNode]{
-						Label:       "Assets",
-						Name:        "Assets",
-						Getter:      getters.Key[[]p_filesystem.VNode]("$in.Assets"),
-						Url:         lago.RoutePath("filesystem.MultiSelectRoute", nil),
-						Display:     getters.Key[string]("$in.Name"),
-						Placeholder: "Select assets...",
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.PhotoID"),
+						Children: []components.PageInterface{
+							&p_filesystem.InputVNode{
+								Label: "Photo",
+								Name:  "PhotoID",
+								VNode: func(ctx context.Context) (p_filesystem.VNode, error) {
+									var zero p_filesystem.VNode
+									if id, err := getters.Deref(getters.Key[*uint]("$in.PhotoID"))(ctx); err == nil && id != 0 {
+										return getters.Association[p_filesystem.VNode](getters.Static(id))(ctx)
+									}
+									if id, err := getters.Key[uint]("$in.PhotoID")(ctx); err == nil && id != 0 {
+										return getters.Association[p_filesystem.VNode](getters.Static(id))(ctx)
+									}
+									return zero, nil
+								},
+								AllowedFiletypes: []string{".jpg", ".jpeg", ".png", ".webp"},
+								Path: getters.Format(
+									"/students/%s-%d/",
+									getters.Any(getters.IfOrElse(
+										getters.Key[string]("$in.StudentNo"),
+										getters.Static("unknown"),
+									)),
+									getters.Any(getters.Key[int64]("$timestamp")),
+								),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Documents"),
+						Children: []components.PageInterface{
+							&p_filesystem.InputMultiVNode{
+								Label: "Documents",
+								Name:  "Documents",
+								VNode: func(ctx context.Context) ([]p_filesystem.VNode, error) {
+									if nodes, err := getters.Key[[]p_filesystem.VNode]("$in.Documents")(ctx); err == nil && len(nodes) > 0 {
+										return nodes, nil
+									}
+									return getters.AssociationList[p_filesystem.VNode](
+										getters.AssociationIDs(getters.ContextKeyIn, "Documents"),
+										"",
+									)(ctx)
+								},
+								AllowedFiletypes: []string{".pdf", ".jpg", ".jpeg", ".png", ".webp"},
+								Path: getters.Format(
+									"/students/%s-%d/",
+									getters.Any(getters.IfOrElse(
+										getters.Key[string]("$in.StudentNo"),
+										getters.Static("unknown"),
+									)),
+									getters.Any(getters.Key[int64]("$timestamp")),
+								),
+							},
+						},
 					},
 				},
 			},
 		},
-	}
-}
-
-func studentCreateUrlGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if role == "superuser" || role == "admin" {
-			return lago.RoutePath("students.CreateRoute", nil)(ctx)
-		}
-		return "", fmt.Errorf("you do not have permission to do this action")
 	}
 }
 
@@ -326,7 +369,6 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[Student]]("students"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentFilter"}, Page: components.Page{Roles: []string{"admin", "superuser"}}},
-					&components.TableButtonCreate{Link: studentCreateUrlGetter(), Page: components.Page{Roles: []string{"admin", "superuser"}}},
 				},
 				OnClick: getters.NavigateGetter(lago.RoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
@@ -364,10 +406,29 @@ func registerTablePages() {
 						},
 					},
 					{
-						Label: "Father's Name",
-						Name:  "FathersName",
+						Label: "Phone",
+						Name:  "User.Phone",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.FathersName")},
+							&components.FieldPhone{
+								Getter: getters.ForeignKey[p_users.User, uint, string](
+									getters.Key[uint]("$row.UserID"),
+									"Phone",
+								),
+							},
+						},
+					},
+					{
+						Label: "Mother's Name",
+						Name:  "MotherName",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.MotherName")},
+						},
+					},
+					{
+						Label: "Father's Name",
+						Name:  "FatherName",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.FatherName")},
 						},
 					},
 					{
@@ -409,17 +470,35 @@ func registerDetailPages() {
 								Getter: getters.Key[string]("$in.StudentNo"),
 							},
 							&components.LabelInline{
+								Title: "Email",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string]("$in.User.Email")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Phone",
+								Children: []components.PageInterface{
+									&components.FieldPhone{Getter: getters.Key[string]("$in.User.Phone")},
+								},
+							},
+							&components.LabelInline{
 								Title: "Date of Birth",
 								Children: []components.PageInterface{
 									&components.FieldDate{
-										Getter: dobDetailGetter(),
+										Getter: getters.Deref(getters.Key[*time.Time]("$in.DOB")),
 									},
 								},
 							},
 							&components.LabelInline{
-								Title: "Address",
+								Title: "Mother's Name",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.Address")},
+									&components.FieldText{Getter: getters.Key[string]("$in.MotherName")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Father's Name",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string]("$in.FatherName")},
 								},
 							},
 							&components.LabelInline{
@@ -428,22 +507,26 @@ func registerDetailPages() {
 									&components.FieldText{Getter: getters.Key[string]("$in.Category")},
 								},
 							},
-							&components.LabelInline{
-								Title: "Father's Name",
+							&components.LabelNewline{
+								Title: "Address",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.FathersName")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Address")},
 								},
 							},
-							&components.LabelInline{
-								Title: "Assets",
+							&components.LabelNewline{
+								Title: "Photo",
 								Children: []components.PageInterface{
-									&components.FieldManyToMany[p_filesystem.VNode]{
-										Getter:  getters.Key[[]p_filesystem.VNode]("$in.Assets"),
-										Display: getters.Key[string]("$in.Name"),
-										Link: lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-											"id": getters.Any(getters.Key[uint]("$in.ID")),
-										}),
-										Classes: "w-full",
+									&p_filesystem.FieldPhoto{
+										VNode:   getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$in.PhotoID"))),
+										Classes: "w-42 rounded",
+									},
+								},
+							},
+							&components.LabelNewline{
+								Title: "Documents",
+								Children: []components.PageInterface{
+									&p_filesystem.FieldManyFile{
+										VNode: getters.Key[[]p_filesystem.VNode]("$in.Documents"),
 									},
 								},
 							},
@@ -505,10 +588,29 @@ func registerSelectionPages() {
 						},
 					},
 					{
-						Label: "Father's Name",
-						Name:  "FathersName",
+						Label: "Phone",
+						Name:  "User.Phone",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.FathersName")},
+							&components.FieldPhone{
+								Getter: getters.ForeignKey[p_users.User, uint, string](
+									getters.Key[uint]("$row.UserID"),
+									"Phone",
+								),
+							},
+						},
+					},
+					{
+						Label: "Mother's Name",
+						Name:  "MotherName",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.MotherName")},
+						},
+					},
+					{
+						Label: "Father's Name",
+						Name:  "FatherName",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.FatherName")},
 						},
 					},
 					{

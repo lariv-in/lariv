@@ -241,13 +241,13 @@ func applicationFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.CompleteAddress"),
+						Error: getters.Key[error]("$error.Address"),
 						Children: []components.PageInterface{
 							&components.InputTextarea{
-								Label:  "Complete address",
-								Name:   "CompleteAddress",
+								Label:  "Address",
+								Name:   "Address",
 								Rows:   4,
-								Getter: getters.Key[string]("$in.CompleteAddress"),
+								Getter: getters.Key[string]("$in.Address"),
 							},
 						},
 					},
@@ -486,9 +486,9 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelNewline{
-								Title: "Complete address",
+								Title: "Address",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.CompleteAddress")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Address")},
 								},
 							},
 							&components.LabelNewline{

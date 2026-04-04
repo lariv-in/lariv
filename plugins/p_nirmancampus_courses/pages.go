@@ -10,26 +10,11 @@ import (
 
 func init() {
 	registerMenuPages()
-	registerProgramsMenuCoursesEntry()
 	registerFilterPages()
 	registerFormPages()
 	registerTablePages()
 	registerDetailPages()
 	registerSelectionPages()
-}
-
-func registerProgramsMenuCoursesEntry() {
-	lago.RegistryPage.Patch("programs.ProgramMenu", func(page components.PageInterface) components.PageInterface {
-		menu, ok := page.(*components.SidebarMenu)
-		if !ok {
-			return page
-		}
-		menu.Children = append(menu.Children, &components.SidebarMenuItem{
-			Title: getters.Static("Courses"),
-			Url:   lago.RoutePath("courses.DefaultRoute", nil),
-		})
-		return menu
-	})
 }
 
 // --- Menus ---
