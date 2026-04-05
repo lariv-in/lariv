@@ -3,7 +3,6 @@ package p_nirmancampus_studentapplications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -57,10 +56,7 @@ func registerMenuPages() {
 				Url: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
-						getters.IfOrElse(
-							getters.Key[uint]("$in.ID"),
-							getters.ParseUint(getters.Key[string]("$path.id")),
-						),
+						getters.ParseUint(getters.Key[string]("$path.id")),
 					)),
 				}),
 			},
@@ -70,10 +66,7 @@ func registerMenuPages() {
 				Url: lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
-						getters.IfOrElse(
-							getters.Key[uint]("$in.ID"),
-							getters.ParseUint(getters.Key[string]("$path.id")),
-						),
+						getters.ParseUint(getters.Key[string]("$path.id")),
 					)),
 				}),
 			},
@@ -83,7 +76,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("studentapplications.ApplicationFilter", &components.FormComponent[StudentApplication]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("studentapplications.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("studentapplications.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -313,8 +306,12 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "studentapplications.ApplicationMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[StudentApplication]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("studentapplications.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("studentapplications.CreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[StudentApplication]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create application",
 				Subtitle: "Record a new student application",
@@ -325,7 +322,9 @@ func registerFormPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save application"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -335,17 +334,18 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "studentapplications.ApplicationDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[StudentApplication]{
-				Getter: getters.Key[StudentApplication]("studentapplication"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
-						getters.IfOrElse(
-							getters.Key[uint]("$in.ID"),
-							getters.ParseUint(getters.Key[string]("$path.id")),
-						),
+						getters.ParseUint(getters.Key[string]("$path.id")),
 					)),
-				}))),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[StudentApplication]{
+				Getter: getters.Key[StudentApplication]("studentapplication"),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit application",
 				Subtitle: "Update application details",
@@ -357,12 +357,14 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Page:        components.Page{Roles: []string{"admin", "superuser"}},
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("studentapplication.ID"))}),
+								FormPostURL: lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("studentapplication.ID"))}),
+								ModalUID:    "studentapplication-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -373,7 +375,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -526,15 +530,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm deletion",
 				Message: "Are you sure you want to delete this application?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.IfOrElse(
-						getters.Key[uint]("studentapplication.ID"),
-						getters.IfOrElse(
-							getters.Key[uint]("$in.ID"),
-							getters.ParseUint(getters.Key[string]("$path.id")),
-						),
-					)),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

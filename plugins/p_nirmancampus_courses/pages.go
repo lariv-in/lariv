@@ -1,7 +1,6 @@
 package p_nirmancampus_courses
 
 import (
-	"net/http"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -44,7 +43,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("courses.CourseFilter", &components.FormComponent[Course]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("courses.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("courses.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -68,7 +67,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseSelectionFilter", &components.FormComponent[Course]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("courses.SelectRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("courses.SelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -83,7 +82,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("courses.CourseMultiSelectionFilter", &components.FormComponent[Course]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("courses.MultiSelectRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("courses.MultiSelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Hidden: true, Name: "target_input", Getter: getters.Key[string]("$get.target_input")},
@@ -175,7 +174,7 @@ func registerFormPages() {
 		UID: "courses-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[Course]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("courses.CreateRoute", nil))),
+				Attr: getters.FormBubbling(nil),
 
 				Title:    "Create Course",
 				Subtitle: "Create a new course",
@@ -201,9 +200,13 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "courses.CourseDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Course]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
+				Children: []components.PageInterface{
+					&components.FormComponent[Course]{
 				Getter:   getters.Key[Course]("course"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Course",
 				Subtitle: "Update course details",
@@ -215,12 +218,14 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Page:        components.Page{Roles: []string{"admin", "superuser"}},
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
+								FormPostURL: lago.RoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
+								ModalUID:    "course-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -231,7 +236,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -330,9 +337,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this course?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("course.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})
@@ -351,12 +356,14 @@ func registerSelectionPages() {
 				RowAttr: getters.RowAttrSelect("CourseID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseSelectionFilter"}},
-					&components.ButtonModal{
-						Page:    components.Page{Roles: []string{"admin", "superuser"}},
-						Url:     lago.RoutePath("courses.CreateRoute", nil),
-						Icon:    "plus",
-						Classes: "btn-square btn-outline btn-sm",
-						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#course-selection-table")),
+					&components.ButtonModalForm{
+						Page:        components.Page{Roles: []string{"admin", "superuser"}},
+						Url:         lago.RoutePath("courses.CreateRoute", nil),
+						FormPostURL: lago.RoutePath("courses.CreateRoute", nil),
+						ModalUID:    "courses-create-modal",
+						Icon:        "plus",
+						Classes:     "btn-square btn-outline btn-sm",
+						Attr:        getters.ModalRefreshList(getters.Static(""), getters.Static("#course-selection-table")),
 					},
 				},
 				Columns: []components.TableColumn{
@@ -388,12 +395,14 @@ func registerSelectionPages() {
 				),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
-					&components.ButtonModal{
-						Page:    components.Page{Roles: []string{"admin", "superuser"}},
-						Url:     lago.RoutePath("courses.CreateRoute", nil),
-						Icon:    "plus",
-						Classes: "btn-square btn-outline btn-sm",
-						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#course-multi-selection-table")),
+					&components.ButtonModalForm{
+						Page:        components.Page{Roles: []string{"admin", "superuser"}},
+						Url:         lago.RoutePath("courses.CreateRoute", nil),
+						FormPostURL: lago.RoutePath("courses.CreateRoute", nil),
+						ModalUID:    "courses-create-modal",
+						Icon:        "plus",
+						Classes:     "btn-square btn-outline btn-sm",
+						Attr:        getters.ModalRefreshList(getters.Static(""), getters.Static("#course-multi-selection-table")),
 					},
 				},
 				Columns: []components.TableColumn{

@@ -3,7 +3,6 @@ package forms
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -225,8 +224,12 @@ func registerFormCRUDPages() {
 			lago.DynamicPage{Name: "forms.FormMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Form]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("forms.CreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[Form]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create form",
 				Subtitle: "The public URL slug is generated from the title",
@@ -236,7 +239,9 @@ func registerFormCRUDPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -288,7 +293,7 @@ func registerFormCRUDPages() {
 								Actions: []components.PageInterface{
 									&components.TableButtonCreate{
 										Link: lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
-											"form_id": getters.Any(getters.Key[uint]("$in.ID")),
+											"form_id": getters.Any(getters.Key[uint]("form.ID")),
 										}),
 									},
 								},
@@ -307,11 +312,15 @@ func registerFormCRUDPages() {
 			lago.DynamicPage{Name: "forms.FormDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Form]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
+					"form_id": getters.Any(getters.Key[uint]("form.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[Form]{
 				Getter: getters.Key[Form]("form"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
-					"form_id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title: "Edit form",
 				ChildrenInput: []components.PageInterface{
@@ -321,10 +330,12 @@ func registerFormCRUDPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
+							&components.ButtonModalForm{
 								Label:   "Delete",
 								Icon:    "trash",
-								Url:     lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Url:     lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
+								FormPostURL: lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
+								ModalUID: "forms-form-delete-modal",
 								Classes: "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
@@ -336,7 +347,9 @@ func registerFormCRUDPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -346,9 +359,7 @@ func registerFormCRUDPages() {
 			&components.DeleteConfirmation{
 				Title:   "Delete form",
 				Message: "This will delete the form, its field definitions, and stored submissions.",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{
-					"form_id": getters.Any(getters.Key[uint]("form.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})
@@ -421,10 +432,14 @@ func registerFieldPages() {
 			lago.DynamicPage{Name: "forms.FormDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[FormField]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
-				}))),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[FormField]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Add field",
 				Subtitle: "Define name, label, and type",
@@ -434,7 +449,9 @@ func registerFieldPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save field"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -443,12 +460,16 @@ func registerFieldPages() {
 			lago.DynamicPage{Name: "forms.FieldEditMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[FormField]{
-				Getter: getters.Key[FormField]("form_field"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
-				}))),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[FormField]{
+				Getter: getters.Key[FormField]("form_field"),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title: "Edit field",
 				ChildrenInput: []components.PageInterface{
@@ -462,8 +483,8 @@ func registerFieldPages() {
 								Label: "Delete",
 								Icon:  "trash",
 								Url: lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
-									"form_id": getters.Any(getters.Key[uint]("$in.FormID")),
-									"id":      getters.Any(getters.Key[uint]("$in.ID")),
+									"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
+									"id":      getters.Any(getters.Key[uint]("form_field.ID")),
 								}),
 								Classes: "btn-outline btn-error btn-sm",
 							},
@@ -476,7 +497,9 @@ func registerFieldPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -486,10 +509,7 @@ func registerFieldPages() {
 			&components.DeleteConfirmation{
 				Title:   "Delete field",
 				Message: "Remove this field from the form?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
-					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
-					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

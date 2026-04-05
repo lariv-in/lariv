@@ -9,9 +9,9 @@ import (
 	"maragu.dev/gomponents"
 )
 
-// ModalRefreshList returns a Getter suitable for [components.ButtonModal].Attr. It emits an
-// x-init handler that registers a single document listener for "lago:modal-closed" (see
-// FormSubmitCloseModal). On each event, it GETs listURL and swaps innerHTML into the first element
+// ModalRefreshList returns a Getter suitable for [components.ButtonModal] / [components.ButtonModalForm].Attr. It emits an
+// x-init handler that registers a single document listener for "lago:modal-closed" (dispatched when
+// [components.ButtonModalForm] closes the dialog after a successful POST). On each event, it GETs listURL and swaps innerHTML into the first element
 // matching tableSelector (typically "#your-table-uid"). The response is parsed with DOMParser and
 // only that element’s innerHTML is copied, so a full-page GET (including a nested <dialog.modal>)
 // does not insert an entire second modal inside the existing table container.

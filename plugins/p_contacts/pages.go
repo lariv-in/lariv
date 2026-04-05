@@ -1,7 +1,6 @@
 package p_contacts
 
 import (
-	"net/http"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -57,7 +56,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("contacts.ContactFilter", &components.FormComponent[Contact]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("contacts.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("contacts.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -83,7 +82,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("contacts.ContactSelectionFilter", &components.FormComponent[Contact]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("contacts.SelectRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("contacts.SelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -183,8 +182,12 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "contacts.ContactMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Contact]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("contacts.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("contacts.CreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[Contact]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create Contact",
 				Subtitle: "Add a new contact",
@@ -195,7 +198,9 @@ func registerFormPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Contact"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -204,11 +209,15 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "contacts.ContactDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Contact]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("contact.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[Contact]{
 				Getter: getters.Key[Contact]("contact"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Contact",
 				Subtitle: "Update contact details",
@@ -220,11 +229,13 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("contact.ID"))}),
+								FormPostURL: lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("contact.ID"))}),
+								ModalUID:    "contact-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -235,7 +246,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -344,9 +357,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this contact?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("contact.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

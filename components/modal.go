@@ -29,6 +29,8 @@ func (e Modal) Build(ctx context.Context) Node {
 
 	uid := e.UID
 
+	modalContent := Div(Class("mt-8"), Group(childNodes))
+
 	return El("dialog",
 		ID(uid), Class("modal modal-open fk-modal-container"),
 		Attr("hx-push-url", "false"),
@@ -40,7 +42,7 @@ func (e Modal) Build(ctx context.Context) Node {
 					Attr("onclick", "document.getElementById('"+uid+"').remove()"), Render(Icon{Name: "x-mark"}, ctx),
 				),
 			),
-			Div(Class("mt-8"), Group(childNodes)),
+			modalContent,
 		),
 		FormEl(Method("dialog"), Class("modal-backdrop"),
 			Button(Attr("onclick", "document.getElementById('"+uid+"').remove()"), Text("close")),

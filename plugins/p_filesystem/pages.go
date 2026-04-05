@@ -499,7 +499,7 @@ func registerMenus() {
 
 func registerFilters() {
 	lago.RegistryPage.Register("filesystem.VNodeFilter", &components.FormComponent[VNode]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(listOrBrowseRoute("filesystem.ListRoute", "filesystem.BrowseRoute"))),
+		Attr: getters.FormBoostedGet(listOrBrowseRoute("filesystem.ListRoute", "filesystem.BrowseRoute")),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -513,7 +513,7 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.ParentSelectionFilter", &components.FormComponent[VNode]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute")))),
+		Attr: getters.FormBoostedGet(withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute"))),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -527,7 +527,7 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.DestinationSelectionFilter", &components.FormComponent[VNode]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute")))),
+		Attr: getters.FormBoostedGet(withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute"))),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -545,23 +545,33 @@ func registerForms() {
 	lago.RegistryPage.Register("filesystem.VNodeCreateForm", &components.ShellScaffold{
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
-			&components.FormComponent[VNode]{
-				Attr:     getters.FormAttr(http.MethodPost, getters.FormSubmit(listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute"))),
+						&components.FormListenBoostedPost{
+				ActionURL: listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute"),
+				Children: []components.PageInterface{
+					&components.FormComponent[VNode]{
+				Attr:     getters.FormBubbling(nil),
+
 				Title:    "Create Item",
 				Subtitle: "Create a new file or directory",
 				ChildrenInput: []components.PageInterface{
 					vnodeFormFields(true, "Create", false),
 				},
+				},
 			},
+		},
 		},
 	})
 
 	lago.RegistryPage.Register("filesystem.VNodeUpdateForm", &components.ShellScaffold{
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
-			&components.FormComponent[VNode]{
+						&components.FormListenBoostedPost{
+				ActionURL: currentVNodeEditRoute(),
+				Children: []components.PageInterface{
+					&components.FormComponent[VNode]{
 				Getter:   getters.Key[VNode]("vnode"),
-				Attr:     getters.FormAttr(http.MethodPost, getters.FormSubmit(currentVNodeEditRoute())),
+				Attr:     getters.FormBubbling(nil),
+
 				Title:    "Edit Item",
 				Subtitle: "Update file or directory details",
 				ChildrenInput: []components.PageInterface{
@@ -593,11 +603,13 @@ func registerForms() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     currentVNodeDeleteRoute(),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         currentVNodeDeleteRoute(),
+								FormPostURL: currentVNodeDeleteRoute(),
+								ModalUID:    "filesystem-vnode-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -608,16 +620,22 @@ func registerForms() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 
 	lago.RegistryPage.Register("filesystem.VNodeMoveForm", &components.ShellScaffold{
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
-			&components.FormComponent[VNode]{
+						&components.FormListenBoostedPost{
+				ActionURL: currentVNodeMoveRoute(),
+				Children: []components.PageInterface{
+					&components.FormComponent[VNode]{
 				Getter: getters.Key[VNode]("vnode"),
-				Attr:   getters.FormAttr(http.MethodPost, getters.FormSubmit(currentVNodeMoveRoute())),
+				Attr:   getters.FormBubbling(nil),
+
 
 				Title:    "Move Item",
 				Subtitle: "Select the destination directory",
@@ -639,15 +657,21 @@ func registerForms() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Move"},
 				},
+				},
 			},
+		},
 		},
 	})
 
 	lago.RegistryPage.Register("filesystem.VNodeMultiUploadForm", &components.ShellScaffold{
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
-			&components.FormComponent[VNode]{
-				Attr:     getters.FormAttr(http.MethodPost, getters.FormSubmit(listOrBrowseRoute("filesystem.MultiUploadRoute", "filesystem.MultiUploadChildRoute"))),
+						&components.FormListenBoostedPost{
+				ActionURL: listOrBrowseRoute("filesystem.MultiUploadRoute", "filesystem.MultiUploadChildRoute"),
+				Children: []components.PageInterface{
+					&components.FormComponent[VNode]{
+				Attr:     getters.FormBubbling(nil),
+
 				Title:    "Bulk Upload",
 				Subtitle: "Upload multiple files at once",
 				ChildrenInput: []components.PageInterface{
@@ -662,7 +686,9 @@ func registerForms() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Upload Files"},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -781,7 +807,7 @@ func registerDelete() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item? Deleting directories will remove all nested contents.",
-				Attr:    getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(currentVNodeDeleteRoute())),
+				Attr:    getters.FormBubbling(nil),
 			},
 		},
 	})

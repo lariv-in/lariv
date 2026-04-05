@@ -27,7 +27,8 @@ type DeleteConfirmation struct {
 	Title   string
 	Message string
 	Classes string
-	// Attr is merged onto the form (method, @submit.prevent, etc.); use getters.FormAttr with getters.FormSubmit pointing at the resource DeleteRoute.
+	// Attr is merged onto the form; use [getters.FormBubbling] and wire [ButtonModalForm] (opening this modal) with FormPostURL set to the resource DeleteRoute.
+	// Modal HTML is a fragment (no [ShellBase]), so Build also shows "$error._global" for [views.LayerDelete] failures.
 	Attr getters.Getter[Node]
 }
 
@@ -37,6 +38,14 @@ func (e DeleteConfirmation) GetKey() string {
 
 func (e DeleteConfirmation) GetRoles() []string {
 	return e.Roles
+}
+
+func deleteConfirmationGlobalError(ctx context.Context) Node {
+	err, lookupErr := getters.Key[error]("$error._global")(ctx)
+	if lookupErr != nil || err == nil {
+		return nil
+	}
+	return Div(Class("alert alert-error my-2 text-sm"), Text(err.Error()))
 }
 
 func (e DeleteConfirmation) Build(ctx context.Context) Node {
@@ -49,6 +58,7 @@ func (e DeleteConfirmation) Build(ctx context.Context) Node {
 	return Div(Class("container mx-auto "+e.Classes),
 		H2(Class("text-xl font-bold text-error"), Text(e.Title)),
 		P(Class("my-2"), Text(e.Message)),
+		deleteConfirmationGlobalError(ctx),
 		form.Build(ctx),
 	)
 }

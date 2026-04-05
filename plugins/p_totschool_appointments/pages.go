@@ -3,7 +3,6 @@ package p_totschool_appointments
 import (
 	"context"
 	"log/slog"
-	"net/http"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -52,7 +51,7 @@ func registerMenus() {
 
 func registerFilter() {
 	lago.RegistryPage.Register("appointments.AppointmentFilter", components.FormComponent[Appointment]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("appointments.ListRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("appointments.ListRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			components.ContainerError{
@@ -131,23 +130,33 @@ func registerForms() {
 	lago.RegistryPage.Register("appointments.AppointmentCreateForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
 		Children: []components.PageInterface{
-			components.FormComponent[Appointment]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("appointments.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("appointments.CreateRoute", nil),
+				Children: []components.PageInterface{
+					components.FormComponent[Appointment]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:          "Create Appointment",
 				Subtitle:       "Create a new appointment",
 				ChildrenInput:  appointmentFormFields(),
 				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Appointment"}},
+				},
 			},
+		},
 		},
 	})
 
 	lago.RegistryPage.Register("appointments.AppointmentUpdateForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentDetailMenu"}},
 		Children: []components.PageInterface{
-			components.FormComponent[Appointment]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
+				Children: []components.PageInterface{
+					components.FormComponent[Appointment]{
 				Getter:         getters.Key[Appointment]("appointment"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:          "Edit Appointment",
 				Subtitle:       "Update appointment details",
@@ -156,11 +165,13 @@ func registerForms() {
 					components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							components.ButtonModal{
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							components.ButtonModalForm{
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
+								FormPostURL: lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
+								ModalUID:    "appointment-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -171,7 +182,9 @@ func registerForms() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -210,8 +223,8 @@ func registerDetail() {
 				components.FieldTitle{Getter: getters.Static("Generated Letter")},
 				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
 					components.ButtonLink{Classes: "btn-outline btn-success btn-sm", Label: "Send via WhatsApp", Link: getters.Format("https://wa.me/%v?text=%v", getters.Any(getters.Key[string]("$in.Phone")), getters.Any(getters.QueryEscape(getters.Key[string]("$in.GeneratedLetter"))))},
-					components.ButtonModal{Label: "Edit with AI", Url: lago.RoutePath("appointments.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-					components.ButtonPost{Label: "Regenerate Letter", URL: lago.RoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
+					components.ButtonModalForm{Label: "Edit with AI", Url: lago.RoutePath("appointments.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), FormPostURL: lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), ModalUID: "ai-edit-modal", Classes: "btn-outline btn-secondary btn-sm"},
+					components.ButtonPost{Label: "Regenerate Letter", URL: lago.RoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
 			components.FieldMarkdown{Getter: getters.Key[string]("$in.GeneratedLetter")},
@@ -220,13 +233,13 @@ func registerDetail() {
 
 	pendingSection := []components.PageInterface{
 		components.HTMXPolling{
-			URL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+			URL: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 			Children: []components.PageInterface{
 				components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
 					components.FieldText{Getter: getters.Static("Generating...")},
 					components.ButtonPost{
 						Label:   "Cancel Generation",
-						URL:     lago.RoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+						URL:     lago.RoutePath("appointments.CancelRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 						Classes: "btn-outline btn-error btn-sm",
 					},
 				}},
@@ -235,7 +248,7 @@ func registerDetail() {
 	}
 
 	idleSection := []components.PageInterface{
-		components.ButtonPost{Label: "Generate Letter with AI", URL: lago.RoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}), Classes: "btn-primary"},
+		components.ButtonPost{Label: "Generate Letter with AI", URL: lago.RoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), Classes: "btn-primary"},
 	}
 
 	lago.RegistryPage.Register("appointments.AppointmentDetail", components.ShellScaffold{
@@ -351,7 +364,7 @@ func registerModal() {
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
 				Getter:   getters.Key[Appointment]("appointment"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}))),
+				Attr: getters.FormBubbling(nil),
 
 				Title:    "Edit with AI",
 				ChildrenInput: []components.PageInterface{
@@ -385,9 +398,7 @@ func registerDelete() {
 			components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this appointment?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("appointment.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})
@@ -418,7 +429,7 @@ func registerSelectionPages() {
 	})
 
 	lago.RegistryPage.Register("appointments.AppointmentCardTimelineFilter", components.FormComponent[Appointment]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("appointments.CardTimelineRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("appointments.CardTimelineRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			components.ContainerError{

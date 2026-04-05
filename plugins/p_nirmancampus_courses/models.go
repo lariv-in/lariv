@@ -10,7 +10,7 @@ type Course struct {
 
 	Name        string
 	IsActive    bool
-	Code        string
+	Code        string `gorm:"unique"`
 	CourseType  string `gorm:"type:varchar(64);not null;default:''"`
 	Description string
 }

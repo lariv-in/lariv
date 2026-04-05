@@ -2,7 +2,6 @@ package p_nirmancampus_sessions
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -63,7 +62,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("sessions.SessionFilter", &components.FormComponent[Session]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("sessions.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("sessions.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -92,7 +91,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("sessions.sessionselectionFilter", &components.FormComponent[Session]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("sessions.SelectRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("sessions.SelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -236,8 +235,12 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "sessions.SessionMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Session]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("sessions.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("sessions.CreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[Session]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create Session",
 				Subtitle: "Create a new session",
@@ -248,7 +251,9 @@ func registerFormPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Session"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -257,11 +262,15 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "sessions.SessionDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Session]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("session.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[Session]{
 				Getter: getters.Key[Session]("session"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Session",
 				Subtitle: "Update session details",
@@ -273,11 +282,13 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("session.ID"))}),
+								FormPostURL: lago.RoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("session.ID"))}),
+								ModalUID:    "session-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -288,7 +299,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -404,9 +417,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this session?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("session.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

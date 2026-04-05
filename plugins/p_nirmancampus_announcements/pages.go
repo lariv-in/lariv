@@ -3,7 +3,6 @@ package p_nirmancampus_announcements
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -65,7 +64,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementFilter", &components.FormComponent[Announcement]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("announcements.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("announcements.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -91,7 +90,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("announcements.AnnouncementSelectionFilter", &components.FormComponent[Announcement]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("announcements.SelectRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("announcements.SelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -204,8 +203,12 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "announcements.AnnouncementMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Announcement]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("announcements.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("announcements.CreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[Announcement]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create Announcement",
 				Subtitle: "Create a new announcement",
@@ -216,7 +219,9 @@ func registerFormPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Announcement"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -226,11 +231,15 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "announcements.AnnouncementDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Announcement]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("announcement.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[Announcement]{
 				Getter: getters.Key[Announcement]("announcement"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Announcement",
 				Subtitle: "Update announcement details",
@@ -242,12 +251,14 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Page:        components.Page{Roles: []string{"admin", "superuser"}},
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
+								FormPostURL: lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
+								ModalUID:    "announcement-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -258,7 +269,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -392,9 +405,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this announcement?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("announcement.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

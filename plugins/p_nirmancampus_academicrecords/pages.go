@@ -3,7 +3,6 @@ package p_nirmancampus_academicrecords
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -140,7 +139,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordFilter", &components.FormComponent[AcademicRecord]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("academicrecords.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("academicrecords.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputSelect[string]{
@@ -426,7 +425,7 @@ func registerFormPages() {
 		UID: "academicrecords-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("academicrecords.CreateRoute", nil))),
+				Attr: getters.FormBubbling(nil),
 
 				Title:    "Create Academic Record",
 				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
@@ -451,11 +450,15 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "academicrecords.AcademicRecordDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[AcademicRecord]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[AcademicRecord]{
 				Getter: getters.Key[AcademicRecord]("academicrecord"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Academic Record",
 				Subtitle: "Update status or course selections. Student, program, and term cannot be changed here.",
@@ -467,12 +470,14 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Page:        components.Page{Roles: []string{"admin", "superuser"}},
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("academicrecord.ID"))}),
+								FormPostURL: lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("academicrecord.ID"))}),
+								ModalUID:    "academicrecord-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -483,7 +488,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -513,11 +520,13 @@ func registerTablePages() {
 						Child: lago.DynamicPage{Name: "academicrecords.AcademicRecordFilter"},
 						Page:  components.Page{Roles: []string{"admin", "superuser"}},
 					},
-					&components.ButtonModal{
-						Page:    components.Page{Roles: []string{"admin", "superuser"}},
-						Url:     lago.RoutePath("academicrecords.CreateRoute", nil),
-						Icon:    "plus",
-						Classes: "btn-square btn-outline btn-sm",
+					&components.ButtonModalForm{
+						Page:        components.Page{Roles: []string{"admin", "superuser"}},
+						Url:         lago.RoutePath("academicrecords.CreateRoute", nil),
+						FormPostURL: lago.RoutePath("academicrecords.CreateRoute", nil),
+						ModalUID:    "academicrecords-create-modal",
+						Icon:        "plus",
+						Classes:     "btn-square btn-outline btn-sm",
 					},
 				},
 				RowAttr: getters.RowAttrNavigate(
@@ -609,9 +618,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this academic record?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

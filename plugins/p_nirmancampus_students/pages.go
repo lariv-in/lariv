@@ -2,7 +2,6 @@ package p_nirmancampus_students
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -111,7 +110,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("students.StudentFilter", &components.FormComponent[Student]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("students.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("students.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -162,7 +161,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("students.StudentSelectionFilter", &components.FormComponent[Student]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("students.SelectRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("students.SelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -358,8 +357,12 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "students.StudentMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Student]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("students.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("students.CreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[Student]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create Student",
 				Subtitle: "Create a new student",
@@ -370,7 +373,9 @@ func registerFormPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Student"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -380,9 +385,13 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "students.StudentDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Student]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("student.ID"))}),
+				Children: []components.PageInterface{
+					&components.FormComponent[Student]{
 				Getter:   getters.Key[Student]("student"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Student",
 				Subtitle: "Update student details",
@@ -394,12 +403,14 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("students.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Page:        components.Page{Roles: []string{"admin", "superuser"}},
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("students.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("student.ID"))}),
+								FormPostURL: lago.RoutePath("students.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("student.ID"))}),
+								ModalUID:    "student-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -410,7 +421,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -610,9 +623,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this student?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("students.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("student.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})
@@ -694,7 +705,7 @@ func registerSelectionPages() {
 
 func registerStudentUserPickPages() {
 	lago.RegistryPage.Register("students.UserPickFilter", &components.FormComponent[p_users.User]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("students.UserPickRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("students.UserPickRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -723,11 +734,13 @@ func registerStudentUserPickPages() {
 				RowAttr: getters.RowAttrSelect("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.UserPickFilter"}},
-					&components.ButtonModal{
-						Url:     lago.RoutePath("users.CreateRoute", nil),
-						Icon:    "plus",
-						Classes: "btn-square btn-outline btn-sm",
-						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#student-user-pick-table")),
+					&components.ButtonModalForm{
+						Url:         lago.RoutePath("users.CreateRoute", nil),
+						FormPostURL: lago.RoutePath("users.CreateRoute", nil),
+						ModalUID:    "user-create-modal",
+						Icon:        "plus",
+						Classes:     "btn-square btn-outline btn-sm",
+						Attr:        getters.ModalRefreshList(getters.Static(""), getters.Static("#student-user-pick-table")),
 					},
 				},
 				Columns: []components.TableColumn{

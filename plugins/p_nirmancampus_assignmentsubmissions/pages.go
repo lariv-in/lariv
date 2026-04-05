@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"net/http"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -65,7 +64,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.Filter", &components.FormComponent[AssignmentSubmission]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("assignmentsubmissions.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("assignmentsubmissions.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -231,7 +230,7 @@ func registerFormPages() {
 		UID: "assignmentsubmissions-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("assignmentsubmissions.CreateRoute", nil))),
+				Attr: getters.FormBubbling(nil),
 
 				Title:    "Create submission",
 				Subtitle: "Create a new assignment submission",
@@ -257,11 +256,15 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "assignmentsubmissions.DetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[AssignmentSubmission]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[AssignmentSubmission]{
 				Getter: getters.Key[AssignmentSubmission]("assignmentsubmission"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit submission",
 				Subtitle: "Update assignment submission details",
@@ -273,12 +276,14 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Page:        components.Page{Roles: []string{"admin", "superuser"}},
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID"))}),
+								FormPostURL: lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID"))}),
+								ModalUID:    "assignmentsubmission-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -289,7 +294,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -307,11 +314,13 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[AssignmentSubmission]]("assignmentsubmissions"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "assignmentsubmissions.Filter"}},
-					&components.ButtonModal{
-						Page:    components.Page{Roles: []string{"admin", "superuser"}},
-						Url:     lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
-						Icon:    "plus",
-						Classes: "btn-square btn-outline btn-sm",
+					&components.ButtonModalForm{
+						Page:        components.Page{Roles: []string{"admin", "superuser"}},
+						Url:         lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
+						FormPostURL: lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
+						ModalUID:    "assignmentsubmissions-create-modal",
+						Icon:        "plus",
+						Classes:     "btn-square btn-outline btn-sm",
 					},
 				},
 				RowAttr: getters.RowAttrNavigate(lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
@@ -396,9 +405,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm deletion",
 				Message: "Are you sure you want to delete this submission?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

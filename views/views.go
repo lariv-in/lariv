@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/registry"
 )
 
@@ -39,6 +40,9 @@ func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
+	if errs, ok := ctx.Value(getters.ContextKeyError).(map[string]error); ok && len(errs) > 0 {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+	}
 	err := components.Render(page, ctx).Render(w)
 	if err != nil {
 		panic(err)

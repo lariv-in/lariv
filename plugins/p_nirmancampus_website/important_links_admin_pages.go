@@ -2,7 +2,6 @@ package p_nirmancampus_website
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -39,7 +38,7 @@ func init() {
 
 func registerImportantLinksAdminFilterPages() {
 	lago.RegistryPage.Register("nirmancampus_website.ImportantLinksFilter", &components.FormComponent[ImportantLink]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -145,8 +144,12 @@ func registerImportantLinksAdminFormPages() {
 			lago.DynamicPage{Name: "nirmancampus_website.WebsiteAdminMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[ImportantLink]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[ImportantLink]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create Important Link",
 				Subtitle: "Create a new important link entry",
@@ -157,7 +160,9 @@ func registerImportantLinksAdminFormPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -166,8 +171,12 @@ func registerImportantLinksAdminFormPages() {
 			lago.DynamicPage{Name: "nirmancampus_website.WebsiteAdminMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[map[string]any]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[map[string]any]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Import Important Links",
 				Subtitle: "Upload a .json file containing an array of important link objects.",
@@ -193,7 +202,9 @@ func registerImportantLinksAdminFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -202,11 +213,15 @@ func registerImportantLinksAdminFormPages() {
 			lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[ImportantLink]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("link.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[ImportantLink]{
 				Getter: getters.Key[ImportantLink]("link"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Important Link",
 				Subtitle: "Update important link details",
@@ -218,13 +233,17 @@ func registerImportantLinksAdminFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
+							&components.ButtonModalForm{
 								Label:   "Delete",
 								Icon:    "trash",
 								Url: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
-									"id": getters.Any(getters.Key[uint]("$in.ID")),
+									"id": getters.Any(getters.Key[uint]("link.ID")),
 								}),
-								Classes: "btn-outline btn-error btn-sm",
+								FormPostURL: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
+									"id": getters.Any(getters.Key[uint]("link.ID")),
+								}),
+								ModalUID: "nirmancampus-important-links-delete-modal",
+								Classes:  "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -235,7 +254,9 @@ func registerImportantLinksAdminFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -394,9 +415,7 @@ func registerImportantLinksAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this important link?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("link.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})

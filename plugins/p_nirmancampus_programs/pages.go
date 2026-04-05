@@ -3,7 +3,6 @@ package p_nirmancampus_programs
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/lariv-in/lago/components"
@@ -300,7 +299,7 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("programs.ProgramFilter", &components.FormComponent[Program]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("programs.DefaultRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("programs.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -328,7 +327,7 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramSelectionFilter", &components.FormComponent[Program]{
-		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("programs.SelectRoute", nil))),
+		Attr: getters.FormBoostedGet(lago.RoutePath("programs.SelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
@@ -465,8 +464,12 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "programs.ProgramMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Program]{
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("programs.CreateRoute", nil))),
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("programs.CreateRoute", nil),
+				Children: []components.PageInterface{
+					&components.FormComponent[Program]{
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Create Program",
 				Subtitle: "Create a new program",
@@ -477,7 +480,9 @@ func registerFormPages() {
 				ChildrenAction: []components.PageInterface{
 					&components.ButtonSubmit{Label: "Save Program"},
 				},
+				},
 			},
+		},
 		},
 	})
 
@@ -487,11 +492,15 @@ func registerFormPages() {
 			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.FormComponent[Program]{
+						&components.FormListenBoostedPost{
+				ActionURL: lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("program.ID")),
+				}),
+				Children: []components.PageInterface{
+					&components.FormComponent[Program]{
 				Getter: getters.Key[Program]("program"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
+
 
 				Title:    "Edit Program",
 				Subtitle: "Update program details",
@@ -503,12 +512,14 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModal{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Delete",
-								Icon:    "trash",
-								Url:     lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
-								Classes: "btn-outline btn-error btn-sm",
+							&components.ButtonModalForm{
+								Page:        components.Page{Roles: []string{"admin", "superuser"}},
+								Label:       "Delete",
+								Icon:        "trash",
+								Url:         lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
+								FormPostURL: lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
+								ModalUID:    "program-delete-modal",
+								Classes:     "btn-outline btn-error btn-sm",
 							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
@@ -519,7 +530,9 @@ func registerFormPages() {
 						},
 					},
 				},
+				},
 			},
+		},
 		},
 	})
 }
@@ -720,9 +733,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this program?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("program.ID")),
-				}))),
+				Attr: getters.FormBubbling(nil),
 			},
 		},
 	})
