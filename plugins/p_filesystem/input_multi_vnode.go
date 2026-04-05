@@ -104,7 +104,7 @@ func (e InputMultiVNode) Build(ctx context.Context) Node {
 		Input(
 			Type("file"),
 			Name(e.Name),
-			Class(fmt.Sprintf("file-input file-input-bordered w-full mt-1 %s", e.Classes)),
+			Class(fmt.Sprintf("file-input file-input-bordered w-full %s", e.Classes)),
 			Multiple(),
 			If(accept != "", Accept(accept)),
 		),

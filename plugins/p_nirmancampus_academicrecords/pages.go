@@ -202,7 +202,7 @@ func createFormFields() components.ContainerColumn {
 		},
 		Children: []components.PageInterface{
 			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
+				Classes: "grid grid-cols-1 gap-1",
 				Children: []components.PageInterface{
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.SessionID"),
@@ -220,11 +220,6 @@ func createFormFields() components.ContainerColumn {
 							},
 						},
 					},
-				},
-			},
-			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
-				Children: []components.PageInterface{
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.StudentID"),
 						Children: []components.PageInterface{
@@ -257,11 +252,6 @@ func createFormFields() components.ContainerColumn {
 							},
 						},
 					},
-				},
-			},
-			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
-				Children: []components.PageInterface{
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Term"),
 						Children: []components.PageInterface{
@@ -273,11 +263,6 @@ func createFormFields() components.ContainerColumn {
 							},
 						},
 					},
-				},
-			},
-			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:max-w-md",
-				Children: []components.PageInterface{
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Status"),
 						Children: []components.PageInterface{
