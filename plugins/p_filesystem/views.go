@@ -371,7 +371,7 @@ func multiUploadHandler(v *views.View) http.Handler {
 			if err := query.Count(&existingCount).Error; err != nil {
 				fieldErrors["_form"] = err
 				ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
-			v.RenderPage(w, r.WithContext(ctx))
+				v.RenderPage(w, r.WithContext(ctx))
 				return
 			}
 			if existingCount > 0 {
@@ -393,7 +393,7 @@ func multiUploadHandler(v *views.View) http.Handler {
 					fieldErrors["_form"] = err
 				}
 				ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
-			v.RenderPage(w, r.WithContext(ctx))
+				v.RenderPage(w, r.WithContext(ctx))
 				return
 			}
 		}

@@ -19,6 +19,7 @@ type LagoConfig struct {
 	Address        string
 	UDS            string
 	GeneratorOrder []string
+	TrustedOrigins []string
 	Plugins        map[string]toml.Primitive
 }
 

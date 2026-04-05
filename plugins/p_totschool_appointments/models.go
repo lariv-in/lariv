@@ -29,8 +29,8 @@ func (a *Appointment) GetOverlappingAppointments(db *gorm.DB) []Appointment {
 	}
 	results, err := gorm.G[Appointment](db).Where("created_by_id = ? AND datetime >= ? AND datetime <= ? AND id != ?",
 		a.CreatedByID,
-		a.Datetime.Add(-30*time.Minute),
-		a.Datetime.Add(30*time.Minute),
+		a.Datetime.Add(-25*time.Minute),
+		a.Datetime.Add(25*time.Minute),
 		a.ID,
 	).Find(context.Background())
 	if err != nil {
@@ -51,8 +51,8 @@ const overlappingAppointmentsWhereSQL = `
 			FROM appointments a2
 			WHERE a2.created_by_id = appointments.created_by_id
 			  AND a2.id != appointments.id
-			  AND a2.datetime BETWEEN appointments.datetime - interval '30 minutes'
-			                      AND appointments.datetime + interval '30 minutes'
+			  AND a2.datetime BETWEEN appointments.datetime - interval '25 minutes'
+			                      AND appointments.datetime + interval '25 minutes'
 		)
 	`
 

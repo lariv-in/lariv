@@ -25,7 +25,7 @@ import (
 // is rendering this button). That is required when the button lives inside a modal: the browser URL
 // is still the parent page, but the list belongs to the modal’s route. If "$request" is absent,
 // the client falls back to window.location.pathname + window.location.search.
-func ModalRefreshList(listURL Getter[string], tableSelector Getter[string]) Getter[gomponents.Node] {
+func ModalRefreshList(listURL, tableSelector Getter[string]) Getter[gomponents.Node] {
 	return func(ctx context.Context) (gomponents.Node, error) {
 		if tableSelector == nil {
 			return nil, fmt.Errorf("getters.ModalRefreshList: tableSelector getter is nil")

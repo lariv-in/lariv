@@ -35,7 +35,7 @@ type AcademicRecord struct {
 	ProgramID         uint                            `gorm:"not null;index"`
 	Program           p_nirmancampus_programs.Program `gorm:"constraint:OnDelete:RESTRICT;foreignKey:ProgramID;references:ID"`
 	SessionID         uint                            `gorm:"not null;index"`
-	Session           sessions.Session               `gorm:"constraint:OnDelete:RESTRICT;foreignKey:SessionID;references:ID"`
+	Session           sessions.Session                `gorm:"constraint:OnDelete:RESTRICT;foreignKey:SessionID;references:ID"`
 	Term              uint                            `gorm:"not null;index"`
 	Status            string                          `gorm:"type:varchar(50);notnull"`
 	CompulsoryCourses []courses.Course                `gorm:"many2many:academic_record_compulsory_courses;"`

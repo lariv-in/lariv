@@ -36,7 +36,7 @@ func (e ShellBase) Body(ctx context.Context) Node {
 			),
 		))
 	}
-	
+
 	return Body(
 		Class("hide-right font-sans"),
 		Attr("x-data", `{ theme: localStorage.getItem('theme') || 'light' }`),

@@ -33,6 +33,7 @@ func StartServer(config LagoConfig) error {
 	for _, layer := range layers {
 		router = layer.Value.Next(router)
 	}
+	router = http.NewCrossOriginProtection().Handler(router)
 
 	slog.Warn("Using plain http without tls, ensure this is running in debug or behind a reverse proxy")
 	if config.UDS != "" {

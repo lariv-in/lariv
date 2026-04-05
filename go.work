@@ -26,7 +26,6 @@ use (
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp
 	./plugins/p_pwa
-	./plugins/p_sqlagent
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally
