@@ -25,8 +25,8 @@ import (
 // into getters.ContextKeyError under "_global" and next is called, never a raw
 // HTTP response.
 type LayerDelete[T any] struct {
-	Key        getters.Getter[string]
-	SuccessURL getters.Getter[string]
+	Key           getters.Getter[string]
+	SuccessURL    getters.Getter[string]
 	QueryPatchers QueryPatchers[T]
 }
 

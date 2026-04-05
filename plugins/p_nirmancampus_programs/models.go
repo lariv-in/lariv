@@ -13,7 +13,7 @@ const (
 )
 
 const (
-	TermTypeYear     = "year"
+	TermTypeYear    = "year"
 	TermTypeSession = "session"
 )
 

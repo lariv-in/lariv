@@ -11,9 +11,9 @@ import (
 )
 
 type View struct {
-	PageName    string
-	PageLookup  func(name string) (components.PageInterface, bool)
-	Layers []registry.Pair[string, Layer]
+	PageName   string
+	PageLookup func(name string) (components.PageInterface, bool)
+	Layers     []registry.Pair[string, Layer]
 }
 
 func (v *View) GetHandler() http.Handler {

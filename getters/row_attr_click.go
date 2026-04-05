@@ -22,7 +22,7 @@ func tableDisplayIsGrid(ctx context.Context) bool {
 	return v == TableDisplayGrid
 }
 
-func rowAttrNavigateClick(click Getter[string], classExpr Getter[string]) Getter[gomponents.Node] {
+func rowAttrNavigateClick(click, classExpr Getter[string]) Getter[gomponents.Node] {
 	return func(ctx context.Context) (gomponents.Node, error) {
 		if click == nil {
 			return nil, fmt.Errorf("getters: rowAttrNavigateClick: click getter is nil")

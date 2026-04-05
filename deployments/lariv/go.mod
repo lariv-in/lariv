@@ -10,7 +10,6 @@ require (
 	github.com/lariv-in/lago/plugins/p_forms v0.0.0-20260403180717-e54a55236dd3
 	github.com/lariv-in/lago/plugins/p_otp v0.5.10
 	github.com/lariv-in/lago/plugins/p_pwa v0.5.10
-	github.com/lariv-in/lago/plugins/p_sqlagent v0.0.0-20260403180717-e54a55236dd3
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 )
 
@@ -64,7 +63,6 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
-	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect

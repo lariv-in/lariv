@@ -102,8 +102,6 @@ github.com/lariv-in/lago/plugins/p_otp v0.5.10 h1:IH/C+0gVbY1umJBetO9Jod0heyZ6cg
 github.com/lariv-in/lago/plugins/p_otp v0.5.10/go.mod h1:7zvKj7IyymgROd18tol9GvONJ1LH73W9oTQu84LTvX0=
 github.com/lariv-in/lago/plugins/p_pwa v0.5.10 h1:/7ndYciEeLEBL9Ye8wLe3WdNEPwLZ4si3TH1M8MTDfY=
 github.com/lariv-in/lago/plugins/p_pwa v0.5.10/go.mod h1:PN4goanUDK28QoIyBuL8lOXghyll3561PVYxxvWmWaY=
-github.com/lariv-in/lago/plugins/p_sqlagent v0.0.0-20260403180717-e54a55236dd3 h1:rpUjVihVP8ievy3+NTzA8yQvnj5PtC3Qq3hpbdwz2O4=
-github.com/lariv-in/lago/plugins/p_sqlagent v0.0.0-20260403180717-e54a55236dd3/go.mod h1:rhcpIuzsMxW3vxcqj8WAxYctN/0eoFmm8bMIISh0lRc=
 github.com/lariv-in/lago/plugins/p_users v0.5.10 h1:2ErBYXwImYP0Op/yEvsClGnK2ofNXQBGK9CGYzlzDqs=
 github.com/lariv-in/lago/plugins/p_users v0.5.10/go.mod h1:VgDEjlJVHh1zXYVx0HHN5BvX9WFsEzPIvudCLY+sBlc=
 github.com/lariv-in/lago/registry v0.5.10 h1:JD/CHKsbP8tfTTEc8bIpK5to56RL1Za3Lsi1mJVm5GA=
@@ -147,8 +145,6 @@ golang.org/x/crypto v0.49.0 h1:+Ng2ULVvLHnJ/ZFEq4KdcDd/cfjrrjjNSXNzxg0Y4U4=
 golang.org/x/crypto v0.49.0/go.mod h1:ErX4dUh2UM+CFYiXZRTcMpEcN8b/1gxEuv3nODoYtCA=
 golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 h1:jiDhWWeC7jfWqR9c/uplMOqJ0sbNlNWv0UkzE0vX1MA=
 golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90/go.mod h1:xE1HEv6b+1SCZ5/uscMRjUBKtIxworgEcEi+/n9NQDQ=
-golang.org/x/net v0.52.0 h1:He/TN1l0e4mmR3QqHMT2Xab3Aj3L9qjbhRm78/6jrW0=
-golang.org/x/net v0.52.0/go.mod h1:R1MAz7uMZxVMualyPXb+VaqGSa3LIaUqk0eEt3w36Sw=
 golang.org/x/sync v0.20.0 h1:e0PTpb7pjO8GAtTs2dQ6jYa5BWYlMuX047Dco/pItO4=
 golang.org/x/sync v0.20.0/go.mod h1:9xrNwdLfx4jkKbNva9FpL6vEN7evnE43NNNJQ2LF3+0=
 golang.org/x/sys v0.42.0 h1:omrd2nAlyT5ESRdCLYdm3+fMfNFE/+Rf4bDIQImRJeo=
