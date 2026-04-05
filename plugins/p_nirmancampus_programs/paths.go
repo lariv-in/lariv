@@ -59,6 +59,11 @@ func registerRoutes() {
 		Path:    AppUrl + "{id}/structure/units/{unitId}/",
 		Handler: lago.NewDynamicView("programs.StructureUnitUpdateView"),
 	})
+
+	_ = lago.RegistryRoute.Register("programs.StructureUnitDeleteRoute", lago.Route{
+		Path:    AppUrl + "{id}/structure/units/{unitId}/delete/",
+		Handler: lago.NewDynamicView("programs.StructureUnitDeleteView"),
+	})
 }
 
 func init() {

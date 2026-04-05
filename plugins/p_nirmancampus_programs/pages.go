@@ -198,19 +198,6 @@ func programTermTypeDisplayGetter() getters.Getter[string] {
 	}
 }
 
-func stringSliceJoinOrDash(g getters.Getter[[]string]) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		sl, err := g(ctx)
-		if err != nil {
-			return "", err
-		}
-		if len(sl) == 0 {
-			return "—", nil
-		}
-		return strings.Join(sl, ", "), nil
-	}
-}
-
 func courseListJoinOrDash(g getters.Getter[[]courses.Course]) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		list, err := g(ctx)
@@ -241,8 +228,8 @@ func programStructureRowsGetter() getters.Getter[any] {
 	}
 }
 
-func programStructureNonEmptyGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
+func programStructureNonEmptyGetter() getters.Getter[bool] {
+	return func(ctx context.Context) (bool, error) {
 		units, err := getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits")(ctx)
 		if err != nil {
 			return false, err
@@ -637,7 +624,7 @@ func registerDetailPages() {
 								Title: "Program structure",
 								Children: []components.PageInterface{
 									&components.ShowIf{
-										Getter: programStructureNonEmptyGetter(),
+										Getter: getters.Any(programStructureNonEmptyGetter()),
 										Children: []components.PageInterface{
 											&components.FieldList{
 												Getter:  programStructureRowsGetter(),
@@ -691,6 +678,19 @@ func registerDetailPages() {
 														},
 													},
 												},
+											},
+										},
+									},
+									&components.ShowIf{
+										Getter: getters.BoolNot(programStructureNonEmptyGetter()),
+										Children: []components.PageInterface{
+											&components.ButtonLink{
+												Page:  components.Page{Roles: []string{"admin", "superuser"}},
+												Label: "Add Program Structure",
+												Link: lago.RoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.ID")),
+												}),
+												Classes: "btn-primary btn-sm w-fit",
 											},
 										},
 									},

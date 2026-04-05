@@ -51,6 +51,13 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 		if err != nil {
 			editURL = "#"
 		}
+		removeURL, err := lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
+			"id":     getters.Any(getters.Key[uint]("program.ID")),
+			"unitId": getters.Any(getters.Static[uint](u.ID)),
+		})(ctx)
+		if err != nil {
+			removeURL = "#"
+		}
 		pool := joinCourseCodes(u.OptionalCourseSelectionPool)
 		comp := joinCourseCodes(u.CompulsoryCourses)
 		nodes = append(nodes,
@@ -61,11 +68,18 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 					Div(Class("text-sm text-base-content/80"), Text(fmt.Sprintf("Optional count: %d", u.OptionalCourseCount))),
 					Div(Class("text-sm text-base-content/80"), Text("Optional pool: "+pool)),
 				),
-				components.Render(&components.ButtonModal{
-					Label:   "Edit",
-					Url:     getters.Static(editURL),
-					Classes: "btn-outline btn-sm",
-				}, ctx),
+				Div(Class("flex flex-wrap gap-2 shrink-0"),
+					components.Render(&components.ButtonModal{
+						Label:   "Edit",
+						Url:     getters.Static(editURL),
+						Classes: "btn-outline btn-sm",
+					}, ctx),
+					components.Render(&components.ButtonLink{
+						Label:   "Remove",
+						Link:    getters.Static(removeURL),
+						Classes: "btn-outline btn-error btn-sm",
+					}, ctx),
+				),
 			),
 		)
 	}
@@ -241,6 +255,25 @@ func registerStructurePages() {
 						},
 					},
 				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("programs.StructureUnitDeleteForm", &components.ShellScaffold{
+		Page: components.Page{
+			Key:   "programs.StructureUnitDeleteForm",
+			Roles: []string{"admin", "superuser"},
+		},
+		Sidebar: []components.PageInterface{
+			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
+		},
+		Children: []components.PageInterface{
+			&components.DeleteConfirmation{
+				Title:   "Remove structure unit",
+				Message: "This removes the term from the program structure. Course links for this unit will be cleared.",
+				CancelUrl: lago.RoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("program.ID")),
+				}),
 			},
 		},
 	})

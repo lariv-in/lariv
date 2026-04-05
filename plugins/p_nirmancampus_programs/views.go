@@ -168,4 +168,20 @@ func init() {
 					return handleStructureUnitUpdate(v)
 				},
 			}))
+
+	lago.RegistryView.Register("programs.StructureUnitDeleteView",
+		applyStructure(lago.GetPageView("programs.StructureUnitDeleteForm")).
+			WithLayer("programs.structure_unit_detail", views.LayerDetail[ProgramStructureUnit]{
+				Key:          getters.Static("unit"),
+				PathParamKey: getters.Static("unitId"),
+				QueryPatchers: views.QueryPatchers[ProgramStructureUnit]{
+					{Key: "programs.structure_unit_scope", Value: structureUnitScopeForContextProgram{}},
+				},
+			}).
+			WithLayer("programs.structure_unit_delete", views.MethodLayer{
+				Method: http.MethodPost,
+				Handler: func(v *views.View) http.Handler {
+					return handleStructureUnitDelete(v)
+				},
+			}))
 }

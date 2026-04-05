@@ -259,3 +259,46 @@ func handleStructureUnitUpdate(v *views.View) http.Handler {
 		views.HtmxRedirect(w, r, loc, http.StatusMovedPermanently)
 	})
 }
+
+func handleStructureUnitDelete(v *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		parentID, ok := structureParentProgramID(r.Context())
+		if !ok {
+			http.Error(w, "missing program", http.StatusBadRequest)
+			return
+		}
+		unitIDStr := r.PathValue("unitId")
+		unitID, err := strconv.ParseUint(unitIDStr, 10, 64)
+		if err != nil {
+			http.Error(w, "invalid unit", http.StatusBadRequest)
+			return
+		}
+		db := r.Context().Value("$db").(*gorm.DB)
+		existing, err := gorm.G[ProgramStructureUnit](db).Where("id = ? AND program_id = ?", unitID, parentID).First(r.Context())
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		if err := db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(&existing).Association("CompulsoryCourses").Clear(); err != nil {
+				return err
+			}
+			if err := tx.Model(&existing).Association("OptionalCourseSelectionPool").Clear(); err != nil {
+				return err
+			}
+			return tx.Delete(&existing).Error
+		}); err != nil {
+			slog.Error("structure unit delete failed", "err", err)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), nil, map[string]error{"_form": err})
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+		loc, err := structureEditRedirectURL(r.Context())
+		if err != nil {
+			ctx := views.ContextWithErrorsAndValues(r.Context(), nil, map[string]error{"_form": err})
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+		views.HtmxRedirect(w, r, loc, http.StatusSeeOther)
+	})
+}
