@@ -39,8 +39,8 @@ func init() {
 
 func registerImportantLinksAdminFilterPages() {
 	lago.RegistryPage.Register("nirmancampus_website.ImportantLinksFilter", &components.FormComponent[ImportantLink]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -146,8 +146,8 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[ImportantLink]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil))),
+
 				Title:    "Create Important Link",
 				Subtitle: "Create a new important link entry",
 				Classes:  "@container",
@@ -167,8 +167,8 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[map[string]any]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil))),
+
 				Title:    "Import Important Links",
 				Subtitle: "Upload a .json file containing an array of important link objects.",
 				Classes:  "@container",
@@ -204,10 +204,10 @@ func registerImportantLinksAdminFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ImportantLink]{
 				Getter: getters.Key[ImportantLink]("link"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit Important Link",
 				Subtitle: "Update important link details",
 				Classes:  "@container",
@@ -384,9 +384,9 @@ func registerImportantLinksAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this important link?",
-				CancelUrl: lago.RoutePath("nirmancampus_website.ImportantLinksDetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("link.ID")),
-				}),
+				}))),
 			},
 		},
 	})

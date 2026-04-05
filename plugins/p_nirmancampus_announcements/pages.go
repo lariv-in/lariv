@@ -72,8 +72,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementFilter", &components.FormComponent[Announcement]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("announcements.DefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("announcements.DefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -98,8 +98,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("announcements.AnnouncementSelectionFilter", &components.FormComponent[Announcement]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("announcements.SelectRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("announcements.SelectRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -212,8 +212,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Announcement]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("announcements.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("announcements.CreateRoute", nil))),
+
 				Title:    "Create Announcement",
 				Subtitle: "Create a new announcement",
 				Classes:  "@container",
@@ -235,10 +235,10 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Announcement]{
 				Getter: getters.Key[Announcement]("announcement"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit Announcement",
 				Subtitle: "Update announcement details",
 				Classes:  "@container",
@@ -384,9 +384,9 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this announcement?",
-				CancelUrl: lago.RoutePath("announcements.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("announcement.ID")),
-				}),
+				}))),
 			},
 		},
 	})

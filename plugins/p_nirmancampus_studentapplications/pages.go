@@ -96,8 +96,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("studentapplications.ApplicationFilter", &components.FormComponent[StudentApplication]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("studentapplications.DefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("studentapplications.DefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Email",
@@ -327,8 +327,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("studentapplications.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("studentapplications.CreateRoute", nil))),
+
 				Title:    "Create application",
 				Subtitle: "Record a new student application",
 				Classes:  "@container",
@@ -350,7 +350,7 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentApplication]{
 				Getter: getters.Key[StudentApplication]("studentapplication"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(
@@ -358,8 +358,8 @@ func registerFormPages() {
 							getters.ParseUint(getters.Key[string]("$path.id")),
 						),
 					)),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit application",
 				Subtitle: "Update application details",
 				Classes:  "@container",
@@ -524,7 +524,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm deletion",
 				Message: "Are you sure you want to delete this application?",
-				CancelUrl: lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
 						getters.IfOrElse(
@@ -532,7 +532,7 @@ func registerDetailPages() {
 							getters.ParseUint(getters.Key[string]("$path.id")),
 						),
 					)),
-				}),
+				}))),
 			},
 		},
 	})

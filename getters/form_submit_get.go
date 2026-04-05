@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// FormSubmitGet returns an Alpine @submit.prevent expression for GET filter forms: it resolves field
+// FormSubmitGet returns an Alpine @submit.prevent expression for GET filter forms; use with [FormAttr] on FormComponent.Attr. It resolves field
 // values with htmx.values and issues a boosted GET via htmx.ajax (outerHTML swap). When the form is
 // inside a modal (dialog.modal), the swap target is that dialog so the list modal is
 // refreshed in place; otherwise the target is body for full-page list filters.

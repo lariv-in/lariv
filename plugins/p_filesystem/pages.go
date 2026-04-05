@@ -500,8 +500,8 @@ func registerMenus() {
 
 func registerFilters() {
 	lago.RegistryPage.Register("filesystem.VNodeFilter", &components.FormComponent[VNode]{
-		OnSubmit: getters.FormSubmitGet(listOrBrowseRoute("filesystem.ListRoute", "filesystem.BrowseRoute")),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(listOrBrowseRoute("filesystem.ListRoute", "filesystem.BrowseRoute"))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -514,8 +514,8 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.ParentSelectionFilter", &components.FormComponent[VNode]{
-		OnSubmit: getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute"))),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute")))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -528,8 +528,8 @@ func registerFilters() {
 	})
 
 	lago.RegistryPage.Register("filesystem.DestinationSelectionFilter", &components.FormComponent[VNode]{
-		OnSubmit: getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute"))),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(withSelectionTarget(listOrBrowseRoute("filesystem.MoveSelectRoute", "filesystem.MoveSelectChildRoute")))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -547,9 +547,7 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
-				OnSubmit: getters.FormSubmit(listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute")),
-				Method:   http.MethodPost,
-				Enctype:  "multipart/form-data",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute"))),
 				Title:    "Create Item",
 				Subtitle: "Create a new file or directory",
 				ChildrenInput: []components.PageInterface{
@@ -564,9 +562,7 @@ func registerForms() {
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
 				Getter:   getters.Key[VNode]("vnode"),
-				OnSubmit: getters.FormSubmit(currentVNodeEditRoute()),
-				Method:   http.MethodPost,
-				Enctype:  "multipart/form-data",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(currentVNodeEditRoute())),
 				Title:    "Edit Item",
 				Subtitle: "Update file or directory details",
 				ChildrenInput: []components.PageInterface{
@@ -606,8 +602,8 @@ func registerForms() {
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
 				Getter:   getters.Key[VNode]("vnode"),
-				OnSubmit: getters.FormSubmit(currentVNodeMoveRoute()),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(currentVNodeMoveRoute())),
+
 				Title:    "Move Item",
 				Subtitle: "Select the destination directory",
 				ChildrenInput: []components.PageInterface{
@@ -636,9 +632,7 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormComponent[VNode]{
-				OnSubmit: getters.FormSubmit(listOrBrowseRoute("filesystem.MultiUploadRoute", "filesystem.MultiUploadChildRoute")),
-				Method:   http.MethodPost,
-				Enctype:  "multipart/form-data",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(listOrBrowseRoute("filesystem.MultiUploadRoute", "filesystem.MultiUploadChildRoute"))),
 				Title:    "Bulk Upload",
 				Subtitle: "Upload multiple files at once",
 				ChildrenInput: []components.PageInterface{
@@ -772,9 +766,7 @@ func registerDelete() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item? Deleting directories will remove all nested contents.",
-				CancelUrl: lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("vnode.ID")),
-				}),
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(currentVNodeDeleteRoute())),
 			},
 		},
 	})

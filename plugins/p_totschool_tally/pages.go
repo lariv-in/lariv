@@ -3,6 +3,7 @@ package p_totschool_tally
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -139,8 +140,8 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				OnSubmit:      getters.FormSubmit(lago.RoutePath("tally.TallyDailyFormRoute", nil)),
-				Method:        "POST",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("tally.TallyDailyFormRoute", nil))),
+
 				Title:         "Daily Tally",
 				Subtitle:      "Submit or update your tally for today",
 				ChildrenInput: tallyCommonFields(),
@@ -176,8 +177,8 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				OnSubmit:      getters.FormSubmit(lago.RoutePath("tally.TallyCreateRoute", nil)),
-				Method:        "POST",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("tally.TallyCreateRoute", nil))),
+
 				Title:         "Create Tally",
 				Subtitle:      "Create a tally record for a specific user and date",
 				ChildrenInput: createAdminFields,
@@ -193,8 +194,8 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Tally]{
-				OnSubmit:      getters.FormSubmit(lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
-				Method:        "POST",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+
 				Title:         "Update Tally",
 				Subtitle:      "Edit tally details",
 				ChildrenInput: createAdminFields,
@@ -210,9 +211,11 @@ func init() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
 		Children: []components.PageInterface{
 			components.DeleteConfirmation{
-				Title:     "Delete Tally?",
-				Message:   "Are you sure you want to delete this tally? This action cannot be undone.",
-				CancelUrl: lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+				Title:   "Delete Tally?",
+				Message: "Are you sure you want to delete this tally? This action cannot be undone.",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("Tally.ID")),
+				}))),
 			},
 		},
 	})
@@ -347,8 +350,8 @@ func init() {
 
 	// Tally Filter
 	tallyFilter := components.FormComponent[Tally]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("tally.TallyListRoute", nil)),
-		Method:   "GET",
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("tally.TallyListRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			components.InputForeignKey[uint]{
 				Page: components.Page{Roles: []string{"totschool_admin", "superuser"}},

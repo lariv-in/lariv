@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// FormSubmitCloseModal returns an Alpine @submit.prevent expression (see components.FormComponent).
+// FormSubmitCloseModal returns an Alpine @submit.prevent expression; use with [FormAttr] on FormComponent.Attr.
 // It resolves the form from $event.target, POSTs via fetch with HX-Request and HX-Boosted (so
 // views.HtmxRedirect returns 200 + HX-Redirect). The enclosing dialog.modal (see components.Modal)
 // is replaced with outerHTML from the response body when there is no redirect, so validation and

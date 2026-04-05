@@ -101,8 +101,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("users.UserFilter", &components.FormComponent[User]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("users.ListRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("users.ListRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 			&components.InputText{Label: "Email", Name: "Email", Getter: getters.Key[string]("$get.Email")},
@@ -117,8 +117,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("users.UserSelectionFilter", &components.FormComponent[User]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("users.SelectRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("users.SelectRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 			&components.InputText{Label: "Email", Name: "Email", Getter: getters.Key[string]("$get.Email")},
@@ -132,8 +132,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("users.RoleSelectionFilter", &components.FormComponent[Role]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("users.SelectRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("users.SelectRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -210,8 +210,8 @@ func registerFormPages() {
 		UID: "user-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
-				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("users.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("users.CreateRoute", nil))),
+
 				Title:    "Create User",
 				Subtitle: "Create a new user",
 				Classes:  "@container",
@@ -237,10 +237,10 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
 				Getter: getters.Key[User]("user"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("users.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit User",
 				Subtitle: "Update user details",
 				Classes:  "@container",
@@ -261,8 +261,8 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
 				Getter:   getters.Key[User]("user"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("users.SelfUpdateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.SelfUpdateRoute", nil))),
+
 				Title:    "Edit My Profile",
 				Subtitle: "Update your account details",
 				Classes:  "@container",
@@ -283,8 +283,8 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
 				Getter:   getters.Key[User]("user"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("users.SelfChangePasswordRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.SelfChangePasswordRoute", nil))),
+
 				Title:    "Change Password",
 				Subtitle: "Update your password",
 				ChildrenInput: []components.PageInterface{
@@ -315,8 +315,8 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
 				Getter:   getters.Key[User]("user"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("users.ChangePasswordRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.ChangePasswordRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+
 				Title:    "Change Password",
 				Subtitle: "Update user password",
 				ChildrenInput: []components.PageInterface{
@@ -470,9 +470,11 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
-				Title:     "Confirm Deletion",
-				Message:   "Are you sure you want to delete this user?",
-				CancelUrl: lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
+				Title:   "Confirm Deletion",
+				Message: "Are you sure you want to delete this user?",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("user.ID")),
+				}))),
 			},
 		},
 	})
@@ -490,8 +492,8 @@ func registerAuthPages() {
 						Key: "users.AuthForm",
 					},
 					Getter:   getters.Key[User]("user"),
-					OnSubmit: getters.FormSubmit(lago.RoutePath("users.LoginRoute", nil)),
-					Method:   http.MethodPost,
+					Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.LoginRoute", nil))),
+
 					ChildrenInput: []components.PageInterface{
 						&components.ContainerError{
 							Error: getters.Key[error]("$error.Email"),
@@ -537,8 +539,8 @@ func registerAuthPages() {
 				components.FieldTitle{Getter: getters.Static("Create an Account")},
 				&components.FormComponent[User]{
 					Getter:   getters.Key[User]("user"),
-					OnSubmit: getters.FormSubmit(lago.RoutePath("users.SignupRoute", nil)),
-					Method:   http.MethodPost,
+					Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.SignupRoute", nil))),
+
 					ChildrenInput: []components.PageInterface{
 						&components.ContainerError{
 							Error: getters.Key[error]("$error.Name"),
@@ -690,8 +692,8 @@ func registerRolePages() {
 
 	// Role Filter
 	lago.RegistryPage.Register("users.RoleFilter", &components.FormComponent[Role]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("users.RoleListRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("users.RoleListRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
 		},
@@ -739,8 +741,8 @@ func registerRolePages() {
 		UID: "role-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[Role]{
-				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("users.RoleCreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("users.RoleCreateRoute", nil))),
+
 				Title:    "Create Role",
 				Subtitle: "Create a new role",
 				ChildrenInput: []components.PageInterface{
@@ -771,8 +773,8 @@ func registerRolePages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Role]{
 				Getter:   getters.Key[Role]("role"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+
 				Title:    "Edit Role",
 				Subtitle: "Update role details",
 				ChildrenInput: []components.PageInterface{
@@ -816,9 +818,11 @@ func registerRolePages() {
 		},
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
-				Title:     "Confirm Deletion",
-				Message:   "Are you sure you want to delete this role?",
-				CancelUrl: lago.RoutePath("users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
+				Title:   "Confirm Deletion",
+				Message: "Are you sure you want to delete this role?",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("role.ID")),
+				}))),
 			},
 		},
 	})

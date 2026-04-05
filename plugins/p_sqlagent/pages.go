@@ -50,8 +50,8 @@ func registerConversationPages() {
 					},
 					&components.FormComponent[Conversation]{
 						Page:     components.Page{Key: "sqlagent.NewConversationForm"},
-						OnSubmit: getters.FormSubmit(lago.RoutePath("sqlagent.ConversationCreateRoute", nil)),
-						Method:   http.MethodPost,
+						Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("sqlagent.ConversationCreateRoute", nil))),
+
 						Title:    "",
 						Subtitle: "",
 						ChildrenInput: []components.PageInterface{
@@ -99,8 +99,8 @@ func registerConversationPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Conversation]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("sqlagent.ConversationCreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("sqlagent.ConversationCreateRoute", nil))),
+
 				Title:    "New conversation",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{

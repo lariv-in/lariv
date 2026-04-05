@@ -118,8 +118,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("students.StudentFilter", &components.FormComponent[Student]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("students.DefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("students.DefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Student Number",
@@ -169,8 +169,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("students.StudentSelectionFilter", &components.FormComponent[Student]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("students.SelectRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("students.SelectRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -366,8 +366,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Student]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("students.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("students.CreateRoute", nil))),
+
 				Title:    "Create Student",
 				Subtitle: "Create a new student",
 				Classes:  "@container",
@@ -389,8 +389,8 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Student]{
 				Getter:   getters.Key[Student]("student"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("students.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+
 				Title:    "Edit Student",
 				Subtitle: "Update student details",
 				Classes:  "@container",
@@ -600,9 +600,11 @@ func registerDetailPages() {
 		},
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
-				Title:     "Confirm Deletion",
-				Message:   "Are you sure you want to delete this student?",
-				CancelUrl: lago.RoutePath("students.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("student.ID"))}),
+				Title:   "Confirm Deletion",
+				Message: "Are you sure you want to delete this student?",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("students.DeleteRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("student.ID")),
+				}))),
 			},
 		},
 	})
@@ -684,8 +686,8 @@ func registerSelectionPages() {
 
 func registerStudentUserPickPages() {
 	lago.RegistryPage.Register("students.UserPickFilter", &components.FormComponent[p_users.User]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("students.UserPickRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("students.UserPickRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Name:   "allow_user_id",

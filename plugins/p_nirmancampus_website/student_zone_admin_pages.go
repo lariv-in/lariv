@@ -111,8 +111,8 @@ func registerStudentZoneAdminMenuPages() {
 
 func registerStudentZoneAdminFilterPages() {
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionFilter", &components.FormComponent[StudentZoneSection]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.StudentZoneAdminDefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -132,8 +132,8 @@ func registerStudentZoneAdminFilterPages() {
 	})
 
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionSelectionFilter", &components.FormComponent[StudentZoneSection]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionSelectRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionSelectRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -153,8 +153,8 @@ func registerStudentZoneAdminFilterPages() {
 	})
 
 	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminItemFilter", &components.FormComponent[StudentZoneItem]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemListRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Title",
@@ -301,8 +301,8 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneSection]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil))),
+
 				Title:    "Create Section",
 				Subtitle: "Create a new student zone section",
 				Classes:  "@container",
@@ -323,10 +323,10 @@ func registerStudentZoneAdminFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneSection]{
 				Getter: getters.Key[StudentZoneSection]("section"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit Section",
 				Subtitle: "Update section details",
 				Classes:  "@container",
@@ -346,8 +346,8 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneItem]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil))),
+
 				Title:    "Create Item",
 				Subtitle: "Create a new student zone item",
 				Classes:  "@container",
@@ -368,10 +368,10 @@ func registerStudentZoneAdminFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[StudentZoneItem]{
 				Getter: getters.Key[StudentZoneItem]("item"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit Item",
 				Subtitle: "Update item details",
 				Classes:  "@container",
@@ -505,9 +505,9 @@ func registerStudentZoneAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this section? All items in this section will also be deleted.",
-				CancelUrl: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("section.ID")),
-				}),
+				}))),
 			},
 		},
 	})
@@ -569,9 +569,9 @@ func registerStudentZoneAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item?",
-				CancelUrl: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
-				}),
+				}))),
 			},
 		},
 	})

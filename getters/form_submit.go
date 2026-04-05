@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// FormSubmit returns an Alpine @submit.prevent expression (see components.FormComponent): it reads the
+// FormSubmit returns an Alpine @submit.prevent expression; pair with [FormAttr] on FormComponent.Attr. It reads the
 // form from $event.target, serializes with htmx.values, and POSTs via htmx.ajax with HX-Boosted
 // (target body, outerHTML swap).
 func FormSubmit(path Getter[string]) Getter[string] {

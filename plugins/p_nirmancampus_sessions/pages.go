@@ -69,8 +69,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("sessions.SessionFilter", &components.FormComponent[Session]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("sessions.DefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("sessions.DefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Code",
@@ -98,8 +98,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("sessions.sessionselectionFilter", &components.FormComponent[Session]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("sessions.SelectRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("sessions.SelectRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Code",
@@ -243,8 +243,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Session]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("sessions.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("sessions.CreateRoute", nil))),
+
 				Title:    "Create Session",
 				Subtitle: "Create a new session",
 				Classes:  "@container",
@@ -265,10 +265,10 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Session]{
 				Getter: getters.Key[Session]("session"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit Session",
 				Subtitle: "Update session details",
 				Classes:  "@container",
@@ -396,9 +396,9 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this session?",
-				CancelUrl: lago.RoutePath("sessions.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("session.ID")),
-				}),
+				}))),
 			},
 		},
 	})

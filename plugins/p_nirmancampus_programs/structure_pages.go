@@ -236,8 +236,8 @@ func registerStructurePages() {
 		UID: "structure-unit-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
-				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))})),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}))),
+
 				Title:    "Add structure unit",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
@@ -271,9 +271,10 @@ func registerStructurePages() {
 			&components.DeleteConfirmation{
 				Title:   "Remove structure unit",
 				Message: "This removes the term from the program structure. Course links for this unit will be cleared.",
-				CancelUrl: lago.RoutePath("programs.StructureEditRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("program.ID")),
-				}),
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
+					"id":     getters.Any(getters.Key[uint]("program.ID")),
+					"unitId": getters.Any(getters.Key[uint]("unit.ID")),
+				}))),
 			},
 		},
 	})
@@ -283,11 +284,11 @@ func registerStructurePages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
 				Getter: getters.Key[ProgramStructureUnit]("unit"),
-				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
 					"id":     getters.Any(getters.Key[uint]("program.ID")),
 					"unitId": getters.Any(getters.Key[uint]("unit.ID")),
-				})),
-				Method: http.MethodPost,
+				}))),
+
 				Title:  "Edit structure unit",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{

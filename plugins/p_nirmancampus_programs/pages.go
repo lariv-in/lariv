@@ -307,8 +307,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("programs.ProgramFilter", &components.FormComponent[Program]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("programs.DefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("programs.DefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -335,8 +335,8 @@ func registerFilterPages() {
 	})
 
 	lago.RegistryPage.Register("programs.ProgramSelectionFilter", &components.FormComponent[Program]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("programs.SelectRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("programs.SelectRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
@@ -473,8 +473,8 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Program]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("programs.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("programs.CreateRoute", nil))),
+
 				Title:    "Create Program",
 				Subtitle: "Create a new program",
 				Classes:  "@container",
@@ -496,10 +496,10 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Program]{
 				Getter: getters.Key[Program]("program"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit Program",
 				Subtitle: "Update program details",
 				Classes:  "@container",
@@ -712,9 +712,9 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this program?",
-				CancelUrl: lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
-				}),
+				}))),
 			},
 		},
 	})

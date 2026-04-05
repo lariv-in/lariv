@@ -232,8 +232,8 @@ func registerFormCRUDPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[Form]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.CreateRoute", nil))),
+
 				Title:    "Create form",
 				Subtitle: "The public URL slug is generated from the title",
 				ChildrenInput: []components.PageInterface{
@@ -315,10 +315,10 @@ func registerFormCRUDPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[Form]{
 				Getter: getters.Key[Form]("form"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method: http.MethodPost,
+				}))),
+
 				Title:  "Edit form",
 				ChildrenInput: []components.PageInterface{
 					formDefinitionFields(),
@@ -338,9 +338,9 @@ func registerFormCRUDPages() {
 			&components.DeleteConfirmation{
 				Title:   "Delete form",
 				Message: "This will delete the form, its field definitions, and stored submissions.",
-				CancelUrl: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
-				}),
+				}))),
 			},
 		},
 	})
@@ -414,10 +414,10 @@ func registerFieldPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormComponent[FormField]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Add field",
 				Subtitle: "Define name, label, and type",
 				ChildrenInput: []components.PageInterface{
@@ -437,11 +437,11 @@ func registerFieldPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[FormField]{
 				Getter: getters.Key[FormField]("form_field"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
-				})),
-				Method: http.MethodPost,
+				}))),
+
 				Title:  "Edit field",
 				ChildrenInput: []components.PageInterface{
 					formFieldEditorBody(),
@@ -461,9 +461,10 @@ func registerFieldPages() {
 			&components.DeleteConfirmation{
 				Title:   "Delete field",
 				Message: "Remove this field from the form?",
-				CancelUrl: lago.RoutePath("forms.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
-				}),
+					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
+				}))),
 			},
 		},
 	})

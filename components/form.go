@@ -16,14 +16,12 @@ import (
 type FormComponent[T any] struct {
 	Page
 	Getter         getters.Getter[T]
-	OnSubmit       getters.Getter[string]
-	Method         string
 	ChildrenInput  []PageInterface
 	ChildrenAction []PageInterface
 	Classes        string
 	Title          string
 	Subtitle       string
-	Enctype        string
+	Attr           getters.Getter[gomponents.Node]
 }
 
 type FormInterface interface {
@@ -55,32 +53,12 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 		submitGroup = append(submitGroup, Render(child, childCtx))
 	}
 
-	var onSubmitHandler string
-	if e.OnSubmit != nil {
-		var err error
-		onSubmitHandler, err = e.OnSubmit(childCtx)
-		if err != nil {
-			slog.Error("FormComponent OnSubmit getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
-		}
-	}
-
 	var headerNodes []gomponents.Node
 	if e.Title != "" {
 		headerNodes = append(headerNodes, html.Div(html.Class("text-xl font-semibold"), gomponents.Text(e.Title)))
 	}
 	if e.Subtitle != "" {
 		headerNodes = append(headerNodes, html.Div(html.Class("text-sm text-gray-500"), gomponents.Text(e.Subtitle)))
-	}
-
-	enctype := e.Enctype
-	if enctype == "" {
-		for _, input := range FindInputs(&e) {
-			if _, ok := input.(MultipartInputInterface); ok {
-				enctype = "multipart/form-data"
-				break
-			}
-		}
 	}
 
 	var formErrorNode gomponents.Node
@@ -99,12 +77,29 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	formNodes := []gomponents.Node{
 		html.Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
 	}
-	if e.OnSubmit != nil {
-		formNodes = append(formNodes, gomponents.Attr("@submit.prevent", onSubmitHandler))
+	if e.Attr != nil {
+		extra, err := e.Attr(childCtx)
+		if err != nil {
+			slog.Error("FormComponent Attr getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		}
+		if extra != nil {
+			formNodes = append(formNodes, extra)
+		}
 	}
+
+	enctype := ""
+	for _, input := range FindInputs(&e) {
+		if _, ok := input.(MultipartInputInterface); ok {
+			enctype = "multipart/form-data"
+			break
+		}
+	}
+	if enctype != "" {
+		formNodes = append(formNodes, gomponents.Attr("enctype", enctype))
+	}
+
 	formNodes = append(formNodes,
-		gomponents.If(e.Method != "", html.Method(e.Method)),
-		gomponents.If(enctype != "", gomponents.Attr("enctype", enctype)),
 		gomponents.Group(headerNodes),
 		inputGroup,
 		formErrorNode,

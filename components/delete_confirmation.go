@@ -2,19 +2,31 @@ package components
 
 import (
 	"context"
-	"log/slog"
+	"net/http"
 
 	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
+var _ FormInterface = DeleteConfirmation{}
+
+// deleteConfirmSubmitBtn is the destructive submit action for delete flows.
+type deleteConfirmSubmitBtn struct{}
+
+func (deleteConfirmSubmitBtn) GetKey() string       { return "" }
+func (deleteConfirmSubmitBtn) GetRoles() []string   { return nil }
+func (deleteConfirmSubmitBtn) Build(context.Context) Node {
+	return Button(Type("submit"), Class("btn btn-error my-2"), Text("Confirm Delete"))
+}
+
 type DeleteConfirmation struct {
 	Page
-	Title     string
-	Message   string
-	CancelUrl getters.Getter[string]
-	Classes   string
+	Title   string
+	Message string
+	Classes string
+	// Attr is merged onto the form (method, @submit.prevent, etc.); use getters.FormAttr with getters.FormSubmit pointing at the resource DeleteRoute.
+	Attr getters.Getter[Node]
 }
 
 func (e DeleteConfirmation) GetKey() string {
@@ -26,35 +38,22 @@ func (e DeleteConfirmation) GetRoles() []string {
 }
 
 func (e DeleteConfirmation) Build(ctx context.Context) Node {
-	cancelUrl := "#"
-	if e.CancelUrl != nil {
-		url, err := e.CancelUrl(ctx)
-		if err != nil {
-			slog.Error("DeleteConfirmation CancelUrl getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
-		}
-		cancelUrl = url
-	}
-	var formErrNode Node
-	if errMap, ok := ctx.Value(getters.ContextKeyError).(map[string]error); ok {
-		if ferr := errMap["_form"]; ferr != nil {
-			formErrNode = P(Class("my-2 text-sm text-error"), Text(ferr.Error()))
-		}
-	} else if errorMap, ok := ctx.Value(getters.ContextKeyError).(map[string]any); ok {
-		if raw, exists := errorMap["_form"]; exists && raw != nil {
-			if ferr, ok := raw.(error); ok {
-				formErrNode = P(Class("my-2 text-sm text-error"), Text(ferr.Error()))
-			}
-		}
+	form := FormComponent[struct{}]{
+		Classes:        "gap-2 my-4",
+		Attr:           e.Attr,
+		ChildrenAction: []PageInterface{deleteConfirmSubmitBtn{}},
 	}
 
 	return Div(Class("container mx-auto "+e.Classes),
 		H2(Class("text-xl font-bold text-error"), Text(e.Title)),
 		P(Class("my-2"), Text(e.Message)),
-		formErrNode,
-		FormEl(Class("flex gap-2 my-4"), Method("post"),
-			Button(Type("submit"), Class("btn btn-error"), Text("Confirm Delete")),
-			A(Href(cancelUrl), Class("btn btn-ghost"), Text("Cancel")),
-		),
+		form.Build(ctx),
 	)
+}
+
+func (e DeleteConfirmation) ParseForm(r *http.Request) (map[string]any, map[string]error, error) {
+	inner := FormComponent[struct{}]{
+		ChildrenAction: []PageInterface{deleteConfirmSubmitBtn{}},
+	}
+	return inner.ParseForm(r)
 }

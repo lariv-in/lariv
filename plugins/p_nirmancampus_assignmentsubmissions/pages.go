@@ -72,8 +72,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.Filter", &components.FormComponent[AssignmentSubmission]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("assignmentsubmissions.DefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("assignmentsubmissions.DefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Assignment title",
@@ -238,8 +238,8 @@ func registerFormPages() {
 		UID: "assignmentsubmissions-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
-				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("assignmentsubmissions.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("assignmentsubmissions.CreateRoute", nil))),
+
 				Title:    "Create submission",
 				Subtitle: "Create a new assignment submission",
 				Classes:  "@container",
@@ -266,10 +266,10 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
 				Getter: getters.Key[AssignmentSubmission]("assignmentsubmission"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit submission",
 				Subtitle: "Update assignment submission details",
 				Classes:  "@container",
@@ -388,9 +388,9 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm deletion",
 				Message: "Are you sure you want to delete this submission?",
-				CancelUrl: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
-				}),
+				}))),
 			},
 		},
 	})

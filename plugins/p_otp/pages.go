@@ -17,8 +17,8 @@ func init() {
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.Static("Login via SMS")},
 					components.FormComponent[map[string]string]{
-						OnSubmit: getters.FormSubmit(lago.RoutePath("otp.PhoneOtpRequestRoute", nil)),
-						Method:   http.MethodPost,
+						Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("otp.PhoneOtpRequestRoute", nil))),
+
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
 								Error: getters.Key[error]("$error.Identifier"),
@@ -60,8 +60,8 @@ func init() {
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.Static("Login via Email")},
 					components.FormComponent[map[string]string]{
-						OnSubmit: getters.FormSubmit(lago.RoutePath("otp.EmailOtpRequestRoute", nil)),
-						Method:   http.MethodPost,
+						Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("otp.EmailOtpRequestRoute", nil))),
+
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
 								Error: getters.Key[error]("$error.Identifier"),
@@ -107,8 +107,8 @@ func init() {
 						Getter:  getters.Static("Enter the code we sent and choose a new password."),
 					},
 					components.FormComponent[map[string]string]{
-						OnSubmit: getters.FormSubmit(getters.Format("%v?identifier=%v", getters.Any(lago.RoutePath("otp.OtpVerifyRoute", nil)), getters.Any(getters.QueryEscape(getters.Key[string]("$in.Identifier"))))),
-						Method:   http.MethodPost,
+						Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(getters.Format("%v?identifier=%v", getters.Any(lago.RoutePath("otp.OtpVerifyRoute", nil)), getters.Any(getters.QueryEscape(getters.Key[string]("$in.Identifier")))))),
+
 						ChildrenInput: []components.PageInterface{
 							components.ContainerError{
 								Error: getters.Key[error]("$error.Otp"),
@@ -228,10 +228,10 @@ func init() {
 		},
 		Children: []components.PageInterface{
 			components.FormComponent[OTPPreferences]{
-				OnSubmit: getters.FormSubmit(lago.RoutePath("otp.OTPPreferencesRoute", nil)),
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("otp.OTPPreferencesRoute", nil))),
+
 				Title:    "OTP Preferences",
 				Subtitle: "Configure OTP settings for SMS and Email",
-				Method:   http.MethodPost,
 				ChildrenInput: []components.PageInterface{
 					components.FieldText{
 						Classes: "text-lg font-semibold mt-4",

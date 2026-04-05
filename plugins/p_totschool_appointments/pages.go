@@ -53,8 +53,8 @@ func registerMenus() {
 
 func registerFilter() {
 	lago.RegistryPage.Register("appointments.AppointmentFilter", components.FormComponent[Appointment]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("appointments.ListRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("appointments.ListRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			components.ContainerError{
 				Error: getters.Key[error]("$error.Name"),
@@ -133,8 +133,8 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
-				OnSubmit:       getters.FormSubmit(lago.RoutePath("appointments.CreateRoute", nil)),
-				Method:         http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("appointments.CreateRoute", nil))),
+
 				Title:          "Create Appointment",
 				Subtitle:       "Create a new appointment",
 				ChildrenInput:  appointmentFormFields(),
@@ -148,8 +148,8 @@ func registerForms() {
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
 				Getter:         getters.Key[Appointment]("appointment"),
-				OnSubmit:       getters.FormSubmit(lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})),
-				Method:         http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+
 				Title:          "Edit Appointment",
 				Subtitle:       "Update appointment details",
 				ChildrenInput:  appointmentFormFields(),
@@ -334,8 +334,8 @@ func registerModal() {
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
 				Getter:   getters.Key[Appointment]("appointment"),
-				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}))),
+
 				Title:    "Edit with AI",
 				ChildrenInput: []components.PageInterface{
 					components.ContainerError{
@@ -366,9 +366,11 @@ func registerDelete() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentDetailMenu"}},
 		Children: []components.PageInterface{
 			components.DeleteConfirmation{
-				Title:     "Confirm Deletion",
-				Message:   "Are you sure you want to delete this appointment?",
-				CancelUrl: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
+				Title:   "Confirm Deletion",
+				Message: "Are you sure you want to delete this appointment?",
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("appointment.ID")),
+				}))),
 			},
 		},
 	})
@@ -399,8 +401,8 @@ func registerSelectionPages() {
 	})
 
 	lago.RegistryPage.Register("appointments.AppointmentCardTimelineFilter", components.FormComponent[Appointment]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("appointments.CardTimelineRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("appointments.CardTimelineRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			components.ContainerError{
 				Error: getters.Key[error]("$error.Date"),

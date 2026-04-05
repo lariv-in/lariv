@@ -147,8 +147,8 @@ func registerMenuPages() {
 
 func registerFilterPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordFilter", &components.FormComponent[AcademicRecord]{
-		OnSubmit: getters.FormSubmitGet(lago.RoutePath("academicrecords.DefaultRoute", nil)),
-		Method:   http.MethodGet,
+		Attr: getters.FormAttr(http.MethodGet, getters.FormSubmitGet(lago.RoutePath("academicrecords.DefaultRoute", nil))),
+
 		ChildrenInput: []components.PageInterface{
 			&components.InputSelect[string]{
 				Label:   "Status",
@@ -433,8 +433,8 @@ func registerFormPages() {
 		UID: "academicrecords-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
-				OnSubmit: getters.FormSubmitCloseModal(lago.RoutePath("academicrecords.CreateRoute", nil)),
-				Method:   http.MethodPost,
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("academicrecords.CreateRoute", nil))),
+
 				Title:    "Create Academic Record",
 				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
 				Classes:  "@container",
@@ -460,10 +460,10 @@ func registerFormPages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
 				Getter: getters.Key[AcademicRecord]("academicrecord"),
-				OnSubmit: getters.FormSubmit(lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$in.ID")),
-				})),
-				Method:   http.MethodPost,
+				}))),
+
 				Title:    "Edit Academic Record",
 				Subtitle: "Update status or course selections. Student, program, and term cannot be changed here.",
 				Classes:  "@container",
@@ -600,9 +600,9 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this academic record?",
-				CancelUrl: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
-				}),
+				}))),
 			},
 		},
 	})
