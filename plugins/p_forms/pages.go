@@ -61,12 +61,6 @@ func registerMenus() {
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 			},
-			&components.SidebarMenuItem{
-				Title: getters.Static("Delete"),
-				Url: lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{
-					"form_id": getters.Any(getters.Key[uint]("form.ID")),
-				}),
-			},
 		},
 	})
 
@@ -319,26 +313,40 @@ func registerFormCRUDPages() {
 					"form_id": getters.Any(getters.Key[uint]("$in.ID")),
 				}))),
 
-				Title:  "Edit form",
+				Title: "Edit form",
 				ChildrenInput: []components.PageInterface{
 					formDefinitionFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save"},
+					&components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							&components.ButtonModal{
+								Label:   "Delete",
+								Icon:    "trash",
+								Url:     lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Save"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("forms.FormDeleteForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "forms.FormDetailMenu"},
-		},
+	lago.RegistryPage.Register("forms.FormDeleteForm", &components.Modal{
+		UID: "forms-form-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Delete form",
 				Message: "This will delete the form, its field definitions, and stored submissions.",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}))),
 			},
@@ -442,26 +450,43 @@ func registerFieldPages() {
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
 				}))),
 
-				Title:  "Edit field",
+				Title: "Edit field",
 				ChildrenInput: []components.PageInterface{
 					formFieldEditorBody(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save"},
+					&components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							&components.ButtonModal{
+								Label: "Delete",
+								Icon:  "trash",
+								Url: lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
+									"form_id": getters.Any(getters.Key[uint]("$in.FormID")),
+									"id":      getters.Any(getters.Key[uint]("$in.ID")),
+								}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Save"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 	})
 
-	lago.RegistryPage.Register("forms.FieldDeleteForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "forms.FieldEditMenu"},
-		},
+	lago.RegistryPage.Register("forms.FieldDeleteForm", &components.Modal{
+		UID: "forms-field-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Delete field",
 				Message: "Remove this field from the form?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
 				}))),

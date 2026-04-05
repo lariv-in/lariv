@@ -69,12 +69,6 @@ func registerStudentZoneAdminMenuPages() {
 					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 			},
-			&components.SidebarMenuItem{
-				Title: getters.Static("Delete Section"),
-				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("section.ID")),
-				}),
-			},
 		},
 	})
 
@@ -94,12 +88,6 @@ func registerStudentZoneAdminMenuPages() {
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit Item"),
 				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("item.ID")),
-				}),
-			},
-			&components.SidebarMenuItem{
-				Title: getters.Static("Delete Item"),
-				Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 			},
@@ -334,7 +322,25 @@ func registerStudentZoneAdminFormPages() {
 					studentZoneAdminSectionFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Update Section"},
+					&components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							&components.ButtonModal{
+								Label:   "Delete",
+								Icon:    "trash",
+								Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
+									"id": getters.Any(getters.Key[uint]("$in.ID")),
+								}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Update Section"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -379,7 +385,25 @@ func registerStudentZoneAdminFormPages() {
 					studentZoneAdminItemFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Update Item"},
+					&components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							&components.ButtonModal{
+								Label:   "Delete",
+								Icon:    "trash",
+								Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
+									"id": getters.Any(getters.Key[uint]("$in.ID")),
+								}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Update Item"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -497,15 +521,13 @@ func registerStudentZoneAdminDetailPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionDeleteForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminSectionDetailMenu"},
-		},
+	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminSectionDeleteForm", &components.Modal{
+		UID: "nirmancampus-student-zone-section-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this section? All items in this section will also be deleted.",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}))),
 			},
@@ -561,15 +583,13 @@ func registerStudentZoneAdminDetailPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminItemDeleteForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "nirmancampus_website.StudentZoneAdminItemDetailMenu"},
-		},
+	lago.RegistryPage.Register("nirmancampus_website.StudentZoneAdminItemDeleteForm", &components.Modal{
+		UID: "nirmancampus-student-zone-item-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}))),
 			},

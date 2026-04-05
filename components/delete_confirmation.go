@@ -12,10 +12,12 @@ import (
 var _ FormInterface = DeleteConfirmation{}
 
 // deleteConfirmSubmitBtn is the destructive submit action for delete flows.
-type deleteConfirmSubmitBtn struct{}
+type deleteConfirmSubmitBtn struct {
+	Page
+}
 
-func (deleteConfirmSubmitBtn) GetKey() string       { return "" }
-func (deleteConfirmSubmitBtn) GetRoles() []string   { return nil }
+func (e deleteConfirmSubmitBtn) GetKey() string     { return e.Key }
+func (e deleteConfirmSubmitBtn) GetRoles() []string { return e.Roles }
 func (deleteConfirmSubmitBtn) Build(context.Context) Node {
 	return Button(Type("submit"), Class("btn btn-error my-2"), Text("Confirm Delete"))
 }

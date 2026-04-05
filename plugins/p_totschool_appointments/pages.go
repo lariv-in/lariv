@@ -46,7 +46,6 @@ func registerMenus() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{Title: getters.Static("Appointment Detail"), Url: lago.RoutePath("appointments.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
 			components.SidebarMenuItem{Title: getters.Static("Edit Appointment"), Url: lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
-			components.SidebarMenuItem{Title: getters.Static("Delete Appointment"), Url: lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))})},
 		},
 	})
 }
@@ -152,8 +151,26 @@ func registerForms() {
 
 				Title:          "Edit Appointment",
 				Subtitle:       "Update appointment details",
-				ChildrenInput:  appointmentFormFields(),
-				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Appointment"}},
+				ChildrenInput: appointmentFormFields(),
+				ChildrenAction: []components.PageInterface{
+					components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							components.ButtonModal{
+								Label:   "Delete",
+								Icon:    "trash",
+								Url:     lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									components.ButtonSubmit{Label: "Save Appointment"},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	})
@@ -362,13 +379,13 @@ func registerModal() {
 }
 
 func registerDelete() {
-	lago.RegistryPage.Register("appointments.AppointmentDeleteForm", components.ShellScaffold{
-		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentDetailMenu"}},
+	lago.RegistryPage.Register("appointments.AppointmentDeleteForm", components.Modal{
+		UID: "appointment-delete-modal",
 		Children: []components.PageInterface{
 			components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this appointment?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("appointment.ID")),
 				}))),
 			},

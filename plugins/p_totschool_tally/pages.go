@@ -128,10 +128,6 @@ func init() {
 				Title: getters.Static("Edit"),
 				Url:   lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 			},
-			components.SidebarMenuItem{
-				Title: getters.Static("Delete"),
-				Url:   lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
-			},
 		},
 	})
 
@@ -200,20 +196,37 @@ func init() {
 				Subtitle:      "Edit tally details",
 				ChildrenInput: createAdminFields,
 				ChildrenAction: []components.PageInterface{
-					components.ButtonSubmit{Label: "Update Tally"},
+					components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							components.ButtonModal{
+								Page:    components.Page{Roles: []string{"totschool_admin", "superuser"}},
+								Label:   "Delete",
+								Icon:    "trash",
+								Url:     lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									components.ButtonSubmit{Label: "Update Tally"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 	})
 
 	// Delete Form
-	lago.RegistryPage.Register("tally.TallyDeleteForm", components.ShellScaffold{
-		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
+	lago.RegistryPage.Register("tally.TallyDeleteForm", components.Modal{
+		UID: "tally-delete-modal",
 		Children: []components.PageInterface{
 			components.DeleteConfirmation{
 				Title:   "Delete Tally?",
 				Message: "Are you sure you want to delete this tally? This action cannot be undone.",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("Tally.ID")),
 				}))),
 			},

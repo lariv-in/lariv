@@ -60,12 +60,6 @@ func registerMenuPages() {
 				}),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.Static("Delete User"),
-				Url: lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("user.ID")),
-				}),
-			},
-			&components.SidebarMenuItem{
 				Title: getters.Static("Change Password"),
 				Url: lago.RoutePath("users.ChangePasswordRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("user.ID")),
@@ -248,7 +242,23 @@ func registerFormPages() {
 					userFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save User"},
+					&components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							&components.ButtonModal{
+								Label:   "Delete",
+								Icon:    "trash",
+								Url:     lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Save User"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -464,15 +474,13 @@ func registerDetailPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("users.UserDeleteForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserDetailMenu"},
-		},
+	lago.RegistryPage.Register("users.UserDeleteForm", &components.Modal{
+		UID: "user-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this user?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("user.ID")),
 				}))),
 			},
@@ -683,10 +691,6 @@ func registerRolePages() {
 				Title: getters.Static("Edit Role"),
 				Url:   lago.RoutePath("users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 			},
-			&components.SidebarMenuItem{
-				Title: getters.Static("Delete Role"),
-				Url:   lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
-			},
 		},
 	})
 
@@ -786,7 +790,23 @@ func registerRolePages() {
 					},
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save Role"},
+					&components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							&components.ButtonModal{
+								Label:   "Delete",
+								Icon:    "trash",
+								Url:     lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Save Role"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -812,15 +832,13 @@ func registerRolePages() {
 	})
 
 	// Role Delete
-	lago.RegistryPage.Register("users.RoleDeleteForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.RoleDetailMenu"},
-		},
+	lago.RegistryPage.Register("users.RoleDeleteForm", &components.Modal{
+		UID: "role-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this role?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("role.ID")),
 				}))),
 			},

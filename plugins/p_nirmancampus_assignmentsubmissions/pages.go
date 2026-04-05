@@ -59,13 +59,6 @@ func registerMenuPages() {
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}),
 			},
-			&components.SidebarMenuItem{
-				Page:  components.Page{Roles: []string{"admin", "superuser"}},
-				Title: getters.Static("Delete submission"),
-				Url: lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
-				}),
-			},
 		},
 	})
 }
@@ -277,7 +270,24 @@ func registerFormPages() {
 					assignmentSubmissionFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save submission"},
+					&components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							&components.ButtonModal{
+								Page:    components.Page{Roles: []string{"admin", "superuser"}},
+								Label:   "Delete",
+								Icon:    "trash",
+								Url:     lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Save submission"},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -379,16 +389,14 @@ func registerDetailPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("assignmentsubmissions.DeleteForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("assignmentsubmissions.DeleteForm", &components.Modal{
 		Page: components.Page{Roles: []string{"admin", "superuser"}},
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "assignmentsubmissions.DetailMenu"},
-		},
+		UID:  "assignmentsubmission-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Confirm deletion",
 				Message: "Are you sure you want to delete this submission?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}))),
 			},

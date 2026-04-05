@@ -51,13 +51,6 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 		if err != nil {
 			editURL = "#"
 		}
-		removeURL, err := lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
-			"id":     getters.Any(getters.Key[uint]("program.ID")),
-			"unitId": getters.Any(getters.Static[uint](u.ID)),
-		})(ctx)
-		if err != nil {
-			removeURL = "#"
-		}
 		pool := joinCourseCodes(u.OptionalCourseSelectionPool)
 		comp := joinCourseCodes(u.CompulsoryCourses)
 		nodes = append(nodes,
@@ -74,9 +67,12 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 						Url:     getters.Static(editURL),
 						Classes: "btn-outline btn-sm",
 					}, ctx),
-					components.Render(&components.ButtonLink{
-						Label:   "Remove",
-						Link:    getters.Static(removeURL),
+					components.Render(&components.ButtonModal{
+						Label: "Remove",
+						Url: lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
+							"id":     getters.Any(getters.Key[uint]("program.ID")),
+							"unitId": getters.Any(getters.Static[uint](u.ID)),
+						}),
 						Classes: "btn-outline btn-error btn-sm",
 					}, ctx),
 				),
@@ -259,19 +255,17 @@ func registerStructurePages() {
 		},
 	})
 
-	lago.RegistryPage.Register("programs.StructureUnitDeleteForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("programs.StructureUnitDeleteForm", &components.Modal{
 		Page: components.Page{
 			Key:   "programs.StructureUnitDeleteForm",
 			Roles: []string{"admin", "superuser"},
 		},
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
-		},
+		UID: "structure-unit-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Remove structure unit",
 				Message: "This removes the term from the program structure. Course links for this unit will be cleared.",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
 					"id":     getters.Any(getters.Key[uint]("program.ID")),
 					"unitId": getters.Any(getters.Key[uint]("unit.ID")),
 				}))),
@@ -300,9 +294,24 @@ func registerStructurePages() {
 				},
 				ChildrenAction: []components.PageInterface{
 					&components.ContainerRow{
-						Classes: "flex justify-end gap-2 mt-2",
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Save changes", Classes: "btn-primary"},
+							&components.ButtonModal{
+								Page:    components.Page{Roles: []string{"admin", "superuser"}},
+								Label:   "Remove unit",
+								Icon:    "trash",
+								Url: lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
+									"id":     getters.Any(getters.Key[uint]("program.ID")),
+									"unitId": getters.Any(getters.Key[uint]("unit.ID")),
+								}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Save changes", Classes: "btn-primary"},
+								},
+							},
 						},
 					},
 				},

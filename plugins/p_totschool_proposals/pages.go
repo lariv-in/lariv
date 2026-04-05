@@ -44,7 +44,6 @@ func registerMenus() {
 		Children: []components.PageInterface{
 			components.SidebarMenuItem{Title: getters.Static("Proposal Detail"), Url: lago.RoutePath("proposals.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))})},
 			components.SidebarMenuItem{Title: getters.Static("Edit Proposal"), Url: lago.RoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))})},
-			components.SidebarMenuItem{Title: getters.Static("Delete Proposal"), Url: lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))})},
 		},
 	})
 }
@@ -90,8 +89,8 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalDetailMenu"}},
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
-				Getter:   getters.Key[Proposal]("proposal"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
+				Getter: getters.Key[Proposal]("proposal"),
+				Attr:   getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}))),
 
 				Title:    "Edit Proposal",
 				Subtitle: "Update questionnaire answers",
@@ -103,7 +102,25 @@ func registerForms() {
 						Name:   "Answers",
 					},
 				},
-				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
+				ChildrenAction: []components.PageInterface{
+					components.ContainerRow{
+						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+						Children: []components.PageInterface{
+							components.ButtonModal{
+								Label:   "Delete",
+								Icon:    "trash",
+								Url:     lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))}),
+								Classes: "btn-outline btn-error btn-sm",
+							},
+							components.ContainerRow{
+								Classes: "flex justify-end gap-2",
+								Children: []components.PageInterface{
+									components.ButtonSubmit{Label: "Save Proposal"},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	})
@@ -277,10 +294,10 @@ func registerModal() {
 		UID: "ai-edit-modal",
 		Children: []components.PageInterface{
 			components.FormComponent[Proposal]{
-				Getter:   getters.Key[Proposal]("proposal"),
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}))),
+				Getter: getters.Key[Proposal]("proposal"),
+				Attr:   getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}))),
 
-				Title:    "Edit with AI",
+				Title: "Edit with AI",
 				ChildrenInput: []components.PageInterface{
 					components.InputTextarea{Name: "GeneratedContent", Label: "Current Proposal Markdown", Getter: getters.Key[string]("$in.GeneratedContent"), Rows: 8},
 					components.InputTextarea{Name: "instructions", Label: "Instructions for AI", Getter: getters.Key[string]("$in.instructions"), Rows: 4, Required: true},
@@ -296,13 +313,13 @@ func registerModal() {
 }
 
 func registerDelete() {
-	lago.RegistryPage.Register("proposals.ProposalDeleteForm", components.ShellScaffold{
-		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalDetailMenu"}},
+	lago.RegistryPage.Register("proposals.ProposalDeleteForm", components.Modal{
+		UID: "proposal-delete-modal",
 		Children: []components.PageInterface{
 			components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this proposal?",
-				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmit(lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{
+				Attr: getters.FormAttr(http.MethodPost, getters.FormSubmitCloseModal(lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("proposal.ID")),
 				}))),
 			},
