@@ -60,7 +60,7 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	expr := fmt.Sprintf(
-		`(function(evt){console.log('[FormListenBoostedPost] lago-form-submit',evt);var d=evt.detail||{};if(d.name!==%s)return;var f=d.form;if(!f)return;var root=evt.currentTarget;if(!root||!root.contains||!root.contains(f))return;var u=%s;var targetPath;try{targetPath=(new URL(u,window.location.href)).pathname}catch(_){targetPath=''}var formAction=f.getAttribute&&f.getAttribute('action');if(!formAction||formAction===''){formAction=window.location.href}var formPath;try{formPath=(new URL(formAction,window.location.href)).pathname}catch(_){formPath=''}if(targetPath!==''&&formPath!==''&&targetPath!==formPath)return;evt.stopPropagation();htmx.ajax('POST',u,{source:f,target:'body',swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}})})($event)`,
+		`(function(evt){var d=evt.detail||{};if(d.name!==%s)return;var f=d.form;if(!f)return;var root=evt.currentTarget;if(!root||!root.contains||!root.contains(f))return;var u=%s;var targetPath;try{targetPath=(new URL(u,window.location.href)).pathname}catch(_){targetPath=''}var formAction=f.getAttribute&&f.getAttribute('action');if(!formAction||formAction===''){formAction=window.location.href}var formPath;try{formPath=(new URL(formAction,window.location.href)).pathname}catch(_){formPath=''}if(targetPath!==''&&formPath!==''&&targetPath!==formPath)return;evt.stopPropagation();htmx.ajax('POST',u,{source:f,target:'body',swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}})})($event)`,
 		nameLit,
 		urlLit,
 	)

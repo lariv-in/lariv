@@ -86,7 +86,6 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	// %s/%s are JSON string literals for modal id and POST URL (see json.Marshal above).
 	script := fmt.Sprintf(
 		`(function(evt){
-  console.log('[ButtonModalForm] lago-form-submit', evt);
   var d = evt.detail || {};
   var f = d.form;
   if (!f || d.name !== %s) return;
