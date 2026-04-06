@@ -7,11 +7,14 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-// HTMXTargetBodyModal / HTMXSwapBodyModal append modal markup as a direct child of document.body so
-// overlays stack above parent stacking contexts (nested modals, selector inside a dialog, etc.).
+// HTMXTargetBodyModal / HTMXSwapBodyModal append modal markup as a direct child of document.body.
 const (
 	HTMXTargetBodyModal = "body"
 	HTMXSwapBodyModal   = "beforeend"
+	// HTMXTargetLocalModal / HTMXSwapLocalModal append modal markup into the closest
+	// local modal host container (used by ButtonModal and ButtonModalForm).
+	HTMXTargetLocalModal = "closest .fk-modal-host"
+	HTMXSwapLocalModal   = "beforeend"
 )
 
 type Modal struct {

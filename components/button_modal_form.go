@@ -10,7 +10,7 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-// ButtonModalForm is like [ButtonModal] but registers a document listener for bubbling
+// ButtonModalForm is like [ButtonModal] but registers a local listener for bubbling
 // "lago-form-submit" from [getters.FormBubbling]. Only events whose form sits in
 // dialog.modal with id [ModalUID] are handled. The form is POSTed to [FormPostURL].
 // On HTTP redirect (see [views.HtmxRedirect] without HX-Request: normal 3xx + Location),
@@ -58,7 +58,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
-	// Alpine @lago-form-submit.document: POST the bubbling form, then close or swap the dialog.
+	// Alpine @lago-form-submit: POST the bubbling form, then close or swap the dialog.
 	// %s/%s are JSON string literals for modal id and POST URL (see json.Marshal above).
 	script := fmt.Sprintf(
 		`(function(evt){
@@ -76,9 +76,16 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
   fetch(u, {
     method: 'POST',
     body: new FormData(f),
+    headers: { 'HX-Request': 'true' },
     credentials: 'same-origin',
     redirect: 'manual'
   }).then(function (r) {
+    var hxLoc = r.headers.get('HX-Redirect');
+    if (hxLoc) {
+      closeModal({ httpStatus: r.status, location: hxLoc });
+      window.location.assign(hxLoc);
+      return;
+    }
     if (r.type === 'opaqueredirect' || (r.status >= 300 && r.status < 400)) {
       var loc = r.headers.get('Location');
       closeModal({ httpStatus: r.status, location: loc });
@@ -113,8 +120,8 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		Type("button"),
 		Class(buttonClasses),
 		Attr("hx-get", url),
-		Attr("hx-target", HTMXTargetBodyModal),
-		Attr("hx-swap", HTMXSwapBodyModal),
+		Attr("hx-target", HTMXTargetLocalModal),
+		Attr("hx-swap", HTMXSwapLocalModal),
 		Attr("hx-push-url", "false"),
 	}
 	if e.Attr != nil {
@@ -128,8 +135,8 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	}
 	buttonAttrs = append(buttonAttrs, content)
 
-	return Div(Class("w-full"),
-		Attr("@lago-form-submit.document", script),
+	return Div(Class("w-full fk-modal-host"),
+		Attr("@lago-form-submit", script),
 		Button(Group(buttonAttrs)),
 	)
 }

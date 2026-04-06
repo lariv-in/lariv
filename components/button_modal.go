@@ -51,8 +51,8 @@ func (e ButtonModal) Build(ctx context.Context) Node {
 		Type("button"),
 		Class(buttonClasses),
 		Attr("hx-get", url),
-		Attr("hx-target", HTMXTargetBodyModal),
-		Attr("hx-swap", HTMXSwapBodyModal),
+		Attr("hx-target", HTMXTargetLocalModal),
+		Attr("hx-swap", HTMXSwapLocalModal),
 		Attr("hx-push-url", "false"),
 	}
 	if e.Attr != nil {
@@ -66,7 +66,7 @@ func (e ButtonModal) Build(ctx context.Context) Node {
 	}
 	buttonAttrs = append(buttonAttrs, content)
 
-	return Div(Class("w-full"),
+	return Div(Class("w-full fk-modal-host"),
 		Button(Group(buttonAttrs)),
 	)
 }
