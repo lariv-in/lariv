@@ -144,19 +144,19 @@ func registerFormPages() {
 							&components.ContainerRow{
 								Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 								Children: []components.PageInterface{
-									&components.ButtonModalForm{
-										Page:        components.Page{Roles: []string{"admin", "superuser"}},
-										Label:       "Delete",
-										Icon:        "trash",
-										Url:         lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
-										FormPostURL: lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
-										ModalUID:    "announcement-delete-modal",
-										Classes:     "btn-outline btn-error btn-sm",
-									},
 									&components.ContainerRow{
 										Classes: "flex justify-end gap-2",
 										Children: []components.PageInterface{
 											&components.ButtonSubmit{Label: "Update Announcement"},
+											&components.ButtonModalForm{
+												Page:        components.Page{Roles: []string{"admin", "superuser"}},
+												Label:       "Delete",
+												Icon:        "trash",
+												Url:         lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
+												FormPostURL: lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
+												ModalUID:    "announcement-delete-modal",
+												Classes:     "btn-error",
+											},
 										},
 									},
 								},

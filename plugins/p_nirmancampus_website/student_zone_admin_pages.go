@@ -334,22 +334,22 @@ func registerStudentZoneAdminFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModalForm{
-								Label:   "Delete",
-								Icon:    "trash",
-								Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
-									"id": getters.Any(getters.Key[uint]("section.ID")),
-								}),
-								FormPostURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
-									"id": getters.Any(getters.Key[uint]("section.ID")),
-								}),
-								ModalUID: "nirmancampus-student-zone-section-delete-modal",
-								Classes:  "btn-outline btn-error btn-sm",
-							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
 								Children: []components.PageInterface{
 									&components.ButtonSubmit{Label: "Update Section"},
+									&components.ButtonModalForm{
+										Label:   "Delete",
+										Icon:    "trash",
+										Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("section.ID")),
+										}),
+										FormPostURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("section.ID")),
+										}),
+										ModalUID: "nirmancampus-student-zone-section-delete-modal",
+										Classes:  "btn-error",
+									},
 								},
 							},
 						},
@@ -413,22 +413,22 @@ func registerStudentZoneAdminFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModalForm{
-								Label:   "Delete",
-								Icon:    "trash",
-								Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
-									"id": getters.Any(getters.Key[uint]("item.ID")),
-								}),
-								FormPostURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
-									"id": getters.Any(getters.Key[uint]("item.ID")),
-								}),
-								ModalUID: "nirmancampus-student-zone-item-delete-modal",
-								Classes:  "btn-outline btn-error btn-sm",
-							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
 								Children: []components.PageInterface{
 									&components.ButtonSubmit{Label: "Update Item"},
+									&components.ButtonModalForm{
+										Label:   "Delete",
+										Icon:    "trash",
+										Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("item.ID")),
+										}),
+										FormPostURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("item.ID")),
+										}),
+										ModalUID: "nirmancampus-student-zone-item-delete-modal",
+										Classes:  "btn-error",
+									},
 								},
 							},
 						},

@@ -96,5 +96,5 @@ func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 	if s == "" {
 		return ghtml.Div()
 	}
-	return ghtml.Div(ghtml.Class(e.Classes), gomponents.Raw(RenderMarkdown(s)))
+	return ghtml.Div(ghtml.Class("whitespace-pre-wrap border border-base-300 p-2 rounded-md "+e.Classes), gomponents.Raw(RenderMarkdown(s)))
 }

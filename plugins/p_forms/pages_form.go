@@ -214,18 +214,18 @@ func registerFormCRUDPages() {
 							&components.ContainerRow{
 								Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 								Children: []components.PageInterface{
-									&components.ButtonModalForm{
-										Label:       "Delete",
-										Icon:        "trash",
-										Url:         lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
-										FormPostURL: lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
-										ModalUID:    "forms-form-delete-modal",
-										Classes:     "btn-outline btn-error btn-sm",
-									},
 									&components.ContainerRow{
 										Classes: "flex justify-end gap-2",
 										Children: []components.PageInterface{
 											&components.ButtonSubmit{Label: "Save"},
+											&components.ButtonModalForm{
+												Label:       "Delete",
+												Icon:        "trash",
+												Url:         lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
+												FormPostURL: lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
+												ModalUID:    "forms-form-delete-modal",
+												Classes:     "btn-error",
+											},
 										},
 									},
 								},

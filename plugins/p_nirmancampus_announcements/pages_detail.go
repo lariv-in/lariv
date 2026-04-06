@@ -24,7 +24,7 @@ func registerDetailPages() {
 								Page:   components.Page{Key: "announcements.AnnouncementDetailTitle"},
 								Getter: getters.Key[string]("$in.Title"),
 							},
-							&components.LabelInline{
+							&components.LabelNewline{
 								Title: "Description",
 								Children: []components.PageInterface{
 									&components.FieldMarkdown{Getter: getters.Key[string]("$in.Description")},

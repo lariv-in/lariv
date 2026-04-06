@@ -32,7 +32,7 @@ func (e ButtonSubmit) Build(ctx context.Context) Node {
 		content = append(content, Text(e.Label))
 	}
 
-	classes := "btn btn-primary my-2 " + e.Classes
+	classes := "btn btn-primary " + e.Classes
 	if e.Icon != "" && e.Label != "" {
 		classes += " inline-flex items-center gap-2"
 	}

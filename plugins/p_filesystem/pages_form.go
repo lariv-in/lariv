@@ -70,18 +70,18 @@ func registerForms() {
 							&components.ContainerRow{
 								Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 								Children: []components.PageInterface{
-									&components.ButtonModalForm{
-										Label:       "Delete",
-										Icon:        "trash",
-										Url:         currentVNodeDeleteRoute(),
-										FormPostURL: currentVNodeDeleteRoute(),
-										ModalUID:    "filesystem-vnode-delete-modal",
-										Classes:     "btn-outline btn-error btn-sm",
-									},
 									&components.ContainerRow{
 										Classes: "flex justify-end gap-2",
 										Children: []components.PageInterface{
 											&components.ButtonSubmit{Label: "Save"},
+											&components.ButtonModalForm{
+												Label:       "Delete",
+												Icon:        "trash",
+												Url:         currentVNodeDeleteRoute(),
+												FormPostURL: currentVNodeDeleteRoute(),
+												ModalUID:    "filesystem-vnode-delete-modal",
+												Classes:     "btn-error",
+											},
 										},
 									},
 								},

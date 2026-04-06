@@ -233,22 +233,22 @@ func registerImportantLinksAdminFormPages() {
 					&components.ContainerRow{
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
-							&components.ButtonModalForm{
-								Label:   "Delete",
-								Icon:    "trash",
-								Url: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
-									"id": getters.Any(getters.Key[uint]("link.ID")),
-								}),
-								FormPostURL: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
-									"id": getters.Any(getters.Key[uint]("link.ID")),
-								}),
-								ModalUID: "nirmancampus-important-links-delete-modal",
-								Classes:  "btn-outline btn-error btn-sm",
-							},
 							&components.ContainerRow{
 								Classes: "flex justify-end gap-2",
 								Children: []components.PageInterface{
 									&components.ButtonSubmit{Label: "Update"},
+									&components.ButtonModalForm{
+										Label:   "Delete",
+										Icon:    "trash",
+										Url: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("link.ID")),
+										}),
+										FormPostURL: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("link.ID")),
+										}),
+										ModalUID: "nirmancampus-important-links-delete-modal",
+										Classes:  "btn-error",
+									},
 								},
 							},
 						},
