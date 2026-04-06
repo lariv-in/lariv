@@ -62,8 +62,8 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 				),
 				Div(Class("flex flex-wrap gap-2 shrink-0"),
 					components.Render(&components.ButtonModalForm{
-						Label:   "Edit",
-						Url:     getters.Static(editURL),
+						Label: "Edit",
+						Url:   getters.Static(editURL),
 						FormPostURL: lago.RoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
 							"id":     getters.Any(getters.Key[uint]("program.ID")),
 							"unitId": getters.Any(getters.Static[uint](u.ID)),
@@ -112,11 +112,11 @@ func registerStructurePages() {
 					},
 					programStructureUnitCards{},
 					&components.ButtonModalForm{
-						Label:   "Add new unit",
-						Url:     lago.RoutePath("programs.StructureUnitCreateModalRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
+						Label:       "Add new unit",
+						Url:         lago.RoutePath("programs.StructureUnitCreateModalRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 						FormPostURL: lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
-						ModalUID: "structure-unit-create-modal",
-						Classes: "btn-primary",
+						ModalUID:    "structure-unit-create-modal",
+						Classes:     "btn-primary",
 					},
 				},
 			},
@@ -245,7 +245,7 @@ func registerStructurePages() {
 			&components.FormComponent[ProgramStructureUnit]{
 				Attr: getters.FormBubbling(nil),
 
-				Title:    "Add structure unit",
+				Title: "Add structure unit",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
 						Hidden: true,
@@ -276,7 +276,7 @@ func registerStructurePages() {
 			&components.DeleteConfirmation{
 				Title:   "Remove structure unit",
 				Message: "This removes the term from the program structure. Course links for this unit will be cleared.",
-				Attr: getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(nil),
 			},
 		},
 	})
@@ -286,9 +286,9 @@ func registerStructurePages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
 				Getter: getters.Key[ProgramStructureUnit]("unit"),
-				Attr: getters.FormBubbling(nil),
+				Attr:   getters.FormBubbling(nil),
 
-				Title:  "Edit structure unit",
+				Title: "Edit structure unit",
 				ChildrenInput: []components.PageInterface{
 					&components.InputText{
 						Hidden: true,
@@ -302,9 +302,9 @@ func registerStructurePages() {
 						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 						Children: []components.PageInterface{
 							&components.ButtonModalForm{
-								Page:    components.Page{Roles: []string{"admin", "superuser"}},
-								Label:   "Remove unit",
-								Icon:    "trash",
+								Page:  components.Page{Roles: []string{"admin", "superuser"}},
+								Label: "Remove unit",
+								Icon:  "trash",
 								Url: lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
 									"id":     getters.Any(getters.Key[uint]("program.ID")),
 									"unitId": getters.Any(getters.Key[uint]("unit.ID")),

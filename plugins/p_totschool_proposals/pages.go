@@ -73,68 +73,66 @@ func registerForms() {
 	lago.RegistryPage.Register("proposals.ProposalCreateForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalMenu"}},
 		Children: []components.PageInterface{
-						&components.FormListenBoostedPost{
+			&components.FormListenBoostedPost{
 				ActionURL: lago.RoutePath("proposals.CreateRoute", nil),
 				Children: []components.PageInterface{
 					components.FormComponent[Proposal]{
-				Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(nil),
 
-
-				Title:          "Create Proposal",
-				Subtitle:       "Fill in the questionnaire answers",
-				ChildrenInput:  []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.Key[string]("$in.Title")}, components.InputKeyValue{Getter: getters.Key[datatypes.JSON]("$in.Answers"), Keys: getters.Static(QUESTIONS), Name: "Answers"}},
-				ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
+						Title:          "Create Proposal",
+						Subtitle:       "Fill in the questionnaire answers",
+						ChildrenInput:  []components.PageInterface{components.InputText{Label: "Proposal Title", Name: "Title", Required: true, Getter: getters.Key[string]("$in.Title")}, components.InputKeyValue{Getter: getters.Key[datatypes.JSON]("$in.Answers"), Keys: getters.Static(QUESTIONS), Name: "Answers"}},
+						ChildrenAction: []components.PageInterface{components.ButtonSubmit{Label: "Save Proposal"}},
+					},
 				},
 			},
-		},
 		},
 	})
 
 	lago.RegistryPage.Register("proposals.ProposalUpdateForm", components.ShellScaffold{
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "proposals.ProposalDetailMenu"}},
 		Children: []components.PageInterface{
-						&components.FormListenBoostedPost{
+			&components.FormListenBoostedPost{
 				ActionURL: lago.RoutePath("proposals.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
 				Children: []components.PageInterface{
 					components.FormComponent[Proposal]{
-				Getter: getters.Key[Proposal]("proposal"),
-				Attr:   getters.FormBubbling(nil),
+						Getter: getters.Key[Proposal]("proposal"),
+						Attr:   getters.FormBubbling(nil),
 
-
-				Title:    "Edit Proposal",
-				Subtitle: "Update questionnaire answers",
-				ChildrenInput: []components.PageInterface{
-					components.InputText{Label: "Title", Name: "Title", Getter: getters.Key[string]("$in.Title")},
-					components.InputKeyValue{
-						Getter: getters.Key[datatypes.JSON]("$in.Answers"),
-						Keys:   getters.Static(QUESTIONS),
-						Name:   "Answers",
-					},
-				},
-				ChildrenAction: []components.PageInterface{
-					components.ContainerRow{
-						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
-						Children: []components.PageInterface{
-							components.ButtonModalForm{
-								Label:       "Delete",
-								Icon:        "trash",
-								Url:         lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
-								FormPostURL: lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
-								ModalUID:    "proposal-delete-modal",
-								Classes:     "btn-outline btn-error btn-sm",
+						Title:    "Edit Proposal",
+						Subtitle: "Update questionnaire answers",
+						ChildrenInput: []components.PageInterface{
+							components.InputText{Label: "Title", Name: "Title", Getter: getters.Key[string]("$in.Title")},
+							components.InputKeyValue{
+								Getter: getters.Key[datatypes.JSON]("$in.Answers"),
+								Keys:   getters.Static(QUESTIONS),
+								Name:   "Answers",
 							},
+						},
+						ChildrenAction: []components.PageInterface{
 							components.ContainerRow{
-								Classes: "flex justify-end gap-2",
+								Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 								Children: []components.PageInterface{
-									components.ButtonSubmit{Label: "Save Proposal"},
+									components.ButtonModalForm{
+										Label:       "Delete",
+										Icon:        "trash",
+										Url:         lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
+										FormPostURL: lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
+										ModalUID:    "proposal-delete-modal",
+										Classes:     "btn-outline btn-error btn-sm",
+									},
+									components.ContainerRow{
+										Classes: "flex justify-end gap-2",
+										Children: []components.PageInterface{
+											components.ButtonSubmit{Label: "Save Proposal"},
+										},
+									},
 								},
 							},
 						},
 					},
 				},
-				},
 			},
-		},
 		},
 	})
 }
@@ -332,7 +330,7 @@ func registerDelete() {
 			components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this proposal?",
-				Attr: getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(nil),
 			},
 		},
 	})

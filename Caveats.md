@@ -70,6 +70,17 @@ Existing registries:
    - `lago/registry_views.go` for adding views (see the views section below)
    - `lago/regsitry_dbinit.go` for adding functions that run after the database is initialized; run model automigrations here
 
+# Plugin page source files (layout convention)
+
+For plugins with many registered pages, prefer **several files in the plugin root** (same package as the rest of the plugin), not a separate `pages/` or `models/` subpackage, unless there is a strong reason to split packages.
+
+- **`pages.go`** — `init()` that calls `registerMenuPages`, `registerFilterPages`, etc., plus **small** shared wiring (e.g. sidebar menus). Keep this file short when possible.
+- **`pages_<area>.go`** — larger page trees: name by concern, e.g. `pages_form.go` (create/update and shared form fields), `pages_detail.go` (detail view and closely related UI such as a delete confirmation modal), `pages_table.go` (list filters, main list table, and selection modal when they belong together), `pages_structure.go` (a sizeable secondary feature).
+- **Rule of thumb:** treat **detail**, **forms**, and **list/filter/table** surfaces as the primary splits when those definitions are large; merge **tiny** registrations into `pages.go` or into the most related larger file so the layout stays maintainable.
+- **Size:** aim for roughly **200–400 lines per file** where practical. Going slightly over is fine for cohesion; avoid many separate files that are only a few dozen lines each unless the boundary is conceptually important.
+
+See `plugins/p_nirmancampus_programs` for a concrete layout using this pattern.
+
 # HTTP routes nested under another app's prefix
 
 When a plugin mounts HTTP routes under another plugin's `AppUrl` (e.g. Students at `/students/`), use an **`addon/<slug>/`** segment after that base so your subtree does not structurally overlap the host's dynamic routes.

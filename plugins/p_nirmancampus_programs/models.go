@@ -10,11 +10,8 @@ const (
 	AdmissionSessionJan  = "jan"
 	AdmissionSessionJuly = "july"
 	AdmissionSessionBoth = "both"
-)
-
-const (
-	TermTypeYear    = "year"
-	TermTypeSession = "session"
+	TermTypeYear         = "year"
+	TermTypeSession      = "session"
 )
 
 // ProgramStructureUnit is one term of a program's structure.
