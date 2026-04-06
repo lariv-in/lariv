@@ -13,10 +13,11 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("filesystem.VNodeCreateForm"),
 				ActionURL: listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute"),
 				Children: []components.PageInterface{
 					&components.FormComponent[VNode]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("filesystem.VNodeCreateForm")),
 
 						Title:    "Create Item",
 						Subtitle: "Create a new file or directory",
@@ -33,11 +34,12 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("filesystem.VNodeUpdateForm"),
 				ActionURL: currentVNodeEditRoute(),
 				Children: []components.PageInterface{
 					&components.FormComponent[VNode]{
 						Getter: getters.Key[VNode]("vnode"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("filesystem.VNodeUpdateForm")),
 
 						Title:    "Edit Item",
 						Subtitle: "Update file or directory details",
@@ -77,6 +79,7 @@ func registerForms() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
+												Name:        getters.Static("filesystem.VNodeDeleteForm"),
 												Url:         currentVNodeDeleteRoute(),
 												FormPostURL: currentVNodeDeleteRoute(),
 												ModalUID:    "filesystem-vnode-delete-modal",
@@ -97,11 +100,12 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("filesystem.VNodeMoveForm"),
 				ActionURL: currentVNodeMoveRoute(),
 				Children: []components.PageInterface{
 					&components.FormComponent[VNode]{
 						Getter: getters.Key[VNode]("vnode"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("filesystem.VNodeMoveForm")),
 
 						Title:    "Move Item",
 						Subtitle: "Select the destination directory",
@@ -133,10 +137,11 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("filesystem.VNodeMultiUploadForm"),
 				ActionURL: listOrBrowseRoute("filesystem.MultiUploadRoute", "filesystem.MultiUploadChildRoute"),
 				Children: []components.PageInterface{
 					&components.FormComponent[VNode]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("filesystem.VNodeMultiUploadForm")),
 
 						Title:    "Bulk Upload",
 						Subtitle: "Upload multiple files at once",

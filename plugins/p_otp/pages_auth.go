@@ -13,10 +13,11 @@ func registerOtpAuthPages() {
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.Static("Login via SMS")},
 					&components.FormListenBoostedPost{
+						Name:      getters.Static("otp.PhoneOtpRequestForm"),
 						ActionURL: lago.RoutePath("otp.PhoneOtpRequestRoute", nil),
 						Children: []components.PageInterface{
 							components.FormComponent[map[string]string]{
-								Attr: getters.FormBubbling(nil),
+								Attr: getters.FormBubbling(getters.Static("otp.PhoneOtpRequestForm")),
 								ChildrenInput: []components.PageInterface{
 									components.ContainerError{
 										Error: getters.Key[error]("$error.Identifier"),
@@ -60,10 +61,11 @@ func registerOtpAuthPages() {
 				Children: []components.PageInterface{
 					components.FieldTitle{Getter: getters.Static("Login via Email")},
 					&components.FormListenBoostedPost{
+						Name:      getters.Static("otp.EmailOtpRequestForm"),
 						ActionURL: lago.RoutePath("otp.EmailOtpRequestRoute", nil),
 						Children: []components.PageInterface{
 							components.FormComponent[map[string]string]{
-								Attr: getters.FormBubbling(nil),
+								Attr: getters.FormBubbling(getters.Static("otp.EmailOtpRequestForm")),
 								ChildrenInput: []components.PageInterface{
 									components.ContainerError{
 										Error: getters.Key[error]("$error.Identifier"),
@@ -111,10 +113,11 @@ func registerOtpAuthPages() {
 						Getter:  getters.Static("Enter the code we sent and choose a new password."),
 					},
 					&components.FormListenBoostedPost{
+						Name:      getters.Static("otp.OtpVerifyForm"),
 						ActionURL: getters.Format("%v?identifier=%v", getters.Any(lago.RoutePath("otp.OtpVerifyRoute", nil)), getters.Any(getters.QueryEscape(getters.Key[string]("$in.Identifier")))),
 						Children: []components.PageInterface{
 							components.FormComponent[map[string]string]{
-								Attr: getters.FormBubbling(nil),
+								Attr: getters.FormBubbling(getters.Static("otp.OtpVerifyForm")),
 								ChildrenInput: []components.PageInterface{
 									components.ContainerError{
 										Error: getters.Key[error]("$error.Otp"),

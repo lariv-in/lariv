@@ -15,6 +15,7 @@ import (
 // outerHTML swap). Use for full-page flows;
 type FormListenBoostedPost struct {
 	Page
+	Name      getters.Getter[string]
 	ActionURL getters.Getter[string]
 	Children  []PageInterface
 }
@@ -36,10 +37,21 @@ func (e *FormListenBoostedPost) SetChildren(children []PageInterface) {
 }
 
 func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
+	if e.Name == nil {
+		return ContainerError{Error: getters.Static(fmt.Errorf("FormListenBoostedPost: Name is nil"))}.Build(ctx)
+	}
 	if e.ActionURL == nil {
 		return ContainerError{Error: getters.Static(fmt.Errorf("FormListenBoostedPost: ActionURL is nil"))}.Build(ctx)
 	}
+	name, err := e.Name(ctx)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+	}
 	url, err := e.ActionURL(ctx)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+	}
+	nameLit, err := json.Marshal(name)
 	if err != nil {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
@@ -48,7 +60,8 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	expr := fmt.Sprintf(
-		`(function(evt){evt.stopPropagation();var d=evt.detail||{};var f=d.form;if(!f)return;htmx.ajax('POST',%s,{source:f,target:'body',swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}})})($event)`,
+		`(function(evt){console.log('[FormListenBoostedPost] lago-form-submit',evt);var d=evt.detail||{};if(d.name!==%s)return;var f=d.form;if(!f)return;var root=evt.currentTarget;if(!root||!root.contains||!root.contains(f))return;var u=%s;var targetPath;try{targetPath=(new URL(u,window.location.href)).pathname}catch(_){targetPath=''}var formAction=f.getAttribute&&f.getAttribute('action');if(!formAction||formAction===''){formAction=window.location.href}var formPath;try{formPath=(new URL(formAction,window.location.href)).pathname}catch(_){formPath=''}if(targetPath!==''&&formPath!==''&&targetPath!==formPath)return;evt.stopPropagation();htmx.ajax('POST',u,{source:f,target:'body',swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}})})($event)`,
+		nameLit,
 		urlLit,
 	)
 	var childNodes []gomponents.Node

@@ -12,6 +12,7 @@ func registerAuthPages() {
 			&components.ContainerColumn{Children: []components.PageInterface{
 				&components.FieldTitle{Getter: getters.Static("Login")},
 				&components.FormListenBoostedPost{
+					Name:      getters.Static("users.LoginPage"),
 					ActionURL: lago.RoutePath("users.LoginRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[User]{
@@ -19,7 +20,7 @@ func registerAuthPages() {
 								Key: "users.AuthForm",
 							},
 							Getter: getters.Key[User]("user"),
-							Attr:   getters.FormBubbling(nil),
+							Attr:   getters.FormBubbling(getters.Static("users.LoginPage")),
 							ChildrenInput: []components.PageInterface{
 								&components.ContainerError{
 									Error: getters.Key[error]("$error.Email"),
@@ -66,11 +67,12 @@ func registerAuthPages() {
 			&components.ContainerColumn{Children: []components.PageInterface{
 				components.FieldTitle{Getter: getters.Static("Create an Account")},
 				&components.FormListenBoostedPost{
+					Name:      getters.Static("users.SignupPage"),
 					ActionURL: lago.RoutePath("users.SignupRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[User]{
 							Getter: getters.Key[User]("user"),
-							Attr:   getters.FormBubbling(nil),
+							Attr:   getters.FormBubbling(getters.Static("users.SignupPage")),
 							ChildrenInput: []components.PageInterface{
 								&components.ContainerError{
 									Error: getters.Key[error]("$error.Name"),

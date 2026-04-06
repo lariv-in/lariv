@@ -74,6 +74,7 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 		Actions: []components.PageInterface{
 			&components.ButtonModalForm{
 				Page: components.Page{Roles: []string{"admin", "superuser"}},
+				Name: getters.Static("assignmentsubmissions.CreateForm"),
 				Url: getters.Format(
 					"%s?AcademicRecordID=%d",
 					getters.Any(lago.RoutePath("assignmentsubmissions.CreateRoute", nil)),

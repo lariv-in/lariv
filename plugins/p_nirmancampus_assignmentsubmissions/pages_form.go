@@ -154,7 +154,7 @@ func registerFormPages() {
 		UID: "assignmentsubmissions-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AssignmentSubmission]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
 				Title:    "Create submission",
 				Subtitle: "Create a new assignment submission",
@@ -181,13 +181,14 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("assignmentsubmissions.UpdateForm"),
 				ActionURL: lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[AssignmentSubmission]{
 						Getter: getters.Key[AssignmentSubmission]("assignmentsubmission"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("assignmentsubmissions.UpdateForm")),
 
 						Title:    "Edit submission",
 						Subtitle: "Update assignment submission details",
@@ -207,6 +208,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        getters.Static("assignmentsubmissions.DeleteForm"),
 												Url:         lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID"))}),
 												FormPostURL: lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID"))}),
 												ModalUID:    "assignmentsubmission-delete-modal",

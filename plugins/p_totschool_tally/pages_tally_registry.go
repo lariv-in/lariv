@@ -76,10 +76,11 @@ func registerTallyPages() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("tally.TallyDailyForm"),
 				ActionURL: lago.RoutePath("tally.TallyDailyFormRoute", nil),
 				Children: []components.PageInterface{
 					components.FormComponent[Tally]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("tally.TallyDailyForm")),
 
 						Title:         "Daily Tally",
 						Subtitle:      "Submit or update your tally for today",
@@ -118,10 +119,11 @@ func registerTallyPages() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyMenu"}},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("tally.TallyCreateForm"),
 				ActionURL: lago.RoutePath("tally.TallyCreateRoute", nil),
 				Children: []components.PageInterface{
 					components.FormComponent[Tally]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("tally.TallyCreateForm")),
 
 						Title:         "Create Tally",
 						Subtitle:      "Create a tally record for a specific user and date",
@@ -140,10 +142,11 @@ func registerTallyPages() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "tally.TallyDetailMenu"}},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("tally.TallyUpdateForm"),
 				ActionURL: lago.RoutePath("tally.TallyUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 				Children: []components.PageInterface{
 					components.FormComponent[Tally]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("tally.TallyUpdateForm")),
 
 						Title:         "Update Tally",
 						Subtitle:      "Edit tally details",
@@ -160,6 +163,7 @@ func registerTallyPages() {
 												Page:        components.Page{Roles: []string{"totschool_admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
+												Name:        getters.Static("tally.TallyDeleteForm"),
 												Url:         lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 												FormPostURL: lago.RoutePath("tally.TallyDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("Tally.ID"))}),
 												ModalUID:    "tally-delete-modal",
@@ -183,7 +187,7 @@ func registerTallyPages() {
 			components.DeleteConfirmation{
 				Title:   "Delete Tally?",
 				Message: "Are you sure you want to delete this tally? This action cannot be undone.",
-				Attr:    getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

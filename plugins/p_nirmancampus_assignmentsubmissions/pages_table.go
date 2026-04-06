@@ -49,6 +49,7 @@ func registerTablePages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "assignmentsubmissions.Filter"}},
 					&components.ButtonModalForm{
 						Page:        components.Page{Roles: []string{"admin", "superuser"}},
+						Name:        getters.Static("assignmentsubmissions.CreateForm"),
 						Url:         lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
 						FormPostURL: lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
 						ModalUID:    "assignmentsubmissions-create-modal",

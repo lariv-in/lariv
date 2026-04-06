@@ -18,6 +18,7 @@ func registerSelectionPages() {
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.UserSelectionFilter"}},
 					&components.ButtonModalForm{
+						Name:        getters.Static("users.UserCreateForm"),
 						Url:         lago.RoutePath("users.CreateRoute", nil),
 						FormPostURL: lago.RoutePath("users.CreateRoute", nil),
 						ModalUID:    "user-create-modal",
@@ -52,6 +53,7 @@ func registerSelectionPages() {
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleSelectionFilter"}},
 					&components.ButtonModalForm{
+						Name:        getters.Static("users.RoleCreateForm"),
 						Url:         lago.RoutePath("users.RoleCreateRoute", nil),
 						FormPostURL: lago.RoutePath("users.RoleCreateRoute", nil),
 						ModalUID:    "role-create-modal",

@@ -77,9 +77,12 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[Course]]("courses"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseFilter"}},
-					&components.ButtonModal{
+					&components.ButtonModalForm{
 						Page:    components.Page{Roles: []string{"admin", "superuser"}},
+						Name:    getters.Static("courses.CourseCreateForm"),
 						Url:     lago.RoutePath("courses.CreateRoute", nil),
+						FormPostURL: lago.RoutePath("courses.CreateRoute", nil),
+						ModalUID:    "courses-create-modal",
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
 						Attr:    getters.ModalRefreshList(getters.Static(""), getters.Static("#course-table")),
@@ -118,6 +121,7 @@ func registerSelectionPages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseSelectionFilter"}},
 					&components.ButtonModalForm{
 						Page:        components.Page{Roles: []string{"admin", "superuser"}},
+						Name:        getters.Static("courses.CourseCreateForm"),
 						Url:         lago.RoutePath("courses.CreateRoute", nil),
 						FormPostURL: lago.RoutePath("courses.CreateRoute", nil),
 						ModalUID:    "courses-create-modal",
@@ -157,6 +161,7 @@ func registerSelectionPages() {
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "courses.CourseMultiSelectionFilter"}},
 					&components.ButtonModalForm{
 						Page:        components.Page{Roles: []string{"admin", "superuser"}},
+						Name:        getters.Static("courses.CourseCreateForm"),
 						Url:         lago.RoutePath("courses.CreateRoute", nil),
 						FormPostURL: lago.RoutePath("courses.CreateRoute", nil),
 						ModalUID:    "courses-create-modal",

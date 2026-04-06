@@ -290,7 +290,7 @@ func registerFormPages() {
 		UID: "academicrecords-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[AcademicRecord]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
 				Title:    "Create Academic Record",
 				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
@@ -316,13 +316,14 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("academicrecords.AcademicRecordUpdateForm"),
 				ActionURL: lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[AcademicRecord]{
 						Getter: getters.Key[AcademicRecord]("academicrecord"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("academicrecords.AcademicRecordUpdateForm")),
 
 						Title:    "Edit Academic Record",
 						Subtitle: "Update status or course selections. Student, program, and term cannot be changed here.",
@@ -342,6 +343,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        getters.Static("academicrecords.AcademicRecordDeleteForm"),
 												Url:         lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("academicrecord.ID"))}),
 												FormPostURL: lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("academicrecord.ID"))}),
 												ModalUID:    "academicrecord-delete-modal",

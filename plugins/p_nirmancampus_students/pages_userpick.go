@@ -40,6 +40,7 @@ func registerStudentUserPickPages() {
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.UserPickFilter"}},
 					&components.ButtonModalForm{
+						Name:        getters.Static("users.UserCreateForm"),
 						Url:         lago.RoutePath("users.CreateRoute", nil),
 						FormPostURL: lago.RoutePath("users.CreateRoute", nil),
 						ModalUID:    "user-create-modal",

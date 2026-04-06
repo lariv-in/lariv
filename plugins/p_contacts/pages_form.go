@@ -75,16 +75,21 @@ func contactFormFields() components.ContainerColumn {
 }
 
 func registerFormPages() {
+	createFormName := getters.Static("contacts.ContactCreateForm")
+	updateFormName := getters.Static("contacts.ContactUpdateForm")
+	deleteFormName := getters.Static("contacts.ContactDeleteForm")
+
 	lago.RegistryPage.Register("contacts.ContactCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "contacts.ContactMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      createFormName,
 				ActionURL: lago.RoutePath("contacts.CreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[Contact]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(createFormName),
 
 						Title:    "Create Contact",
 						Subtitle: "Add a new contact",
@@ -107,13 +112,14 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      updateFormName,
 				ActionURL: lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[Contact]{
 						Getter: getters.Key[Contact]("contact"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(updateFormName),
 
 						Title:    "Edit Contact",
 						Subtitle: "Update contact details",
@@ -132,6 +138,7 @@ func registerFormPages() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        deleteFormName,
 												Url:         lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("contact.ID"))}),
 												FormPostURL: lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("contact.ID"))}),
 												ModalUID:    "contact-delete-modal",

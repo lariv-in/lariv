@@ -63,6 +63,7 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 				Div(Class("flex flex-wrap gap-2 shrink-0"),
 					components.Render(&components.ButtonModalForm{
 						Label: "Edit",
+						Name:  getters.Static("programs.StructureUnitEditModal"),
 						Url:   getters.Static(editURL),
 						FormPostURL: lago.RoutePath("programs.StructureUnitUpdateRoute", map[string]getters.Getter[any]{
 							"id":     getters.Any(getters.Key[uint]("program.ID")),
@@ -73,6 +74,7 @@ func (e programStructureUnitCards) Build(ctx context.Context) Node {
 					}, ctx),
 					components.Render(&components.ButtonModalForm{
 						Label: "Remove",
+						Name:  getters.Static("programs.StructureUnitDeleteForm"),
 						Url: lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
 							"id":     getters.Any(getters.Key[uint]("program.ID")),
 							"unitId": getters.Any(getters.Static[uint](u.ID)),
@@ -243,7 +245,7 @@ func registerStructurePages() {
 		UID: "structure-unit-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("programs.StructureUnitCreateModal")),
 
 				Title: "Add structure unit",
 				ChildrenInput: []components.PageInterface{
@@ -276,7 +278,7 @@ func registerStructurePages() {
 			&components.DeleteConfirmation{
 				Title:   "Remove structure unit",
 				Message: "This removes the term from the program structure. Course links for this unit will be cleared.",
-				Attr:    getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})
@@ -286,7 +288,7 @@ func registerStructurePages() {
 		Children: []components.PageInterface{
 			&components.FormComponent[ProgramStructureUnit]{
 				Getter: getters.Key[ProgramStructureUnit]("unit"),
-				Attr:   getters.FormBubbling(nil),
+				Attr:   getters.FormBubbling(getters.Static("programs.StructureUnitEditModal")),
 
 				Title: "Edit structure unit",
 				ChildrenInput: []components.PageInterface{
@@ -309,6 +311,7 @@ func registerStructurePages() {
 										Page:  components.Page{Roles: []string{"admin", "superuser"}},
 										Label: "Remove unit",
 										Icon:  "trash",
+										Name:  getters.Static("programs.StructureUnitDeleteForm"),
 										Url: lago.RoutePath("programs.StructureUnitDeleteRoute", map[string]getters.Getter[any]{
 											"id":     getters.Any(getters.Key[uint]("program.ID")),
 											"unitId": getters.Any(getters.Key[uint]("unit.ID")),

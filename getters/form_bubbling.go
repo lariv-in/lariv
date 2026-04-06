@@ -11,26 +11,26 @@ import (
 
 // FormBubbling returns attributes for [components.FormComponent].Attr: HTTP POST plus Alpine
 // @submit.prevent that stops native submit and dispatches a bubbling CustomEvent "lago-form-submit"
-// from the form with detail { form: <form element>, name?: string }. Parents (e.g. [components.ButtonModalForm],
+// from the form with detail { form: <form element>, name: string }. Parents (e.g. [components.ButtonModalForm],
 // or [components.FormListenBoostedPost]) handle the request.
-//
-// Pass nil or a pointer to "" to omit detail.name; otherwise listeners can filter by detail.name.
-func FormBubbling(name *string) Getter[gomponents.Node] {
+func FormBubbling(name Getter[string]) Getter[gomponents.Node] {
 	return func(ctx context.Context) (gomponents.Node, error) {
-		if name == nil || *name == "" {
-			return gomponents.Group{
-				ghtml.Method("POST"),
-				gomponents.Attr("@submit.prevent", `(function(evt){evt.preventDefault();var f=evt.target&&evt.target.closest&&evt.target.closest('form');if(!f)return;f.dispatchEvent(new CustomEvent('lago-form-submit',{bubbles:true,detail:{form:f}}))})($event)`),
-			}, nil
+		if name == nil {
+			return nil, fmt.Errorf("FormBubbling: Name is nil")
 		}
-		nLit, err := json.Marshal(*name)
+		resolvedName, err := name(ctx)
+		if err != nil {
+			return nil, err
+		}
+		nLit, err := json.Marshal(resolvedName)
 		if err != nil {
 			return nil, err
 		}
 		return gomponents.Group{
 			ghtml.Method("POST"),
+			gomponents.Attr("hx-boost", "false"),
 			gomponents.Attr("@submit.prevent", fmt.Sprintf(
-				`(function(evt){evt.preventDefault();var f=evt.target&&evt.target.closest&&evt.target.closest('form');if(!f)return;f.dispatchEvent(new CustomEvent('lago-form-submit',{bubbles:true,detail:{form:f,name:%s}}))})($event)`,
+				`(function(evt){evt.preventDefault();var f=(evt.currentTarget&&evt.currentTarget.tagName==='FORM')?evt.currentTarget:(evt.target&&evt.target.closest&&evt.target.closest('form'));if(!f)return;f.dispatchEvent(new CustomEvent('lago-form-submit',{bubbles:true,detail:{form:f,name:%s}}))})($event)`,
 				nLit,
 			)),
 		}, nil

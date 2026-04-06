@@ -124,10 +124,11 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("sessions.SessionCreateForm"),
 				ActionURL: lago.RoutePath("sessions.CreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[Session]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("sessions.SessionCreateForm")),
 
 						Title:    "Create Session",
 						Subtitle: "Create a new session",
@@ -150,13 +151,14 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("sessions.SessionUpdateForm"),
 				ActionURL: lago.RoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("session.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[Session]{
 						Getter: getters.Key[Session]("session"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("sessions.SessionUpdateForm")),
 
 						Title:    "Edit Session",
 						Subtitle: "Update session details",
@@ -175,6 +177,7 @@ func registerFormPages() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
+												Name:        getters.Static("sessions.SessionDeleteForm"),
 												Url:         lago.RoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("session.ID"))}),
 												FormPostURL: lago.RoutePath("sessions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("session.ID"))}),
 												ModalUID:    "session-delete-modal",

@@ -14,15 +14,26 @@ type GlobalLayer interface {
 	Next(http.Handler) http.Handler
 }
 
-// AttachRequestLayer puts the *http.Request in context as "$request" and the
-// current time as int64 Unix microseconds as "$timestamp". It is registered on the
-// global HTTP stack in lago.StartServer (core.AttachRequestLayer); do not attach
-// "$request" manually in view handlers.
+func requestQueryMap(r *http.Request) map[string]any {
+	queryMap := map[string]any{}
+	for param, values := range r.URL.Query() {
+		if len(values) > 0 && values[0] != "" {
+			queryMap[param] = values[0]
+		}
+	}
+	return queryMap
+}
+
+// AttachRequestLayer puts the *http.Request in context as "$request", the raw
+// query params as "$get", and the current time as int64 Unix microseconds as
+// "$timestamp". It is registered on the global HTTP stack in lago.StartServer
+// (core.AttachRequestLayer); do not attach "$request" manually in view handlers.
 type AttachRequestLayer struct{}
 
 func (AttachRequestLayer) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), "$request", r)
+		ctx = context.WithValue(ctx, "$get", requestQueryMap(r))
 		ctx = context.WithValue(ctx, "$timestamp", time.Now().UnixMicro())
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

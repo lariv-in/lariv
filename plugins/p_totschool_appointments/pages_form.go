@@ -56,10 +56,11 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentMenu"}},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("appointments.AppointmentCreateForm"),
 				ActionURL: lago.RoutePath("appointments.CreateRoute", nil),
 				Children: []components.PageInterface{
 					components.FormComponent[Appointment]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("appointments.AppointmentCreateForm")),
 
 						Title:          "Create Appointment",
 						Subtitle:       "Create a new appointment",
@@ -75,11 +76,12 @@ func registerForms() {
 		Sidebar: []components.PageInterface{lago.DynamicPage{Name: "appointments.AppointmentDetailMenu"}},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("appointments.AppointmentUpdateForm"),
 				ActionURL: lago.RoutePath("appointments.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 				Children: []components.PageInterface{
 					components.FormComponent[Appointment]{
 						Getter: getters.Key[Appointment]("appointment"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("appointments.AppointmentUpdateForm")),
 
 						Title:         "Edit Appointment",
 						Subtitle:      "Update appointment details",
@@ -95,6 +97,7 @@ func registerForms() {
 											components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
+												Name:        getters.Static("appointments.AppointmentDeleteForm"),
 												Url:         lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 												FormPostURL: lago.RoutePath("appointments.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}),
 												ModalUID:    "appointment-delete-modal",

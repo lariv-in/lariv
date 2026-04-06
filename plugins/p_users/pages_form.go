@@ -68,7 +68,7 @@ func registerFormPages() {
 		UID: "user-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[User]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
 				Title:    "Create User",
 				Subtitle: "Create a new user",
@@ -94,13 +94,14 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("users.UserUpdateForm"),
 				ActionURL: lago.RoutePath("users.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("user.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[User]{
 						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("users.UserUpdateForm")),
 
 						Title:    "Edit User",
 						Subtitle: "Update user details",
@@ -119,6 +120,7 @@ func registerFormPages() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        getters.Static("users.UserDeleteForm"),
 												Url:         lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
 												FormPostURL: lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
 												ModalUID:    "user-delete-modal",
@@ -141,11 +143,12 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("users.SelfUpdateForm"),
 				ActionURL: lago.RoutePath("users.SelfUpdateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[User]{
 						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("users.SelfUpdateForm")),
 
 						Title:    "Edit My Profile",
 						Subtitle: "Update your account details",
@@ -168,11 +171,12 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("users.SelfChangePasswordForm"),
 				ActionURL: lago.RoutePath("users.SelfChangePasswordRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[User]{
 						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("users.SelfChangePasswordForm")),
 
 						Title:    "Change Password",
 						Subtitle: "Update your password",
@@ -205,11 +209,12 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("users.ChangePasswordForm"),
 				ActionURL: lago.RoutePath("users.ChangePasswordRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
 				Children: []components.PageInterface{
 					&components.FormComponent[User]{
 						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("users.ChangePasswordForm")),
 
 						Title:    "Change Password",
 						Subtitle: "Update user password",

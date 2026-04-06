@@ -288,10 +288,11 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 						&components.FormListenBoostedPost{
+				Name:      getters.Static("nirmancampus_website.StudentZoneAdminSectionCreateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[StudentZoneSection]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.StudentZoneAdminSectionCreateForm")),
 
 
 				Title:    "Create Section",
@@ -315,13 +316,14 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 						&components.FormListenBoostedPost{
+				Name:      getters.Static("nirmancampus_website.StudentZoneAdminSectionUpdateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("section.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[StudentZoneSection]{
 				Getter: getters.Key[StudentZoneSection]("section"),
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.StudentZoneAdminSectionUpdateForm")),
 
 
 				Title:    "Edit Section",
@@ -341,6 +343,7 @@ func registerStudentZoneAdminFormPages() {
 									&components.ButtonModalForm{
 										Label:   "Delete",
 										Icon:    "trash",
+										Name:    getters.Static("nirmancampus_website.StudentZoneAdminSectionDeleteForm"),
 										Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminSectionDeleteRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("section.ID")),
 										}),
@@ -367,10 +370,11 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 						&components.FormListenBoostedPost{
+				Name:      getters.Static("nirmancampus_website.StudentZoneAdminItemCreateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[StudentZoneItem]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.StudentZoneAdminItemCreateForm")),
 
 
 				Title:    "Create Item",
@@ -394,13 +398,14 @@ func registerStudentZoneAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 						&components.FormListenBoostedPost{
+				Name:      getters.Static("nirmancampus_website.StudentZoneAdminItemUpdateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("item.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[StudentZoneItem]{
 				Getter: getters.Key[StudentZoneItem]("item"),
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.StudentZoneAdminItemUpdateForm")),
 
 
 				Title:    "Edit Item",
@@ -420,6 +425,7 @@ func registerStudentZoneAdminFormPages() {
 									&components.ButtonModalForm{
 										Label:   "Delete",
 										Icon:    "trash",
+										Name:    getters.Static("nirmancampus_website.StudentZoneAdminItemDeleteForm"),
 										Url: lago.RoutePath("nirmancampus_website.StudentZoneAdminItemDeleteRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("item.ID")),
 										}),
@@ -558,7 +564,7 @@ func registerStudentZoneAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this section? All items in this section will also be deleted.",
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})
@@ -618,7 +624,7 @@ func registerStudentZoneAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this item?",
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

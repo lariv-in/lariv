@@ -28,10 +28,11 @@ func registerOtpPreferencesPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("otp.OTPPreferencesForm"),
 				ActionURL: lago.RoutePath("otp.OTPPreferencesRoute", nil),
 				Children: []components.PageInterface{
 					components.FormComponent[OTPPreferences]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("otp.OTPPreferencesForm")),
 
 						Title:    "OTP Preferences",
 						Subtitle: "Configure OTP settings for SMS and Email",

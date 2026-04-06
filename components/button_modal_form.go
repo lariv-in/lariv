@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neturl "net/url"
 
 	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
@@ -21,6 +22,7 @@ type ButtonModalForm struct {
 	Page
 	Label       string
 	Url         getters.Getter[string]
+	Name        getters.Getter[string]
 	FormPostURL getters.Getter[string]
 	ModalUID    string
 	Icon        string
@@ -33,11 +35,18 @@ func (e ButtonModalForm) GetKey() string     { return e.Key }
 func (e ButtonModalForm) GetRoles() []string { return e.Roles }
 
 func (e ButtonModalForm) Build(ctx context.Context) Node {
-	url := ""
+	if e.Name == nil {
+		return ContainerError{Error: getters.Static(fmt.Errorf("ButtonModalForm: Name is nil"))}.Build(ctx)
+	}
+	href := ""
 	if e.Url != nil {
 		if v, err := e.Url(ctx); err == nil {
-			url = v
+			href = v
 		}
+	}
+	name, err := e.Name(ctx)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 	postURL := ""
 	if e.FormPostURL != nil {
@@ -49,6 +58,21 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		return ContainerError{Error: getters.Static(fmt.Errorf("ButtonModalForm: FormPostURL and ModalUID are required"))}.Build(ctx)
 	}
 
+	if href != "" {
+		parsedURL, err := neturl.Parse(href)
+		if err != nil {
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		}
+		query := parsedURL.Query()
+		query.Set("name", name)
+		parsedURL.RawQuery = query.Encode()
+		href = parsedURL.String()
+	}
+
+	nameLit, err := json.Marshal(name)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+	}
 	postLit, err := json.Marshal(postURL)
 	if err != nil {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
@@ -62,12 +86,13 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	// %s/%s are JSON string literals for modal id and POST URL (see json.Marshal above).
 	script := fmt.Sprintf(
 		`(function(evt){
-  evt.stopPropagation();
+  console.log('[ButtonModalForm] lago-form-submit', evt);
   var d = evt.detail || {};
   var f = d.form;
-  if (!f) return;
+  if (!f || d.name !== %s) return;
   var m = f.closest('dialog.modal');
   if (!m || m.id !== %s) return;
+  evt.stopPropagation();
   var u = %s;
   function closeModal(x) {
     document.dispatchEvent(new CustomEvent('lago:modal-closed', { bubbles: true, detail: Object.assign({ dialog: m }, x) }));
@@ -99,6 +124,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
     return r.text().then(function (x) { m.outerHTML = x; });
   });
 })($event)`,
+		string(nameLit),
 		string(uidLit),
 		string(postLit),
 	)
@@ -119,9 +145,9 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	buttonAttrs := []Node{
 		Type("button"),
 		Class(buttonClasses),
-		Attr("hx-get", url),
-		Attr("hx-target", HTMXTargetLocalModal),
-		Attr("hx-swap", HTMXSwapLocalModal),
+		Attr("hx-get", href),
+		Attr("hx-target", HTMXTargetBodyModal),
+		Attr("hx-swap", HTMXSwapBodyModal),
 		Attr("hx-push-url", "false"),
 	}
 	if e.Attr != nil {
@@ -136,7 +162,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	buttonAttrs = append(buttonAttrs, content)
 
 	return Div(Class("w-full fk-modal-host"),
-		Attr("@lago-form-submit", script),
+		Attr("@lago-form-submit.window.stop", script),
 		Button(Group(buttonAttrs)),
 	)
 }

@@ -18,7 +18,7 @@ func registerDetail() {
 				components.FieldTitle{Getter: getters.Static("Generated Letter")},
 				components.ContainerColumn{Classes: "flex gap-2", Children: []components.PageInterface{
 					components.ButtonLink{Classes: "btn-outline btn-success btn-sm", Label: "Send via WhatsApp", Link: getters.Format("https://wa.me/%v?text=%v", getters.Any(getters.Key[string]("$in.Phone")), getters.Any(getters.QueryEscape(getters.Key[string]("$in.GeneratedLetter"))))},
-					components.ButtonModalForm{Label: "Edit with AI", Url: lago.RoutePath("appointments.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), FormPostURL: lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), ModalUID: "ai-edit-modal", Classes: "btn-outline btn-secondary btn-sm"},
+					components.ButtonModalForm{Label: "Edit with AI", Name: getters.Static("appointments.AiEditModal"), Url: lago.RoutePath("appointments.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), FormPostURL: lago.RoutePath("appointments.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), ModalUID: "ai-edit-modal", Classes: "btn-outline btn-secondary btn-sm"},
 					components.ButtonPost{Label: "Regenerate Letter", URL: lago.RoutePath("appointments.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("appointment.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
 				}},
 			}},
@@ -159,7 +159,7 @@ func registerModal() {
 		Children: []components.PageInterface{
 			components.FormComponent[Appointment]{
 				Getter: getters.Key[Appointment]("appointment"),
-				Attr:   getters.FormBubbling(nil),
+				Attr:   getters.FormBubbling(getters.Key[string]("$get.name")),
 
 				Title: "Edit with AI",
 				ChildrenInput: []components.PageInterface{
@@ -193,7 +193,7 @@ func registerDelete() {
 			components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this appointment?",
-				Attr:    getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

@@ -106,7 +106,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm deletion",
 				Message: "Are you sure you want to delete this application?",
-				Attr:    getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

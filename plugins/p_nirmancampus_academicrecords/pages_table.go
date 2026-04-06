@@ -111,6 +111,7 @@ func registerTablePages() {
 						Page:  components.Page{Roles: []string{"admin", "superuser"}},
 					},
 					&components.ButtonModalForm{
+						Name:        getters.Static("academicrecords.AcademicRecordCreateForm"),
 						Page:        components.Page{Roles: []string{"admin", "superuser"}},
 						Url:         lago.RoutePath("academicrecords.CreateRoute", nil),
 						FormPostURL: lago.RoutePath("academicrecords.CreateRoute", nil),

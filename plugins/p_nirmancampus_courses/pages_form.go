@@ -70,6 +70,9 @@ func courseFormFields() *components.ContainerColumn {
 
 func registerFormPages() {
 	lago.RegistryPage.Register("courses.CourseFormFields", courseFormFields())
+	createFormName := getters.Static("courses.CourseCreateForm")
+	updateFormName := getters.Static("courses.CourseUpdateForm")
+	deleteFormName := getters.Static("courses.CourseDeleteForm")
 
 	lago.RegistryPage.Register("courses.CourseCreateForm", &components.Modal{
 		Page: components.Page{
@@ -79,7 +82,7 @@ func registerFormPages() {
 		UID: "courses-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[Course]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(createFormName),
 
 				Title:    "Create Course",
 				Subtitle: "Create a new course",
@@ -106,11 +109,12 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      updateFormName,
 				ActionURL: lago.RoutePath("courses.UpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 				Children: []components.PageInterface{
 					&components.FormComponent[Course]{
 						Getter: getters.Key[Course]("course"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(updateFormName),
 
 						Title:    "Edit Course",
 						Subtitle: "Update course details",
@@ -130,6 +134,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        deleteFormName,
 												Url:         lago.RoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 												FormPostURL: lago.RoutePath("courses.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("course.ID"))}),
 												ModalUID:    "course-delete-modal",

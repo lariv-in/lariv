@@ -75,6 +75,7 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
 			&components.ButtonModalForm{
+				Name: getters.Static("academicrecords.AcademicRecordCreateForm"),
 				Url: getters.Format(
 					"%s?StudentID=%d",
 					getters.Any(lago.RoutePath("academicrecords.CreateRoute", nil)),

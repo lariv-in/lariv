@@ -198,10 +198,11 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("studentapplications.ApplicationCreateForm"),
 				ActionURL: lago.RoutePath("studentapplications.CreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[StudentApplication]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("studentapplications.ApplicationCreateForm")),
 
 						Title:    "Create application",
 						Subtitle: "Record a new student application",
@@ -225,6 +226,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("studentapplications.ApplicationUpdateForm"),
 				ActionURL: lago.RoutePath("studentapplications.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.IfOrElse(
 						getters.Key[uint]("studentapplication.ID"),
@@ -234,7 +236,7 @@ func registerFormPages() {
 				Children: []components.PageInterface{
 					&components.FormComponent[StudentApplication]{
 						Getter: getters.Key[StudentApplication]("studentapplication"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("studentapplications.ApplicationUpdateForm")),
 
 						Title:    "Edit application",
 						Subtitle: "Update application details",
@@ -254,6 +256,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        getters.Static("studentapplications.ApplicationDeleteForm"),
 												Url:         lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("studentapplication.ID"))}),
 												FormPostURL: lago.RoutePath("studentapplications.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("studentapplication.ID"))}),
 												ModalUID:    "studentapplication-delete-modal",

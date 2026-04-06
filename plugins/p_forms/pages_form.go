@@ -111,10 +111,11 @@ func registerFormCRUDPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("forms.FormCreateForm"),
 				ActionURL: lago.RoutePath("forms.CreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[Form]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(getters.Static("forms.FormCreateForm")),
 
 						Title:    "Create form",
 						Subtitle: "The public URL slug is generated from the title",
@@ -198,13 +199,14 @@ func registerFormCRUDPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("forms.FormUpdateForm"),
 				ActionURL: lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[Form]{
 						Getter: getters.Key[Form]("form"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("forms.FormUpdateForm")),
 
 						Title: "Edit form",
 						ChildrenInput: []components.PageInterface{
@@ -221,6 +223,7 @@ func registerFormCRUDPages() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
+												Name:        getters.Static("forms.FormDeleteForm"),
 												Url:         lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
 												FormPostURL: lago.RoutePath("forms.DeleteRoute", map[string]getters.Getter[any]{"form_id": getters.Any(getters.Key[uint]("form.ID"))}),
 												ModalUID:    "forms-form-delete-modal",
@@ -243,7 +246,7 @@ func registerFormCRUDPages() {
 			&components.DeleteConfirmation{
 				Title:   "Delete form",
 				Message: "This will delete the form, its field definitions, and stored submissions.",
-				Attr:    getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

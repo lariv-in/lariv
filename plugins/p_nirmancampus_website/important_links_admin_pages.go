@@ -145,10 +145,11 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 						&components.FormListenBoostedPost{
+				Name:      getters.Static("nirmancampus_website.ImportantLinksCreateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[ImportantLink]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksCreateForm")),
 
 
 				Title:    "Create Important Link",
@@ -172,10 +173,11 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 						&components.FormListenBoostedPost{
+				Name:      getters.Static("nirmancampus_website.ImportantLinksImportForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[map[string]any]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksImportForm")),
 
 
 				Title:    "Import Important Links",
@@ -214,13 +216,14 @@ func registerImportantLinksAdminFormPages() {
 		},
 		Children: []components.PageInterface{
 						&components.FormListenBoostedPost{
+				Name:      getters.Static("nirmancampus_website.ImportantLinksUpdateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[ImportantLink]{
 				Getter: getters.Key[ImportantLink]("link"),
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksUpdateForm")),
 
 
 				Title:    "Edit Important Link",
@@ -240,6 +243,7 @@ func registerImportantLinksAdminFormPages() {
 									&components.ButtonModalForm{
 										Label:   "Delete",
 										Icon:    "trash",
+										Name:    getters.Static("nirmancampus_website.ImportantLinksDeleteForm"),
 										Url: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
 											"id": getters.Any(getters.Key[uint]("link.ID")),
 										}),
@@ -415,7 +419,7 @@ func registerImportantLinksAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this important link?",
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

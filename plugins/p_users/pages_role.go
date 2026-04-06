@@ -54,6 +54,7 @@ func registerRolePages() {
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "users.RoleFilter"}},
 					&components.ButtonModalForm{
+						Name:        getters.Static("users.RoleCreateForm"),
 						Url:         lago.RoutePath("users.RoleCreateRoute", nil),
 						FormPostURL: lago.RoutePath("users.RoleCreateRoute", nil),
 						ModalUID:    "role-create-modal",
@@ -79,7 +80,7 @@ func registerRolePages() {
 		UID: "role-create-modal",
 		Children: []components.PageInterface{
 			&components.FormComponent[Role]{
-				Attr: getters.FormBubbling(nil),
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
 				Title:    "Create Role",
 				Subtitle: "Create a new role",
@@ -110,11 +111,12 @@ func registerRolePages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      getters.Static("users.RoleUpdateForm"),
 				ActionURL: lago.RoutePath("users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 				Children: []components.PageInterface{
 					&components.FormComponent[Role]{
 						Getter: getters.Key[Role]("role"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(getters.Static("users.RoleUpdateForm")),
 
 						Title:    "Edit Role",
 						Subtitle: "Update role details",
@@ -137,6 +139,7 @@ func registerRolePages() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        getters.Static("users.RoleDeleteForm"),
 												Url:         lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 												FormPostURL: lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 												ModalUID:    "role-delete-modal",
@@ -179,7 +182,7 @@ func registerRolePages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this role?",
-				Attr:    getters.FormBubbling(nil),
+				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

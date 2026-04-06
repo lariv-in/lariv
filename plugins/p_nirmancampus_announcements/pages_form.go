@@ -91,6 +91,9 @@ func announcementFormFields() components.ContainerColumn {
 
 func registerFormPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementFormFields", announcementFormFields())
+	createFormName := getters.Static("announcements.AnnouncementCreateForm")
+	updateFormName := getters.Static("announcements.AnnouncementUpdateForm")
+	deleteFormName := getters.Static("announcements.AnnouncementDeleteForm")
 
 	lago.RegistryPage.Register("announcements.AnnouncementCreateForm", &components.ShellScaffold{
 		Page: components.Page{Roles: []string{"admin", "superuser"}},
@@ -99,10 +102,11 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      createFormName,
 				ActionURL: lago.RoutePath("announcements.CreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[Announcement]{
-						Attr: getters.FormBubbling(nil),
+						Attr: getters.FormBubbling(createFormName),
 
 						Title:    "Create Announcement",
 						Subtitle: "Create a new announcement",
@@ -126,13 +130,14 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
+				Name:      updateFormName,
 				ActionURL: lago.RoutePath("announcements.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("announcement.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[Announcement]{
 						Getter: getters.Key[Announcement]("announcement"),
-						Attr:   getters.FormBubbling(nil),
+						Attr:   getters.FormBubbling(updateFormName),
 
 						Title:    "Edit Announcement",
 						Subtitle: "Update announcement details",
@@ -152,6 +157,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
+										Name:        deleteFormName,
 												Url:         lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
 												FormPostURL: lago.RoutePath("announcements.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("announcement.ID"))}),
 												ModalUID:    "announcement-delete-modal",
