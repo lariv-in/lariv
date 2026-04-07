@@ -126,7 +126,7 @@ func registerForms() {
 											components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
-										Name:        deleteFormName,
+												Name:        deleteFormName,
 												Url:         lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
 												FormPostURL: lago.RoutePath("proposals.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}),
 												ModalUID:    "proposal-delete-modal",
@@ -171,17 +171,17 @@ func registerTable() {
 func registerDetail() {
 	generatedSection := []components.PageInterface{
 		components.Accordion{
-			Classes: "mt-4",
+			Classes: "my-2",
 			Items: []components.AccordionItem{
 				{
 					Title: components.FieldText{Classes: "font-semibold", Getter: getters.Static("Generated Proposal")},
 					Children: []components.PageInterface{
 						components.ContainerColumn{Classes: "my-2", Children: []components.PageInterface{
 							components.ContainerRow{Classes: "flex flex-wrap justify-between items-center gap-4 mb-4", Children: []components.PageInterface{
-								components.ContainerColumn{Classes: "flex flex-wrap gap-2 items-center", Children: []components.PageInterface{
+								components.ContainerColumn{Classes: "flex flex-wrap gap-2", Children: []components.PageInterface{
 									components.ButtonDownload{Label: "Export to PDF", Link: lago.RoutePath("proposals.ExportPdfRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
 									components.ButtonDownload{Label: "Export to Word", Link: lago.RoutePath("proposals.ExportDocxRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}), Classes: "btn-outline btn-secondary btn-sm"},
-								components.ButtonModalForm{Label: "Edit with AI", Name: getters.Static("proposals.AiEditModal"), Url: lago.RoutePath("proposals.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}), FormPostURL: lago.RoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}), ModalUID: "ai-edit-modal", Classes: "btn-outline btn-secondary btn-sm"},
+									components.ButtonModalForm{Label: "Edit with AI", Name: getters.Static("proposals.AiEditModal"), Url: lago.RoutePath("proposals.AiEditFormRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}), FormPostURL: lago.RoutePath("proposals.AiEditRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}), ModalUID: "ai-edit-modal", Classes: "btn-outline btn-secondary btn-sm"},
 									components.ButtonPost{Label: "Regenerate Proposal", URL: lago.RoutePath("proposals.GenerateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("proposal.ID"))}), Classes: "btn-outline btn-primary btn-sm"},
 								}},
 							}},
@@ -199,7 +199,7 @@ func registerDetail() {
 				"id": getters.Any(getters.Key[uint]("proposal.ID")),
 			}),
 			Children: []components.PageInterface{
-				components.ContainerRow{Classes: "flex gap-2 items-center", Children: []components.PageInterface{
+				components.ContainerRow{Classes: "flex gap-2 items-center my-2", Children: []components.PageInterface{
 					components.FieldText{Getter: getters.Static("Generating...")},
 					components.ButtonPost{
 						Label:   "Cancel Generation",
@@ -230,7 +230,7 @@ func registerDetail() {
 					components.ContainerColumn{Children: []components.PageInterface{
 						components.FieldTitle{Getter: getters.Key[string]("$in.Title")},
 						components.LabelInline{Title: "Created At", Children: []components.PageInterface{components.FieldDatetime{Getter: getters.Key[time.Time]("$in.CreatedAt")}}},
-						components.Accordion{Classes: "mt-4", Items: []components.AccordionItem{
+						components.Accordion{Classes: "my-2", Items: []components.AccordionItem{
 							{
 								Title: components.FieldText{Classes: "font-semibold", Getter: getters.Static("Questionnaire Answers")},
 								Children: []components.PageInterface{

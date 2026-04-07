@@ -42,7 +42,7 @@ func (e ButtonDownload) Build(ctx context.Context) Node {
 
 	classes := "btn " + e.Classes
 	if e.Icon != "" && e.Label != "" {
-		classes += " inline-flex items-center gap-2"
+		classes += " inline-flex gap-2"
 	}
 
 	return A(
