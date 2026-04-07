@@ -72,7 +72,7 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
 		Attr("x-data"),
 		Attr("x-init", fmt.Sprintf(`
 	$el.closest('form').addEventListener('submit', (e) => {
-		let form = e.target;
+		let form = e.currentTarget;
 		let data = [];
 		let fd = new FormData(form);
             let keys = fd.getAll('%sKey');
@@ -80,7 +80,7 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
 			data = keys.map((k, i) => ({Key: k, Value: vals[i]}));
             $el.value = JSON.stringify(data);
             form.querySelectorAll('[name=%sKey], [name=%sValue]').forEach(el => el.disabled = true);
-        });
+        }, true);
 	`, e.Name, e.Name, e.Name, e.Name)),
 	)
 	return Div(Class(e.Classes), Group(nodes), finalInput)

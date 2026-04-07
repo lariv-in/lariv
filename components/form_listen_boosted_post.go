@@ -12,7 +12,8 @@ import (
 
 // FormListenBoostedPost is a parent wrapper for forms that use [getters.FormBubbling] on [FormComponent].Attr.
 // It listens for the bubbling "lago-form-submit" event and POSTs via htmx.ajax with HX-Boosted (body,
-// outerHTML swap). Use for full-page flows;
+// outerHTML swap). Use for full-page flows. While a POST is in flight, further submits for the same form
+// are ignored so rapid clicks do not create duplicate records.
 type FormListenBoostedPost struct {
 	Page
 	Name      getters.Getter[string]
@@ -59,8 +60,44 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 	if err != nil {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
-	expr := fmt.Sprintf(
-		`(function(evt){var d=evt.detail||{};if(d.name!==%s)return;var f=d.form;if(!f)return;var root=evt.currentTarget;if(!root||!root.contains||!root.contains(f))return;var u=%s;var targetPath;try{targetPath=(new URL(u,window.location.href)).pathname}catch(_){targetPath=''}var formAction=f.getAttribute&&f.getAttribute('action');if(!formAction||formAction===''){formAction=window.location.href}var formPath;try{formPath=(new URL(formAction,window.location.href)).pathname}catch(_){formPath=''}if(targetPath!==''&&formPath!==''&&targetPath!==formPath)return;evt.stopPropagation();htmx.ajax('POST',u,{source:f,target:'body',swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}})})($event)`,
+	expr := fmt.Sprintf(`(function(evt){
+  var d = evt.detail || {};
+  if (d.name !== %s) return;
+  var f = d.form;
+  if (!f) return;
+  var root = evt.currentTarget;
+  if (!root || !root.contains || !root.contains(f)) return;
+  var u = %s;
+  var targetPath;
+  try {
+    targetPath = (new URL(u, window.location.href)).pathname;
+  } catch (_) {
+    targetPath = '';
+  }
+  var formAction = f.getAttribute && f.getAttribute('action');
+  if (!formAction || formAction === '') {
+    formAction = window.location.href;
+  }
+  var formPath;
+  try {
+    formPath = (new URL(formAction, window.location.href)).pathname;
+  } catch (_) {
+    formPath = '';
+  }
+  if (targetPath !== '' && formPath !== '' && targetPath !== formPath) return;
+  evt.stopPropagation();
+  if (f.dataset.lagoPostPending) return;
+  f.dataset.lagoPostPending = '1';
+  htmx.ajax('POST', u, {
+    source: f,
+    target: 'body',
+    swap: 'outerHTML',
+    values: htmx.values(f),
+    headers: { 'HX-Boosted': 'true' },
+  }).finally(function () {
+    delete f.dataset.lagoPostPending;
+  });
+})($event)`,
 		nameLit,
 		urlLit,
 	)

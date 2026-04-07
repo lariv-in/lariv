@@ -15,14 +15,13 @@ func TestFormListenBoostedPostRendersNameGuard(t *testing.T) {
 		Children:  []PageInterface{},
 	}.Build(context.Background()))
 
-	guard := `d.name!==`
-	if !strings.Contains(html, guard) {
+	if !strings.Contains(html, `d.name !==`) {
 		t.Fatalf("expected name guard in boosted-post listener, got %s", html)
 	}
 	if !strings.Contains(html, "example.submit") {
 		t.Fatalf("expected listener name in rendered html, got %s", html)
 	}
-	if strings.Index(html, guard) > strings.Index(html, `evt.stopPropagation()`) {
+	if strings.Index(html, `d.name !==`) > strings.Index(html, `evt.stopPropagation()`) {
 		t.Fatalf("expected stopPropagation after name guard, got %s", html)
 	}
 	if !strings.Contains(html, "targetPath") || !strings.Contains(html, "formPath") {
@@ -30,6 +29,9 @@ func TestFormListenBoostedPostRendersNameGuard(t *testing.T) {
 	}
 	if !strings.Contains(html, "root.contains(f)") {
 		t.Fatalf("expected subtree containment guard in boosted-post listener, got %s", html)
+	}
+	if !strings.Contains(html, "lagoPostPending") {
+		t.Fatalf("expected in-flight submit guard in boosted-post listener, got %s", html)
 	}
 }
 
@@ -53,6 +55,9 @@ func TestButtonModalFormThreadsNameIntoGetAndGuard(t *testing.T) {
 	}
 	if strings.Index(html, `d.name !==`) > strings.Index(html, `evt.stopPropagation()`) {
 		t.Fatalf("expected stopPropagation after the name guard, got %s", html)
+	}
+	if !strings.Contains(html, "lagoPostPending") {
+		t.Fatalf("expected in-flight submit guard in modal form listener, got %s", html)
 	}
 }
 

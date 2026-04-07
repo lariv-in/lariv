@@ -92,6 +92,8 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
   var m = f.closest('dialog.modal');
   if (!m || m.id !== %s) return;
   evt.stopPropagation();
+  if (f.dataset.lagoPostPending) return;
+  f.dataset.lagoPostPending = '1';
   var u = %s;
   function closeModal(x) {
     document.dispatchEvent(new CustomEvent('lago:modal-closed', { bubbles: true, detail: Object.assign({ dialog: m }, x) }));
@@ -121,7 +123,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
       return;
     }
     return r.text().then(function (x) { m.outerHTML = x; });
-  });
+  }).finally(function () { delete f.dataset.lagoPostPending; });
 })($event)`,
 		string(nameLit),
 		string(uidLit),
