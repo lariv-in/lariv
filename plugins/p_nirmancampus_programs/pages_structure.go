@@ -115,6 +115,7 @@ func registerStructurePages() {
 					programStructureUnitCards{},
 					&components.ButtonModalForm{
 						Label:       "Add new unit",
+						Name:        getters.Static("programs.StructureUnitCreateModal"),
 						Url:         lago.RoutePath("programs.StructureUnitCreateModalRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 						FormPostURL: lago.RoutePath("programs.StructureUnitCreateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 						ModalUID:    "structure-unit-create-modal",
