@@ -59,8 +59,8 @@ func registerDetail() {
 									components.Icon{Name: "exclamation-triangle", Classes: "w-5 h-5"},
 									components.FieldText{Getter: getters.Static("Overlapping Appointments:")},
 								}},
-								components.FieldList{
-									Getter:  getters.Any(getters.Key[[]map[string]any]("OverlapWarningList")),
+								components.FieldList[map[string]any]{
+									Getter:  getters.Key[[]map[string]any]("OverlapWarningList"),
 									Classes: "flex flex-col gap-2 pl-4",
 									Children: []components.PageInterface{
 										components.ContainerRow{Classes: "items-center gap-2", Children: []components.PageInterface{
