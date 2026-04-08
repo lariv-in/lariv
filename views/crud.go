@@ -24,7 +24,7 @@ func PopulateFromMap[T any](v *T, values map[string]any) error {
 	return decoder.Decode(values)
 }
 
-func splitAssociationValues(values map[string]any) (map[string]any, map[string]components.AssociationIDs) {
+func SplitAssociationValues(values map[string]any) (map[string]any, map[string]components.AssociationIDs) {
 	regularValues := make(map[string]any, len(values))
 	associationValues := map[string]components.AssociationIDs{}
 	for key, value := range values {

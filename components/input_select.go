@@ -26,8 +26,9 @@ type InputSelect[T comparable] struct {
 	// EmptyLabel is the visible label for the empty value option when Required is false.
 	// If empty, "—" is used.
 	EmptyLabel string
-	Classes    string
-	Hidden     bool
+	Classes string
+	Hidden  bool
+	Attr    getters.Getter[Node]
 }
 
 func (e InputSelect[T]) GetKey() string {
@@ -91,6 +92,14 @@ func (e InputSelect[T]) Build(ctx context.Context) Node {
 				Class(fmt.Sprintf("select select-bordered w-full %s", e.Classes)),
 				Group(optionNodes),
 				If(e.Required, Required()),
+				Iff(e.Attr != nil, func() Node {
+					n, err := e.Attr(ctx)
+					if err != nil {
+						slog.Error("InputSelect Attr getter failed", "error", err, "key", e.Key)
+						return Raw("")
+					}
+					return n
+				}),
 			),
 		),
 	)

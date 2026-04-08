@@ -5,39 +5,43 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"strings"
+	"time"
 
 	"github.com/lariv-in/lago/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
-type InputText struct {
+// InputDuration renders a text input for Go duration strings (e.g. "30s", "5m", "1h30m").
+// Parse returns *time.Duration; empty input returns nil.
+type InputDuration struct {
 	Page
 	Label    string
 	Name     string
-	Getter   getters.Getter[string]
-	Attr     getters.Getter[Node]
+	Getter   getters.Getter[*time.Duration]
 	Required bool
 	Classes  string
 	Hidden   bool
+	Attr     getters.Getter[Node]
 }
 
-func (e InputText) GetKey() string {
+func (e InputDuration) GetKey() string {
 	return e.Key
 }
 
-func (e InputText) GetRoles() []string {
+func (e InputDuration) GetRoles() []string {
 	return e.Roles
 }
 
-func (e InputText) Build(ctx context.Context) Node {
-	valueNode := Value("")
+func (e InputDuration) Build(ctx context.Context) Node {
+	var valueNode Node = Value("")
 	if e.Getter != nil {
-		value, err := e.Getter(ctx)
+		d, err := e.Getter(ctx)
 		if err != nil {
-			slog.Error("InputText getter failed", "error", err, "key", e.Key)
-		} else {
-			valueNode = Value(value)
+			slog.Error("InputDuration getter failed", "error", err, "key", e.Key)
+		} else if d != nil {
+			valueNode = Value(d.String())
 		}
 	}
 
@@ -45,6 +49,7 @@ func (e InputText) Build(ctx context.Context) Node {
 	if e.Hidden {
 		wrapClass += " hidden"
 	}
+
 	return Div(Class(wrapClass),
 		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
 			If(!e.Hidden, Text(e.Label)),
@@ -56,12 +61,12 @@ func (e InputText) Build(ctx context.Context) Node {
 					out = Raw("")
 					defer func() {
 						if r := recover(); r != nil {
-							slog.Error("InputText attr getter panicked", "panic", r, "key", e.Key)
+							slog.Error("InputDuration attr getter panicked", "panic", r, "key", e.Key)
 						}
 					}()
 					n, err := e.Attr(ctx)
 					if err != nil {
-						slog.Error("InputText attr getter failed", "error", err, "key", e.Key)
+						slog.Error("InputDuration attr getter failed", "error", err, "key", e.Key)
 						return out
 					}
 					if n == nil {
@@ -78,14 +83,22 @@ func (e InputText) Build(ctx context.Context) Node {
 	)
 }
 
-func (e InputText) Parse(v any, _ context.Context) (any, error) {
+func (e InputDuration) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 {
-		return "", nil
+		return (*time.Duration)(nil), nil
 	}
-	return vals[0], nil
+	raw := strings.TrimSpace(vals[0])
+	if raw == "" {
+		return (*time.Duration)(nil), nil
+	}
+	d, err := time.ParseDuration(raw)
+	if err != nil {
+		return nil, fmt.Errorf("invalid duration")
+	}
+	return &d, nil
 }
 
-func (e InputText) GetName() string {
+func (e InputDuration) GetName() string {
 	return e.Name
 }

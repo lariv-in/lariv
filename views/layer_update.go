@@ -62,7 +62,7 @@ func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 		db := ctx.Value("$db").(*gorm.DB)
-		regularValues, associationValues := splitAssociationValues(values)
+		regularValues, associationValues := SplitAssociationValues(values)
 		key, err := m.Key(ctx)
 		if err != nil {
 			slog.Error("views: layer update: resolve context key", "error", err)

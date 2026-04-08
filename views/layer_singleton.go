@@ -72,7 +72,7 @@ func (m LayerSingleton[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 
-		regularValues, associationValues := splitAssociationValues(values)
+		regularValues, associationValues := SplitAssociationValues(values)
 
 		instance := new(T)
 		err = db.Transaction(func(tx *gorm.DB) error {

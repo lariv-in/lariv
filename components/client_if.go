@@ -4,7 +4,6 @@ import (
 	"context"
 
 	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ClientIf renders children conditionally on the client side using Alpine.
@@ -20,21 +19,20 @@ type ClientIf struct {
 }
 
 func (e ClientIf) Build(ctx context.Context) Node {
-	data := e.Data
-	if data == "" {
-		data = "{}"
-	}
-
 	group := Group{}
 	for _, child := range e.Children {
 		group = append(group, Render(child, ctx))
 	}
 
-	return Div(
-		Attr("x-data", data),
-		If(e.Init != "", Attr("x-init", e.Init)),
-		If(e.Condition != "", Attr("x-show", e.Condition)),
-		group,
+	content := Node(group)
+	if len(group) > 1 {
+		// Alpine x-if template content must have a single root element.
+		content = El("div", group)
+	}
+
+	return El("template",
+		If(e.Condition != "", Attr("x-if", e.Condition)),
+		content,
 	)
 }
 

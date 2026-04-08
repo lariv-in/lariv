@@ -28,6 +28,7 @@ func TestInputImplementations(t *testing.T) {
 	var _ InputInterface = InputPassword{}
 	var _ InputInterface = InputPhone{}
 	var _ InputInterface = InputText{}
+	var _ InputInterface = InputDuration{}
 	var _ InputInterface = InputSelect[string]{}
 	var _ InputInterface = InputStringList{}
 }

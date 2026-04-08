@@ -57,7 +57,7 @@ func (m LayerCreate[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 		db := ctx.Value("$db").(*gorm.DB)
-		regularValues, associationValues := splitAssociationValues(values)
+		regularValues, associationValues := SplitAssociationValues(values)
 		record := new(T)
 		err = db.Transaction(func(tx *gorm.DB) error {
 			if err := PopulateFromMap(record, regularValues); err != nil {
