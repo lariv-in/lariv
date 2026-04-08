@@ -30,7 +30,8 @@ var sampleProgramSeeds = []struct {
 			University:        "IGNOU",
 			ProgramType:       "bachelor",
 			AdmissionSessions: AdmissionSessionBoth,
-			TermType:          TermTypeSession,
+			TermType:          TermTypeSemester,
+			ProgramFee:        45000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-CS101"}, OptionalPoolCodes: []string{"GEN-MTH101", "GEN-ENG205"}},
@@ -46,7 +47,8 @@ var sampleProgramSeeds = []struct {
 			University:        "MRSPTU",
 			ProgramType:       "bachelor",
 			AdmissionSessions: AdmissionSessionBoth,
-			TermType:          TermTypeSession,
+			TermType:          TermTypeSemester,
+			ProgramFee:        32000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-ENG205"}, OptionalPoolCodes: []string{"GEN-MTH101", "GEN-CS101"}},
@@ -62,6 +64,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "bachelor",
 			AdmissionSessions: AdmissionSessionBoth,
 			TermType:          TermTypeYear,
+			ProgramFee:        28000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 0, CompulsoryCodes: []string{"GEN-MTH101", "GEN-ECO201"}, OptionalPoolCodes: nil},
@@ -76,7 +79,8 @@ var sampleProgramSeeds = []struct {
 			University:        "MRSPTU",
 			ProgramType:       "bachelor",
 			AdmissionSessions: AdmissionSessionJuly,
-			TermType:          TermTypeSession,
+			TermType:          TermTypeSemester,
+			ProgramFee:        42000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 0, CompulsoryCodes: []string{"GEN-MTH101", "GEN-PHY301"}, OptionalPoolCodes: nil},
@@ -91,7 +95,8 @@ var sampleProgramSeeds = []struct {
 			University:        "IGNOU",
 			ProgramType:       "diploma",
 			AdmissionSessions: AdmissionSessionJan,
-			TermType:          TermTypeSession,
+			TermType:          TermTypeSemester,
+			ProgramFee:        18000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-MTH101"}, OptionalPoolCodes: []string{"GEN-ENG205"}},
@@ -107,6 +112,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "masters",
 			AdmissionSessions: AdmissionSessionJuly,
 			TermType:          TermTypeYear,
+			ProgramFee:        24000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-ECO201", "GEN-ENG205"}, OptionalPoolCodes: []string{"GEN-CS301", "GEN-CHM201"}},

@@ -38,7 +38,7 @@ func programTermTypeDisplayGetter() getters.Getter[string] {
 		switch s {
 		case TermTypeYear:
 			return "Year", nil
-		case TermTypeSession:
+		case TermTypeSemester:
 			return "Session", nil
 		default:
 			return s, nil
@@ -60,19 +60,6 @@ func courseListDisplayGetter(g getters.Getter[[]courses.Course]) getters.Getter[
 			codes = append(codes, c.Code)
 		}
 		return strings.Join(codes, ", "), nil
-	}
-}
-
-func programStructureRowsGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		units, err := getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits")(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if units == nil {
-			return []ProgramStructureUnit{}, nil
-		}
-		return units, nil
 	}
 }
 
@@ -124,6 +111,12 @@ func registerDetailPages() {
 									&components.FieldText{Getter: programTermTypeDisplayGetter()},
 								},
 							},
+							&components.LabelInline{
+								Title: "Program fee",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$in.ProgramFee")))},
+								},
+							},
 							&components.LabelNewline{
 								Title: "Description",
 								Children: []components.PageInterface{
@@ -137,7 +130,7 @@ func registerDetailPages() {
 										Getter: getters.Any(programStructureNonEmptyGetter()),
 										Children: []components.PageInterface{
 											&components.FieldList{
-												Getter:  programStructureRowsGetter(),
+												Getter:  getters.Any(getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits")),
 												Classes: "flex flex-col gap-2",
 												Children: []components.PageInterface{
 													&components.ContainerColumn{

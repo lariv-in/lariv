@@ -67,7 +67,7 @@ func admissionSessionChoices() []registry.Pair[string, string] {
 func termTypeChoices() []registry.Pair[string, string] {
 	return []registry.Pair[string, string]{
 		{Key: TermTypeYear, Value: "Year"},
-		{Key: TermTypeSession, Value: "Session"},
+		{Key: TermTypeSemester, Value: "Session"},
 	}
 }
 
@@ -200,6 +200,22 @@ func programFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.TermType"),
 						Children: []components.PageInterface{
 							termTypeFormSelect(),
+						},
+					},
+				},
+			},
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.ProgramFee"),
+						Children: []components.PageInterface{
+							&components.InputNumber[uint]{
+								Label:    "Program fee (₹)",
+								Name:     "ProgramFee",
+								Required: false,
+								Getter:   getters.Key[uint]("$in.ProgramFee"),
+							},
 						},
 					},
 				},

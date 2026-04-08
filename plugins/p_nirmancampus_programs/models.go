@@ -11,7 +11,7 @@ const (
 	AdmissionSessionJuly = "july"
 	AdmissionSessionBoth = "both"
 	TermTypeYear         = "year"
-	TermTypeSession      = "session"
+	TermTypeSemester     = "semester"
 )
 
 // ProgramStructureUnit is one term of a program's structure.
@@ -38,6 +38,7 @@ type Program struct {
 	ProgramType       string `gorm:"type:varchar(32);not null;default:''"`
 	AdmissionSessions string `gorm:"type:varchar(32);not null;default:''"`
 	TermType          string `gorm:"type:varchar(32);not null;default:''"`
+	ProgramFee        uint   `gorm:"not null;default:0"`
 
 	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
 }
@@ -63,6 +64,6 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_programs", lago.AdminPanel[Program]{
 		SearchField: "Name",
-		ListFields:  []string{"Name", "Code", "University", "ProgramType"},
+		ListFields:  []string{"Name", "Code", "University", "ProgramType", "ProgramFee"},
 	})
 }
