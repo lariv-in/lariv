@@ -129,8 +129,8 @@ func registerDetailPages() {
 									&components.ShowIf{
 										Getter: getters.Any(programStructureNonEmptyGetter()),
 										Children: []components.PageInterface{
-											&components.FieldList{
-												Getter:  getters.Any(getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits")),
+											&components.FieldList[ProgramStructureUnit]{
+												Getter:  getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits"),
 												Classes: "flex flex-col gap-2",
 												Children: []components.PageInterface{
 													&components.ContainerColumn{
