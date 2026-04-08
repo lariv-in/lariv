@@ -9,7 +9,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 )
 
-// studentFormUserPickURL opens the scoped user picker; on edit, allow_user_id keeps the linked user visible.
 func registerDetailPages() {
 	lago.RegistryPage.Register("students.StudentDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -23,7 +22,7 @@ func registerDetailPages() {
 						Page: components.Page{Key: "students.StudentDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{
-								Getter: getters.Key[string]("$in.User.Name"),
+								Getter: getters.Key[string]("$in.Name"),
 							},
 							&components.FieldSubtitle{
 								Getter: getters.Key[string]("$in.StudentNo"),
@@ -31,13 +30,13 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Email",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.User.Email")},
+									&components.FieldText{Getter: getters.Key[string]("$in.Email")},
 								},
 							},
 							&components.LabelInline{
 								Title: "Phone",
 								Children: []components.PageInterface{
-									&components.FieldPhone{Getter: getters.Key[string]("$in.User.Phone")},
+									&components.FieldPhone{Getter: getters.Key[string]("$in.Phone")},
 								},
 							},
 							&components.LabelInline{
@@ -103,7 +102,7 @@ func registerDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this student?",
-				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
+				Attr:    getters.FormBubbling(getters.Key[string]("student.Name")),
 			},
 		},
 	})

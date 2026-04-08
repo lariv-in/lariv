@@ -19,7 +19,6 @@ func init() {
 			WithLayer("students.list", views.LayerList[Student]{
 				Key: getters.Static("students"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload", Value: views.QueryPatcherPreload[Student]{Field: "User"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
 				},
 			}))
@@ -31,7 +30,6 @@ func init() {
 				Key:          getters.Static("student"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_user", Value: views.QueryPatcherPreload[Student]{Field: "User"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_photo", Value: views.QueryPatcherPreload[Student]{Field: "Photo"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_documents", Value: views.QueryPatcherPreload[Student]{Field: "Documents"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
@@ -54,7 +52,6 @@ func init() {
 				Key:          getters.Static("student"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_user", Value: views.QueryPatcherPreload[Student]{Field: "User"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_photo", Value: views.QueryPatcherPreload[Student]{Field: "Photo"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_documents", Value: views.QueryPatcherPreload[Student]{Field: "Documents"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
@@ -76,7 +73,6 @@ func init() {
 				Key:          getters.Static("student"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_user", Value: views.QueryPatcherPreload[Student]{Field: "User"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_photo", Value: views.QueryPatcherPreload[Student]{Field: "Photo"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_documents", Value: views.QueryPatcherPreload[Student]{Field: "Documents"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
@@ -96,19 +92,7 @@ func init() {
 			WithLayer("students.select", views.LayerList[Student]{
 				Key: getters.Static("students"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload", Value: views.QueryPatcherPreload[Student]{Field: "User"}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
-				},
-			}))
-
-	lago.RegistryView.Register("students.UserPickView",
-		lago.GetPageView("students.UserPickTable").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("students.user_pick_admin", studentsAdminRoleLayer).
-			WithLayer("students.user_pick_list", views.LayerList[p_users.User]{
-				Key: getters.Static("users"),
-				QueryPatchers: views.QueryPatchers[p_users.User]{
-					registry.Pair[string, views.QueryPatcher[p_users.User]]{Key: "students.user_pick_scope", Value: UserPickForStudentQueryPatcher},
 				},
 			}))
 }

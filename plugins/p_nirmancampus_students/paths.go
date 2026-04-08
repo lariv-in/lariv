@@ -34,11 +34,6 @@ func registerRoutes() {
 		Path:    AppUrl + "select/",
 		Handler: lago.NewDynamicView("students.SelectView"),
 	})
-
-	_ = lago.RegistryRoute.Register("students.UserPickRoute", lago.Route{
-		Path:    AppUrl + "addon/pick-user/",
-		Handler: lago.NewDynamicView("students.UserPickView"),
-	})
 }
 
 func init() {

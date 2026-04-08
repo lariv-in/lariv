@@ -37,7 +37,7 @@ func registerFilterPages() {
 func registerTablePages() {
 	lago.RegistryPage.Register("assignmentsubmissions.Table", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "students.StudentMenu"},
+			lago.DynamicPage{Name: "assignmentsubmissions.ListMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[AssignmentSubmission]{

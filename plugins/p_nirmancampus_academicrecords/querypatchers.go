@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -15,7 +16,7 @@ type academicRecordScopeByRole struct{}
 
 // AcademicRecordScopeByRole restricts academic record queries:
 // - superuser, admin: full queryset
-// - student: only academic records for the logged-in user's Student row (read via list/detail/select)
+// - student: only academic records for Student rows whose Email matches the logged-in user's email
 // - default (any other role): empty queryset
 func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[AcademicRecord]) gorm.ChainInterface[AcademicRecord] {
 	ctx := r.Context()
@@ -62,7 +63,11 @@ func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm
 	case "admin":
 		return query
 	case "student":
-		sub := db.Model(&p_nirmancampus_students.Student{}).Select("id").Where("user_id = ?", user.ID)
+		email := strings.TrimSpace(user.Email)
+		if email == "" {
+			return query.Where("1 = 0")
+		}
+		sub := db.Model(&p_nirmancampus_students.Student{}).Select("id").Where("email = ?", email)
 		return query.Where("student_id IN (?)", sub)
 	default:
 		return query.Where("1 = 0")

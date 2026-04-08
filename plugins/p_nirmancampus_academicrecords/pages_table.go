@@ -12,8 +12,8 @@ import (
 
 func tableColumns() []components.TableColumn {
 	return []components.TableColumn{
-		{Label: "Student", Name: "Student.User.Name", Children: []components.PageInterface{
-			&components.FieldText{Getter: getters.Key[string]("$row.Student.User.Name")},
+		{Label: "Student", Name: "Student.Name", Children: []components.PageInterface{
+			&components.FieldText{Getter: getters.Key[string]("$row.Student.Name")},
 		}},
 		{Label: "Program", Name: "Program.Name", Children: []components.PageInterface{
 			&components.FieldText{Getter: getters.Key[string]("$row.Program.Name")},

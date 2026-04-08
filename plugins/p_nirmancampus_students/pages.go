@@ -13,7 +13,6 @@ func init() {
 	registerTablePages()
 	registerDetailPages()
 	registerSelectionPages()
-	registerStudentUserPickPages()
 }
 
 func registerMenuPages() {
@@ -32,7 +31,7 @@ func registerMenuPages() {
 	})
 
 	lago.RegistryPage.Register("students.StudentDetailMenu", &components.SidebarMenu{
-		Title: getters.Format("Student: %s", getters.Any(getters.Key[string]("student.User.Name"))),
+		Title: getters.Format("Student: %s", getters.Any(getters.Key[string]("student.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Students"),
 			Url:   lago.RoutePath("students.DefaultRoute", nil),

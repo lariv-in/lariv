@@ -4,10 +4,8 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_users"
 )
 
-// studentFormUserPickURL opens the scoped user picker; on edit, allow_user_id keeps the linked user visible.
 func registerFilterPages() {
 	lago.RegistryPage.Register("students.StudentFilter", &components.FormComponent[Student]{
 		Attr: getters.FormBoostedGet(lago.RoutePath("students.DefaultRoute", nil)),
@@ -20,18 +18,18 @@ func registerFilterPages() {
 			},
 			&components.InputText{
 				Label:  "Name",
-				Name:   "User.Name",
-				Getter: getters.Key[string]("$get.User.Name"),
+				Name:   "Name",
+				Getter: getters.Key[string]("$get.Name"),
 			},
 			&components.InputText{
 				Label:  "Email",
-				Name:   "User.Email",
-				Getter: getters.Key[string]("$get.User.Email"),
+				Name:   "Email",
+				Getter: getters.Key[string]("$get.Email"),
 			},
 			&components.InputText{
 				Label:  "Phone",
-				Name:   "User.Phone",
-				Getter: getters.Key[string]("$get.User.Phone"),
+				Name:   "Phone",
+				Getter: getters.Key[string]("$get.Phone"),
 			},
 			&components.InputText{
 				Label:  "Mother's Name",
@@ -66,8 +64,8 @@ func registerFilterPages() {
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
 				Label:  "Name",
-				Name:   "User.Name",
-				Getter: getters.Key[string]("$get.User.Name"),
+				Name:   "Name",
+				Getter: getters.Key[string]("$get.Name"),
 			},
 			&components.InputText{
 				Label:  "Student No",
@@ -76,8 +74,8 @@ func registerFilterPages() {
 			},
 			&components.InputText{
 				Label:  "Phone",
-				Name:   "User.Phone",
-				Getter: getters.Key[string]("$get.User.Phone"),
+				Name:   "Phone",
+				Getter: getters.Key[string]("$get.Phone"),
 			},
 		},
 		ChildrenAction: []components.PageInterface{
@@ -117,13 +115,10 @@ func registerTablePages() {
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Name:  "User.Name",
+						Name:  "Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.ForeignKey[p_users.User, uint, string](
-									getters.Key[uint]("$row.UserID"),
-									"Name",
-								),
+								Getter: getters.Key[string]("$row.Name"),
 							},
 						},
 					},
@@ -138,25 +133,19 @@ func registerTablePages() {
 					},
 					{
 						Label: "Email",
-						Name:  "User.Email",
+						Name:  "Email",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.ForeignKey[p_users.User, uint, string](
-									getters.Key[uint]("$row.UserID"),
-									"Email",
-								),
+								Getter: getters.Key[string]("$row.Email"),
 							},
 						},
 					},
 					{
 						Label: "Phone",
-						Name:  "User.Phone",
+						Name:  "Phone",
 						Children: []components.PageInterface{
 							&components.FieldPhone{
-								Getter: getters.ForeignKey[p_users.User, uint, string](
-									getters.Key[uint]("$row.UserID"),
-									"Phone",
-								),
+								Getter: getters.Key[string]("$row.Phone"),
 							},
 						},
 					},
@@ -203,20 +192,17 @@ func registerSelectionPages() {
 				UID:     "student-selection-table",
 				Title:   "Select Student",
 				Data:    getters.Key[components.ObjectList[Student]]("students"),
-				RowAttr: getters.RowAttrSelect("StudentID", getters.Key[uint]("$row.ID"), getters.ForeignKey[Student, uint, string](getters.Key[uint]("$row.ID"), "StudentNo")),
+				RowAttr: getters.RowAttrSelect("StudentID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "students.StudentSelectionFilter"}},
 				},
 				Columns: []components.TableColumn{
 					{
 						Label: "Name",
-						Name:  "User.Name",
+						Name:  "Name",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.ForeignKey[p_users.User, uint, string](
-									getters.Key[uint]("$row.UserID"),
-									"Name",
-								),
+								Getter: getters.Key[string]("$row.Name"),
 							},
 						},
 					},
@@ -231,13 +217,10 @@ func registerSelectionPages() {
 					},
 					{
 						Label: "Phone",
-						Name:  "User.Phone",
+						Name:  "Phone",
 						Children: []components.PageInterface{
 							&components.FieldPhone{
-								Getter: getters.ForeignKey[p_users.User, uint, string](
-									getters.Key[uint]("$row.UserID"),
-									"Phone",
-								),
+								Getter: getters.Key[string]("$row.Phone"),
 							},
 						},
 					},

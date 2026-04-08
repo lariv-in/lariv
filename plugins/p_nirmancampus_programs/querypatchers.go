@@ -154,9 +154,13 @@ func (programScopeByRole) Patch(_ views.View, r *http.Request, q gorm.ChainInter
 	case "superuser", "admin", "unassigned":
 		return q
 	case "student":
+		email := strings.TrimSpace(user.Email)
+		if email == "" {
+			return q.Where("1 = 0")
+		}
 		studentSub := db.Model(&p_nirmancampus_students.Student{}).
 			Select("id").
-			Where("user_id = ?", user.ID)
+			Where("email = ?", email)
 		programSub := db.Table("academic_records").
 			Select("program_id").
 			Where("student_id IN (?)", studentSub).

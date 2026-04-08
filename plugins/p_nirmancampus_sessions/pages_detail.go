@@ -31,13 +31,13 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Start",
 								Children: []components.PageInterface{
-									&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.Start")},
+									&components.FieldDate{Getter: getters.Key[time.Time]("$in.Start")},
 								},
 							},
 							&components.LabelInline{
 								Title: "End",
 								Children: []components.PageInterface{
-									&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.End")},
+									&components.FieldDate{Getter: getters.Key[time.Time]("$in.End")},
 								},
 							},
 						},
