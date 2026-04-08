@@ -12,10 +12,11 @@ import (
 type Student struct {
 	gorm.Model
 
-	UserID    uint         `gorm:"uniqueIndex;notnull"`
-	User      p_users.User `gorm:"constraint:OnDelete:CASCADE"`
-	StudentNo string       `gorm:"uniqueIndex;notnull"`
-	DOB       *time.Time   `gorm:"type:date"`
+	Name      string     `gorm:"type:varchar(255);notnull"`
+	Email     string     `gorm:"type:varchar(255);default:'';index"`
+	Phone     string     `gorm:"type:varchar(64);default:''"`
+	StudentNo string     `gorm:"uniqueIndex;notnull"`
+	DOB       *time.Time `gorm:"type:date"`
 
 	MotherName string `gorm:"type:varchar(255);default:''"`
 	FatherName string `gorm:"column:fathers_name;type:varchar(255);default:''"`
@@ -37,15 +38,15 @@ func init() {
 		SearchField: "StudentNo",
 		ListFields: []string{
 			"StudentNo",
-			"User.Name",
-			"User.Email",
-			"User.Phone",
+			"Name",
+			"Email",
+			"Phone",
 			"DOB",
 			"MotherName",
 			"FatherName",
 			"Category",
 			"UpdatedAt",
 		},
-		Preload: []string{"User"},
+		Preload: []string{},
 	})
 }

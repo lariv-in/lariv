@@ -40,7 +40,7 @@ func registerSelectionPages() {
 						Label: "Start",
 						Name:  "Start",
 						Children: []components.PageInterface{
-							&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Start")},
+							&components.FieldDate{Getter: getters.Key[time.Time]("$row.Start")},
 						},
 					},
 					{

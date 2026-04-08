@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -53,9 +54,13 @@ func (assignmentSubmissionScopeByRole) Patch(_ views.View, r *http.Request, quer
 	case "superuser", "admin":
 		return query
 	case "student":
+		email := strings.TrimSpace(user.Email)
+		if email == "" {
+			return query.Where("1 = 0")
+		}
 		studentSub := db.Model(&p_nirmancampus_students.Student{}).
 			Select("id").
-			Where("user_id = ?", user.ID)
+			Where("email = ?", email)
 		academicRecordSub := db.Table("academic_records").
 			Select("id").
 			Where("student_id IN (?)", studentSub)

@@ -2,62 +2,14 @@ package p_nirmancampus_students
 
 import (
 	"context"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/plugins/p_users"
 )
 
-// studentFormUserPickURL opens the scoped user picker; on edit, allow_user_id keeps the linked user visible.
-func studentFormUserPickURL(ctx context.Context) (string, error) {
-	base, err := lago.RoutePath("students.UserPickRoute", nil)(ctx)
-	if err != nil {
-		return "", err
-	}
-	in, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-	if !ok {
-		return base, nil
-	}
-	var uid uint
-	switch v := in["UserID"].(type) {
-	case uint:
-		uid = v
-	case uint8:
-		uid = uint(v)
-	case uint16:
-		uid = uint(v)
-	case uint32:
-		uid = uint(v)
-	case uint64:
-		uid = uint(v)
-	case float64:
-		uid = uint(v)
-	case int:
-		if v > 0 {
-			uid = uint(v)
-		}
-	case int64:
-		if v > 0 {
-			uid = uint(v)
-		}
-	case string:
-		s := strings.TrimSpace(v)
-		if s != "" {
-			if n, err := strconv.ParseUint(s, 10, 64); err == nil {
-				uid = uint(n)
-			}
-		}
-	}
-	if uid != 0 {
-		return base + "?allow_user_id=" + strconv.FormatUint(uint64(uid), 10), nil
-	}
-	return base, nil
-}
 func studentFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{
@@ -68,16 +20,13 @@ func studentFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.UserID"),
+						Error: getters.Key[error]("$error.Name"),
 						Children: []components.PageInterface{
-							&components.InputForeignKey[p_users.User]{
-								Label:       "User Account",
-								Name:        "UserID",
-								Required:    true,
-								Getter:      getters.Association[p_users.User](getters.Key[uint]("$in.UserID")),
-								Url:         studentFormUserPickURL,
-								Display:     getters.Key[string]("$in.Name"),
-								Placeholder: "Select a user...",
+							&components.InputText{
+								Label:    "Name",
+								Name:     "Name",
+								Required: true,
+								Getter:   getters.Key[string]("$in.Name"),
 							},
 						},
 					},
@@ -94,13 +43,39 @@ func studentFormFields() components.ContainerColumn {
 					},
 				},
 			},
+			components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Email"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "Email",
+								Name:   "Email",
+								Getter: getters.Key[string]("$in.Email"),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Phone"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "Phone",
+								Name:   "Phone",
+								Getter: getters.Key[string]("$in.Phone"),
+							},
+						},
+					},
+				},
+			},
 			&components.ContainerError{
 				Error: getters.Key[error]("$error.DOB"),
 				Children: []components.PageInterface{
 					&components.InputDate{
-						Label:  "Date of Birth",
-						Name:   "DOB",
-						Getter: getters.Deref(getters.Key[*time.Time]("$in.DOB")),
+						Label:    "Date of Birth",
+						Name:     "DOB",
+						Required: true,
+						Getter:   getters.Deref(getters.Key[*time.Time]("$in.DOB")),
 					},
 				},
 			},
@@ -277,7 +252,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
-										Name:        getters.Static("students.StudentDeleteForm"),
+												Name:        getters.Static("students.StudentDeleteForm"),
 												Url:         lago.RoutePath("students.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("student.ID"))}),
 												FormPostURL: lago.RoutePath("students.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("student.ID"))}),
 												ModalUID:    "student-delete-modal",

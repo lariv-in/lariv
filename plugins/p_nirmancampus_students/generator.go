@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/lago"
@@ -12,8 +13,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_users"
 	"gorm.io/gorm"
 )
-
-const defaultPassword = "Pass1234#"
 
 func generateStudentNo(index int) string {
 	return fmt.Sprintf("STU%05d", index+1)
@@ -160,35 +159,36 @@ func attachRandomStudentDocuments(db *gorm.DB, student *Student) error {
 	return db.Model(student).Association("Documents").Append(docs)
 }
 
+func randomStudentContact(db *gorm.DB, r *rand.Rand) (name, email, phone string, err error) {
+	name = p_users.GetRandomIndianName()
+	studentCount, err := gorm.G[Student](db).Count(context.Background(), "*")
+	if err != nil {
+		return "", "", "", err
+	}
+	username := fmt.Sprintf("%s_%d", strings.ToLower(strings.ReplaceAll(name, " ", ".")), studentCount+1)
+	email = fmt.Sprintf("%s@school1.com", username)
+	phone = p_users.GenerateRandomPhone()
+	return name, email, phone, nil
+}
+
 // CreateSampleStudent idempotently creates a sample student (student1@lariv.in).
 func CreateSampleStudent(db *gorm.DB) (*Student, error) {
 	const sampleEmail = "student1@lariv.in"
 
 	var existing Student
-	err := db.Joins("User").Where("\"User\".email = ?", sampleEmail).First(&existing).Error
+	err := db.Where("email = ?", sampleEmail).First(&existing).Error
 	if err == nil {
 		fmt.Println("Sample student (student1) already exists")
 		return &existing, nil
 	}
 
-	role := p_users.Role{Name: "student"}
-	db.Where("name = ?", "student").FirstOrCreate(&role)
-
-	user := p_users.User{
-		Name:     "Sample Student",
-		Email:    sampleEmail,
-		Phone:    p_users.GenerateRandomPhone(),
-		Password: []byte(defaultPassword),
-		RoleID:   role.ID,
-	}
-	if err := gorm.G[p_users.User](db).Create(context.Background(), &user); err != nil {
-		return nil, fmt.Errorf("failed to create sample student user: %w", err)
-	}
-
+	dob := time.Date(2010, 6, 15, 0, 0, 0, 0, time.UTC)
 	student := Student{
-		UserID:     user.ID,
+		Name:       "Sample Student",
+		Email:      sampleEmail,
+		Phone:      p_users.GenerateRandomPhone(),
 		StudentNo:  "STU00000",
-		DOB:        nil,
+		DOB:        &dob,
 		MotherName: "",
 		FatherName: "",
 		Category:   "",
@@ -230,9 +230,9 @@ func init() {
 			}
 
 			for i := range studentCount {
-				user, err := p_users.GenerateUserWithoutPassword(db, "student")
+				name, email, phone, err := randomStudentContact(db, r)
 				if err != nil {
-					return fmt.Errorf("failed to generate user for student %d: %w", i, err)
+					return fmt.Errorf("failed to generate contact for student %d: %w", i, err)
 				}
 
 				studentNo := generateStudentNo(i)
@@ -240,7 +240,9 @@ func init() {
 				mn, fn, cat, addr := randomNirmancampusFields(r)
 
 				student := Student{
-					UserID:     user.ID,
+					Name:       name,
+					Email:      email,
+					Phone:      phone,
 					StudentNo:  studentNo,
 					DOB:        dob,
 					MotherName: mn,

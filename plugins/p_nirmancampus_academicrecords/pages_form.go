@@ -165,7 +165,7 @@ func editFormFields() components.ContainerColumn {
 							&components.FieldText{Getter: getters.Format(
 								"%s (%s)",
 								getters.Any(getters.Key[string]("$in.Student.StudentNo")),
-								getters.Any(getters.Key[string]("$in.Student.User.Name")),
+								getters.Any(getters.Key[string]("$in.Student.Name")),
 							)},
 						},
 					},

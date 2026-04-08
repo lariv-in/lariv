@@ -51,6 +51,6 @@ func init() {
 	lago.RegistryAdmin.Register("p_nirmancampus_academicrecords", lago.AdminPanel[AcademicRecord]{
 		SearchField: "Status",
 		ListFields:  []string{"Status", "Term", "Session.Name", "Program.Name", "Student.StudentNo", "UpdatedAt"},
-		Preload:     []string{"Student.User", "Program", "Session", "CompulsoryCourses", "OptionalCourses"},
+		Preload:     []string{"Student", "Program", "Session", "CompulsoryCourses", "OptionalCourses"},
 	})
 }

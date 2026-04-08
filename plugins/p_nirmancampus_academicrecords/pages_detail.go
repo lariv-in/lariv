@@ -19,7 +19,7 @@ func registerDetailPages() {
 					components.ContainerColumn{
 						Page: components.Page{Key: "academicrecords.AcademicRecordDetailContent"},
 						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.Key[string]("$in.Student.User.Name")},
+							&components.FieldTitle{Getter: getters.Key[string]("$in.Student.Name")},
 							&components.FieldSubtitle{Getter: getters.Key[string]("$in.Student.StudentNo")},
 							&components.LabelInline{
 								Title: "Program",

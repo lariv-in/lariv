@@ -36,7 +36,7 @@ func registerStudentsMenuAcademicRecordsEntry() {
 
 func registerMenuPages() {
 	lago.RegistryPage.Register("academicrecords.AcademicRecordDetailMenu", &components.SidebarMenu{
-		Title: getters.Format("Record: %s", getters.Any(getters.Key[string]("academicrecord.Student.User.Name"))),
+		Title: getters.Format("Record: %s", getters.Any(getters.Key[string]("academicrecord.Student.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to all Academic Records"),
 			Url:   lago.RoutePath("academicrecords.DefaultRoute", nil),

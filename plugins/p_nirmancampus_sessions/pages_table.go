@@ -66,6 +66,7 @@ func registerFilterPages() {
 		},
 	})
 }
+
 func registerTablePages() {
 	lago.RegistryPage.Register("sessions.SessionTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -105,14 +106,14 @@ func registerTablePages() {
 						Label: "Start",
 						Name:  "Start",
 						Children: []components.PageInterface{
-							&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Start")},
+							&components.FieldDate{Getter: getters.Key[time.Time]("$row.Start")},
 						},
 					},
 					{
 						Label: "End",
 						Name:  "End",
 						Children: []components.PageInterface{
-							&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.End")},
+							&components.FieldDate{Getter: getters.Key[time.Time]("$row.End")},
 						},
 					},
 					{

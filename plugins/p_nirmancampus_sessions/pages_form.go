@@ -77,8 +77,8 @@ func sessionFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Start"),
 						Children: []components.PageInterface{
-							&components.InputDatetime{
-								Label:    "Start Date & Time",
+							&components.InputDate{
+								Label:    "Start Date",
 								Name:     "Start",
 								Required: true,
 								Getter:   getters.Key[time.Time]("$in.Start"),
@@ -88,8 +88,8 @@ func sessionFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.End"),
 						Children: []components.PageInterface{
-							&components.InputDatetime{
-								Label:    "End Date & Time",
+							&components.InputDate{
+								Label:    "End Date",
 								Name:     "End",
 								Required: true,
 								Getter:   getters.Key[time.Time]("$in.End"),
@@ -151,7 +151,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("sessions.SessionUpdateForm"),
+				Name: getters.Static("sessions.SessionUpdateForm"),
 				ActionURL: lago.RoutePath("sessions.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("session.ID")),
 				}),

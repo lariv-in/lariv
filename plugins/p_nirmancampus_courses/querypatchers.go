@@ -64,9 +64,13 @@ func (courseScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainIn
 	case "superuser", "admin":
 		return query
 	case "student":
+		email := strings.TrimSpace(user.Email)
+		if email == "" {
+			return query.Where("1 = 0")
+		}
 		studentSub := db.Model(&p_nirmancampus_students.Student{}).
 			Select("id").
-			Where("user_id = ?", user.ID)
+			Where("email = ?", email)
 		compulsorySub := db.Table("academic_record_compulsory_courses").
 			Select("academic_record_compulsory_courses.course_id").
 			Joins("JOIN academic_records ON academic_records.id = academic_record_compulsory_courses.academic_record_id AND academic_records.deleted_at IS NULL").
