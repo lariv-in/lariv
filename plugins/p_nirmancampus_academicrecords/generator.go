@@ -3,6 +3,7 @@ package p_nirmancampus_academicrecords
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
@@ -13,11 +14,14 @@ import (
 )
 
 var sampleStatuses = []string{
+	"Not Applied",
+	"Applied",
 	"Enrolled",
 	"Enrolled",
-	"Completed",
-	"Probation",
-	"Withdrawn",
+	"Rejected",
+	"Applied",
+	"Not Applied",
+	"Enrolled",
 }
 
 var sampleTerms = []uint{1, 2, 1, 3, 2, 1, 2, 3}
@@ -58,12 +62,15 @@ func init() {
 			}
 
 			n := 0
+			today := time.Now().UTC()
+			admissionDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
 			for k, st := range students {
 				rec := AcademicRecord{
 					StudentID: st.ID,
 					ProgramID: programs[k%len(programs)].ID,
 					SessionID: sessions[k%len(sessions)].ID,
 					Term:      sampleTerms[k%len(sampleTerms)],
+					Date:      admissionDate.AddDate(0, 0, -k),
 					Status:    sampleStatuses[k%len(sampleStatuses)],
 				}
 				if err := gorm.G[AcademicRecord](db).Create(context.Background(), &rec); err != nil {

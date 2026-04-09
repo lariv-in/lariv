@@ -7,15 +7,16 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
-// StudentCategoryChoices maps stored category codes to select labels.
-var StudentCategoryChoices = map[string]string{
-	"SC":  "SC",
-	"ST":  "ST",
-	"OBC": "OBC",
-	"GEN": "General",
+// StudentCategoryChoices is stored category Key -> select label Value (slice order = dropdown order).
+var StudentCategoryChoices = []registry.Pair[string, string]{
+	{Key: "GEN", Value: "General"},
+	{Key: "OBC", Value: "OBC"},
+	{Key: "SC", Value: "SC"},
+	{Key: "ST", Value: "ST"},
 }
 
 type Student struct {

@@ -45,13 +45,13 @@ func registerFilterPages() {
 			&components.InputSelect[string]{
 				Label:   "Status",
 				Name:    "Status",
-				Choices: getters.Static(registry.PairsFromMap(AcademicRecordStatusChoices)),
+				Choices: getters.Static(AcademicRecordStatusChoices),
 				Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
 					s, err := getters.Key[string]("$get.Status")(ctx)
 					if err != nil || s == "" {
 						return registry.Pair[string, string]{}, nil
 					}
-					if p, ok := registry.PairFromMap(s, AcademicRecordStatusChoices); ok {
+					if p, ok := registry.PairFromPairs(s, AcademicRecordStatusChoices); ok {
 						return p, nil
 					}
 					return registry.Pair[string, string]{Key: s, Value: s}, nil

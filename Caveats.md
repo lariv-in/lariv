@@ -43,14 +43,21 @@
 
 # Choice fields (string columns)
 
-For a model field that is edited with a fixed set of string options (dropdown), keep **one** canonical map in the plugin’s `models.go` beside the GORM struct:
+For a model field edited with a fixed set of string options (dropdown), define **one** ordered slice in the plugin’s `models.go` beside the GORM struct:
 
-- **`map[string]string` where the key is the persisted value** (what the database stores and what `<option value>` submits) **and the value is the UI label** shown in selects and read-only views when you want a friendly string.
-- **Do not add a parallel `const` block** whose only purpose is to name those keys again for the map or for `switch` statements. Use string literals as map keys (see `p_nirmancampus_students.StudentCategoryChoices`, `p_nirmancampus_programs.universityChoices`, `p_nirmancampus_programs.admissionSessionChoices`).
-- **Forms:** `components.InputSelect[string]` with `Choices: getters.Static(registry.PairsFromMap(YourChoices))`. The current value getter should resolve with `registry.PairFromMap(s, YourChoices)` when `s` is non-empty, and fall back to `registry.Pair[string, string]{Key: s, Value: s}` for unknown legacy rows so the UI still renders.
-- **Detail / list labels:** Prefer a map lookup (`YourChoices[s]`) or `PairFromMap` instead of duplicating the same options in a `switch`.
-- **Generators, form patchers, and tests** must use the **same string literals** as the map keys so inserts and validation stay aligned.
-- `registry.PairsFromMap` sorts options by key. If the UI must follow a custom order, build `[]registry.Pair[string, string]` explicitly and document why.
+```go
+var MyFieldChoices = []registry.Pair[string, string]{
+	{Key: "stored_value", Value: "Label in UI"},
+	// ...
+}
+```
+
+- **`Key`** is the persisted value (database column, `<option value>`, form POST). **`Value`** is the label shown in selects and read-only views.
+- **Slice order** is the option order in the UI (`InputSelect`, list filters, etc.). Do not add a parallel `const` block or `switch` that repeats those keys; use the same string literals everywhere.
+- **Forms and filters:** `components.InputSelect[string]` with `Choices: getters.Static(MyFieldChoices)`. Resolve the current selection with `registry.PairFromPairs(s, MyFieldChoices)` when `s` is non-empty; for unknown legacy values fall back to `registry.Pair[string, string]{Key: s, Value: s}` so the UI still renders.
+- **Maps when needed:** `registry.MapFromPairs(MyFieldChoices)` builds a `map[string]string` for ad-hoc lookups; `registry.PairFromMap` works on that map. Prefer the slice + `PairFromPairs` when you only need a single lookup—no package-level map is required.
+- **Helpers:** `registry.PairFromPairs`, `registry.MapFromPairs`, and (for legacy or map-based code paths) `registry.PairFromMap` / `registry.PairsFromMap` live in `registry/registry.go`. **`registry.KeysFromPairs`** returns keys in slice order (e.g. generators picking a random allowed value).
+- **Generators, form patchers, and tests** must use the **same `Key` string literals** as in the slice so inserts and validation stay aligned. Example: `plugins/p_nirmancampus_academicrecords` (`AcademicRecordStatusChoices`).
 
 # Environment selector
 

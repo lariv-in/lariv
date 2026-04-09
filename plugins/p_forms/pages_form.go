@@ -276,9 +276,9 @@ func formFieldEditorBody() components.PageInterface {
 					Label:    "Field type",
 					Name:     "FieldType",
 					Required: true,
-					Choices:  getters.Static(FieldTypeRegistryPairs),
+					Choices:  getters.Static(FieldTypeChoices),
 					Getter: getters.Map(getters.Key[string]("$in.FieldType"), func(_ context.Context, ft string) (registry.Pair[string, string], error) {
-						if p, ok := registry.PairFromMap(ft, FieldTypeChoices); ok {
+						if p, ok := registry.PairFromPairs(ft, FieldTypeChoices); ok {
 							return p, nil
 						}
 						return registry.Pair[string, string]{Key: ft, Value: ft}, nil

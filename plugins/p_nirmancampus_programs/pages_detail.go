@@ -8,6 +8,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
+	"github.com/lariv-in/lago/registry"
 )
 
 func programAdmissionSessionsDisplayGetter() getters.Getter[string] {
@@ -16,8 +17,8 @@ func programAdmissionSessionsDisplayGetter() getters.Getter[string] {
 		if err != nil || s == "" {
 			return "—", nil
 		}
-		if label, ok := admissionSessionChoices[s]; ok {
-			return label, nil
+		if p, ok := registry.PairFromPairs(s, admissionSessionChoices); ok {
+			return p.Value, nil
 		}
 		return s, nil
 	}
@@ -29,8 +30,8 @@ func programTermTypeDisplayGetter() getters.Getter[string] {
 		if err != nil || s == "" {
 			return "—", nil
 		}
-		if label, ok := termTypeChoices[s]; ok {
-			return label, nil
+		if p, ok := registry.PairFromPairs(s, termTypeChoices); ok {
+			return p.Value, nil
 		}
 		return s, nil
 	}

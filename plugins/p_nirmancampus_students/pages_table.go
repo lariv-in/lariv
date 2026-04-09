@@ -12,7 +12,7 @@ func registerFilterPages() {
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
-				Label:  "Enrollment Number / Control ID",
+				Label:  "Enrollment No / Control ID",
 				Name:   "StudentNo",
 				Getter: getters.Key[string]("$get.StudentNo"),
 			},
@@ -68,7 +68,7 @@ func registerFilterPages() {
 				Getter: getters.Key[string]("$get.Name"),
 			},
 			&components.InputText{
-				Label:  "Enrollment Number / Control ID",
+				Label:  "Enrollment No / Control ID",
 				Name:   "StudentNo",
 				Getter: getters.Key[string]("$get.StudentNo"),
 			},
@@ -123,7 +123,7 @@ func registerTablePages() {
 						},
 					},
 					{
-						Label: "Enrollment Number / Control ID",
+						Label: "Enrollment No / Control ID",
 						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{
@@ -147,34 +147,6 @@ func registerTablePages() {
 							&components.FieldPhone{
 								Getter: getters.Key[string]("$row.Phone"),
 							},
-						},
-					},
-					{
-						Label: "Mother's Name",
-						Name:  "MotherName",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.MotherName")},
-						},
-					},
-					{
-						Label: "Father's Name",
-						Name:  "FatherName",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.FatherName")},
-						},
-					},
-					{
-						Label: "Category",
-						Name:  "Category",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.Category")},
-						},
-					},
-					{
-						Label: "Address",
-						Name:  "Address",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.Address")},
 						},
 					},
 				},
@@ -207,7 +179,7 @@ func registerSelectionPages() {
 						},
 					},
 					{
-						Label: "Enrollment Number / Control ID",
+						Label: "Enrollment No / Control ID",
 						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{
@@ -222,27 +194,6 @@ func registerSelectionPages() {
 							&components.FieldPhone{
 								Getter: getters.Key[string]("$row.Phone"),
 							},
-						},
-					},
-					{
-						Label: "Mother's Name",
-						Name:  "MotherName",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.MotherName")},
-						},
-					},
-					{
-						Label: "Father's Name",
-						Name:  "FatherName",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.FatherName")},
-						},
-					},
-					{
-						Label: "Category",
-						Name:  "Category",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.Category")},
 						},
 					},
 				},

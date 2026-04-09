@@ -55,6 +55,34 @@ func PairFromMap[K comparable, V any](key K, m map[K]V) (Pair[K, V], bool) {
 	}, true
 }
 
+// MapFromPairs builds a map from pairs. If the same key appears more than once, the last occurrence wins.
+func MapFromPairs[K comparable, V any](pairs []Pair[K, V]) map[K]V {
+	m := make(map[K]V, len(pairs))
+	for _, p := range pairs {
+		m[p.Key] = p.Value
+	}
+	return m
+}
+
+// PairFromPairs returns the first pair whose Key equals key.
+func PairFromPairs[K comparable, V any](key K, pairs []Pair[K, V]) (Pair[K, V], bool) {
+	for _, p := range pairs {
+		if p.Key == key {
+			return p, true
+		}
+	}
+	return Pair[K, V]{}, false
+}
+
+// KeysFromPairs returns each pair's Key in slice order (e.g. for generators or tests).
+func KeysFromPairs[K comparable, V any](pairs []Pair[K, V]) []K {
+	out := make([]K, len(pairs))
+	for i, p := range pairs {
+		out[i] = p.Key
+	}
+	return out
+}
+
 func (p Pair[K, V]) ToKVJson() string {
 	b, err := json.Marshal(map[K]V{p.Key: p.Value})
 	if err != nil {

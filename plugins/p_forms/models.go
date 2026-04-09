@@ -10,17 +10,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// FieldTypeChoices maps stored FormField.FieldType values to admin UI labels.
-var FieldTypeChoices = map[string]string{
-	"text":     "Text",
-	"textarea": "Textarea",
-	"email":    "Email",
-	"number":   "Number",
-	"select":   "Select",
+// FieldTypeChoices is stored field type Key -> admin label Value (slice order = dropdown order).
+var FieldTypeChoices = []registry.Pair[string, string]{
+	{Key: "email", Value: "Email"},
+	{Key: "number", Value: "Number"},
+	{Key: "select", Value: "Select"},
+	{Key: "text", Value: "Text"},
+	{Key: "textarea", Value: "Textarea"},
 }
-
-// FieldTypeRegistryPairs is used by admin FieldType InputSelect (sorted by key via PairsFromMap).
-var FieldTypeRegistryPairs = registry.PairsFromMap(FieldTypeChoices)
 
 // Form is a form definition (title, URL slug, optional description).
 type Form struct {

@@ -3,20 +3,21 @@ package p_nirmancampus_programs
 import (
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
-// admissionSessionChoices maps stored Program.AdmissionSessions values to labels (forms and detail views).
-var admissionSessionChoices = map[string]string{
-	"jan":  "January",
-	"july": "July",
-	"both": "January and July",
+// admissionSessionChoices: stored AdmissionSessions Key -> label (slice order = dropdown order).
+var admissionSessionChoices = []registry.Pair[string, string]{
+	{Key: "both", Value: "January and July"},
+	{Key: "jan", Value: "January"},
+	{Key: "july", Value: "July"},
 }
 
-// termTypeChoices maps stored Program.TermType values to labels.
-var termTypeChoices = map[string]string{
-	"year":     "Year",
-	"semester": "Session",
+// termTypeChoices: stored TermType Key -> label.
+var termTypeChoices = []registry.Pair[string, string]{
+	{Key: "semester", Value: "Session"},
+	{Key: "year", Value: "Year"},
 }
 
 // ProgramStructureUnit is one term of a program's structure.
@@ -48,16 +49,16 @@ type Program struct {
 	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
 }
 
-var universityChoices = map[string]string{
-	"IGNOU":  "IGNOU",
-	"MRSPTU": "MRSPTU",
+var universityChoices = []registry.Pair[string, string]{
+	{Key: "IGNOU", Value: "IGNOU"},
+	{Key: "MRSPTU", Value: "MRSPTU"},
 }
 
-var programTypeChoices = map[string]string{
-	"certificate": "Certificate",
-	"diploma":     "Diploma",
-	"bachelor":    "Bachelor",
-	"masters":     "Masters",
+var programTypeChoices = []registry.Pair[string, string]{
+	{Key: "bachelor", Value: "Bachelor"},
+	{Key: "certificate", Value: "Certificate"},
+	{Key: "diploma", Value: "Diploma"},
+	{Key: "masters", Value: "Masters"},
 }
 
 func init() {

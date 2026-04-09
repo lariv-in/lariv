@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
@@ -20,6 +21,15 @@ type formPatcherAcademicRecordCreate struct{}
 func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	if s, ok := values["Status"].(string); !ok || s == "" {
 		values["Status"] = "Enrolled"
+	}
+
+	tz, _ := r.Context().Value("$tz").(*time.Location)
+	if tz == nil {
+		tz = components.DefaultTimeZone
+	}
+	if d, ok := values["Date"].(time.Time); !ok || d.IsZero() {
+		now := time.Now().In(tz)
+		values["Date"] = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, tz)
 	}
 
 	dbVal := r.Context().Value("$db")
@@ -87,6 +97,9 @@ func (formPatcherAcademicRecordUpdate) Patch(_ views.View, r *http.Request, valu
 	rec, err := gorm.G[AcademicRecord](db).Where("id = ?", id).First(r.Context())
 	if err != nil {
 		return values, formErrors
+	}
+	if d, ok := values["Date"].(time.Time); !ok || d.IsZero() {
+		values["Date"] = rec.Date
 	}
 	psu, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).
 		Select("optional_course_count").

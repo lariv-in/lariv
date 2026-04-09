@@ -15,7 +15,7 @@ func universityFilterPairGetter() getters.Getter[registry.Pair[string, string]] 
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromMap(s, universityChoices); ok {
+		if p, ok := registry.PairFromPairs(s, universityChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -26,7 +26,7 @@ func universityFilterSelect() *components.InputSelect[string] {
 	return &components.InputSelect[string]{
 		Label:   "University",
 		Name:    "University",
-		Choices: getters.Static(registry.PairsFromMap(universityChoices)),
+		Choices: getters.Static(universityChoices),
 		Getter:  universityFilterPairGetter(),
 	}
 }
@@ -37,7 +37,7 @@ func programTypeFilterPairGetter() getters.Getter[registry.Pair[string, string]]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromMap(s, programTypeChoices); ok {
+		if p, ok := registry.PairFromPairs(s, programTypeChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -48,7 +48,7 @@ func programTypeFilterSelect() *components.InputSelect[string] {
 	return &components.InputSelect[string]{
 		Label:   "Program type",
 		Name:    "ProgramType",
-		Choices: getters.Static(registry.PairsFromMap(programTypeChoices)),
+		Choices: getters.Static(programTypeChoices),
 		Getter:  programTypeFilterPairGetter(),
 	}
 }

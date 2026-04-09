@@ -17,7 +17,7 @@ func studentCategoryPairGetter() getters.Getter[registry.Pair[string, string]] {
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromMap(s, StudentCategoryChoices); ok {
+		if p, ok := registry.PairFromPairs(s, StudentCategoryChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -48,7 +48,7 @@ func studentFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.StudentNo"),
 						Children: []components.PageInterface{
 							&components.InputText{
-								Label:    "Enrollment Number / Control ID",
+								Label:    "Enrollment No / Control ID",
 								Name:     "StudentNo",
 								Required: true,
 								Getter:   getters.Key[string]("$in.StudentNo"),
@@ -123,7 +123,7 @@ func studentFormFields() components.ContainerColumn {
 								Label:    "Category",
 								Name:     "Category",
 								Required: false,
-								Choices:  getters.Static(registry.PairsFromMap(StudentCategoryChoices)),
+								Choices:  getters.Static(StudentCategoryChoices),
 								Getter:   studentCategoryPairGetter(),
 							},
 						},

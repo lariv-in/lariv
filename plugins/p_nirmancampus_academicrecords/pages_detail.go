@@ -1,6 +1,8 @@
 package p_nirmancampus_academicrecords
 
 import (
+	"time"
+
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
@@ -37,6 +39,12 @@ func registerDetailPages() {
 								Title: "Status",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.Status")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Admission date",
+								Children: []components.PageInterface{
+									&components.FieldDate{Getter: getters.Key[time.Time]("$in.Date")},
 								},
 							},
 							&components.LabelInline{

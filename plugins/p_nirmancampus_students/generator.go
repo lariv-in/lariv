@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"maps"
 	"math/rand"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"gorm.io/gorm"
@@ -81,8 +80,8 @@ func randomFathersName(r *rand.Rand) string {
 	return fmt.Sprintf("%s %d", prefix, suffix)
 }
 
-// studentCategoryKeys is the map keys as a slice so we can pick a random category by index.
-var studentCategoryKeys = slices.Collect(maps.Keys(StudentCategoryChoices))
+// studentCategoryKeys lists persisted category keys in the same order as StudentCategoryChoices.
+var studentCategoryKeys = registry.KeysFromPairs(StudentCategoryChoices)
 
 func randomNirmancampusFields(r *rand.Rand) (motherName, fatherName, category, address string) {
 	motherName = randomMothersName(r)

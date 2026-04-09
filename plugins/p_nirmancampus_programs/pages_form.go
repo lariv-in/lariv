@@ -16,7 +16,7 @@ func programUniversityPairGetter() getters.Getter[registry.Pair[string, string]]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromMap(s, universityChoices); ok {
+		if p, ok := registry.PairFromPairs(s, universityChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -28,7 +28,7 @@ func universityFormSelect() *components.InputSelect[string] {
 		Label:    "University",
 		Name:     "University",
 		Required: false,
-		Choices:  getters.Static(registry.PairsFromMap(universityChoices)),
+		Choices:  getters.Static(universityChoices),
 		Getter:   programUniversityPairGetter(),
 	}
 }
@@ -39,7 +39,7 @@ func programProgramTypePairGetter() getters.Getter[registry.Pair[string, string]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromMap(s, programTypeChoices); ok {
+		if p, ok := registry.PairFromPairs(s, programTypeChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -51,7 +51,7 @@ func programTypeFormSelect() *components.InputSelect[string] {
 		Label:    "Program type",
 		Name:     "ProgramType",
 		Required: false,
-		Choices:  getters.Static(registry.PairsFromMap(programTypeChoices)),
+		Choices:  getters.Static(programTypeChoices),
 		Getter:   programProgramTypePairGetter(),
 	}
 }
@@ -62,7 +62,7 @@ func programAdmissionSessionsPairGetter() getters.Getter[registry.Pair[string, s
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromMap(s, admissionSessionChoices); ok {
+		if p, ok := registry.PairFromPairs(s, admissionSessionChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -75,7 +75,7 @@ func programTermTypePairGetter() getters.Getter[registry.Pair[string, string]] {
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromMap(s, termTypeChoices); ok {
+		if p, ok := registry.PairFromPairs(s, termTypeChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -87,7 +87,7 @@ func admissionSessionsFormSelect() *components.InputSelect[string] {
 		Label:    "Admission sessions",
 		Name:     "AdmissionSessions",
 		Required: false,
-		Choices:  getters.Static(registry.PairsFromMap(admissionSessionChoices)),
+		Choices:  getters.Static(admissionSessionChoices),
 		Getter:   programAdmissionSessionsPairGetter(),
 	}
 }
@@ -97,7 +97,7 @@ func termTypeFormSelect() *components.InputSelect[string] {
 		Label:    "Term type",
 		Name:     "TermType",
 		Required: false,
-		Choices:  getters.Static(registry.PairsFromMap(termTypeChoices)),
+		Choices:  getters.Static(termTypeChoices),
 		Getter:   programTermTypePairGetter(),
 	}
 }

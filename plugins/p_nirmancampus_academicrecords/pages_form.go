@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -127,16 +128,16 @@ func createFormFields() components.ContainerColumn {
 								Label:    "Status",
 								Name:     "Status",
 								Required: true,
-								Choices:  getters.Static(registry.PairsFromMap(AcademicRecordStatusChoices)),
+								Choices:  getters.Static(AcademicRecordStatusChoices),
 								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
 									s, err := getters.Key[string]("$in.Status")(ctx)
 									if err != nil || s == "" {
-										if p, ok := registry.PairFromMap("Enrolled", AcademicRecordStatusChoices); ok {
+										if p, ok := registry.PairFromPairs("Enrolled", AcademicRecordStatusChoices); ok {
 											return p, nil
 										}
 										return registry.Pair[string, string]{Key: "Enrolled", Value: "Enrolled"}, nil
 									}
-									if p, ok := registry.PairFromMap(s, AcademicRecordStatusChoices); ok {
+									if p, ok := registry.PairFromPairs(s, AcademicRecordStatusChoices); ok {
 										return p, nil
 									}
 									return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -144,9 +145,38 @@ func createFormFields() components.ContainerColumn {
 							},
 						},
 					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Date"),
+						Children: []components.PageInterface{
+							&components.InputDate{
+								Label:    "Admission date",
+								Name:     "Date",
+								Required: true,
+								Getter:   academicRecordDefaultGetter(getters.Key[time.Time]("$in.Date")),
+							},
+						},
+					},
 				},
 			},
 		},
+	}
+}
+
+func academicRecordDefaultGetter(base getters.Getter[time.Time]) getters.Getter[time.Time] {
+	return func(ctx context.Context) (time.Time, error) {
+		t, err := base(ctx)
+		if err != nil {
+			return time.Time{}, err
+		}
+		if !t.IsZero() {
+			return t, nil
+		}
+		tz, _ := ctx.Value("$tz").(*time.Location)
+		if tz == nil {
+			tz = components.DefaultTimeZone
+		}
+		now := time.Now().In(tz)
+		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, tz), nil
 	}
 }
 
@@ -191,6 +221,17 @@ func editFormFields() components.ContainerColumn {
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$in.Term"))),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Date"),
+						Children: []components.PageInterface{
+							&components.InputDate{
+								Label:    "Admission date",
+								Name:     "Date",
+								Required: true,
+								Getter:   getters.Key[time.Time]("$in.Date"),
 							},
 						},
 					},
@@ -257,13 +298,13 @@ func editFormFields() components.ContainerColumn {
 								Label:    "Status",
 								Name:     "Status",
 								Required: true,
-								Choices:  getters.Static(registry.PairsFromMap(AcademicRecordStatusChoices)),
+								Choices:  getters.Static(AcademicRecordStatusChoices),
 								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
 									s, err := getters.Key[string]("$in.Status")(ctx)
 									if err != nil || s == "" {
 										return registry.Pair[string, string]{}, nil
 									}
-									if p, ok := registry.PairFromMap(s, AcademicRecordStatusChoices); ok {
+									if p, ok := registry.PairFromPairs(s, AcademicRecordStatusChoices); ok {
 										return p, nil
 									}
 									return registry.Pair[string, string]{Key: s, Value: s}, nil
