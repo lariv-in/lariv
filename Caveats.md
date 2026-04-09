@@ -41,6 +41,17 @@
 
 - time.Time should always be handled with consideration to the timezone, timezone is injected into the context in $tz key (*time.Location).
 
+# Choice fields (string columns)
+
+For a model field that is edited with a fixed set of string options (dropdown), keep **one** canonical map in the plugin’s `models.go` beside the GORM struct:
+
+- **`map[string]string` where the key is the persisted value** (what the database stores and what `<option value>` submits) **and the value is the UI label** shown in selects and read-only views when you want a friendly string.
+- **Do not add a parallel `const` block** whose only purpose is to name those keys again for the map or for `switch` statements. Use string literals as map keys (see `p_nirmancampus_students.StudentCategoryChoices`, `p_nirmancampus_programs.universityChoices`, `p_nirmancampus_programs.admissionSessionChoices`).
+- **Forms:** `components.InputSelect[string]` with `Choices: getters.Static(registry.PairsFromMap(YourChoices))`. The current value getter should resolve with `registry.PairFromMap(s, YourChoices)` when `s` is non-empty, and fall back to `registry.Pair[string, string]{Key: s, Value: s}` for unknown legacy rows so the UI still renders.
+- **Detail / list labels:** Prefer a map lookup (`YourChoices[s]`) or `PairFromMap` instead of duplicating the same options in a `switch`.
+- **Generators, form patchers, and tests** must use the **same string literals** as the map keys so inserts and validation stay aligned.
+- `registry.PairsFromMap` sorts options by key. If the UI must follow a custom order, build `[]registry.Pair[string, string]` explicitly and document why.
+
 # Environment selector
 
 - `components.Environment[T]` (`components/environment.go`) renders a `<select>` that reads and writes the `environment` JSON cookie; the parsed map is available as `$environment` (`map[string]string`) on the request context.

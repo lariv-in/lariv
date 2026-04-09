@@ -12,7 +12,7 @@ func registerFilterPages() {
 
 		ChildrenInput: []components.PageInterface{
 			&components.InputText{
-				Label:  "Student Number",
+				Label:  "Enrollment Number / Control ID",
 				Name:   "StudentNo",
 				Getter: getters.Key[string]("$get.StudentNo"),
 			},
@@ -68,7 +68,7 @@ func registerFilterPages() {
 				Getter: getters.Key[string]("$get.Name"),
 			},
 			&components.InputText{
-				Label:  "Student No",
+				Label:  "Enrollment Number / Control ID",
 				Name:   "StudentNo",
 				Getter: getters.Key[string]("$get.StudentNo"),
 			},
@@ -123,7 +123,7 @@ func registerTablePages() {
 						},
 					},
 					{
-						Label: "Student No",
+						Label: "Enrollment Number / Control ID",
 						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{
@@ -207,7 +207,7 @@ func registerSelectionPages() {
 						},
 					},
 					{
-						Label: "Student No",
+						Label: "Enrollment Number / Control ID",
 						Name:  "StudentNo",
 						Children: []components.PageInterface{
 							&components.FieldText{

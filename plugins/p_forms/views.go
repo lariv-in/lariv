@@ -152,7 +152,7 @@ type clearOptionsUnlessSelect struct{}
 
 func (clearOptionsUnlessSelect) Patch(_ views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	ft, _ := formData["FieldType"].(string)
-	if ft != FieldTypeSelect {
+	if ft != "select" {
 		formData["Options"] = "[]"
 	}
 	return formData, formErrors

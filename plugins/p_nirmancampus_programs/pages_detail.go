@@ -16,16 +16,10 @@ func programAdmissionSessionsDisplayGetter() getters.Getter[string] {
 		if err != nil || s == "" {
 			return "—", nil
 		}
-		switch s {
-		case AdmissionSessionJan:
-			return "January", nil
-		case AdmissionSessionJuly:
-			return "July", nil
-		case AdmissionSessionBoth:
-			return "January and July", nil
-		default:
-			return s, nil
+		if label, ok := admissionSessionChoices[s]; ok {
+			return label, nil
 		}
+		return s, nil
 	}
 }
 
@@ -35,14 +29,10 @@ func programTermTypeDisplayGetter() getters.Getter[string] {
 		if err != nil || s == "" {
 			return "—", nil
 		}
-		switch s {
-		case TermTypeYear:
-			return "Year", nil
-		case TermTypeSemester:
-			return "Session", nil
-		default:
-			return s, nil
+		if label, ok := termTypeChoices[s]; ok {
+			return label, nil
 		}
+		return s, nil
 	}
 }
 

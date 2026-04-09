@@ -19,7 +19,7 @@ type formPatcherAcademicRecordCreate struct{}
 
 func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	if s, ok := values["Status"].(string); !ok || s == "" {
-		values["Status"] = AcademicRecordStatusEnrolled
+		values["Status"] = "Enrolled"
 	}
 
 	dbVal := r.Context().Value("$db")

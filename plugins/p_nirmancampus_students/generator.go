@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
 	"math/rand"
+	"slices"
 	"strings"
 	"time"
 
@@ -27,14 +29,6 @@ func randomDOB() *time.Time {
 	daysOffset := rand.Intn(365)
 	dob := time.Date(now.Year()-yearsAgo, 1, 1+daysOffset, 0, 0, 0, 0, time.UTC)
 	return &dob
-}
-
-var studentCategories = []string{
-	"General",
-	"OBC",
-	"SC",
-	"ST",
-	"",
 }
 
 var fathersNamePrefixes = []string{
@@ -87,10 +81,13 @@ func randomFathersName(r *rand.Rand) string {
 	return fmt.Sprintf("%s %d", prefix, suffix)
 }
 
+// studentCategoryKeys is the map keys as a slice so we can pick a random category by index.
+var studentCategoryKeys = slices.Collect(maps.Keys(StudentCategoryChoices))
+
 func randomNirmancampusFields(r *rand.Rand) (motherName, fatherName, category, address string) {
 	motherName = randomMothersName(r)
 	fatherName = randomFathersName(r)
-	category = studentCategories[r.Intn(len(studentCategories))]
+	category = studentCategoryKeys[r.Intn(len(studentCategoryKeys))]
 	if r.Intn(100) < 60 {
 		address = randomAddress(r)
 	}

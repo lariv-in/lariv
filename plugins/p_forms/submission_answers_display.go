@@ -152,7 +152,7 @@ func formatAnswerForField(f FormField, raw any) (string, string) {
 	}
 
 	switch f.FieldType {
-	case FieldTypeNumber:
+	case "number":
 		s, ok := formatNumberAnswer(raw)
 		if !ok {
 			return empty, ""
@@ -162,21 +162,21 @@ func formatAnswerForField(f FormField, raw any) (string, string) {
 		}
 		return s, ""
 
-	case FieldTypeTextarea:
+	case "textarea":
 		s := strings.TrimRight(fmt.Sprint(raw), "\r\n")
 		if strings.TrimSpace(s) == "" {
 			return empty, ""
 		}
 		return s, "whitespace-pre-wrap break-words"
 
-	case FieldTypeSelect:
+	case "select":
 		s := strings.TrimSpace(fmt.Sprint(raw))
 		if s == "" {
 			return empty, ""
 		}
 		return s, ""
 
-	case FieldTypeEmail:
+	case "email":
 		s := strings.TrimSpace(fmt.Sprint(raw))
 		if s == "" {
 			return empty, ""

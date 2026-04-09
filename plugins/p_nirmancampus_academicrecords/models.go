@@ -9,20 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// Stored AcademicRecord.Status values (use these everywhere so forms and DB stay aligned).
-const (
-	AcademicRecordStatusEnrolled  = "Enrolled"
-	AcademicRecordStatusCompleted = "Completed"
-	AcademicRecordStatusProbation = "Probation"
-	AcademicRecordStatusWithdrawn = "Withdrawn"
-)
-
-// AcademicRecordStatusChoices maps stored status values to display labels.
+// AcademicRecordStatusChoices maps stored AcademicRecord.Status values to display labels.
 var AcademicRecordStatusChoices = map[string]string{
-	AcademicRecordStatusEnrolled:  "Enrolled",
-	AcademicRecordStatusCompleted: "Completed",
-	AcademicRecordStatusProbation: "Probation",
-	AcademicRecordStatusWithdrawn: "Withdrawn",
+	"Enrolled":   "Enrolled",
+	"Completed":  "Completed",
+	"Probation":  "Probation",
+	"Withdrawn":  "Withdrawn",
 }
 
 // AcademicRecord links a student to a program term with status and course selections.

@@ -131,10 +131,10 @@ func createFormFields() components.ContainerColumn {
 								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
 									s, err := getters.Key[string]("$in.Status")(ctx)
 									if err != nil || s == "" {
-										if p, ok := registry.PairFromMap(AcademicRecordStatusEnrolled, AcademicRecordStatusChoices); ok {
+										if p, ok := registry.PairFromMap("Enrolled", AcademicRecordStatusChoices); ok {
 											return p, nil
 										}
-										return registry.Pair[string, string]{Key: AcademicRecordStatusEnrolled, Value: AcademicRecordStatusEnrolled}, nil
+										return registry.Pair[string, string]{Key: "Enrolled", Value: "Enrolled"}, nil
 									}
 									if p, ok := registry.PairFromMap(s, AcademicRecordStatusChoices); ok {
 										return p, nil

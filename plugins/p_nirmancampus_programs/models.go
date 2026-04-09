@@ -6,13 +6,18 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	AdmissionSessionJan  = "jan"
-	AdmissionSessionJuly = "july"
-	AdmissionSessionBoth = "both"
-	TermTypeYear         = "year"
-	TermTypeSemester     = "semester"
-)
+// admissionSessionChoices maps stored Program.AdmissionSessions values to labels (forms and detail views).
+var admissionSessionChoices = map[string]string{
+	"jan":  "January",
+	"july": "July",
+	"both": "January and July",
+}
+
+// termTypeChoices maps stored Program.TermType values to labels.
+var termTypeChoices = map[string]string{
+	"year":     "Year",
+	"semester": "Session",
+}
 
 // ProgramStructureUnit is one term of a program's structure.
 // CompulsoryCourses and OptionalCourseSelectionPool are many-to-many relations to Course.

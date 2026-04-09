@@ -37,7 +37,7 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Academic record",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("%s · %s", getters.Any(getters.Key[string]("$in.AcademicRecord.Student.StudentNo")), getters.Any(getters.Key[string]("$in.AcademicRecord.Program.Name")))},
+									&components.FieldText{Getter: getters.Format("%s (%s)", getters.Any(getters.Key[string]("$in.AcademicRecord.Student.Name")), getters.Any(getters.Key[string]("$in.AcademicRecord.Session.Name")))},
 								},
 							},
 							&components.LabelInline{

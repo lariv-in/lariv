@@ -8,7 +8,21 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lago/registry"
 )
+
+func studentCategoryPairGetter() getters.Getter[registry.Pair[string, string]] {
+	return func(ctx context.Context) (registry.Pair[string, string], error) {
+		s, err := getters.Key[string]("$in.Category")(ctx)
+		if err != nil || s == "" {
+			return registry.Pair[string, string]{}, nil
+		}
+		if p, ok := registry.PairFromMap(s, StudentCategoryChoices); ok {
+			return p, nil
+		}
+		return registry.Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
 
 func studentFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
@@ -34,7 +48,7 @@ func studentFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.StudentNo"),
 						Children: []components.PageInterface{
 							&components.InputText{
-								Label:    "Student Number",
+								Label:    "Enrollment Number / Control ID",
 								Name:     "StudentNo",
 								Required: true,
 								Getter:   getters.Key[string]("$in.StudentNo"),
@@ -105,10 +119,12 @@ func studentFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.Category"),
 						Children: []components.PageInterface{
-							&components.InputText{
-								Label:  "Category",
-								Name:   "Category",
-								Getter: getters.Key[string]("$in.Category"),
+							&components.InputSelect[string]{
+								Label:    "Category",
+								Name:     "Category",
+								Required: false,
+								Choices:  getters.Static(registry.PairsFromMap(StudentCategoryChoices)),
+								Getter:   studentCategoryPairGetter(),
 							},
 						},
 					},

@@ -98,8 +98,6 @@ func init() {
 			if err := db.Exec("DELETE FROM academic_record_optional_courses").Error; err != nil {
 				return fmt.Errorf("clear academic_record_optional_courses: %w", err)
 			}
-			// Legacy join table from the previous single Courses association (safe if absent).
-			_ = db.Exec("DELETE FROM academic_record_courses").Error
 			return db.Unscoped().Where("1=1").Delete(&AcademicRecord{}).Error
 		},
 	})

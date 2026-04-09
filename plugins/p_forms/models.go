@@ -10,23 +10,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// Field type values for FormField.FieldType (also used by admin InputSelect).
-const (
-	FieldTypeText     = "text"
-	FieldTypeTextarea = "textarea"
-	FieldTypeEmail    = "email"
-	FieldTypeNumber   = "number"
-	FieldTypeSelect   = "select"
-)
-
-// FieldTypeRegistryPairs is the canonical list for admin FieldType InputSelect (Key = stored value, Value = label).
-var FieldTypeRegistryPairs = []registry.Pair[string, string]{
-	{Key: FieldTypeText, Value: "Text"},
-	{Key: FieldTypeTextarea, Value: "Textarea"},
-	{Key: FieldTypeEmail, Value: "Email"},
-	{Key: FieldTypeNumber, Value: "Number"},
-	{Key: FieldTypeSelect, Value: "Select"},
+// FieldTypeChoices maps stored FormField.FieldType values to admin UI labels.
+var FieldTypeChoices = map[string]string{
+	"text":     "Text",
+	"textarea": "Textarea",
+	"email":    "Email",
+	"number":   "Number",
+	"select":   "Select",
 }
+
+// FieldTypeRegistryPairs is used by admin FieldType InputSelect (sorted by key via PairsFromMap).
+var FieldTypeRegistryPairs = registry.PairsFromMap(FieldTypeChoices)
 
 // Form is a form definition (title, URL slug, optional description).
 type Form struct {
@@ -48,7 +42,7 @@ type FormField struct {
 	Label     string `gorm:"size:250;not null"`
 	FieldType string `gorm:"size:32;not null"`
 	Required  bool
-	// Options is a JSON-encoded []string of choice values when FieldType is FieldTypeSelect.
+	// Options is a JSON-encoded []string of choice values when FieldType is "select".
 	Options string `gorm:"type:text"`
 }
 

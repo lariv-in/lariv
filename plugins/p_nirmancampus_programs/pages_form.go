@@ -56,31 +56,14 @@ func programTypeFormSelect() *components.InputSelect[string] {
 	}
 }
 
-func admissionSessionChoices() []registry.Pair[string, string] {
-	return []registry.Pair[string, string]{
-		{Key: AdmissionSessionJan, Value: "January"},
-		{Key: AdmissionSessionJuly, Value: "July"},
-		{Key: AdmissionSessionBoth, Value: "January and July"},
-	}
-}
-
-func termTypeChoices() []registry.Pair[string, string] {
-	return []registry.Pair[string, string]{
-		{Key: TermTypeYear, Value: "Year"},
-		{Key: TermTypeSemester, Value: "Session"},
-	}
-}
-
 func programAdmissionSessionsPairGetter() getters.Getter[registry.Pair[string, string]] {
 	return func(ctx context.Context) (registry.Pair[string, string], error) {
 		s, err := getters.Key[string]("$in.AdmissionSessions")(ctx)
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		for _, p := range admissionSessionChoices() {
-			if p.Key == s {
-				return p, nil
-			}
+		if p, ok := registry.PairFromMap(s, admissionSessionChoices); ok {
+			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
 	}
@@ -92,10 +75,8 @@ func programTermTypePairGetter() getters.Getter[registry.Pair[string, string]] {
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		for _, p := range termTypeChoices() {
-			if p.Key == s {
-				return p, nil
-			}
+		if p, ok := registry.PairFromMap(s, termTypeChoices); ok {
+			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
 	}
@@ -106,7 +87,7 @@ func admissionSessionsFormSelect() *components.InputSelect[string] {
 		Label:    "Admission sessions",
 		Name:     "AdmissionSessions",
 		Required: false,
-		Choices:  getters.Static(admissionSessionChoices()),
+		Choices:  getters.Static(registry.PairsFromMap(admissionSessionChoices)),
 		Getter:   programAdmissionSessionsPairGetter(),
 	}
 }
@@ -116,7 +97,7 @@ func termTypeFormSelect() *components.InputSelect[string] {
 		Label:    "Term type",
 		Name:     "TermType",
 		Required: false,
-		Choices:  getters.Static(termTypeChoices()),
+		Choices:  getters.Static(registry.PairsFromMap(termTypeChoices)),
 		Getter:   programTermTypePairGetter(),
 	}
 }

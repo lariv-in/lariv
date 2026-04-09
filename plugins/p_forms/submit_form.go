@@ -114,7 +114,7 @@ func (e PublicSubmitForm) buildField(ctx context.Context, f FormField) []gompone
 	}
 
 	switch f.FieldType {
-	case FieldTypeTextarea:
+	case "textarea":
 		return []gomponents.Node{wrap(&components.InputTextarea{
 			Page:     components.Page{Key: "forms.public." + name},
 			Label:    f.Label,
@@ -123,7 +123,7 @@ func (e PublicSubmitForm) buildField(ctx context.Context, f FormField) []gompone
 			Rows:     4,
 			Getter:   getter,
 		})}
-	case FieldTypeEmail:
+	case "email":
 		return []gomponents.Node{wrap(&components.InputEmail{
 			Page:     components.Page{Key: "forms.public." + name},
 			Label:    f.Label,
@@ -131,7 +131,7 @@ func (e PublicSubmitForm) buildField(ctx context.Context, f FormField) []gompone
 			Required: f.Required,
 			Getter:   getter,
 		})}
-	case FieldTypeNumber:
+	case "number":
 		gn := getters.Getter[int](func(c context.Context) (int, error) {
 			in := map[string]any{}
 			if m, ok := c.Value(getters.ContextKeyIn).(map[string]any); ok {
@@ -160,7 +160,7 @@ func (e PublicSubmitForm) buildField(ctx context.Context, f FormField) []gompone
 			Required: f.Required,
 			Getter:   gn,
 		})}
-	case FieldTypeSelect:
+	case "select":
 		opts := selectOptionsFromField(f)
 		choices := getters.Static(opts)
 		selGetter := getters.Getter[registry.Pair[string, string]](func(c context.Context) (registry.Pair[string, string], error) {
@@ -232,14 +232,14 @@ func (e PublicSubmitForm) ParseForm(r *http.Request) (map[string]any, map[string
 			continue
 		}
 		switch f.FieldType {
-		case FieldTypeNumber:
+		case "number":
 			n, err := strconv.Atoi(raw)
 			if err != nil {
 				errs[f.Name] = fmt.Errorf("invalid number")
 				continue
 			}
 			values[f.Name] = n
-		case FieldTypeSelect:
+		case "select":
 			ok := false
 			for _, opt := range selectOptionsFromField(f) {
 				if opt.Key == raw {
