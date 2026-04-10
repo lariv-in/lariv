@@ -2,11 +2,7 @@ package p_lacerate
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"html"
 	"log/slog"
 	"strings"
 
@@ -17,16 +13,6 @@ import (
 
 // redditListingMaxPages caps extra listing fetches when a page contains duplicates already stored for this source.
 const redditListingMaxPages = 25
-
-// intelDedupHashFromRedditPostID builds DedupHash from Reddit listing JSON `id` (short post id).
-func intelDedupHashFromRedditPostID(redditID string) string {
-	id := strings.TrimSpace(redditID)
-	if id == "" {
-		return ""
-	}
-	sum := sha256.Sum256([]byte(id))
-	return hex.EncodeToString(sum[:])
-}
 
 func lacerateUniqueViolation(err error) bool {
 	if err == nil {
@@ -45,51 +31,6 @@ type RedditSource struct {
 	SearchQuery string
 	SourceID    uint   `gorm:"not null;uniqueIndex"`
 	Source      Source `gorm:"foreignKey:SourceID"`
-}
-
-func redditPreviewImageURL(post RedditPostData) string {
-	t := strings.TrimSpace(html.UnescapeString(post.Thumbnail))
-	if strings.HasPrefix(t, "http://") || strings.HasPrefix(t, "https://") {
-		return t
-	}
-	return ""
-}
-
-func redditPostToMarkdown(ctx context.Context, post RedditPostData) string {
-	var b strings.Builder
-	title := strings.TrimSpace(post.Title)
-	if title != "" {
-		b.WriteString("# ")
-		b.WriteString(title)
-		b.WriteString("\n\n")
-	}
-	if txt := strings.TrimSpace(post.Selftext); txt != "" {
-		b.WriteString(txt)
-		b.WriteString("\n\n")
-	}
-	if !post.IsSelf {
-		if u := strings.TrimSpace(post.URL); u != "" {
-			if body := fetchPostURLAsMarkdown(ctx, u); body != "" {
-				b.WriteString("## Linked article\n\n")
-				b.WriteString(body)
-				b.WriteString("\n\n")
-			}
-		}
-	}
-	b.WriteString("---\n\n")
-	fmt.Fprintf(&b, "- **Author:** u/%s\n", post.Author)
-	fmt.Fprintf(&b, "- **Subreddit:** r/%s\n", post.Subreddit)
-	fmt.Fprintf(&b, "- **Score:** %d (up %d / down %d)\n", post.Score, post.Ups, post.Downs)
-	fmt.Fprintf(&b, "- **Comments:** %d\n", post.NumComments)
-	if post.Permalink != "" {
-		fmt.Fprintf(&b, "- **Permalink:** https://www.reddit.com%s\n", post.Permalink)
-	}
-	if !post.IsSelf {
-		if u := strings.TrimSpace(post.URL); u != "" {
-			fmt.Fprintf(&b, "- **Link:** %s\n", u)
-		}
-	}
-	return strings.TrimSpace(b.String())
 }
 
 func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, ctx context.Context, db *gorm.DB, out *[]Intel) error {
@@ -112,7 +53,7 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 		pageHadDup := false
 		for _, child := range listing.Data.Children {
 			post := child.Data
-			dedupe := intelDedupHashFromRedditPostID(post.ID)
+			dedupe := post.IntelDedupHash()
 			if dedupe == "" {
 				slog.Warn("lacerate: reddit post missing id, skip", "subreddit", subredditName)
 				continue
@@ -126,7 +67,7 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 				pageHadDup = true
 				continue
 			}
-			previewURL := redditPreviewImageURL(post)
+			previewURL := post.PreviewImageURL()
 			var previewID *uint
 			if previewURL != "" {
 				previewID = persistRedditPreviewImage(ctx, db, post, previewURL)
@@ -135,7 +76,7 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 			i := Intel{
 				SourceID:       r.SourceID,
 				DedupHash:      &dedupeCopy,
-				Content:        redditPostToMarkdown(ctx, post),
+				Content:        post.Markdown(ctx),
 				PreviewImageID: previewID,
 			}
 			if err := db.Create(&i).Error; err != nil {

@@ -16,20 +16,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-func lookupTouchedTargetsOfInterestListGetter() getters.Getter[[]LookupTouchedTargetOfInterestDisplay] {
-	return func(ctx context.Context) ([]LookupTouchedTargetOfInterestDisplay, error) {
-		raw := ctx.Value(ctxKeyLookupTouchedTargetsOfInterest)
-		if raw == nil {
-			return nil, nil
-		}
-		v, ok := raw.([]LookupTouchedTargetOfInterestDisplay)
-		if !ok {
-			return nil, nil
-		}
-		return v, nil
-	}
-}
-
 func touchedTargetOfInterestRowLabelGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		row, ok := ctx.Value("$row").(LookupTouchedTargetOfInterestDisplay)
@@ -56,19 +42,6 @@ func touchedTargetOfInterestRowLabelGetter() getters.Getter[string] {
 	}
 }
 
-func touchedTargetOfInterestRowLinkGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		row, ok := ctx.Value("$row").(LookupTouchedTargetOfInterestDisplay)
-		if !ok || row.TargetOfInterest.ID == 0 {
-			return "", nil
-		}
-		g := lago.RoutePath("lacerate.TargetOfInterestDetailRoute", map[string]getters.Getter[any]{
-			"id": getters.Any(getters.Static(row.TargetOfInterest.ID)),
-		})
-		return g(ctx)
-	}
-}
-
 func lookupDetailTouchedTargetsOfInterestSection() components.PageInterface {
 	return &components.ContainerColumn{
 		Page:    components.Page{Key: "lacerate.LookupDetailTouchedTargetsOfInterest"},
@@ -80,12 +53,14 @@ func lookupDetailTouchedTargetsOfInterestSection() components.PageInterface {
 			},
 			&components.FieldList[LookupTouchedTargetOfInterestDisplay]{
 				Page:    components.Page{Key: "lacerate.LookupDetailTouchedTargetsOfInterestList"},
-				Getter:  lookupTouchedTargetsOfInterestListGetter(),
+				Getter:  getters.Key[[]LookupTouchedTargetOfInterestDisplay](ctxKeyLookupTouchedTargetsOfInterest),
 				Classes: "space-y-2",
 				Children: []components.PageInterface{
 					&components.ButtonLink{
 						GetterLabel: touchedTargetOfInterestRowLabelGetter(),
-						Link:        touchedTargetOfInterestRowLinkGetter(),
+						Link: lago.RoutePath("lacerate.TargetOfInterestDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$row.TargetOfInterest.ID")),
+						}),
 						Icon:        "document-text",
 						Classes:     "btn btn-ghost btn-sm justify-start h-auto min-h-10 whitespace-normal text-left",
 					},
@@ -95,28 +70,20 @@ func lookupDetailTouchedTargetsOfInterestSection() components.PageInterface {
 	}
 }
 
-func lookupLogEntriesObjectListGetter() getters.Getter[components.ObjectList[LookupLogDisplay]] {
-	return func(ctx context.Context) (components.ObjectList[LookupLogDisplay], error) {
-		raw := ctx.Value(ctxKeyLookupLogEntries)
-		if raw == nil {
-			return components.ObjectList[LookupLogDisplay]{Items: nil, Total: 0, Number: 1, NumPages: 1}, nil
-		}
-		displays, ok := raw.([]LookupLogDisplay)
-		if !ok {
-			return components.ObjectList[LookupLogDisplay]{Items: nil, Total: 0, Number: 1, NumPages: 1}, nil
-		}
-		n := uint64(len(displays))
-		return components.ObjectList[LookupLogDisplay]{
-			Items:    displays,
-			Number:   1,
-			NumPages: 1,
-			Total:    n,
-		}, nil
-	}
-}
-
 func lookupLogRowMarkdownGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
+		prettyJSON := func(j datatypes.JSON) string {
+			if len(j) == 0 {
+				return "(none)"
+			}
+			var out bytes.Buffer
+			if err := json.Indent(&out, j, "", "  "); err != nil {
+				slog.Warn("lacerate: lookup log pretty json indent", "error", err)
+				return string(j)
+			}
+			return out.String()
+		}
+
 		row, ok := ctx.Value("$row").(map[string]any)
 		if !ok {
 			return "", nil
@@ -164,9 +131,9 @@ func lookupLogRowMarkdownGetter() getters.Getter[string] {
 				var b strings.Builder
 				fmt.Fprintf(&b, "**Tool:** `%s`\n\n", tc.Name)
 				b.WriteString("**Arguments**\n\n```json\n")
-				b.WriteString(prettyDatatypesJSON(tc.Arguments))
+				b.WriteString(prettyJSON(tc.Arguments))
 				b.WriteString("\n```\n\n**Result**\n\n```json\n")
-				b.WriteString(prettyDatatypesJSON(tc.Result))
+				b.WriteString(prettyJSON(tc.Result))
 				b.WriteString("\n```")
 				body = b.String()
 			}
@@ -179,7 +146,7 @@ func lookupLogRowMarkdownGetter() getters.Getter[string] {
 				fmt.Fprintf(&b, "**Tool:** `%s`\n\n**Message:** %s\n\n", te.ToolName, te.Message)
 				if len(te.Detail) > 0 {
 					b.WriteString("**Detail**\n\n```json\n")
-					b.WriteString(prettyDatatypesJSON(te.Detail))
+					b.WriteString(prettyJSON(te.Detail))
 					b.WriteString("\n```")
 				}
 				body = b.String()
@@ -192,25 +159,13 @@ func lookupLogRowMarkdownGetter() getters.Getter[string] {
 	}
 }
 
-func prettyDatatypesJSON(j datatypes.JSON) string {
-	if len(j) == 0 {
-		return "(none)"
-	}
-	var out bytes.Buffer
-	if err := json.Indent(&out, j, "", "  "); err != nil {
-		slog.Warn("lacerate: lookup log pretty json indent", "error", err)
-		return string(j)
-	}
-	return out.String()
-}
-
 func lookupDetailLogSection() components.PageInterface {
 	return &components.Timeline[LookupLogDisplay]{
 		Page:    components.Page{Key: "lacerate.LookupDetailLogs"},
 		UID:     "lacerate-lookup-log-timeline",
 		Title:   "Activity log",
 		Classes: "w-full mt-8",
-		Data:    lookupLogEntriesObjectListGetter(),
+		Data:    getters.Key[components.ObjectList[LookupLogDisplay]](ctxKeyLookupLogEntries),
 		Children: []components.PageInterface{
 			&components.ContainerColumn{
 				Page: components.Page{Key: "lacerate.LookupDetailLogRow"},

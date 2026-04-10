@@ -1,8 +1,12 @@
 package p_lacerate
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"log/slog"
 	"net/http"
@@ -64,6 +68,67 @@ type RedditPostData struct {
 
 func (RedditPostData) Kind() string {
 	return "t3"
+}
+
+// IntelDedupHash returns a stable dedupe key from the Reddit listing JSON `id` (short post id).
+func (p RedditPostData) IntelDedupHash() string {
+	id := strings.TrimSpace(p.ID)
+	if id == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(id))
+	return hex.EncodeToString(sum[:])
+}
+
+// PreviewImageURL returns the post thumbnail when it is an absolute http(s) URL.
+func (p RedditPostData) PreviewImageURL() string {
+	t := strings.TrimSpace(html.UnescapeString(p.Thumbnail))
+	u, err := url.Parse(t)
+	if err != nil {
+		return ""
+	}
+	if (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return ""
+	}
+	return t
+}
+
+// Markdown builds markdown body for ingest into [Intel.Content].
+func (p RedditPostData) Markdown(ctx context.Context) string {
+	var b strings.Builder
+	title := strings.TrimSpace(p.Title)
+	if title != "" {
+		b.WriteString("# ")
+		b.WriteString(title)
+		b.WriteString("\n\n")
+	}
+	if txt := strings.TrimSpace(p.Selftext); txt != "" {
+		b.WriteString(txt)
+		b.WriteString("\n\n")
+	}
+	if !p.IsSelf {
+		if u := strings.TrimSpace(p.URL); u != "" {
+			if body := fetchPostURLAsMarkdown(ctx, u); body != "" {
+				b.WriteString("## Linked article\n\n")
+				b.WriteString(body)
+				b.WriteString("\n\n")
+			}
+		}
+	}
+	b.WriteString("---\n\n")
+	fmt.Fprintf(&b, "- **Author:** u/%s\n", p.Author)
+	fmt.Fprintf(&b, "- **Subreddit:** r/%s\n", p.Subreddit)
+	fmt.Fprintf(&b, "- **Score:** %d (up %d / down %d)\n", p.Score, p.Ups, p.Downs)
+	fmt.Fprintf(&b, "- **Comments:** %d\n", p.NumComments)
+	if p.Permalink != "" {
+		fmt.Fprintf(&b, "- **Permalink:** https://www.reddit.com%s\n", p.Permalink)
+	}
+	if !p.IsSelf {
+		if u := strings.TrimSpace(p.URL); u != "" {
+			fmt.Fprintf(&b, "- **Link:** %s\n", u)
+		}
+	}
+	return strings.TrimSpace(b.String())
 }
 
 func FetchSubredditPosts(subreddit string, after *string) (*RedditObject[RedditListing[RedditPostData]], error) {

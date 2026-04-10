@@ -2,19 +2,21 @@ package p_lacerate
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
 	"time"
 
+	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
-// ctxKeyLookupLogEntries stores []LookupLogDisplay for the lookup detail page ([lookupDetailLogsLayer]).
+// ctxKeyLookupLogEntries stores components.ObjectList[LookupLogDisplay] for the lookup detail page ([lookupDetailLogsLayer]).
 const ctxKeyLookupLogEntries = "lookupLogEntries"
 
-// ctxKeyLookupTouchedTargetsOfInterest stores []LookupTouchedTargetOfInterestDisplay ([buildLookupTouchedTargetOfInterestDisplays]).
+// ctxKeyLookupTouchedTargetsOfInterest stores []LookupTouchedTargetOfInterestDisplay from tool_call rows ([buildLookupTouchedTargetOfInterestDisplays]).
 const ctxKeyLookupTouchedTargetsOfInterest = "lookupTouchedTargetsOfInterest"
 
 // LookupTouchedTargetOfInterestDisplay is a read bundle for the lookup detail UI (not a GORM model).
@@ -24,39 +26,74 @@ type LookupTouchedTargetOfInterestDisplay struct {
 	LogCreatedAt     time.Time
 }
 
-func buildLookupTouchedTargetOfInterestDisplays(db *gorm.DB, lookupID uint) []LookupTouchedTargetOfInterestDisplay {
-	if lookupID == 0 || db == nil {
+func buildLookupTouchedTargetOfInterestDisplays(db *gorm.DB, displays []LookupLogDisplay) []LookupTouchedTargetOfInterestDisplay {
+	if db == nil {
 		return nil
 	}
-	var refs []LookupLogTargetOfInterest
-	err := db.Joins("INNER JOIN lookup_log_entries ON lookup_log_entries.id = lookup_log_targets_of_interest.lookup_log_entry_id AND lookup_log_entries.deleted_at IS NULL").
-		Where("lookup_log_targets_of_interest.lookup_id = ? AND lookup_log_targets_of_interest.deleted_at IS NULL", lookupID).
-		Order("lookup_log_entries.created_at DESC").
-		Preload("TargetOfInterest").
-		Preload("LookupLogEntry").
-		Find(&refs).Error
-	if err != nil {
-		slog.Error("lacerate: lookup touched Targets of Interest", "error", err, "lookup_id", lookupID)
-		return nil
+	type pending struct {
+		id     uint
+		action string
+		logAt  time.Time
 	}
+	var pend []pending
 	seen := make(map[uint]struct{})
-	out := make([]LookupTouchedTargetOfInterestDisplay, 0, len(refs))
-	for _, ref := range refs {
-		if ref.TargetOfInterestID == 0 || ref.TargetOfInterest.ID == 0 {
+	for _, d := range displays {
+		tc := d.ToolCall
+		if tc == nil || len(tc.Result) == 0 {
 			continue
 		}
-		if _, dup := seen[ref.TargetOfInterestID]; dup {
+		var action string
+		switch tc.Name {
+		case "create_target_of_interest":
+			action = "create"
+		case "edit_target_of_interest":
+			action = "edit"
+		default:
 			continue
 		}
-		seen[ref.TargetOfInterestID] = struct{}{}
-		logAt := time.Time{}
-		if ref.LookupLogEntry.ID != 0 {
-			logAt = ref.LookupLogEntry.CreatedAt
+		var toolOut struct {
+			ID uint `json:"id"`
+		}
+		if err := json.Unmarshal(tc.Result, &toolOut); err != nil {
+			slog.Error("lacerate: lookup tool call result JSON", "error", err, "lookup_log_entry_id", d.ID)
+			continue
+		}
+		id := toolOut.ID
+		if id == 0 {
+			continue
+		}
+		if _, dup := seen[id]; dup {
+			continue
+		}
+		seen[id] = struct{}{}
+		pend = append(pend, pending{id: id, action: action, logAt: d.CreatedAt})
+	}
+	if len(pend) == 0 {
+		return nil
+	}
+	ids := make([]uint, len(pend))
+	for i, p := range pend {
+		ids[i] = p.id
+	}
+	var targets []TargetOfInterest
+	if err := db.Where("id IN ?", ids).Find(&targets).Error; err != nil {
+		slog.Error("lacerate: lookup touched Targets of Interest load", "error", err)
+		return nil
+	}
+	byID := make(map[uint]TargetOfInterest, len(targets))
+	for _, t := range targets {
+		byID[t.ID] = t
+	}
+	out := make([]LookupTouchedTargetOfInterestDisplay, 0, len(pend))
+	for _, p := range pend {
+		t, ok := byID[p.id]
+		if !ok || t.ID == 0 {
+			continue
 		}
 		out = append(out, LookupTouchedTargetOfInterestDisplay{
-			TargetOfInterest: ref.TargetOfInterest,
-			Action:           ref.Action,
-			LogCreatedAt:     logAt,
+			TargetOfInterest: t,
+			Action:           p.action,
+			LogCreatedAt:     p.logAt,
 		})
 	}
 	return out
@@ -136,8 +173,14 @@ func (lookupDetailLogsLayer) Next(view views.View, next http.Handler) http.Handl
 			return
 		}
 		displays := lookupLogDisplaysWithPayloads(db, entries)
-		touched := buildLookupTouchedTargetOfInterestDisplays(db, lu.ID)
-		ctx = context.WithValue(ctx, ctxKeyLookupLogEntries, displays)
+		touched := buildLookupTouchedTargetOfInterestDisplays(db, displays)
+		n := uint64(len(displays))
+		ctx = context.WithValue(ctx, ctxKeyLookupLogEntries, components.ObjectList[LookupLogDisplay]{
+			Items:    displays,
+			Number:   1,
+			NumPages: 1,
+			Total:    n,
+		})
 		ctx = context.WithValue(ctx, ctxKeyLookupTouchedTargetsOfInterest, touched)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

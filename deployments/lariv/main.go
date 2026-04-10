@@ -9,6 +9,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_dashboard"
 	_ "github.com/lariv-in/lago/plugins/p_filesystem"
 	_ "github.com/lariv-in/lago/plugins/p_forms"
+	_ "github.com/lariv-in/lago/plugins/p_lacerate"
 	_ "github.com/lariv-in/lago/plugins/p_otp"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
 	_ "github.com/lariv-in/lago/plugins/p_users"

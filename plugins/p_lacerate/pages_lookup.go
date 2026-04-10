@@ -57,71 +57,6 @@ func registerLookupMenus() {
 	})
 }
 
-func lookupUpdateIntervalPtrGetter() getters.Getter[*time.Duration] {
-	return func(ctx context.Context) (*time.Duration, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if ok {
-			if v, ok := m["UpdateInterval"]; ok {
-				switch d := v.(type) {
-				case *time.Duration:
-					if d == nil || *d == 0 {
-						return nil, nil
-					}
-					dup := *d
-					return &dup, nil
-				case time.Duration:
-					if d == 0 {
-						return nil, nil
-					}
-					dup := d
-					return &dup, nil
-				case int64:
-					if d == 0 {
-						return nil, nil
-					}
-					dup := time.Duration(d)
-					return &dup, nil
-				case float64:
-					if d == 0 {
-						return nil, nil
-					}
-					dup := time.Duration(int64(d))
-					return &dup, nil
-				}
-			}
-		}
-		return getters.Key[*time.Duration]("$in.UpdateInterval")(ctx)
-	}
-}
-
-func lookupUpdateIntervalCellGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		d, err := getters.Deref(getters.Key[*time.Duration]("$row.UpdateInterval"))(ctx)
-		if err != nil {
-			slog.Error("lacerate: lookup update interval cell getter", "error", err)
-			return "", err
-		}
-		if d == 0 {
-			return "—", nil
-		}
-		return d.String(), nil
-	}
-}
-
-func lookupUpdateIntervalDetailGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		d, err := getters.Deref(getters.Key[*time.Duration]("$in.UpdateInterval"))(ctx)
-		if err != nil {
-			slog.Error("lacerate: lookup update interval detail getter", "error", err)
-			return "", err
-		}
-		if d == 0 {
-			return "(not set)", nil
-		}
-		return d.String(), nil
-	}
-}
-
 func lookupContentPreviewCell() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		s, err := getters.Key[string]("$row.Content")(ctx)
@@ -169,7 +104,15 @@ func registerLookupTable() {
 					{
 						Label: "Update interval",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: lookupUpdateIntervalCellGetter()},
+							&components.FieldText{Getter: getters.IfOrElse(
+								getters.Map(getters.Deref(getters.Key[*time.Duration]("$row.UpdateInterval")), func(_ context.Context, d time.Duration) (string, error) {
+									if d == 0 {
+										return "", nil
+									}
+									return d.String(), nil
+								}),
+								getters.Static("—"),
+							)},
 						},
 					},
 					{
@@ -194,7 +137,7 @@ func lookupFormFields() components.PageInterface {
 					&components.InputDuration{
 						Label:   "Update interval (optional)",
 						Name:    "UpdateInterval",
-						Getter:  lookupUpdateIntervalPtrGetter(),
+						Getter:  getters.Key[*time.Duration]("$in.UpdateInterval"),
 						Classes: "w-full",
 					},
 				},
@@ -316,7 +259,15 @@ func registerLookupDetail() {
 							&components.LabelInline{
 								Title: "Update interval",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: lookupUpdateIntervalDetailGetter()},
+									&components.FieldText{Getter: getters.IfOrElse(
+										getters.Map(getters.Deref(getters.Key[*time.Duration]("$in.UpdateInterval")), func(_ context.Context, d time.Duration) (string, error) {
+											if d == 0 {
+												return "", nil
+											}
+											return d.String(), nil
+										}),
+										getters.Static("(not set)"),
+									)},
 								},
 							},
 							&components.LabelInline{

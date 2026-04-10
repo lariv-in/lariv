@@ -2,7 +2,6 @@ package p_lacerate
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"sync"
 	"time"
@@ -20,15 +19,15 @@ var (
 	lookupWorkers  = map[uint]lookupWorkerHandle{}
 )
 
-// scheduleRestartLookupWorker restarts the interval worker after the surrounding transaction commits.
-func scheduleRestartLookupWorker(tx *gorm.DB, lookupID uint) {
-	if lookupID == 0 || tx == nil {
+// scheduleRestartLookupWorker restarts the lookup worker without blocking [Lookup.AfterSave].
+func scheduleRestartLookupWorker(tx *gorm.DB, lu *Lookup) {
+	if lu == nil || lu.ID == 0 || tx == nil {
 		return
 	}
+	luc := *lu
 	sess := tx.Session(&gorm.Session{NewDB: true})
 	go func() {
-		time.Sleep(40 * time.Millisecond)
-		RestartLookupWorker(sess, lookupID)
+		RestartLookupWorker(sess, &luc)
 	}()
 }
 
@@ -44,7 +43,7 @@ func startLookupWorkersFromDB(db *gorm.DB) {
 		return
 	}
 	for i := range lookups {
-		RestartLookupWorker(db, lookups[i].ID)
+		RestartLookupWorker(db, &lookups[i])
 	}
 }
 
@@ -58,36 +57,34 @@ func StopLookupWorker(lookupID uint) {
 	}
 }
 
-// RestartLookupWorker stops an existing worker (if any), then starts a new one using the
-// current row from the DB. No worker is started if the lookup is missing or the interval is nil/non-positive.
-func RestartLookupWorker(db *gorm.DB, lookupID uint) {
+// RestartLookupWorker stops an existing worker (if any), then starts a new one from lu.
+// No worker is started if lu is nil, lu.ID is zero, or the interval is nil/non-positive.
+// The worker uses this snapshot until the next restart (e.g. after a save).
+func RestartLookupWorker(db *gorm.DB, lu *Lookup) {
 	if db == nil {
-		slog.Error("lacerate: RestartLookupWorker called with nil db", "lookup_id", lookupID)
+		slog.Error("lacerate: RestartLookupWorker called with nil db")
+		return
+	}
+	if lu == nil || lu.ID == 0 {
 		return
 	}
 
-	StopLookupWorker(lookupID)
+	StopLookupWorker(lu.ID)
 
-	var lu Lookup
-	if err := db.First(&lu, lookupID).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			slog.Error("lacerate: load lookup for worker", "error", err, "lookup_id", lookupID)
-		}
-		return
-	}
 	if lu.UpdateInterval == nil || *lu.UpdateInterval <= 0 {
 		return
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	lookupWorkerMu.Lock()
-	lookupWorkers[lookupID] = lookupWorkerHandle{ctx: ctx, cancel: cancel}
+	lookupWorkers[lu.ID] = lookupWorkerHandle{ctx: ctx, cancel: cancel}
 	lookupWorkerMu.Unlock()
 
-	go runLookupWorker(db, lookupID, ctx)
+	go runLookupWorker(db, *lu, ctx)
 }
 
-func runLookupWorker(db *gorm.DB, lookupID uint, ctx context.Context) {
+func runLookupWorker(db *gorm.DB, lu Lookup, ctx context.Context) {
+	lookupID := lu.ID
 	defer slog.Info("lacerate: lookup worker exited", "lookup_id", lookupID)
 
 	for {
@@ -97,13 +94,6 @@ func runLookupWorker(db *gorm.DB, lookupID uint, ctx context.Context) {
 		default:
 		}
 
-		var lu Lookup
-		if err := db.WithContext(ctx).First(&lu, lookupID).Error; err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Error("lacerate: lookup worker reload lookup", "error", err, "lookup_id", lookupID)
-			}
-			return
-		}
 		if lu.UpdateInterval == nil || *lu.UpdateInterval <= 0 {
 			StopLookupWorker(lookupID)
 			return

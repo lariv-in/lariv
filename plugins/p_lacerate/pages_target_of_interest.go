@@ -2,7 +2,6 @@ package p_lacerate
 
 import (
 	"context"
-	"log/slog"
 	"strings"
 
 	"github.com/lariv-in/lago/components"
@@ -57,54 +56,6 @@ func registerTargetOfInterestMenus() {
 	})
 }
 
-func targetOfInterestTypePairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.Type")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
-
-func targetOfInterestContentPreviewCell() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$row.Content")(ctx)
-		if err != nil {
-			slog.Error("lacerate: target of interest content preview cell", "error", err)
-			return "", err
-		}
-		s = strings.TrimSpace(s)
-		if s == "" {
-			return "—", nil
-		}
-		if len(s) > 96 {
-			return s[:93] + "...", nil
-		}
-		return s, nil
-	}
-}
-
-func targetOfInterestTypeCellGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$row.Type")(ctx)
-		if err != nil {
-			slog.Error("lacerate: target of interest type cell getter", "error", err)
-			return "", err
-		}
-		if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
-			return p.Value, nil
-		}
-		if s == "" {
-			return "—", nil
-		}
-		return s, nil
-	}
-}
-
 func targetOfInterestFormFields() components.PageInterface {
 	return &components.ContainerColumn{
 		Page: components.Page{Key: "lacerate.TargetOfInterestFormFields"},
@@ -140,7 +91,16 @@ func targetOfInterestFormFields() components.PageInterface {
 						Name:     "Type",
 						Required: true,
 						Choices:  getters.Static(TargetOfInterestTypeChoices),
-						Getter:   targetOfInterestTypePairGetter(),
+						Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
+							s, err := getters.Key[string]("$in.Type")(ctx)
+							if err != nil || s == "" {
+								return registry.Pair[string, string]{}, nil
+							}
+							if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
+								return p, nil
+							}
+							return registry.Pair[string, string]{Key: s, Value: s}, nil
+						},
 					},
 				},
 			},
@@ -189,13 +149,36 @@ func registerTargetOfInterestTable() {
 					{
 						Label: "Type",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: targetOfInterestTypeCellGetter()},
+							&components.FieldText{Getter: getters.IfOrElse(
+								getters.Map(getters.Key[string]("$row.Type"), func(_ context.Context, s string) (string, error) {
+									if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
+										return p.Value, nil
+									}
+									if s == "" {
+										return "", nil
+									}
+									return s, nil
+								}),
+								getters.Static("—"),
+							)},
 						},
 					},
 					{
 						Label: "Content",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: targetOfInterestContentPreviewCell()},
+							&components.FieldText{Getter: getters.IfOrElse(
+								getters.Map(getters.Key[string]("$row.Content"), func(_ context.Context, s string) (string, error) {
+									s = strings.TrimSpace(s)
+									if s == "" {
+										return "", nil
+									}
+									if len(s) > 96 {
+										return s[:93] + "...", nil
+									}
+									return s, nil
+								}),
+								getters.Static("—"),
+							)},
 						},
 					},
 				},
@@ -300,7 +283,12 @@ func registerTargetOfInterestDetail() {
 						Page: components.Page{Key: "lacerate.TargetOfInterestDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{Getter: getters.Key[string]("$in.Name")},
-							&components.FieldSubtitle{Getter: targetOfInterestTypeCellGetterForDetail()},
+							&components.FieldSubtitle{Getter: getters.Map(getters.Key[string]("$in.Type"), func(_ context.Context, s string) (string, error) {
+								if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
+									return p.Value, nil
+								}
+								return s, nil
+							})},
 							&components.LabelInline{
 								Title: "Description",
 								Children: []components.PageInterface{
@@ -338,16 +326,3 @@ func registerTargetOfInterestDetail() {
 	})
 }
 
-func targetOfInterestTypeCellGetterForDetail() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$in.Type")(ctx)
-		if err != nil {
-			slog.Error("lacerate: Target of Interest type detail getter", "error", err)
-			return "", err
-		}
-		if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
-			return p.Value, nil
-		}
-		return s, nil
-	}
-}

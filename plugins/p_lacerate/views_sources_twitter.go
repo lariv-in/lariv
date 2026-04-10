@@ -110,7 +110,7 @@ func (m twitterSourceCreateLayer) Next(view views.View, next http.Handler) http.
 		handlesJ, hErr := twitterHandlesJSONFromValues(values)
 		if hErr != nil {
 			fieldErrors["Handles"] = hErr
-		} else if err := twitterAtLeastOneNormalizedHandle(handlesJ); err != nil {
+		} else if err := twitterAtLeastOneHandle(handlesJ); err != nil {
 			fieldErrors["Handles"] = err
 		}
 
@@ -202,7 +202,7 @@ func (m twitterSourceUpdateLayer) Next(view views.View, next http.Handler) http.
 		handlesJ, hErr := twitterHandlesJSONFromValues(values)
 		if hErr != nil {
 			fieldErrors["Handles"] = hErr
-		} else if err := twitterAtLeastOneNormalizedHandle(handlesJ); err != nil {
+		} else if err := twitterAtLeastOneHandle(handlesJ); err != nil {
 			fieldErrors["Handles"] = err
 		}
 		if len(fieldErrors) != 0 {
@@ -283,7 +283,7 @@ func twitterHandlesJSONFromValues(values map[string]any) (datatypes.JSON, error)
 	}
 }
 
-func twitterAtLeastOneNormalizedHandle(handlesJSON datatypes.JSON) error {
+func twitterAtLeastOneHandle(handlesJSON datatypes.JSON) error {
 	if len(handlesJSON) == 0 {
 		err := fmt.Errorf("at least one handle is required")
 		slog.Error("lacerate: twitter handles validation", "error", err)
@@ -296,7 +296,7 @@ func twitterAtLeastOneNormalizedHandle(handlesJSON datatypes.JSON) error {
 		return err
 	}
 	for _, s := range arr {
-		if normalizeTwitterHandle(s) != "" {
+		if strings.TrimSpace(s) != "" {
 			return nil
 		}
 	}

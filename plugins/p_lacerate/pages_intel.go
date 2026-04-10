@@ -2,7 +2,6 @@ package p_lacerate
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -58,30 +57,6 @@ func registerIntelMenus() {
 			},
 		},
 	})
-}
-
-func sourceDurationCellGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		d, err := getters.Key[time.Duration]("$row.Duration")(ctx)
-		if err != nil {
-			slog.Error("lacerate: intel source duration cell getter", "error", err)
-			return "", err
-		}
-		if d == 0 {
-			return "—", nil
-		}
-		return d.String(), nil
-	}
-}
-
-func intelPreviewUploadPath() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		id, err := getters.Key[uint]("$in.ID")(ctx)
-		if err == nil && id != 0 {
-			return fmt.Sprintf("lacerate/intel/%d", id), nil
-		}
-		return "lacerate/intel/new", nil
-	}
 }
 
 func intelContentPreviewCell() getters.Getter[string] {
@@ -147,7 +122,15 @@ func intelFormFields() components.PageInterface {
 							return zero, nil
 						},
 						AllowedFiletypes: []string{".jpg", ".jpeg", ".png", ".webp", ".gif"},
-						Path:             intelPreviewUploadPath(),
+						Path: getters.IfOrElse(
+							getters.Map(getters.Key[uint]("$in.ID"), func(ctx context.Context, id uint) (string, error) {
+								if id == 0 {
+									return "", nil
+								}
+								return getters.Format("lacerate/intel/%d", getters.Any(getters.Static(id)))(ctx)
+							}),
+							getters.Static("lacerate/intel/new"),
+						),
 					},
 				},
 			},
@@ -417,7 +400,15 @@ func registerIntelSourceSelectionPages() {
 						Label: "Duration",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: sourceDurationCellGetter(),
+								Getter: getters.IfOrElse(
+									getters.Map(getters.Key[time.Duration]("$row.Duration"), func(ctx context.Context, d time.Duration) (string, error) {
+										if d == 0 {
+											return "", nil
+										}
+										return getters.Format("%v", getters.Any(getters.Static(d)))(ctx)
+									}),
+									getters.Static("—"),
+								),
 							},
 						},
 					},

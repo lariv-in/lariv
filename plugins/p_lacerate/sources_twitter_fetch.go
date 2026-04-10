@@ -2,6 +2,8 @@ package p_lacerate
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -39,6 +41,16 @@ type twitterFetchedTweet struct {
 	CreatedAt time.Time
 	Permalink string
 	ImageURL  string
+}
+
+// IntelDedupHash returns a stable dedupe key from the tweet stable id.
+func (tw twitterFetchedTweet) IntelDedupHash() string {
+	id := strings.TrimSpace(tw.ID)
+	if id == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(id))
+	return hex.EncodeToString(sum[:])
 }
 
 const twitterHTTPTimeout = 60 * time.Second

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"strings"
 
 	"github.com/lariv-in/lago/registry"
+	"github.com/pgvector/pgvector-go"
 	"google.golang.org/genai"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -134,17 +134,6 @@ func runLookupAgent(ctx context.Context, db *gorm.DB, lu *Lookup) error {
 					if err2 := run.finishToolCall(toolRow, out); err2 != nil {
 						slog.Error("lacerate: lookup agent save tool result", "error", err2, "lookup_id", lu.ID)
 					}
-					if name == "create_target_of_interest" || name == "edit_target_of_interest" {
-						if targetID, ok := targetOfInterestIDFromToolOutput(out); ok && targetID > 0 {
-							act := "create"
-							if name == "edit_target_of_interest" {
-								act = "edit"
-							}
-							if err := run.recordLookupTouchedTargetOfInterest(toolRow, act, targetID); err != nil {
-								slog.Error("lacerate: lookup agent record touched Target of Interest", "error", err, "lookup_id", lu.ID, "target_of_interest_id", targetID)
-							}
-						}
-					}
 				}
 				fr.Response = map[string]any{"output": out}
 			}
@@ -197,37 +186,6 @@ type lookupRun struct {
 	lookupID uint
 }
 
-func targetOfInterestIDFromToolOutput(out any) (uint, bool) {
-	m, ok := out.(map[string]any)
-	if !ok {
-		return 0, false
-	}
-	id, ok := argUint(m, "id")
-	return id, ok && id > 0
-}
-
-func (r *lookupRun) recordLookupTouchedTargetOfInterest(toolRow *LookupToolCall, action string, targetID uint) error {
-	if r == nil || r.db == nil || toolRow == nil || toolRow.LookupLogEntryID == 0 || targetID == 0 {
-		return nil
-	}
-	if action != "create" && action != "edit" {
-		err := fmt.Errorf("invalid touch action %q", action)
-		slog.Warn("lacerate: lookup touched Target of Interest", "error", err, "lookup_id", r.lookupID)
-		return err
-	}
-	row := LookupLogTargetOfInterest{
-		LookupID:           r.lookupID,
-		LookupLogEntryID:   toolRow.LookupLogEntryID,
-		TargetOfInterestID: targetID,
-		Action:             action,
-	}
-	if err := r.db.Create(&row).Error; err != nil {
-		slog.Error("lacerate: lookup touched Target of Interest insert", "error", err, "lookup_id", r.lookupID, "target_of_interest_id", targetID)
-		return err
-	}
-	return nil
-}
-
 func (r *lookupRun) logModelParts(parts []*genai.Part) {
 	for _, p := range parts {
 		if p == nil {
@@ -241,61 +199,31 @@ func (r *lookupRun) logModelParts(parts []*genai.Part) {
 			continue
 		}
 		if p.Thought {
-			if err := r.logThought(t); err != nil {
+			th := &LookupThought{Text: t}
+			if err := CreateLookupLogEntryData(r.db, r.lookupID, th); err != nil {
 				slog.Error("lacerate: lookup log thought", "error", err, "lookup_id", r.lookupID)
 			}
 			continue
 		}
-		if err := r.logText(t); err != nil {
+		lt := &LookupText{Text: t}
+		if err := CreateLookupLogEntryData(r.db, r.lookupID, lt); err != nil {
 			slog.Error("lacerate: lookup log text", "error", err, "lookup_id", r.lookupID)
 		}
 	}
 }
 
-func (r *lookupRun) logThought(text string) error {
-	entry := LookupLogEntry{LookupID: r.lookupID, Kind: "thought"}
-	if err := r.db.Create(&entry).Error; err != nil {
-		slog.Error("lacerate: lookup log thought entry", "error", err, "lookup_id", r.lookupID)
-		return err
-	}
-	if err := r.db.Create(&LookupThought{LookupLogEntryID: entry.ID, Text: text}).Error; err != nil {
-		slog.Error("lacerate: lookup log thought row", "error", err, "lookup_id", r.lookupID)
-		return err
-	}
-	return nil
-}
-
-func (r *lookupRun) logText(text string) error {
-	entry := LookupLogEntry{LookupID: r.lookupID, Kind: "text"}
-	if err := r.db.Create(&entry).Error; err != nil {
-		slog.Error("lacerate: lookup log text entry", "error", err, "lookup_id", r.lookupID)
-		return err
-	}
-	if err := r.db.Create(&LookupText{LookupLogEntryID: entry.ID, Text: text}).Error; err != nil {
-		slog.Error("lacerate: lookup log text row", "error", err, "lookup_id", r.lookupID)
-		return err
-	}
-	return nil
-}
-
 func (r *lookupRun) startToolCall(name string, args map[string]any) (*LookupToolCall, error) {
-	entry := LookupLogEntry{LookupID: r.lookupID, Kind: "tool_call"}
-	if err := r.db.Create(&entry).Error; err != nil {
-		slog.Error("lacerate: lookup tool call log entry", "error", err, "lookup_id", r.lookupID, "tool", name)
-		return nil, err
-	}
 	argJSON, err := json.Marshal(args)
 	if err != nil {
 		slog.Error("lacerate: lookup tool call marshal args", "error", err, "lookup_id", r.lookupID, "tool", name)
 		return nil, err
 	}
 	tool := &LookupToolCall{
-		LookupLogEntryID: entry.ID,
-		Name:             name,
-		Arguments:        datatypes.JSON(argJSON),
+		Name:      name,
+		Arguments: datatypes.JSON(argJSON),
 	}
-	if err := r.db.Create(tool).Error; err != nil {
-		slog.Error("lacerate: lookup tool call row", "error", err, "lookup_id", r.lookupID, "tool", name)
+	if err := CreateLookupLogEntryData(r.db, r.lookupID, tool); err != nil {
+		slog.Error("lacerate: lookup tool call create", "error", err, "lookup_id", r.lookupID, "tool", name)
 		return nil, err
 	}
 	return tool, nil
@@ -318,11 +246,6 @@ func (r *lookupRun) finishToolCall(row *LookupToolCall, result any) error {
 }
 
 func (r *lookupRun) recordToolError(toolName, message string, detail any) error {
-	entry := LookupLogEntry{LookupID: r.lookupID, Kind: "tool_error"}
-	if err := r.db.Create(&entry).Error; err != nil {
-		slog.Error("lacerate: lookup tool error entry", "error", err, "lookup_id", r.lookupID)
-		return err
-	}
 	var det datatypes.JSON
 	if detail != nil {
 		b, err := json.Marshal(detail)
@@ -332,13 +255,13 @@ func (r *lookupRun) recordToolError(toolName, message string, detail any) error 
 		}
 		det = b
 	}
-	if err := r.db.Create(&LookupToolError{
-		LookupLogEntryID: entry.ID,
-		ToolName:         toolName,
-		Message:          message,
-		Detail:           det,
-	}).Error; err != nil {
-		slog.Error("lacerate: lookup tool error row", "error", err, "lookup_id", r.lookupID)
+	errRow := &LookupToolError{
+		ToolName: toolName,
+		Message:  message,
+		Detail:   det,
+	}
+	if err := CreateLookupLogEntryData(r.db, r.lookupID, errRow); err != nil {
+		slog.Error("lacerate: lookup tool error create", "error", err, "lookup_id", r.lookupID)
 		return err
 	}
 	return nil
@@ -376,13 +299,18 @@ func (createTargetOfInterestTool) Declaration() *genai.FunctionDeclaration {
 }
 
 func (createTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
-	name := strings.TrimSpace(argString(args, "name"))
-	typ := strings.TrimSpace(argString(args, "asset_type"))
-	if typ == "" {
-		typ = strings.TrimSpace(argString(args, "type"))
+	var p createTargetOfInterestArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
 	}
-	desc := strings.TrimSpace(argString(args, "description"))
-	content := strings.TrimSpace(argString(args, "content"))
+	name := strings.TrimSpace(p.Name)
+	typ := strings.TrimSpace(p.TargetType)
+	desc := ""
+	if p.Description != nil {
+		desc = strings.TrimSpace(*p.Description)
+	}
+	content := strings.TrimSpace(p.Content)
 	if name == "" {
 		err := fmt.Errorf("name is required")
 		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
@@ -429,8 +357,13 @@ func (editTargetOfInterestTool) Declaration() *genai.FunctionDeclaration {
 }
 
 func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
-	id, ok := argUint(args, "id")
-	if !ok || id == 0 {
+	var p editTargetOfInterestArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	id := p.ID
+	if id == 0 {
 		err := fmt.Errorf("id is required")
 		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
 		return nil, err
@@ -441,8 +374,8 @@ func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[
 		return nil, err
 	}
 	changed := false
-	if s, ok := argOptionalString(args, "name"); ok {
-		s = strings.TrimSpace(s)
+	if p.Name != nil {
+		s := strings.TrimSpace(*p.Name)
 		if s == "" {
 			err := fmt.Errorf("name cannot be empty")
 			slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
@@ -451,8 +384,8 @@ func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[
 		a.Name = s
 		changed = true
 	}
-	if s, ok := argOptionalString(args, "target_type"); ok {
-		s = strings.TrimSpace(s)
+	if p.TargetType != nil {
+		s := strings.TrimSpace(*p.TargetType)
 		if !validTargetOfInterestType(s) {
 			err := fmt.Errorf("invalid target_type")
 			slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
@@ -460,32 +393,13 @@ func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[
 		}
 		a.Type = s
 		changed = true
-	} else if s, ok := argOptionalString(args, "asset_type"); ok {
-		s = strings.TrimSpace(s)
-		if !validTargetOfInterestType(s) {
-			err := fmt.Errorf("invalid asset_type")
-			slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
-			return nil, err
-		}
-		a.Type = s
+	}
+	if p.Description != nil {
+		a.Description = *p.Description
 		changed = true
 	}
-	if s, ok := argOptionalString(args, "type"); ok {
-		s = strings.TrimSpace(s)
-		if !validTargetOfInterestType(s) {
-			err := fmt.Errorf("invalid type")
-			slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
-			return nil, err
-		}
-		a.Type = s
-		changed = true
-	}
-	if s, ok := argOptionalString(args, "description"); ok {
-		a.Description = s
-		changed = true
-	}
-	if s, ok := argOptionalString(args, "content"); ok {
-		a.Content = s
+	if p.Content != nil {
+		a.Content = *p.Content
 		changed = true
 	}
 	if !changed {
@@ -520,13 +434,22 @@ func (getRelevantTargetsOfInterestTool) Declaration() *genai.FunctionDeclaration
 }
 
 func (getRelevantTargetsOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
-	q := strings.TrimSpace(argString(args, "query"))
+	var p embeddingSearchArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	q := strings.TrimSpace(p.Query)
 	if q == "" {
 		err := fmt.Errorf("query is required")
 		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	limit := clampLookupAgentLimit(int(argNumber(args, "limit", 10)))
+	limit, err := parseLookupSearchLimit(p.Limit, 10, 50)
+	if err != nil {
+		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
 	e := vlEmbedder()
 	if e == nil {
 		err := fmt.Errorf("embedding service not configured")
@@ -543,7 +466,7 @@ func (getRelevantTargetsOfInterestTool) Run(ctx context.Context, r *lookupRun, a
 		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	targets, err := searchTargetsOfInterestByEmbedding(r.db.WithContext(ctx), vec, limit)
+	targets, err := searchTargetsOfInterestByEmbedding(r.db.WithContext(ctx), pgvector.NewVector(vec), limit)
 	if err != nil {
 		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest search", "error", err, "lookup_id", r.lookupID)
 		return nil, err
@@ -584,13 +507,22 @@ func (getRelevantIntelTool) Declaration() *genai.FunctionDeclaration {
 }
 
 func (getRelevantIntelTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
-	q := strings.TrimSpace(argString(args, "query"))
+	var p embeddingSearchArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool get_relevant_intel", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	q := strings.TrimSpace(p.Query)
 	if q == "" {
 		err := fmt.Errorf("query is required")
 		slog.Warn("lacerate: lookup tool get_relevant_intel", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	limit := clampLookupAgentLimit(int(argNumber(args, "limit", 10)))
+	limit, err := parseLookupSearchLimit(p.Limit, 10, 50)
+	if err != nil {
+		slog.Warn("lacerate: lookup tool get_relevant_intel", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
 	e := vlEmbedder()
 	if e == nil {
 		err := fmt.Errorf("embedding service not configured")
@@ -607,7 +539,7 @@ func (getRelevantIntelTool) Run(ctx context.Context, r *lookupRun, args map[stri
 		slog.Error("lacerate: lookup tool get_relevant_intel", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	intels, err := searchIntelByEmbedding(r.db.WithContext(ctx), vec, limit)
+	intels, err := searchIntelByEmbedding(r.db.WithContext(ctx), pgvector.NewVector(vec), limit)
 	if err != nil {
 		slog.Error("lacerate: lookup tool get_relevant_intel search", "error", err, "lookup_id", r.lookupID)
 		return nil, err
@@ -634,103 +566,4 @@ func validTargetOfInterestType(k string) bool {
 		}
 	}
 	return false
-}
-
-func argString(m map[string]any, k string) string {
-	v, ok := m[k]
-	if !ok || v == nil {
-		return ""
-	}
-	return strings.TrimSpace(fmt.Sprint(v))
-}
-
-func argOptionalString(m map[string]any, k string) (string, bool) {
-	v, ok := m[k]
-	if !ok || v == nil {
-		return "", false
-	}
-	s := fmt.Sprint(v)
-	return s, true
-}
-
-func argUint(m map[string]any, k string) (uint, bool) {
-	v, ok := m[k]
-	if !ok || v == nil {
-		return 0, false
-	}
-	switch x := v.(type) {
-	case float64:
-		if x < 0 || x > float64(^uint(0)>>1) {
-			return 0, false
-		}
-		return uint(x), true
-	case int:
-		if x < 0 {
-			return 0, false
-		}
-		return uint(x), true
-	case int64:
-		if x < 0 {
-			return 0, false
-		}
-		return uint(x), true
-	case json.Number:
-		n, err := strconv.ParseUint(string(x), 10, 32)
-		if err != nil {
-			return 0, false
-		}
-		return uint(n), true
-	case string:
-		n, err := strconv.ParseUint(strings.TrimSpace(x), 10, 32)
-		if err != nil {
-			return 0, false
-		}
-		return uint(n), true
-	default:
-		n, err := strconv.ParseUint(strings.TrimSpace(fmt.Sprint(v)), 10, 32)
-		if err != nil {
-			return 0, false
-		}
-		return uint(n), true
-	}
-}
-
-func argNumber(m map[string]any, k string, def float64) float64 {
-	v, ok := m[k]
-	if !ok || v == nil {
-		return def
-	}
-	switch x := v.(type) {
-	case float64:
-		return x
-	case int:
-		return float64(x)
-	case int64:
-		return float64(x)
-	case json.Number:
-		f, _ := x.Float64()
-		return f
-	case string:
-		f, err := strconv.ParseFloat(strings.TrimSpace(x), 64)
-		if err != nil {
-			return def
-		}
-		return f
-	default:
-		f, err := strconv.ParseFloat(strings.TrimSpace(fmt.Sprint(v)), 64)
-		if err != nil {
-			return def
-		}
-		return f
-	}
-}
-
-func clampLookupAgentLimit(n int) int {
-	if n < 1 {
-		return 10
-	}
-	if n > 50 {
-		return 50
-	}
-	return n
 }

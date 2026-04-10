@@ -3,7 +3,6 @@ package p_lacerate
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ func registerRedditSourceMenus() {
 	})
 
 	lago.RegistryPage.Register("lacerate.RedditSourceDetailMenu", &components.SidebarMenu{
-		Title: getters.Format("Reddit source: %s", getters.Any(redditSourceDisplayNameGetter())),
+		Title: getters.Format("Reddit source: %s", getters.Any(getters.Key[string]("redditSource.Source.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to Reddit sources"),
 			Url:   lago.RoutePath("lacerate.DefaultRoute", nil),
@@ -57,184 +56,6 @@ func registerRedditSourceMenus() {
 			},
 		},
 	})
-}
-
-func redditSourceDisplayNameGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if ok {
-			if v, ok := m["Source.Name"]; ok {
-				if s, ok := v.(string); ok && s != "" {
-					return s, nil
-				}
-			}
-		}
-		return getters.Key[string]("redditSource.Source.Name")(ctx)
-	}
-}
-
-func redditSourceNameInputGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if !ok {
-			return "", nil
-		}
-		if v, ok := m["Source.Name"]; ok {
-			if s, ok := v.(string); ok {
-				return s, nil
-			}
-		}
-		return "", nil
-	}
-}
-
-func redditSourceDurationPtrGetter() getters.Getter[*time.Duration] {
-	return func(ctx context.Context) (*time.Duration, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if !ok {
-			return nil, nil
-		}
-		if v, ok := m["Source.Duration"]; ok {
-			switch d := v.(type) {
-			case time.Duration:
-				if d == 0 {
-					return nil, nil
-				}
-				dup := d
-				return &dup, nil
-			case int64:
-				if d == 0 {
-					return nil, nil
-				}
-				dup := time.Duration(d)
-				return &dup, nil
-			case float64:
-				if d == 0 {
-					return nil, nil
-				}
-				dup := time.Duration(int64(d))
-				return &dup, nil
-			}
-		}
-		return nil, nil
-	}
-}
-
-func redditSourceDurationCellGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		d, err := getters.Key[time.Duration]("$row.Source.Duration")(ctx)
-		if err != nil {
-			slog.Error("lacerate: reddit source duration cell getter", "error", err)
-			return "", err
-		}
-		if d == 0 {
-			return "—", nil
-		}
-		return d.String(), nil
-	}
-}
-
-func redditSourceDurationDetailGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		d, err := getters.Key[time.Duration]("$in.Source.Duration")(ctx)
-		if err != nil {
-			slog.Error("lacerate: reddit source duration detail getter", "error", err)
-			return "", err
-		}
-		if d == 0 {
-			return "(not set)", nil
-		}
-		return d.String(), nil
-	}
-}
-
-func redditSearchQueryInputGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if !ok {
-			return "", nil
-		}
-		if v, ok := m["SearchQuery"]; ok {
-			if s, ok := v.(string); ok {
-				return s, nil
-			}
-		}
-		return "", nil
-	}
-}
-
-func redditSearchQueryCellGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$row.SearchQuery")(ctx)
-		if err != nil {
-			slog.Error("lacerate: reddit search query cell getter", "error", err)
-			return "", err
-		}
-		s = strings.TrimSpace(s)
-		if s == "" {
-			return "—", nil
-		}
-		if len(s) > 48 {
-			return s[:45] + "...", nil
-		}
-		return s, nil
-	}
-}
-
-func redditSearchQueryDetailGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$in.SearchQuery")(ctx)
-		if err != nil {
-			slog.Error("lacerate: reddit search query detail getter", "error", err)
-			return "", err
-		}
-		s = strings.TrimSpace(s)
-		if s == "" {
-			return "(none — uses default subreddit listing)", nil
-		}
-		return s, nil
-	}
-}
-
-func redditSubredditsSummaryFromRowGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		raw, err := getters.Key[datatypes.JSON]("$row.Subreddits")(ctx)
-		if err != nil || len(raw) == 0 {
-			return "", nil
-		}
-		var items []string
-		if err := json.Unmarshal(raw, &items); err != nil {
-			slog.Error("lacerate: reddit subreddits summary unmarshal", "error", err)
-			return "", err
-		}
-		if len(items) == 0 {
-			return "", nil
-		}
-		s := strings.Join(items, ", ")
-		if len(s) > 120 {
-			return s[:117] + "...", nil
-		}
-		return s, nil
-	}
-}
-
-func redditSubredditsDetailGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		raw, err := getters.Key[datatypes.JSON]("$in.Subreddits")(ctx)
-		if err != nil || len(raw) == 0 {
-			return "(none)",
-				nil
-		}
-		var items []string
-		if err := json.Unmarshal(raw, &items); err != nil {
-			slog.Error("lacerate: reddit subreddits detail unmarshal", "error", err)
-			return "", err
-		}
-		if len(items) == 0 {
-			return "(none)", nil
-		}
-		return strings.Join(items, "\n"), nil
-	}
 }
 
 func registerRedditSourceTable() {
@@ -272,19 +93,55 @@ func registerRedditSourceTable() {
 					{
 						Label: "Duration",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: redditSourceDurationCellGetter()},
+							&components.FieldText{Getter: getters.IfOrElse(
+								getters.Map(getters.Key[time.Duration]("$row.Source.Duration"), func(_ context.Context, d time.Duration) (string, error) {
+									if d == 0 {
+										return "", nil
+									}
+									return d.String(), nil
+								}),
+								getters.Static("—"),
+							)},
 						},
 					},
 					{
 						Label: "Subreddits",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: redditSubredditsSummaryFromRowGetter()},
+							&components.FieldText{Getter: getters.Map(getters.Key[datatypes.JSON]("$row.Subreddits"), func(_ context.Context, raw datatypes.JSON) (string, error) {
+								if len(raw) == 0 {
+									return "", nil
+								}
+								var items []string
+								if err := json.Unmarshal(raw, &items); err != nil {
+									return "", err
+								}
+								if len(items) == 0 {
+									return "", nil
+								}
+								s := strings.Join(items, ", ")
+								if len(s) > 120 {
+									return s[:117] + "...", nil
+								}
+								return s, nil
+							})},
 						},
 					},
 					{
 						Label: "Search query",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: redditSearchQueryCellGetter()},
+							&components.FieldText{Getter: getters.IfOrElse(
+								getters.Map(getters.Key[string]("$row.SearchQuery"), func(_ context.Context, s string) (string, error) {
+									s = strings.TrimSpace(s)
+									if s == "" {
+										return "", nil
+									}
+									if len(s) > 48 {
+										return s[:45] + "...", nil
+									}
+									return s, nil
+								}),
+								getters.Static("—"),
+							)},
 						},
 					},
 				},
@@ -304,7 +161,7 @@ func redditSourceFormFields() components.ContainerColumn {
 						Label:    "Name",
 						Name:     "Name",
 						Required: true,
-						Getter:   redditSourceNameInputGetter(),
+						Getter:   getters.Key[string]("$in.Source.Name"),
 					},
 				},
 			},
@@ -314,7 +171,13 @@ func redditSourceFormFields() components.ContainerColumn {
 					&components.InputDuration{
 						Label:   "Duration",
 						Name:    "Duration",
-						Getter:  redditSourceDurationPtrGetter(),
+						Getter: getters.Map(getters.Key[time.Duration]("$in.Source.Duration"), func(_ context.Context, d time.Duration) (*time.Duration, error) {
+							if d == 0 {
+								return nil, nil
+							}
+							dup := d
+							return &dup, nil
+						}),
 						Classes: "w-full",
 					},
 				},
@@ -326,18 +189,7 @@ func redditSourceFormFields() components.ContainerColumn {
 						Label:   "Subreddits",
 						Name:    "Subreddits",
 						Classes: "w-full",
-						Getter: func(ctx context.Context) (datatypes.JSON, error) {
-							m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-							if !ok {
-								return nil, nil
-							}
-							if v, ok := m["Subreddits"]; ok {
-								if j, ok := v.(datatypes.JSON); ok {
-									return j, nil
-								}
-							}
-							return nil, nil
-						},
+						Getter: getters.Key[datatypes.JSON]("$in.Subreddits"),
 					},
 				},
 			},
@@ -347,7 +199,7 @@ func redditSourceFormFields() components.ContainerColumn {
 					&components.InputText{
 						Label:   "Search query",
 						Name:    "SearchQuery",
-						Getter:  redditSearchQueryInputGetter(),
+						Getter:  getters.Key[string]("$in.SearchQuery"),
 						Classes: "w-full",
 					},
 				},
@@ -453,14 +305,37 @@ func registerRedditSourceDetail() {
 							&components.LabelInline{
 								Title: "Duration",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: redditSourceDurationDetailGetter()},
+									&components.FieldText{Getter: getters.IfOrElse(
+										getters.Map(getters.Key[time.Duration]("$in.Source.Duration"), func(_ context.Context, d time.Duration) (string, error) {
+											if d == 0 {
+												return "", nil
+											}
+											return d.String(), nil
+										}),
+										getters.Static("(not set)"),
+									)},
 								},
 							},
 							&components.LabelInline{
 								Title: "Subreddits",
 								Children: []components.PageInterface{
 									&components.FieldTextArea{
-										Getter:  redditSubredditsDetailGetter(),
+										Getter: getters.IfOrElse(
+											getters.Map(getters.Key[datatypes.JSON]("$in.Subreddits"), func(_ context.Context, raw datatypes.JSON) (string, error) {
+												if len(raw) == 0 {
+													return "", nil
+												}
+												var items []string
+												if err := json.Unmarshal(raw, &items); err != nil {
+													return "", err
+												}
+												if len(items) == 0 {
+													return "", nil
+												}
+												return strings.Join(items, "\n"), nil
+											}),
+											getters.Static("(none)"),
+										),
 										Classes: "text-sm",
 									},
 								},
@@ -468,7 +343,16 @@ func registerRedditSourceDetail() {
 							&components.LabelInline{
 								Title: "Search query",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: redditSearchQueryDetailGetter()},
+									&components.FieldText{Getter: getters.IfOrElse(
+										getters.Map(getters.Key[string]("$in.SearchQuery"), func(_ context.Context, s string) (string, error) {
+											s = strings.TrimSpace(s)
+											if s == "" {
+												return "", nil
+											}
+											return s, nil
+										}),
+										getters.Static("(none — uses default subreddit listing)"),
+									)},
 								},
 							},
 						},

@@ -2,8 +2,6 @@ package p_lacerate
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -14,75 +12,6 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
-
-// migrateTwitterSourcesDropLegacyHandleColumn removes the old NOT NULL `handle` column after the
-// model moved to JSON [TwitterSource.Handles]. GORM does not drop columns on AutoMigrate.
-func migrateTwitterSourcesDropLegacyHandleColumn(db *gorm.DB) {
-	if !db.Migrator().HasTable(&TwitterSource{}) {
-		return
-	}
-	cols, err := db.Migrator().ColumnTypes(&TwitterSource{})
-	if err != nil {
-		slog.Error("lacerate: twitter_sources column types", "error", err)
-		return
-	}
-	hasLegacy := false
-	for _, c := range cols {
-		if c.Name() == "handle" {
-			hasLegacy = true
-			break
-		}
-	}
-	if !hasLegacy {
-		return
-	}
-
-	switch db.Dialector.Name() {
-	case "postgres":
-		if err := db.Exec(`
-			UPDATE twitter_sources
-			SET handles = json_build_array(trim(both from handle))
-			WHERE (
-				handles IS NULL
-				OR trim(both from handles::text) IN ('null', '[]', '""')
-			)
-			  AND handle IS NOT NULL AND trim(both from handle) <> ''
-		`).Error; err != nil {
-			slog.Error("lacerate: twitter_sources copy handle into handles", "error", err)
-		}
-		if err := db.Exec(`ALTER TABLE twitter_sources DROP COLUMN handle`).Error; err != nil {
-			slog.Error("lacerate: twitter_sources drop legacy handle column", "error", err)
-		}
-	case "sqlite":
-		if err := db.Exec(`
-			UPDATE twitter_sources
-			SET handles = json_array(trim(handle))
-			WHERE (handles IS NULL OR handles = 'null' OR handles = '[]' OR handles = '""')
-			  AND handle IS NOT NULL AND trim(handle) <> ''
-		`).Error; err != nil {
-			slog.Error("lacerate: twitter_sources copy handle into handles", "error", err)
-		}
-		if err := db.Exec(`ALTER TABLE twitter_sources DROP COLUMN handle`).Error; err != nil {
-			slog.Error("lacerate: twitter_sources drop legacy handle column", "error", err)
-		}
-	default:
-		slog.Warn("lacerate: twitter_sources still has legacy handle column; migrate or drop it manually", "dialect", db.Dialector.Name())
-	}
-}
-
-func intelDedupHashFromTwitterStableID(stableID string) string {
-	id := strings.TrimSpace(stableID)
-	if id == "" {
-		return ""
-	}
-	sum := sha256.Sum256([]byte(id))
-	return hex.EncodeToString(sum[:])
-}
-
-func normalizeTwitterHandle(raw string) string {
-	s := strings.TrimSpace(strings.TrimPrefix(raw, "@"))
-	return strings.TrimSpace(s)
-}
 
 // TwitterSource configures ingestion from Twitter / X accounts (see global [lacerateConfig.Twitter]).
 type TwitterSource struct {
@@ -117,29 +46,17 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB) ([]Intel, error) 
 		return nil, err
 	}
 
-	var rawHandles []string
+	var handles []string
 	if len(t.Handles) > 0 {
-		if err := json.Unmarshal(t.Handles, &rawHandles); err != nil {
+		if err := json.Unmarshal(t.Handles, &handles); err != nil {
 			slog.Error("lacerate: twitter source unmarshal handles", "error", err, "source_id", t.SourceID)
 			return nil, err
 		}
 	}
-	hasHandle := false
-	for _, h := range rawHandles {
-		if normalizeTwitterHandle(h) != "" {
-			hasHandle = true
-			break
-		}
-	}
-	if !hasHandle {
-		err := fmt.Errorf("twitter source: no handles configured")
-		slog.Error("lacerate: twitter source fetch", "error", err, "source_id", t.SourceID)
-		return nil, err
-	}
 
 	var out []Intel
-	for _, raw := range rawHandles {
-		handle := normalizeTwitterHandle(raw)
+	for _, handle := range handles {
+		handle = strings.TrimSpace(handle)
 		if handle == "" {
 			continue
 		}
@@ -149,7 +66,7 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB) ([]Intel, error) 
 		}
 
 		for _, tw := range tweets {
-			dedupe := intelDedupHashFromTwitterStableID(tw.ID)
+			dedupe := tw.IntelDedupHash()
 			if dedupe == "" {
 				slog.Warn("lacerate: twitter item missing id, skip", "handle", handle)
 				continue
@@ -201,7 +118,6 @@ func init() {
 	}
 	lago.OnDBInit("p_lacerate.twitter_source_model", func(db *gorm.DB) *gorm.DB {
 		lago.RegisterModel[TwitterSource](db)
-		migrateTwitterSourcesDropLegacyHandleColumn(db)
 		return db
 	})
 }

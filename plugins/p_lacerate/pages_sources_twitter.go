@@ -3,7 +3,6 @@ package p_lacerate
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -38,7 +37,7 @@ func registerTwitterlacerateMenuPatch() {
 
 func registerTwitterSourceMenus() {
 	lago.RegistryPage.Register("lacerate.TwitterSourceDetailMenu", &components.SidebarMenu{
-		Title: getters.Format("Twitter source: %s", getters.Any(twitterSourceDisplayNameGetter())),
+		Title: getters.Format("Twitter source: %s", getters.Any(getters.Key[string]("twitterSource.Source.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to Twitter sources"),
 			Url:   lago.RoutePath("lacerate.TwitterDefaultRoute", nil),
@@ -58,123 +57,6 @@ func registerTwitterSourceMenus() {
 			},
 		},
 	})
-}
-
-func twitterSourceDisplayNameGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if ok {
-			if v, ok := m["Source.Name"]; ok {
-				if s, ok := v.(string); ok && s != "" {
-					return s, nil
-				}
-			}
-		}
-		return getters.Key[string]("twitterSource.Source.Name")(ctx)
-	}
-}
-
-func twitterSourceNameInputGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if !ok {
-			return "", nil
-		}
-		if v, ok := m["Source.Name"]; ok {
-			if s, ok := v.(string); ok {
-				return s, nil
-			}
-		}
-		return "", nil
-	}
-}
-
-func twitterSourceDurationPtrGetter() getters.Getter[*time.Duration] {
-	return func(ctx context.Context) (*time.Duration, error) {
-		m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-		if !ok {
-			return nil, nil
-		}
-		if v, ok := m["Source.Duration"]; ok {
-			switch d := v.(type) {
-			case time.Duration:
-				if d == 0 {
-					return nil, nil
-				}
-				dup := d
-				return &dup, nil
-			case int64:
-				if d == 0 {
-					return nil, nil
-				}
-				dup := time.Duration(d)
-				return &dup, nil
-			case float64:
-				if d == 0 {
-					return nil, nil
-				}
-				dup := time.Duration(int64(d))
-				return &dup, nil
-			}
-		}
-		return nil, nil
-	}
-}
-
-func twitterSourceDurationCellGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		d, err := getters.Key[time.Duration]("$row.Source.Duration")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if d == 0 {
-			return "—", nil
-		}
-		return d.String(), nil
-	}
-}
-
-func twitterSourceDurationDetailGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		d, err := getters.Key[time.Duration]("$in.Source.Duration")(ctx)
-		if err != nil {
-			slog.Error("lacerate: twitter source duration detail getter", "error", err)
-			return "", err
-		}
-		if d == 0 {
-			return "(not set)", nil
-		}
-		return d.String(), nil
-	}
-}
-
-func twitterHandlesSummaryFromRowGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		raw, err := getters.Key[datatypes.JSON]("$row.Handles")(ctx)
-		if err != nil || len(raw) == 0 {
-			return "", nil
-		}
-		var items []string
-		if err := json.Unmarshal(raw, &items); err != nil {
-			slog.Error("lacerate: twitter handles summary unmarshal", "error", err)
-			return "", err
-		}
-		out := make([]string, 0, len(items))
-		for _, s := range items {
-			h := normalizeTwitterHandle(s)
-			if h != "" {
-				out = append(out, "@"+h)
-			}
-		}
-		if len(out) == 0 {
-			return "", nil
-		}
-		s := strings.Join(out, ", ")
-		if len(s) > 120 {
-			return s[:117] + "...", nil
-		}
-		return s, nil
-	}
 }
 
 func registerTwitterSourceTable() {
@@ -212,13 +94,44 @@ func registerTwitterSourceTable() {
 					{
 						Label: "Duration",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: twitterSourceDurationCellGetter()},
+							&components.FieldText{Getter: getters.IfOrElse(
+								getters.Map(getters.Key[time.Duration]("$row.Source.Duration"), func(_ context.Context, d time.Duration) (string, error) {
+									if d == 0 {
+										return "", nil
+									}
+									return d.String(), nil
+								}),
+								getters.Static("—"),
+							)},
 						},
 					},
 					{
 						Label: "Handles",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: twitterHandlesSummaryFromRowGetter()},
+							&components.FieldText{Getter: getters.Map(getters.Key[datatypes.JSON]("$row.Handles"), func(_ context.Context, raw datatypes.JSON) (string, error) {
+								if len(raw) == 0 {
+									return "", nil
+								}
+								var items []string
+								if err := json.Unmarshal(raw, &items); err != nil {
+									return "", err
+								}
+								out := make([]string, 0, len(items))
+								for _, s := range items {
+									h := strings.TrimSpace(s)
+									if h != "" {
+										out = append(out, "@"+h)
+									}
+								}
+								if len(out) == 0 {
+									return "", nil
+								}
+								s := strings.Join(out, ", ")
+								if len(s) > 120 {
+									return s[:117] + "...", nil
+								}
+								return s, nil
+							})},
 						},
 					},
 				},
@@ -238,7 +151,7 @@ func twitterSourceFormFields() components.ContainerColumn {
 						Label:    "Name",
 						Name:     "Name",
 						Required: true,
-						Getter:   twitterSourceNameInputGetter(),
+						Getter:   getters.Key[string]("$in.Source.Name"),
 					},
 				},
 			},
@@ -248,7 +161,13 @@ func twitterSourceFormFields() components.ContainerColumn {
 					&components.InputDuration{
 						Label:   "Duration",
 						Name:    "Duration",
-						Getter:  twitterSourceDurationPtrGetter(),
+						Getter: getters.Map(getters.Key[time.Duration]("$in.Source.Duration"), func(_ context.Context, d time.Duration) (*time.Duration, error) {
+							if d == 0 {
+								return nil, nil
+							}
+							dup := d
+							return &dup, nil
+						}),
 						Classes: "w-full",
 					},
 				},
@@ -256,21 +175,12 @@ func twitterSourceFormFields() components.ContainerColumn {
 			&components.ContainerError{
 				Error: getters.Key[error]("$error.Handles"),
 				Children: []components.PageInterface{
-					&components.InputStringList{
-						Label:   "Twitter handles",
-						Name:    "Handles",
-						Classes: "w-full",
-						Getter: func(ctx context.Context) (datatypes.JSON, error) {
-							m, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
-							if !ok {
-								return nil, nil
-							}
-							if v, ok := m["Handles"]; ok {
-								if j, ok := v.(datatypes.JSON); ok {
-									return j, nil
-								}
-							}
-							return nil, nil
+					&InputTwitterHandleList{
+						InputStringList: components.InputStringList{
+							Label:   "Twitter handles",
+							Name:    "Handles",
+							Classes: "w-full",
+							Getter: getters.Key[datatypes.JSON]("$in.Handles"),
 						},
 					},
 				},
@@ -292,7 +202,7 @@ func registerTwitterSourceForms() {
 					&components.FormComponent[TwitterSource]{
 						Attr:     getters.FormBubbling(getters.Static("lacerate.TwitterSourceCreateForm")),
 						Title:    "New Twitter source",
-						Subtitle: "Name, optional poll interval, and handles (with or without @). Ingest mode is set globally in totschool.toml under [plugins.p_lacerate].",
+						Subtitle: "Name, optional poll interval, and handles (leading @ is stripped on save). Ingest mode is set globally in totschool.toml under [plugins.p_lacerate].",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							twitterSourceFormFields(),
@@ -375,14 +285,44 @@ func registerTwitterSourceDetail() {
 							&components.LabelInline{
 								Title: "Duration",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: twitterSourceDurationDetailGetter()},
+									&components.FieldText{Getter: getters.IfOrElse(
+										getters.Map(getters.Key[time.Duration]("$in.Source.Duration"), func(_ context.Context, d time.Duration) (string, error) {
+											if d == 0 {
+												return "", nil
+											}
+											return d.String(), nil
+										}),
+										getters.Static("(not set)"),
+									)},
 								},
 							},
 							&components.LabelInline{
 								Title: "Handles",
 								Children: []components.PageInterface{
 									&components.FieldTextArea{
-										Getter:  twitterHandlesDetailGetter(),
+										Getter: getters.IfOrElse(
+											getters.Map(getters.Key[datatypes.JSON]("$in.Handles"), func(_ context.Context, raw datatypes.JSON) (string, error) {
+												if len(raw) == 0 {
+													return "", nil
+												}
+												var items []string
+												if err := json.Unmarshal(raw, &items); err != nil {
+													return "", err
+												}
+												var lines []string
+												for _, s := range items {
+													h := strings.TrimSpace(s)
+													if h != "" {
+														lines = append(lines, "@"+h)
+													}
+												}
+												if len(lines) == 0 {
+													return "", nil
+												}
+												return strings.Join(lines, "\n"), nil
+											}),
+											getters.Static("(none)"),
+										),
 										Classes: "text-sm",
 									},
 								},
@@ -393,31 +333,6 @@ func registerTwitterSourceDetail() {
 			},
 		},
 	})
-}
-
-func twitterHandlesDetailGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		raw, err := getters.Key[datatypes.JSON]("$in.Handles")(ctx)
-		if err != nil || len(raw) == 0 {
-			return "(none)", nil
-		}
-		var items []string
-		if err := json.Unmarshal(raw, &items); err != nil {
-			slog.Error("lacerate: twitter handles detail unmarshal", "error", err)
-			return "", err
-		}
-		var lines []string
-		for _, s := range items {
-			h := normalizeTwitterHandle(s)
-			if h != "" {
-				lines = append(lines, "@"+h)
-			}
-		}
-		if len(lines) == 0 {
-			return "(none)", nil
-		}
-		return strings.Join(lines, "\n"), nil
-	}
 }
 
 func registerTwitterSourceDelete() {

@@ -32,12 +32,12 @@ type TargetOfInterest struct {
 
 func (TargetOfInterest) TableName() string { return "targets_of_interest" }
 
-// AfterSave refreshes [TargetOfInterest.Embedding] on every create/update.
-func (a *TargetOfInterest) AfterSave(tx *gorm.DB) error {
+// BeforeSave sets [TargetOfInterest.Embedding] from name/type/description/content ([prepareTargetOfInterestEmbeddingForSave]).
+func (a *TargetOfInterest) BeforeSave(tx *gorm.DB) error {
 	if tx.Statement.SkipHooks {
 		return nil
 	}
-	applyTargetOfInterestEmbedding(context.Background(), tx, a)
+	prepareTargetOfInterestEmbeddingForSave(context.Background(), a)
 	return nil
 }
 
