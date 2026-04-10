@@ -116,6 +116,9 @@ func init() {
 		Name:  "Twitter / X",
 		Model: TwitterSource{},
 	}
+	if err := RegistrySourceKind.Register("twitter", func() SourceInterface { return &TwitterSource{} }); err != nil {
+		panic(err)
+	}
 	lago.OnDBInit("p_lacerate.twitter_source_model", func(db *gorm.DB) *gorm.DB {
 		lago.RegisterModel[TwitterSource](db)
 		return db

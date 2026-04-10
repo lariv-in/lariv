@@ -127,6 +127,9 @@ func init() {
 		Name:  "Reddit",
 		Model: RedditSource{},
 	}
+	if err := RegistrySourceKind.Register("reddit", func() SourceInterface { return &RedditSource{} }); err != nil {
+		panic(err)
+	}
 }
 
 func init() {

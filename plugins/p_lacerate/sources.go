@@ -111,32 +111,17 @@ func runSourceWorker(db *gorm.DB, sourceID uint, ctx context.Context) {
 }
 
 func runSourceFetch(ctx context.Context, db *gorm.DB, src *Source) error {
-	if _, ok := SourceKindMap[src.Kind]; !ok {
-		err := fmt.Errorf("unknown source kind %q", src.Kind)
+	newRow, ok := RegistrySourceKind.Get(src.Kind)
+	if !ok {
+		err := fmt.Errorf("source worker not registered for kind %q", src.Kind)
 		slog.Error("lacerate: source fetch", "error", err, "source_id", src.ID, "kind", src.Kind)
 		return err
 	}
-
-	switch src.Kind {
-	case "reddit":
-		var rs RedditSource
-		if err := db.Preload("Source").Where("source_id = ?", src.ID).First(&rs).Error; err != nil {
-			slog.Error("lacerate: source fetch load reddit source", "error", err, "source_id", src.ID)
-			return err
-		}
-		_, err := rs.Fetch(ctx, db.WithContext(ctx))
-		return err
-	case "twitter":
-		var ts TwitterSource
-		if err := db.Preload("Source").Where("source_id = ?", src.ID).First(&ts).Error; err != nil {
-			slog.Error("lacerate: source fetch load twitter source", "error", err, "source_id", src.ID)
-			return err
-		}
-		_, err := ts.Fetch(ctx, db.WithContext(ctx))
-		return err
-	default:
-		err := fmt.Errorf("source worker not implemented for kind %q", src.Kind)
-		slog.Error("lacerate: source fetch", "error", err, "source_id", src.ID, "kind", src.Kind)
+	row := newRow()
+	if err := db.Preload("Source").Model(row).Where("source_id = ?", src.ID).First(row).Error; err != nil {
+		slog.Error("lacerate: source fetch load kind row", "error", err, "source_id", src.ID, "kind", src.Kind)
 		return err
 	}
+	_, err := row.Fetch(ctx, db.WithContext(ctx))
+	return err
 }

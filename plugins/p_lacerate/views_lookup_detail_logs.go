@@ -26,54 +26,57 @@ type LookupTouchedTargetOfInterestDisplay struct {
 	LogCreatedAt     time.Time
 }
 
+// lookupLogToolTouchTOILabel maps create/edit Target-of-Interest tool names to the short label in the lookup detail sidebar.
+var lookupLogToolTouchTOILabel = map[string]string{
+	"create_target_of_interest": "create",
+	"edit_target_of_interest":   "edit",
+}
+
+type lookupTOITouchPending struct {
+	targetID uint
+	action   string
+	logAt    time.Time
+}
+
+// buildLookupTouchedTargetOfInterestDisplays derives “Targets of Interest touched by this lookup” from
+// successful create/edit tool_call rows (first occurrence per target ID, log order is newest-first).
 func buildLookupTouchedTargetOfInterestDisplays(db *gorm.DB, displays []LookupLogDisplay) []LookupTouchedTargetOfInterestDisplay {
 	if db == nil {
 		return nil
 	}
-	type pending struct {
-		id     uint
-		action string
-		logAt  time.Time
-	}
-	var pend []pending
+	var pending []lookupTOITouchPending
 	seen := make(map[uint]struct{})
 	for _, d := range displays {
 		tc := d.ToolCall
 		if tc == nil || len(tc.Result) == 0 {
 			continue
 		}
-		var action string
-		switch tc.Name {
-		case "create_target_of_interest":
-			action = "create"
-		case "edit_target_of_interest":
-			action = "edit"
-		default:
+		label, ok := lookupLogToolTouchTOILabel[tc.Name]
+		if !ok {
 			continue
 		}
-		var toolOut struct {
+		var res struct {
 			ID uint `json:"id"`
 		}
-		if err := json.Unmarshal(tc.Result, &toolOut); err != nil {
+		if err := json.Unmarshal(tc.Result, &res); err != nil {
 			slog.Error("lacerate: lookup tool call result JSON", "error", err, "lookup_log_entry_id", d.ID)
 			continue
 		}
-		id := toolOut.ID
-		if id == 0 {
+		if res.ID == 0 {
 			continue
 		}
-		if _, dup := seen[id]; dup {
+		if _, dup := seen[res.ID]; dup {
 			continue
 		}
-		seen[id] = struct{}{}
-		pend = append(pend, pending{id: id, action: action, logAt: d.CreatedAt})
+		seen[res.ID] = struct{}{}
+		pending = append(pending, lookupTOITouchPending{targetID: res.ID, action: label, logAt: d.CreatedAt})
 	}
-	if len(pend) == 0 {
+	if len(pending) == 0 {
 		return nil
 	}
-	ids := make([]uint, len(pend))
-	for i, p := range pend {
-		ids[i] = p.id
+	ids := make([]uint, len(pending))
+	for i := range pending {
+		ids[i] = pending[i].targetID
 	}
 	var targets []TargetOfInterest
 	if err := db.Where("id IN ?", ids).Find(&targets).Error; err != nil {
@@ -84,10 +87,10 @@ func buildLookupTouchedTargetOfInterestDisplays(db *gorm.DB, displays []LookupLo
 	for _, t := range targets {
 		byID[t.ID] = t
 	}
-	out := make([]LookupTouchedTargetOfInterestDisplay, 0, len(pend))
-	for _, p := range pend {
-		t, ok := byID[p.id]
-		if !ok || t.ID == 0 {
+	out := make([]LookupTouchedTargetOfInterestDisplay, 0, len(pending))
+	for _, p := range pending {
+		t, ok := byID[p.targetID]
+		if !ok {
 			continue
 		}
 		out = append(out, LookupTouchedTargetOfInterestDisplay{
@@ -108,40 +111,44 @@ type LookupLogDisplay struct {
 	ToolError *LookupToolError
 }
 
+// lookupLogFirstPayload loads the child row for one log entry kind; returns nil on missing row or error (after logging non-NotFound).
+func lookupLogFirstPayload[T any](db *gorm.DB, entryID uint, kindSlug string) *T {
+	var row T
+	err := db.Where("lookup_log_entry_id = ?", entryID).First(&row).Error
+	if err == nil {
+		return &row
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		slog.Error("lacerate: lookup log "+kindSlug+" payload", "error", err, "lookup_log_entry_id", entryID)
+	}
+	return nil
+}
+
+type lookupLogPayloadAttach func(db *gorm.DB, e LookupLogEntry, d *LookupLogDisplay)
+
+// lookupLogDisplayPayloadAttachers maps [LookupLogEntry.Kind] to how the corresponding payload row is attached (one query per row when present).
+var lookupLogDisplayPayloadAttachers = map[string]lookupLogPayloadAttach{
+	"thought": func(db *gorm.DB, e LookupLogEntry, d *LookupLogDisplay) {
+		d.Thought = lookupLogFirstPayload[LookupThought](db, e.ID, "thought")
+	},
+	"text": func(db *gorm.DB, e LookupLogEntry, d *LookupLogDisplay) {
+		d.LogText = lookupLogFirstPayload[LookupText](db, e.ID, "text")
+	},
+	"tool_call": func(db *gorm.DB, e LookupLogEntry, d *LookupLogDisplay) {
+		d.ToolCall = lookupLogFirstPayload[LookupToolCall](db, e.ID, "tool_call")
+	},
+	"tool_error": func(db *gorm.DB, e LookupLogEntry, d *LookupLogDisplay) {
+		d.ToolError = lookupLogFirstPayload[LookupToolError](db, e.ID, "tool_error")
+	},
+}
+
 // lookupLogDisplaysWithPayloads loads child rows by kind for each entry (one query per log row).
 func lookupLogDisplaysWithPayloads(db *gorm.DB, entries []LookupLogEntry) []LookupLogDisplay {
 	out := make([]LookupLogDisplay, 0, len(entries))
 	for _, e := range entries {
 		d := LookupLogDisplay{LookupLogEntry: e}
-		switch e.Kind {
-		case "thought":
-			var th LookupThought
-			if err := db.Where("lookup_log_entry_id = ?", e.ID).First(&th).Error; err == nil {
-				d.Thought = &th
-			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Error("lacerate: lookup log thought payload", "error", err, "lookup_log_entry_id", e.ID)
-			}
-		case "text":
-			var tx LookupText
-			if err := db.Where("lookup_log_entry_id = ?", e.ID).First(&tx).Error; err == nil {
-				d.LogText = &tx
-			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Error("lacerate: lookup log text payload", "error", err, "lookup_log_entry_id", e.ID)
-			}
-		case "tool_call":
-			var tc LookupToolCall
-			if err := db.Where("lookup_log_entry_id = ?", e.ID).First(&tc).Error; err == nil {
-				d.ToolCall = &tc
-			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Error("lacerate: lookup log tool_call payload", "error", err, "lookup_log_entry_id", e.ID)
-			}
-		case "tool_error":
-			var te LookupToolError
-			if err := db.Where("lookup_log_entry_id = ?", e.ID).First(&te).Error; err == nil {
-				d.ToolError = &te
-			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Error("lacerate: lookup log tool_error payload", "error", err, "lookup_log_entry_id", e.ID)
-			}
+		if fn, ok := lookupLogDisplayPayloadAttachers[e.Kind]; ok {
+			fn(db, e, &d)
 		}
 		out = append(out, d)
 	}

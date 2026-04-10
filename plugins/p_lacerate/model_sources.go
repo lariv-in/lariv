@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -18,6 +19,10 @@ type SourceDesc struct {
 }
 
 var SourceKindMap = map[string]SourceDesc{}
+
+// RegistrySourceKind holds a constructor per [Source.Kind] that returns a new row value (e.g. &RedditSource{})
+// for GORM to scan into; the dynamic type must implement [SourceInterface].
+var RegistrySourceKind = registry.NewRegistry[func() SourceInterface]()
 
 type Source struct {
 	gorm.Model
