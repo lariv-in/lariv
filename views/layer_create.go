@@ -76,6 +76,10 @@ func (m LayerCreate[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 
+		if hook, ok := any(record).(TxCommitHook); ok {
+			hook.AfterTxCommit(db)
+		}
+
 		id := uint(reflect.ValueOf(*record).FieldByName("ID").Uint())
 		ctx = context.WithValue(ctx, "$id", id)
 		if m.SuccessURL == nil {

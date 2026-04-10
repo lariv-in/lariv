@@ -35,13 +35,13 @@ func (l *Lookup) BeforeSave(tx *gorm.DB) error {
 	return prepareLookupEmbeddingForSave(context.Background(), l)
 }
 
-// AfterSave schedules a non-blocking lookup worker restart with the in-memory row ([views.LayerCreate] / [views.LayerUpdate] use a transaction).
-func (l *Lookup) AfterSave(tx *gorm.DB) error {
-	if tx.Statement.SkipHooks {
-		return nil
+// AfterTxCommit implements [views.TxCommitHook] so the lookup worker restarts after LayerCreate/LayerUpdate
+// commit using the pooled DB (avoids "conn busy" from scheduling inside the transaction).
+func (l *Lookup) AfterTxCommit(db *gorm.DB) {
+	if l == nil {
+		return
 	}
-	scheduleRestartLookupWorker(tx, l)
-	return nil
+	ScheduleRestartLookupWorker(db, l)
 }
 
 // AfterDelete stops the background worker for this lookup.

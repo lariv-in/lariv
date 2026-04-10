@@ -19,15 +19,15 @@ var (
 	lookupWorkers  = map[uint]lookupWorkerHandle{}
 )
 
-// scheduleRestartLookupWorker restarts the lookup worker without blocking [Lookup.AfterSave].
-func scheduleRestartLookupWorker(tx *gorm.DB, lu *Lookup) {
-	if lu == nil || lu.ID == 0 || tx == nil {
+// ScheduleRestartLookupWorker restarts the lookup worker in a goroutine without blocking the caller.
+// db must be a pooled *gorm.DB (e.g. after db.Transaction returns), not a transactional *gorm.DB.
+func ScheduleRestartLookupWorker(db *gorm.DB, lu *Lookup) {
+	if lu == nil || lu.ID == 0 || db == nil {
 		return
 	}
 	luc := *lu
-	sess := tx.Session(&gorm.Session{NewDB: true})
 	go func() {
-		RestartLookupWorker(sess, &luc)
+		RestartLookupWorker(db, &luc)
 	}()
 }
 

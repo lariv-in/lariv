@@ -37,15 +37,16 @@ func init() {
 	})
 }
 
-// scheduleRestartSourceWorker restarts the source fetch worker without blocking [Source.AfterSave].
-func scheduleRestartSourceWorker(tx *gorm.DB, sourceID uint) {
-	if sourceID == 0 || tx == nil {
+// ScheduleRestartSourceWorker restarts the source fetch worker in a goroutine without blocking the caller.
+// db must be a pooled *gorm.DB (e.g. request DB from context), not a transactional *gorm.DB from inside db.Transaction;
+// call after the transaction returns so the worker does not share the transaction connection (avoids "conn busy").
+func ScheduleRestartSourceWorker(db *gorm.DB, sourceID uint) {
+	if sourceID == 0 || db == nil {
 		return
 	}
 	id := sourceID
-	sess := tx.Session(&gorm.Session{NewDB: true})
 	go func() {
-		RestartSourceWorker(sess, id)
+		RestartSourceWorker(db, id)
 	}()
 }
 

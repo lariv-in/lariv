@@ -146,6 +146,8 @@ func (m redditSourceCreateLayer) Next(view views.View, next http.Handler) http.H
 			return
 		}
 
+		ScheduleRestartSourceWorker(db, rs.SourceID)
+
 		ctx = context.WithValue(ctx, "$id", rs.ID)
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -243,6 +245,8 @@ func (m redditSourceUpdateLayer) Next(view views.View, next http.Handler) http.H
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
+
+		ScheduleRestartSourceWorker(db, srcID)
 
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))

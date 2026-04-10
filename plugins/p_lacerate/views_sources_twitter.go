@@ -146,6 +146,8 @@ func (m twitterSourceCreateLayer) Next(view views.View, next http.Handler) http.
 			return
 		}
 
+		ScheduleRestartSourceWorker(db, ts.SourceID)
+
 		ctx = context.WithValue(ctx, "$id", ts.ID)
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -242,6 +244,8 @@ func (m twitterSourceUpdateLayer) Next(view views.View, next http.Handler) http.
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
+
+		ScheduleRestartSourceWorker(db, srcID)
 
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))

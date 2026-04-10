@@ -31,15 +31,6 @@ type Source struct {
 	Duration time.Duration
 }
 
-// AfterSave schedules a non-blocking fetch worker restart ([views] create/update flows use a transaction, like [Lookup.AfterSave]).
-func (s *Source) AfterSave(tx *gorm.DB) error {
-	if tx.Statement.SkipHooks || s == nil || s.ID == 0 {
-		return nil
-	}
-	scheduleRestartSourceWorker(tx, s.ID)
-	return nil
-}
-
 // AfterDelete stops the background fetch worker for this source row.
 func (s *Source) AfterDelete(tx *gorm.DB) error {
 	if s != nil && s.ID != 0 {

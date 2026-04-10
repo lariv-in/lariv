@@ -110,6 +110,10 @@ func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 
+		if hook, ok := any(&record).(TxCommitHook); ok {
+			hook.AfterTxCommit(db)
+		}
+
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
