@@ -10,15 +10,15 @@ import (
 	"gorm.io/datatypes"
 )
 
-var _ components.InputInterface = InputTwitterHandleList{}
+var _ components.InputInterface = InputSubredditList{}
 
-// InputTwitterHandleList embeds [components.InputStringList] and normalizes Twitter handles in Parse (trim, strip one leading @).
+// InputSubredditList embeds [components.InputStringList] and normalizes subreddit names in Parse (trim, strip optional leading r/).
 // Parse returns [datatypes.JSON] so form values match the model field without extra conversion in view layers.
-type InputTwitterHandleList struct {
+type InputSubredditList struct {
 	components.InputStringList
 }
 
-func (e InputTwitterHandleList) Parse(v any, ctx context.Context) (any, error) {
+func (e InputSubredditList) Parse(v any, ctx context.Context) (any, error) {
 	rawAny, err := e.InputStringList.Parse(v, ctx)
 	if err != nil {
 		return nil, err
@@ -32,13 +32,13 @@ func (e InputTwitterHandleList) Parse(v any, ctx context.Context) (any, error) {
 	}
 	var arr []string
 	if err := json.Unmarshal([]byte(s), &arr); err != nil {
-		return nil, fmt.Errorf("handles must be a JSON array of strings: %w", err)
+		return nil, fmt.Errorf("subreddits must be a JSON array of strings: %w", err)
 	}
 	out := make([]string, 0, len(arr))
 	for _, item := range arr {
 		x := strings.TrimSpace(item)
-		if strings.HasPrefix(x, "@") {
-			x = strings.TrimSpace(x[1:])
+		if len(x) >= 2 && strings.EqualFold(x[:2], "r/") {
+			x = strings.TrimSpace(x[2:])
 		}
 		if x != "" {
 			out = append(out, x)

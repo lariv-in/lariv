@@ -2,6 +2,8 @@ package p_lacerate
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/registry"
@@ -32,13 +34,34 @@ type TargetOfInterest struct {
 
 func (TargetOfInterest) TableName() string { return "targets_of_interest" }
 
+// String returns markdown-shaped text for display and for [VLEmbedder] input (name, type, description, content).
+func (a *TargetOfInterest) String() string {
+	if a == nil {
+		return ""
+	}
+	var b strings.Builder
+	if t := strings.TrimSpace(a.Name); t != "" {
+		fmt.Fprintf(&b, "# %s\n\n", t)
+	}
+	if t := strings.TrimSpace(a.Type); t != "" {
+		fmt.Fprintf(&b, "**Type:** %s\n\n", t)
+	}
+	if t := strings.TrimSpace(a.Description); t != "" {
+		b.WriteString(t)
+		b.WriteString("\n\n")
+	}
+	if t := strings.TrimSpace(a.Content); t != "" {
+		b.WriteString(t)
+	}
+	return strings.TrimSpace(b.String())
+}
+
 // BeforeSave sets [TargetOfInterest.Embedding] from name/type/description/content ([prepareTargetOfInterestEmbeddingForSave]).
 func (a *TargetOfInterest) BeforeSave(tx *gorm.DB) error {
 	if tx.Statement.SkipHooks {
 		return nil
 	}
-	prepareTargetOfInterestEmbeddingForSave(context.Background(), a)
-	return nil
+	return prepareTargetOfInterestEmbeddingForSave(context.Background(), a)
 }
 
 func init() {

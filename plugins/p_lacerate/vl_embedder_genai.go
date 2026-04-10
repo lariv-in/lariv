@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math"
 	"net/http"
 	"strings"
 
@@ -22,15 +21,6 @@ const geminiEmbeddingModelMaxImages = 6
 type GenAIVLEmbedder struct {
 	client *genai.Client
 	model  string
-}
-
-func allZeroEmbedding(vec []float32) bool {
-	for _, v := range vec {
-		if math.Abs(float64(v)) > 1e-12 {
-			return false
-		}
-	}
-	return len(vec) > 0
 }
 
 // NewGenAIVLEmbedder returns a [VLEmbedder] backed by the Gemini Developer API. model may be empty
@@ -106,11 +96,6 @@ func (e *GenAIVLEmbedder) Embed(ctx context.Context, text string, images ...[]by
 	if len(values) != IntelEmbeddingDim {
 		err := fmt.Errorf("p_lacerate: genai embed got dimension %d, want %d", len(values), IntelEmbeddingDim)
 		slog.Error("lacerate: genai embed", "error", err, "got", len(values), "want", IntelEmbeddingDim)
-		return nil, err
-	}
-	if allZeroEmbedding(values) {
-		err := fmt.Errorf("p_lacerate: genai embed returned an all-zero vector")
-		slog.Error("lacerate: genai embed", "error", err, "model", e.model, "dim", len(values))
 		return nil, err
 	}
 	return values, nil

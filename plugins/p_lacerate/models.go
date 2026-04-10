@@ -30,8 +30,7 @@ func (i *Intel) BeforeSave(tx *gorm.DB) error {
 	if tx.Statement.SkipHooks {
 		return nil
 	}
-	prepareIntelEmbeddingForSave(context.Background(), tx, i)
-	return nil
+	return prepareIntelEmbeddingForSave(context.Background(), tx, i)
 }
 
 func init() {

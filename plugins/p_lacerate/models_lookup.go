@@ -32,8 +32,7 @@ func (l *Lookup) BeforeSave(tx *gorm.DB) error {
 	if tx.Statement.SkipHooks {
 		return nil
 	}
-	prepareLookupEmbeddingForSave(context.Background(), l)
-	return nil
+	return prepareLookupEmbeddingForSave(context.Background(), l)
 }
 
 // AfterSave schedules a non-blocking lookup worker restart with the in-memory row ([views.LayerCreate] / [views.LayerUpdate] use a transaction).

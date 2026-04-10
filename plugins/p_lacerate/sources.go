@@ -37,6 +37,18 @@ func init() {
 	})
 }
 
+// scheduleRestartSourceWorker restarts the source fetch worker without blocking [Source.AfterSave].
+func scheduleRestartSourceWorker(tx *gorm.DB, sourceID uint) {
+	if sourceID == 0 || tx == nil {
+		return
+	}
+	id := sourceID
+	sess := tx.Session(&gorm.Session{NewDB: true})
+	go func() {
+		RestartSourceWorker(sess, id)
+	}()
+}
+
 // StopSourceWorker cancels the worker for this source ID and removes it from the map.
 func StopSourceWorker(sourceID uint) {
 	sourceWorkerMu.Lock()

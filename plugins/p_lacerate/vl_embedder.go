@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math"
 	"strings"
 	"sync"
 
@@ -43,35 +42,19 @@ func vlEmbedder() VLEmbedder {
 	return defaultVLEmbedder
 }
 
-// intelZeroEmbedding is a valid NOT NULL placeholder when VL embedding fails or is unavailable.
-func intelZeroEmbedding() pgvector.Vector {
-	return pgvector.NewVector(make([]float32, IntelEmbeddingDim))
-}
-
-func embeddingStats(vec []float32) (nonZero int, absSum float64) {
-	for _, v := range vec {
-		f := math.Abs(float64(v))
-		absSum += f
-		if f > 1e-12 {
-			nonZero++
-		}
-	}
-	return nonZero, absSum
-}
-
 // prepareIntelEmbeddingForSave sets [Intel.Embedding] on the struct before INSERT/UPDATE.
-// Without a [VLEmbedder], on embed failure, or on wrong dimension, uses [intelZeroEmbedding] so NOT NULL is satisfied.
-func prepareIntelEmbeddingForSave(ctx context.Context, db *gorm.DB, intel *Intel) {
+// Without a [VLEmbedder], stores a zero vector so NOT NULL is satisfied. On embed failure or wrong dimension, returns an error.
+func prepareIntelEmbeddingForSave(ctx context.Context, db *gorm.DB, intel *Intel) error {
 	if intel == nil {
-		return
+		return nil
 	}
 	e := vlEmbedder()
 	if e == nil {
 		loggedNilEmbedder.Do(func() {
 			slog.Info("lacerate: VLEmbedder not configured (set [p_lacerate.geminiEmbedding] apiKey in config); Intel embeddings use zero vector")
 		})
-		intel.Embedding = intelZeroEmbedding()
-		return
+		intel.Embedding = pgvector.NewVector(make([]float32, IntelEmbeddingDim))
+		return nil
 	}
 	var images [][]byte
 	if intel.PreviewImageID != nil {
@@ -87,94 +70,73 @@ func prepareIntelEmbeddingForSave(ctx context.Context, db *gorm.DB, intel *Intel
 	vec, err := e.Embed(ctx, intel.Content, images...)
 	if err != nil {
 		slog.Error("lacerate: vl embed intel", "error", err, "intel_id", intel.ID)
-		intel.Embedding = intelZeroEmbedding()
-		return
+		return fmt.Errorf("lacerate: vl embed intel: %w", err)
 	}
 	if len(vec) != IntelEmbeddingDim {
 		slog.Error("lacerate: vl embed intel wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "intel_id", intel.ID)
-		intel.Embedding = intelZeroEmbedding()
-		return
+		return fmt.Errorf("lacerate: vl embed intel: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
 	}
 	intel.Embedding = pgvector.NewVector(vec)
-	nonZero, absSum := embeddingStats(vec)
-	slog.Info("lacerate: vl embed intel success", "intel_id", intel.ID, "dim", len(vec), "non_zero", nonZero, "abs_sum", absSum)
-}
-
-func targetOfInterestEmbeddingText(a *TargetOfInterest) string {
-	if a == nil {
-		return ""
-	}
-	var b strings.Builder
-	if t := strings.TrimSpace(a.Name); t != "" {
-		fmt.Fprintf(&b, "# %s\n\n", t)
-	}
-	if t := strings.TrimSpace(a.Type); t != "" {
-		fmt.Fprintf(&b, "**Type:** %s\n\n", t)
-	}
-	if t := strings.TrimSpace(a.Description); t != "" {
-		b.WriteString(t)
-		b.WriteString("\n\n")
-	}
-	if t := strings.TrimSpace(a.Content); t != "" {
-		b.WriteString(t)
-	}
-	return strings.TrimSpace(b.String())
+	slog.Info("lacerate: vl embed intel success", "intel_id", intel.ID, "dim", len(vec))
+	return nil
 }
 
 // prepareTargetOfInterestEmbeddingForSave sets [TargetOfInterest.Embedding] on the struct before INSERT/UPDATE.
-func prepareTargetOfInterestEmbeddingForSave(ctx context.Context, a *TargetOfInterest) {
-	e := vlEmbedder()
-	if e == nil || a == nil {
-		return
+// With no [VLEmbedder] or empty [TargetOfInterest.String], leaves embedding cleared or unchanged. On embed failure or wrong dimension, returns an error without updating the embedding.
+func prepareTargetOfInterestEmbeddingForSave(ctx context.Context, a *TargetOfInterest) error {
+	if a == nil {
+		return nil
 	}
-	text := targetOfInterestEmbeddingText(a)
+	e := vlEmbedder()
+	if e == nil {
+		return nil
+	}
+	text := a.String()
 	if text == "" {
 		a.Embedding = nil
-		return
+		return nil
 	}
 	vec, err := e.Embed(ctx, text)
 	if err != nil {
 		slog.Error("lacerate: vl embed Target of Interest", "error", err, "target_of_interest_id", a.ID)
-		return
+		return fmt.Errorf("lacerate: vl embed Target of Interest: %w", err)
 	}
 	if len(vec) != IntelEmbeddingDim {
 		slog.Error("lacerate: vl embed Target of Interest wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "target_of_interest_id", a.ID)
-		return
+		return fmt.Errorf("lacerate: vl embed Target of Interest: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
 	}
 	v := pgvector.NewVector(vec)
 	a.Embedding = &v
-	nonZero, absSum := embeddingStats(vec)
-	slog.Info("lacerate: vl embed Target of Interest success", "target_of_interest_id", a.ID, "dim", len(vec), "non_zero", nonZero, "abs_sum", absSum)
+	slog.Info("lacerate: vl embed Target of Interest success", "target_of_interest_id", a.ID, "dim", len(vec))
+	return nil
 }
 
 // prepareLookupEmbeddingForSave sets [Lookup.Embedding] from [Lookup.Content] before INSERT/UPDATE.
-// When no [VLEmbedder] is registered and content is non-empty, the existing embedding value is left unchanged
-// (for updates this keeps the loaded column; [Lookup.BeforeCreate] still supplies a zero vector on create).
-func prepareLookupEmbeddingForSave(ctx context.Context, l *Lookup) {
+// Empty content stores a zero vector. When no [VLEmbedder] is registered and content is non-empty, the existing embedding is left unchanged.
+// On embed failure or wrong dimension, returns an error and does not overwrite [Lookup.Embedding].
+func prepareLookupEmbeddingForSave(ctx context.Context, l *Lookup) error {
 	if l == nil {
-		return
+		return nil
 	}
 	text := strings.TrimSpace(l.Content)
 	if text == "" {
-		l.Embedding = intelZeroEmbedding()
-		return
+		l.Embedding = pgvector.NewVector(make([]float32, IntelEmbeddingDim))
+		return nil
 	}
 	e := vlEmbedder()
 	if e == nil {
-		return
+		return nil
 	}
 	vec, err := e.Embed(ctx, text)
 	if err != nil {
 		slog.Error("lacerate: vl embed lookup", "error", err, "lookup_id", l.ID)
-		l.Embedding = intelZeroEmbedding()
-		return
+		return fmt.Errorf("lacerate: vl embed lookup: %w", err)
 	}
 	if len(vec) != IntelEmbeddingDim {
 		slog.Error("lacerate: vl embed lookup wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "lookup_id", l.ID)
-		l.Embedding = intelZeroEmbedding()
-		return
+		return fmt.Errorf("lacerate: vl embed lookup: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
 	}
 	l.Embedding = pgvector.NewVector(vec)
-	nonZero, absSum := embeddingStats(vec)
-	slog.Info("lacerate: vl embed lookup success", "lookup_id", l.ID, "dim", len(vec), "non_zero", nonZero, "abs_sum", absSum)
+	slog.Info("lacerate: vl embed lookup success", "lookup_id", l.ID, "dim", len(vec))
+	return nil
 }

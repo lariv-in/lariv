@@ -2,7 +2,6 @@ package p_lacerate
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -109,9 +108,13 @@ func (m redditSourceCreateLayer) Next(view views.View, next http.Handler) http.H
 			fieldErrors["Name"] = fmt.Errorf("name is required")
 		}
 
-		subJ, subErr := subredditsJSONFromValues(values)
-		if subErr != nil {
-			fieldErrors["Subreddits"] = subErr
+		var subJ datatypes.JSON
+		if fieldErrors["Subreddits"] == nil {
+			var ok bool
+			subJ, ok = values["Subreddits"].(datatypes.JSON)
+			if !ok {
+				fieldErrors["Subreddits"] = fmt.Errorf("invalid subreddits value (got %T)", values["Subreddits"])
+			}
 		}
 
 		if len(fieldErrors) != 0 {
@@ -142,8 +145,6 @@ func (m redditSourceCreateLayer) Next(view views.View, next http.Handler) http.H
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-
-		RestartSourceWorker(db, rs.SourceID)
 
 		ctx = context.WithValue(ctx, "$id", rs.ID)
 		if m.SuccessURL == nil {
@@ -201,9 +202,13 @@ func (m redditSourceUpdateLayer) Next(view views.View, next http.Handler) http.H
 		if name == "" {
 			fieldErrors["Name"] = fmt.Errorf("name is required")
 		}
-		subJ, subErr := subredditsJSONFromValues(values)
-		if subErr != nil {
-			fieldErrors["Subreddits"] = subErr
+		var subJ datatypes.JSON
+		if fieldErrors["Subreddits"] == nil {
+			var ok bool
+			subJ, ok = values["Subreddits"].(datatypes.JSON)
+			if !ok {
+				fieldErrors["Subreddits"] = fmt.Errorf("invalid subreddits value (got %T)", values["Subreddits"])
+			}
 		}
 		if len(fieldErrors) != 0 {
 			for fname, ferr := range fieldErrors {
@@ -227,7 +232,7 @@ func (m redditSourceUpdateLayer) Next(view views.View, next http.Handler) http.H
 			}).Error; err != nil {
 				return err
 			}
-			return tx.Model(&Source{}).Where("id = ?", srcID).Updates(map[string]any{
+			return tx.Model(&Source{Model: gorm.Model{ID: srcID}}).Updates(map[string]any{
 				"Name":     name,
 				"Duration": duration,
 			}).Error
@@ -284,13 +289,11 @@ func (m redditSourceDeleteLayer) Next(view views.View, next http.Handler) http.H
 		rid := record.ID
 		db := ctx.Value("$db").(*gorm.DB)
 
-		StopSourceWorker(srcID)
-
 		err = db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Delete(&RedditSource{}, rid).Error; err != nil {
 				return err
 			}
-			return tx.Delete(&Source{}, srcID).Error
+			return tx.Delete(&Source{Model: gorm.Model{ID: srcID}}).Error
 		})
 		if err != nil {
 			slog.Error("lacerate: reddit source delete", "error", err)
@@ -320,33 +323,4 @@ func durationPtrFromFormValues(values map[string]any) time.Duration {
 		return 0
 	}
 	return *dp
-}
-
-func subredditsJSONFromValues(values map[string]any) (datatypes.JSON, error) {
-	raw, ok := values["Subreddits"]
-	if !ok || raw == nil {
-		return datatypes.JSON("[]"), nil
-	}
-	switch v := raw.(type) {
-	case datatypes.JSON:
-		return v, nil
-	case string:
-		s := strings.TrimSpace(v)
-		if s == "" {
-			return datatypes.JSON("[]"), nil
-		}
-		var arr []string
-		if err := json.Unmarshal([]byte(s), &arr); err != nil {
-			err = fmt.Errorf("subreddits must be a JSON array of strings: %w", err)
-			slog.Error("lacerate: reddit subreddits from form", "error", err)
-			return nil, err
-		}
-		return datatypes.JSON(s), nil
-	case []byte:
-		return datatypes.JSON(v), nil
-	default:
-		err := fmt.Errorf("invalid subreddits value (got %T)", raw)
-		slog.Error("lacerate: reddit subreddits from form", "error", err)
-		return nil, err
-	}
 }

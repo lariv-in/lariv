@@ -107,11 +107,15 @@ func (m twitterSourceCreateLayer) Next(view views.View, next http.Handler) http.
 			fieldErrors["Name"] = fmt.Errorf("name is required")
 		}
 
-		handlesJ, hErr := twitterHandlesJSONFromValues(values)
-		if hErr != nil {
-			fieldErrors["Handles"] = hErr
-		} else if err := twitterAtLeastOneHandle(handlesJ); err != nil {
-			fieldErrors["Handles"] = err
+		var handlesJ datatypes.JSON
+		if fieldErrors["Handles"] == nil {
+			var ok bool
+			handlesJ, ok = values["Handles"].(datatypes.JSON)
+			if !ok {
+				fieldErrors["Handles"] = fmt.Errorf("invalid handles value (got %T)", values["Handles"])
+			} else if err := twitterAtLeastOneHandle(handlesJ); err != nil {
+				fieldErrors["Handles"] = err
+			}
 		}
 
 		if len(fieldErrors) != 0 {
@@ -141,8 +145,6 @@ func (m twitterSourceCreateLayer) Next(view views.View, next http.Handler) http.
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-
-		RestartSourceWorker(db, ts.SourceID)
 
 		ctx = context.WithValue(ctx, "$id", ts.ID)
 		if m.SuccessURL == nil {
@@ -199,11 +201,15 @@ func (m twitterSourceUpdateLayer) Next(view views.View, next http.Handler) http.
 		if name == "" {
 			fieldErrors["Name"] = fmt.Errorf("name is required")
 		}
-		handlesJ, hErr := twitterHandlesJSONFromValues(values)
-		if hErr != nil {
-			fieldErrors["Handles"] = hErr
-		} else if err := twitterAtLeastOneHandle(handlesJ); err != nil {
-			fieldErrors["Handles"] = err
+		var handlesJ datatypes.JSON
+		if fieldErrors["Handles"] == nil {
+			var ok bool
+			handlesJ, ok = values["Handles"].(datatypes.JSON)
+			if !ok {
+				fieldErrors["Handles"] = fmt.Errorf("invalid handles value (got %T)", values["Handles"])
+			} else if err := twitterAtLeastOneHandle(handlesJ); err != nil {
+				fieldErrors["Handles"] = err
+			}
 		}
 		if len(fieldErrors) != 0 {
 			for fname, ferr := range fieldErrors {
@@ -225,7 +231,7 @@ func (m twitterSourceUpdateLayer) Next(view views.View, next http.Handler) http.
 			}).Error; err != nil {
 				return err
 			}
-			return tx.Model(&Source{}).Where("id = ?", srcID).Updates(map[string]any{
+			return tx.Model(&Source{Model: gorm.Model{ID: srcID}}).Updates(map[string]any{
 				"Name":     name,
 				"Duration": duration,
 			}).Error
@@ -236,8 +242,6 @@ func (m twitterSourceUpdateLayer) Next(view views.View, next http.Handler) http.
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-
-		RestartSourceWorker(db, srcID)
 
 		if m.SuccessURL == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -252,35 +256,6 @@ func (m twitterSourceUpdateLayer) Next(view views.View, next http.Handler) http.
 		}
 		views.HtmxRedirect(w, r, successURL, http.StatusSeeOther)
 	})
-}
-
-func twitterHandlesJSONFromValues(values map[string]any) (datatypes.JSON, error) {
-	raw, ok := values["Handles"]
-	if !ok || raw == nil {
-		return datatypes.JSON("[]"), nil
-	}
-	switch v := raw.(type) {
-	case datatypes.JSON:
-		return v, nil
-	case string:
-		s := strings.TrimSpace(v)
-		if s == "" {
-			return datatypes.JSON("[]"), nil
-		}
-		var arr []string
-		if err := json.Unmarshal([]byte(s), &arr); err != nil {
-			err = fmt.Errorf("handles must be a JSON array of strings: %w", err)
-			slog.Error("lacerate: twitter handles from form", "error", err)
-			return nil, err
-		}
-		return datatypes.JSON(s), nil
-	case []byte:
-		return datatypes.JSON(v), nil
-	default:
-		err := fmt.Errorf("invalid handles value (got %T)", raw)
-		slog.Error("lacerate: twitter handles from form", "error", err)
-		return nil, err
-	}
 }
 
 func twitterAtLeastOneHandle(handlesJSON datatypes.JSON) error {
@@ -335,13 +310,11 @@ func (m twitterSourceDeleteLayer) Next(view views.View, next http.Handler) http.
 		tid := record.ID
 		db := ctx.Value("$db").(*gorm.DB)
 
-		StopSourceWorker(srcID)
-
 		err = db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Delete(&TwitterSource{}, tid).Error; err != nil {
 				return err
 			}
-			return tx.Delete(&Source{}, srcID).Error
+			return tx.Delete(&Source{Model: gorm.Model{ID: srcID}}).Error
 		})
 		if err != nil {
 			slog.Error("lacerate: twitter source delete", "error", err)

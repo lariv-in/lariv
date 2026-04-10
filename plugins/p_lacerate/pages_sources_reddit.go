@@ -185,11 +185,13 @@ func redditSourceFormFields() components.ContainerColumn {
 			&components.ContainerError{
 				Error: getters.Key[error]("$error.Subreddits"),
 				Children: []components.PageInterface{
-					&components.InputStringList{
-						Label:   "Subreddits",
-						Name:    "Subreddits",
-						Classes: "w-full",
-						Getter: getters.Key[datatypes.JSON]("$in.Subreddits"),
+					&InputSubredditList{
+						InputStringList: components.InputStringList{
+							Label:   "Subreddits",
+							Name:    "Subreddits",
+							Classes: "w-full",
+							Getter:  getters.Key[datatypes.JSON]("$in.Subreddits"),
+						},
 					},
 				},
 			},
