@@ -5,6 +5,7 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	_ "github.com/lariv-in/lago/plugins/p_dashboard"
+	_ "github.com/lariv-in/lago/plugins/p_export"
 	_ "github.com/lariv-in/lago/plugins/p_otp"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
 	_ "github.com/lariv-in/lago/plugins/p_totschool_appointments"
