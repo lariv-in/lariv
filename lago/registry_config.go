@@ -8,4 +8,4 @@ type Config interface {
 	PostConfig()
 }
 
-var RegistryConfig registry.Registry[Config] = registry.NewRegistry[Config]()
+var RegistryConfig *registry.Registry[Config] = registry.NewRegistry[Config]()

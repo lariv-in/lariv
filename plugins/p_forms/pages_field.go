@@ -13,7 +13,7 @@ func registerFieldPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("forms.FieldCreateForm"),
+				Name: getters.Static("forms.FieldCreateForm"),
 				ActionURL: lago.RoutePath("forms.FieldCreateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),
@@ -41,7 +41,7 @@ func registerFieldPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("forms.FieldUpdateForm"),
+				Name: getters.Static("forms.FieldUpdateForm"),
 				ActionURL: lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 					"id":      getters.Any(getters.Key[uint]("form_field.ID")),
@@ -64,10 +64,10 @@ func registerFieldPages() {
 										Children: []components.PageInterface{
 											&components.ButtonSubmit{Label: "Save"},
 											&components.ButtonModalForm{
-												Label:       "Delete",
-												Icon:        "trash",
-												Name:        getters.Static("forms.FieldDeleteForm"),
-												Url:         lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
+												Label: "Delete",
+												Icon:  "trash",
+												Name:  getters.Static("forms.FieldDeleteForm"),
+												Url: lago.RoutePath("forms.FieldDeleteRoute", map[string]getters.Getter[any]{
 													"form_id": getters.Any(getters.Key[uint]("form_field.FormID")),
 													"id":      getters.Any(getters.Key[uint]("form_field.ID")),
 												}),
@@ -76,7 +76,7 @@ func registerFieldPages() {
 													"id":      getters.Any(getters.Key[uint]("form_field.ID")),
 												}),
 												ModalUID: "forms-field-delete-modal",
-												Classes:   "btn-error",
+												Classes:  "btn-error",
 											},
 										},
 									},

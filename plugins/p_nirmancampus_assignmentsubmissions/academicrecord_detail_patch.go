@@ -86,8 +86,8 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 					getters.Any(getters.Key[uint]("academicrecord.ID")),
 				),
 				ModalUID: "assignmentsubmissions-create-modal",
-				Icon:    "plus",
-				Classes: "btn-square btn-outline btn-sm",
+				Icon:     "plus",
+				Classes:  "btn-square btn-outline btn-sm",
 			},
 		},
 		RowAttr: getters.RowAttrNavigate(

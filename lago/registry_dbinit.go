@@ -3,15 +3,24 @@ package lago
 import (
 	"log"
 
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-var dbInitRegistry []func(*gorm.DB) *gorm.DB = []func(*gorm.DB) *gorm.DB{}
+// DBInitHook runs after core DB setup (migrations, callbacks). Hooks run in registration order.
+type DBInitHook func(*gorm.DB) *gorm.DB
 
-func OnDBInit(f func(*gorm.DB) *gorm.DB) {
-	dbInitRegistry = append(dbInitRegistry, f)
+// RegistryDBInit stores DB init hooks; iterate with [registry.RegisterOrder] to preserve registration order.
+// [AllStable] returns an internal cached slice — do not mutate it.
+var RegistryDBInit = registry.NewRegistry[DBInitHook]()
+
+// OnDBInit registers hook under name. Duplicate names panic at init time.
+func OnDBInit(name string, hook DBInitHook) {
+	if err := RegistryDBInit.Register(name, hook); err != nil {
+		log.Panic(err)
+	}
 }
 
 func InitDB(config LagoConfig) (*gorm.DB, error) {
@@ -39,8 +48,8 @@ func InitDB(config LagoConfig) (*gorm.DB, error) {
 		db.Statement.Unscoped = true
 	})
 
-	for _, f := range dbInitRegistry {
-		db = f(db)
+	for _, p := range *RegistryDBInit.AllStable(registry.RegisterOrder[DBInitHook]{}) {
+		db = p.Value(db)
 	}
 	return db, nil
 }

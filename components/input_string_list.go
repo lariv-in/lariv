@@ -58,6 +58,9 @@ func (e InputStringList) Build(ctx context.Context) Node {
 		remove(i) { this.items.splice(i, 1); if (this.items.length === 0) this.items.push(''); }
 	}`, itemsJSON)
 
+	// Capture phase so this runs before Alpine @submit.prevent on the form dispatches
+	// "lago-form-submit" (e.g. FormListenBoostedPost), which reads the form via htmx.values
+	// before bubble-phase submit handlers run.
 	initJS := fmt.Sprintf(`
 $el.closest('form').addEventListener('submit', (e) => {
 	const d = Alpine.$data($el);
@@ -65,7 +68,7 @@ $el.closest('form').addEventListener('submit', (e) => {
 	const cleaned = d.items.map(s => String(s).trim()).filter(s => s !== '');
 	const h = $el.querySelector('input[type="hidden"][name=%s]');
 	if (h) h.value = JSON.stringify(cleaned);
-});
+}, true);
 `, strconv.Quote(e.Name))
 
 	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)

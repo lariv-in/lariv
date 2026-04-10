@@ -256,7 +256,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("programs.ProgramUpdateForm"),
+				Name: getters.Static("programs.ProgramUpdateForm"),
 				ActionURL: lago.RoutePath("programs.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("program.ID")),
 				}),
@@ -283,7 +283,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
-										Name:        getters.Static("programs.ProgramDeleteForm"),
+												Name:        getters.Static("programs.ProgramDeleteForm"),
 												Url:         lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 												FormPostURL: lago.RoutePath("programs.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("program.ID"))}),
 												ModalUID:    "program-delete-modal",

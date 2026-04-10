@@ -26,7 +26,7 @@ type AssignmentSubmission struct {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_assignmentsubmissions.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[AssignmentSubmission](d)
 		return d
 	})

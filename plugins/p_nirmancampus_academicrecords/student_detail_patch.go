@@ -87,8 +87,8 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 					getters.Any(getters.Key[uint]("student.ID")),
 				),
 				ModalUID: "academicrecords-create-modal",
-				Icon:    "plus",
-				Classes: "btn-square btn-outline btn-sm",
+				Icon:     "plus",
+				Classes:  "btn-square btn-outline btn-sm",
 			},
 		},
 		RowAttr: getters.RowAttrNavigate(lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{

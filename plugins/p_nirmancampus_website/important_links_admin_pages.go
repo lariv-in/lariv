@@ -144,26 +144,25 @@ func registerImportantLinksAdminFormPages() {
 			lago.DynamicPage{Name: "nirmancampus_website.WebsiteAdminMenu"},
 		},
 		Children: []components.PageInterface{
-						&components.FormListenBoostedPost{
+			&components.FormListenBoostedPost{
 				Name:      getters.Static("nirmancampus_website.ImportantLinksCreateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[ImportantLink]{
-				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksCreateForm")),
+						Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksCreateForm")),
 
-
-				Title:    "Create Important Link",
-				Subtitle: "Create a new important link entry",
-				Classes:  "@container",
-				ChildrenInput: []components.PageInterface{
-					importantLinksFormFields(),
-				},
-				ChildrenAction: []components.PageInterface{
-					&components.ButtonSubmit{Label: "Save"},
-				},
+						Title:    "Create Important Link",
+						Subtitle: "Create a new important link entry",
+						Classes:  "@container",
+						ChildrenInput: []components.PageInterface{
+							importantLinksFormFields(),
+						},
+						ChildrenAction: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Save"},
+						},
+					},
 				},
 			},
-		},
 		},
 	})
 
@@ -172,41 +171,40 @@ func registerImportantLinksAdminFormPages() {
 			lago.DynamicPage{Name: "nirmancampus_website.WebsiteAdminMenu"},
 		},
 		Children: []components.PageInterface{
-						&components.FormListenBoostedPost{
+			&components.FormListenBoostedPost{
 				Name:      getters.Static("nirmancampus_website.ImportantLinksImportForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksImportRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[map[string]any]{
-				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksImportForm")),
+						Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksImportForm")),
 
-
-				Title:    "Import Important Links",
-				Subtitle: "Upload a .json file containing an array of important link objects.",
-				Classes:  "@container",
-				ChildrenInput: []components.PageInterface{
-					&components.InputFile{
-						Label:    "JSON File",
-						Name:     "ImportFile",
-						Required: true,
-						Accept:   ".json,application/json",
-					},
-				},
-				ChildrenAction: []components.PageInterface{
-					components.ContainerRow{
-						Classes: "flex gap-2",
-						Children: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Import"},
-							&components.ButtonLink{
-								Label:   "Cancel",
-								Link:    lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
-								Classes: "btn-outline",
+						Title:    "Import Important Links",
+						Subtitle: "Upload a .json file containing an array of important link objects.",
+						Classes:  "@container",
+						ChildrenInput: []components.PageInterface{
+							&components.InputFile{
+								Label:    "JSON File",
+								Name:     "ImportFile",
+								Required: true,
+								Accept:   ".json,application/json",
+							},
+						},
+						ChildrenAction: []components.PageInterface{
+							components.ContainerRow{
+								Classes: "flex gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Import"},
+									&components.ButtonLink{
+										Label:   "Cancel",
+										Link:    lago.RoutePath("nirmancampus_website.ImportantLinksDefaultRoute", nil),
+										Classes: "btn-outline",
+									},
+								},
 							},
 						},
 					},
 				},
-				},
 			},
-		},
 		},
 	})
 
@@ -215,52 +213,51 @@ func registerImportantLinksAdminFormPages() {
 			lago.DynamicPage{Name: "nirmancampus_website.ImportantLinksDetailMenu"},
 		},
 		Children: []components.PageInterface{
-						&components.FormListenBoostedPost{
-				Name:      getters.Static("nirmancampus_website.ImportantLinksUpdateForm"),
+			&components.FormListenBoostedPost{
+				Name: getters.Static("nirmancampus_website.ImportantLinksUpdateForm"),
 				ActionURL: lago.RoutePath("nirmancampus_website.ImportantLinksUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("link.ID")),
 				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[ImportantLink]{
-				Getter: getters.Key[ImportantLink]("link"),
-				Attr: getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksUpdateForm")),
+						Getter: getters.Key[ImportantLink]("link"),
+						Attr:   getters.FormBubbling(getters.Static("nirmancampus_website.ImportantLinksUpdateForm")),
 
-
-				Title:    "Edit Important Link",
-				Subtitle: "Update important link details",
-				Classes:  "@container",
-				ChildrenInput: []components.PageInterface{
-					importantLinksFormFields(),
-				},
-				ChildrenAction: []components.PageInterface{
-					&components.ContainerRow{
-						Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
-						Children: []components.PageInterface{
+						Title:    "Edit Important Link",
+						Subtitle: "Update important link details",
+						Classes:  "@container",
+						ChildrenInput: []components.PageInterface{
+							importantLinksFormFields(),
+						},
+						ChildrenAction: []components.PageInterface{
 							&components.ContainerRow{
-								Classes: "flex justify-end gap-2",
+								Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
 								Children: []components.PageInterface{
-									&components.ButtonSubmit{Label: "Update"},
-									&components.ButtonModalForm{
-										Label:   "Delete",
-										Icon:    "trash",
-										Name:    getters.Static("nirmancampus_website.ImportantLinksDeleteForm"),
-										Url: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
-											"id": getters.Any(getters.Key[uint]("link.ID")),
-										}),
-										FormPostURL: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
-											"id": getters.Any(getters.Key[uint]("link.ID")),
-										}),
-										ModalUID: "nirmancampus-important-links-delete-modal",
-										Classes:  "btn-error",
+									&components.ContainerRow{
+										Classes: "flex justify-end gap-2",
+										Children: []components.PageInterface{
+											&components.ButtonSubmit{Label: "Update"},
+											&components.ButtonModalForm{
+												Label: "Delete",
+												Icon:  "trash",
+												Name:  getters.Static("nirmancampus_website.ImportantLinksDeleteForm"),
+												Url: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("link.ID")),
+												}),
+												FormPostURL: lago.RoutePath("nirmancampus_website.ImportantLinksDeleteRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("link.ID")),
+												}),
+												ModalUID: "nirmancampus-important-links-delete-modal",
+												Classes:  "btn-error",
+											},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-				},
 			},
-		},
 		},
 	})
 }
@@ -419,7 +416,7 @@ func registerImportantLinksAdminDetailPages() {
 			&components.DeleteConfirmation{
 				Title:   "Confirm Deletion",
 				Message: "Are you sure you want to delete this important link?",
-				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
+				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})

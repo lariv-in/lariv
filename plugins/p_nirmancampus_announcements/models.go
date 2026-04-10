@@ -40,7 +40,7 @@ func (a *Announcement) BeforeSave(tx *gorm.DB) error {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_announcements.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Announcement](d)
 		return d
 	})

@@ -5,4 +5,4 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-var RegistryLayer registry.Registry[views.GlobalLayer] = registry.NewRegistry[views.GlobalLayer]()
+var RegistryLayer *registry.Registry[views.GlobalLayer] = registry.NewRegistry[views.GlobalLayer]()

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 

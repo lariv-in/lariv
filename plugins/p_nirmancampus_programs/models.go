@@ -62,7 +62,7 @@ var programTypeChoices = []registry.Pair[string, string]{
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_programs.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Program](d)
 		lago.RegisterModel[ProgramStructureUnit](d)
 		return d

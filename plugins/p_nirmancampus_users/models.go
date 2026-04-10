@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_users.admin_role", func(d *gorm.DB) *gorm.DB {
 		d.FirstOrCreate(&p_users.Role{}, p_users.Role{Name: "admin"})
 		return d
 	})

@@ -62,7 +62,7 @@ func WithOverlappingFilterChain(q gorm.ChainInterface[Appointment]) gorm.ChainIn
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_totschool_appointments.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Appointment](d)
 		d.Model(&Appointment{}).Where("generation_id IS NOT NULL").Update("generation_id", nil)
 		go runWorker(d)

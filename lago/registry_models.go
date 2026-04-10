@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var RegistryModel registry.Registry[any] = registry.NewRegistry[any]()
+var RegistryModel *registry.Registry[any] = registry.NewRegistry[any]()
 
 func RegisterModel[T any](db *gorm.DB) {
 	var zero T

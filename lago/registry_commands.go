@@ -7,4 +7,4 @@ import (
 
 type CommandFactory func(LagoConfig) *cobra.Command
 
-var RegistryCommand registry.Registry[CommandFactory] = registry.NewRegistry[CommandFactory]()
+var RegistryCommand *registry.Registry[CommandFactory] = registry.NewRegistry[CommandFactory]()

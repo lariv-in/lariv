@@ -3,6 +3,8 @@ package lago
 import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/spf13/cobra"
+
+	"github.com/lariv-in/lago/registry"
 )
 
 func Start(config LagoConfig) error {
@@ -36,7 +38,7 @@ func Start(config LagoConfig) error {
 		},
 	})
 
-	for _, pair := range *RegistryCommand.AllStable() {
+	for _, pair := range *RegistryCommand.AllStable(registry.AlphabeticalByKey[CommandFactory]{}) {
 		rootCmd.AddCommand(pair.Value(config))
 	}
 

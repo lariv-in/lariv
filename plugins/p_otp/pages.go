@@ -13,7 +13,7 @@ func init() {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_otp.pages_bootstrap", func(d *gorm.DB) *gorm.DB {
 		prefs := LoadPreferences(d)
 		smsEnabled := prefs.SmsOtpTemplateId != "" || prefs.OtpTemplateId != ""
 		emailEnabled := prefs.EmailOtpTemplateString != ""

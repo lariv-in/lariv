@@ -22,7 +22,7 @@ func buildFileInfo(v VNode, classes string, ctx context.Context) Node {
 	children := []Node{
 		components.Render(components.Icon{Name: "document"}, ctx),
 		Span(Text(v.Name)),
-		Span(Class("opacity-50"), Text(fmt.Sprintf("(%s)", v.GetFileSize()))),
+		Span(Class("opacity-50"), Text(fmt.Sprintf("(%s)", v.FileSizeDisplay()))),
 	}
 
 	detailURL, err := lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{

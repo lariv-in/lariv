@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
 	_ "gorm.io/driver/sqlite"
 )
@@ -28,7 +29,7 @@ func StartServer(config LagoConfig) error {
 	BuildAllRegistries()
 
 	// Applying all layers
-	layers := *RegistryLayer.AllStable()
+	layers := *RegistryLayer.AllStable(registry.RegisterOrder[views.GlobalLayer]{})
 	var router http.Handler = GetRouter(config)
 	for _, layer := range layers {
 		router = layer.Value.Next(router)

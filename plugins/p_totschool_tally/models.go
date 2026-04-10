@@ -265,7 +265,7 @@ func GetLeaderboards(db *gorm.DB, userID *uint, session *TotSchoolSession) map[s
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_totschool_tally.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[TotSchoolSession](d)
 		lago.RegisterModel[Tally](d)
 		return d

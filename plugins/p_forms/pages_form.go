@@ -198,7 +198,7 @@ func registerFormCRUDPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("forms.FormUpdateForm"),
+				Name: getters.Static("forms.FormUpdateForm"),
 				ActionURL: lago.RoutePath("forms.UpdateRoute", map[string]getters.Getter[any]{
 					"form_id": getters.Any(getters.Key[uint]("form.ID")),
 				}),

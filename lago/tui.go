@@ -46,7 +46,7 @@ type model struct {
 }
 
 func initialModel(db *gorm.DB) model {
-	stable := RegistryAdmin.AllStable()
+	stable := RegistryAdmin.AllStable(registry.AlphabeticalByKey[AdminPanelInterface]{})
 	m := model{
 		currentTab: 0,
 		tabs:       *stable,

@@ -18,7 +18,7 @@ type LayoutTopbar struct {
 func (e LayoutTopbar) Build(ctx context.Context) gomponents.Node {
 	topbarItems := gomponents.Group{}
 
-	for _, comp := range *RegistryTopbar.AllStable() {
+	for _, comp := range *RegistryTopbar.AllStable(registry.RegisterOrder[PageInterface]{}) {
 		item := comp.Value
 		topbarItems = append(topbarItems, Render(item, ctx))
 	}

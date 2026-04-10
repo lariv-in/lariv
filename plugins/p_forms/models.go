@@ -65,7 +65,7 @@ func (f *FormField) SelectOptionStrings() []string {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_forms.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Form](d)
 		lago.RegisterModel[FormField](d)
 		lago.RegisterModel[FormSubmission](d)

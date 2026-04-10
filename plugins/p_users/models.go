@@ -55,7 +55,7 @@ func (u *User) hashPassword() (err error) {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_users.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[User](d)
 		lago.RegisterModel[Role](d)
 

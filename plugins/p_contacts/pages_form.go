@@ -112,7 +112,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      updateFormName,
+				Name: updateFormName,
 				ActionURL: lago.RoutePath("contacts.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("contact.ID")),
 				}),
@@ -138,7 +138,7 @@ func registerFormPages() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
-										Name:        deleteFormName,
+												Name:        deleteFormName,
 												Url:         lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("contact.ID"))}),
 												FormPostURL: lago.RoutePath("contacts.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("contact.ID"))}),
 												ModalUID:    "contact-delete-modal",

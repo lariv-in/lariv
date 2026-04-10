@@ -59,7 +59,7 @@ func migrateSchema(db *gorm.DB) {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_students.models", func(d *gorm.DB) *gorm.DB {
 		migrateSchema(d)
 		lago.RegisterModel[Student](d)
 		d.FirstOrCreate(&p_users.Role{}, p_users.Role{Name: "student"})

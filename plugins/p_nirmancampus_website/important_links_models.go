@@ -22,7 +22,7 @@ type ImportantLink struct {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_website.important_links_models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[ImportantLink](d)
 		return d
 	})

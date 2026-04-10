@@ -53,6 +53,7 @@ func optionalCoursesMultiSelectURLGetter() getters.Getter[string] {
 		return u.String(), nil
 	}
 }
+
 func createFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{
@@ -357,7 +358,7 @@ func registerFormPages() {
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("academicrecords.AcademicRecordUpdateForm"),
+				Name: getters.Static("academicrecords.AcademicRecordUpdateForm"),
 				ActionURL: lago.RoutePath("academicrecords.UpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
 				}),
@@ -384,7 +385,7 @@ func registerFormPages() {
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
-										Name:        getters.Static("academicrecords.AcademicRecordDeleteForm"),
+												Name:        getters.Static("academicrecords.AcademicRecordDeleteForm"),
 												Url:         lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("academicrecord.ID"))}),
 												FormPostURL: lago.RoutePath("academicrecords.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("academicrecord.ID"))}),
 												ModalUID:    "academicrecord-delete-modal",

@@ -54,7 +54,7 @@ func (e InputMultiVNode) Build(ctx context.Context) Node {
 					items = append(items, multiVNodeItem{
 						ID:   strconv.FormatUint(uint64(n.ID), 10),
 						Name: n.Name,
-						Size: n.GetFileSize(),
+						Size: n.FileSizeDisplay(),
 					})
 				}
 			}

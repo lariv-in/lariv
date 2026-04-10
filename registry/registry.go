@@ -7,19 +7,21 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
+	"sort"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/lariv-in/lago/getters"
 )
 
-func NewRegistry[T any]() Registry[T] {
-	return Registry[T]{
-		unpatchedItems: map[string]T{},
+func NewRegistry[T any]() *Registry[T] {
+	return &Registry[T]{
+		unpatchedItems: map[string]RegistryItem[T]{},
 		patches:        map[string][]func(T) T{},
-		items:          map[string]T{},
+		items:          map[string]RegistryItem[T]{},
+		itemsList:      make(map[RegistrySorter[T]]*registryItems[T]),
 		isBuilt:        false,
-		itemsList:      []Pair[string, T]{},
 	}
 }
 
@@ -92,26 +94,74 @@ func (p Pair[K, V]) ToKVJson() string {
 	return string(b)
 }
 
+// RegistryItem is the stored value plus registration order for custom [RegistrySorter]s.
+// Use a stable zero-value sorter (e.g. [AlphabeticalByKey], [RegisterOrder]) as the map key for [Registry.AllStable] caching.
+type RegistryItem[T any] struct {
+	Order int
+	Item  T
+}
+
+// RegistrySorter orders entries for [Registry.AllStable]. Compare returns <0 if a sorts before b,
+// 0 if equal for ordering purposes, >0 if a sorts after b (same contract as [strings.Compare] / [cmp.Compare]).
+type RegistrySorter[T any] interface {
+	Compare(a, b Pair[string, RegistryItem[T]]) int
+}
+
+// AlphabeticalByKey sorts by registry name (string key), using [strings.Compare].
+type AlphabeticalByKey[T any] struct{}
+
+func (AlphabeticalByKey[T]) Compare(a, b Pair[string, RegistryItem[T]]) int {
+	return strings.Compare(a.Key, b.Key)
+}
+
+// RegisterOrder sorts by [RegistryItem.Order] (the order entries were registered).
+type RegisterOrder[T any] struct{}
+
+func (RegisterOrder[T]) Compare(a, b Pair[string, RegistryItem[T]]) int {
+	return cmp.Compare(a.Value.Order, b.Value.Order)
+}
+
+type registryItems[T any] struct {
+	isBuilt bool
+	items   []Pair[string, T]
+}
+
 type Registry[T any] struct {
-	unpatchedItems map[string]T
+	unpatchedItems map[string]RegistryItem[T]
 	patches        map[string][]func(T) T
-	items          map[string]T
-	itemsList      []Pair[string, T]
+	items          map[string]RegistryItem[T]
+	itemsList      map[RegistrySorter[T]]*registryItems[T]
 	isBuilt        bool
 	isBuilding     bool
+	mu             sync.RWMutex
+	cond           *sync.Cond
 }
 
 func (r *Registry[T]) Register(name string, unpatchedItem T) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.initCondLocked()
+	for r.isBuilding {
+		r.cond.Wait()
+	}
+
 	_, isPresent := r.unpatchedItems[name]
 	if isPresent {
-		return fmt.Errorf("Entry with name %s is already present in the registry %#v, consider patching it instead", name, *r)
+		return fmt.Errorf("entry with name %s is already present in the registry, consider patching it instead", name)
 	}
-	r.unpatchedItems[name] = unpatchedItem
+	r.unpatchedItems[name] = RegistryItem[T]{Order: len(r.unpatchedItems), Item: unpatchedItem}
 	r.isBuilt = false
 	return nil
 }
 
 func (r *Registry[T]) Patch(name string, patcher func(T) T) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.initCondLocked()
+	for r.isBuilding {
+		r.cond.Wait()
+	}
+
 	if len(r.patches[name]) == 0 {
 		r.patches[name] = []func(T) T{patcher}
 	} else {
@@ -120,17 +170,27 @@ func (r *Registry[T]) Patch(name string, patcher func(T) T) {
 	r.isBuilt = false
 }
 
-func (r *Registry[T]) Build() {
-	if r.isBuilding {
+func (r *Registry[T]) initCondLocked() {
+	if r.cond == nil {
+		r.cond = sync.NewCond(&r.mu)
+	}
+}
+
+func (r *Registry[T]) buildLocked() {
+	if r.isBuilt || r.isBuilding {
 		return
 	}
+	r.initCondLocked()
 	r.isBuilding = true
-	defer func() { r.isBuilding = false }()
 
-	items := maps.Clone(r.unpatchedItems)
-	patches := maps.Clone(r.patches)
+	baseItems := maps.Clone(r.unpatchedItems)
+	basePatches := maps.Clone(r.patches)
+	r.mu.Unlock()
 
-	for k := range r.patches {
+	items := maps.Clone(baseItems)
+	patches := maps.Clone(basePatches)
+
+	for k := range basePatches {
 		_, isItemPresent := items[k]
 		if !isItemPresent {
 			continue
@@ -138,32 +198,35 @@ func (r *Registry[T]) Build() {
 		p := patches[k]
 		delete(patches, k)
 		for _, patcher := range p {
-			items[k] = patcher(items[k])
+			ri := items[k]
+			ri.Item = patcher(ri.Item)
+			items[k] = ri
 		}
-		// Fold applied patches into the base so a later Build still sees the
-		// transformed value; drop them from the pending patch list.
-		r.unpatchedItems[k] = items[k]
 	}
 
+	r.mu.Lock()
+	defer r.cond.Broadcast()
+	defer func() { r.isBuilding = false }()
+
+	// Fold applied patches into the base so a later build still sees the
+	// transformed value; drop them from the pending patch list.
+	for k := range basePatches {
+		if item, ok := items[k]; ok {
+			r.unpatchedItems[k] = item
+		}
+	}
 	r.patches = patches
 
-	maps.Copy(r.items, items)
+	clear(r.items)
+	for k, v := range items {
+		r.items[k] = v
+	}
 
 	if len(r.patches) > 0 {
-		slog.Warn("The following patches were not applied since no corresponding keys were found in the registry", "registry", *r, "patches", r.patches)
+		slog.Warn("The following patches were not applied since no corresponding keys were found in the registry", "patches", r.patches)
 	}
 
-	r.itemsList = []Pair[string, T]{}
-	for k, v := range items {
-		r.itemsList = append(r.itemsList, Pair[string, T]{
-			Key:   k,
-			Value: v,
-		})
-	}
-
-	slices.SortFunc(r.itemsList, func(a, b Pair[string, T]) int {
-		return strings.Compare(a.Key, b.Key)
-	})
+	r.itemsList = make(map[RegistrySorter[T]]*registryItems[T])
 
 	r.isBuilt = true
 }
@@ -171,16 +234,33 @@ func (r *Registry[T]) Build() {
 func (r *Registry[T]) Get(name string) (T, bool) {
 	var zero T
 
-	if !r.isBuilt {
-		// Avoid infinite recursion when patches or getters try to resolve
-		// registry entries while a build is already in progress.
-		if r.isBuilding {
+	r.mu.RLock()
+	if r.isBuilt {
+		ri, isPresent := r.items[name]
+		r.mu.RUnlock()
+		if !isPresent {
 			return zero, false
 		}
-		r.Build()
+		return ri.Item, true
 	}
-	v, isPresent := r.items[name]
-	return v, isPresent
+	// Avoid recursion deadlocks when patches/getters re-enter the same registry
+	// while a build is in progress.
+	if r.isBuilding {
+		r.mu.RUnlock()
+		return zero, false
+	}
+	r.mu.RUnlock()
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !r.isBuilt {
+		r.buildLocked()
+	}
+	ri, isPresent := r.items[name]
+	if !isPresent {
+		return zero, false
+	}
+	return ri.Item, true
 }
 
 func (r *Registry[T]) Getter(name string) getters.Getter[T] {
@@ -194,15 +274,86 @@ func (r *Registry[T]) Getter(name string) getters.Getter[T] {
 }
 
 func (r *Registry[T]) All() map[string]T {
-	if !r.isBuilt {
-		r.Build()
+	r.mu.RLock()
+	if r.isBuilt {
+		out := make(map[string]T, len(r.items))
+		for k, ri := range r.items {
+			out[k] = ri.Item
+		}
+		r.mu.RUnlock()
+		return out
 	}
-	return r.items
+	if r.isBuilding {
+		r.mu.RUnlock()
+		return map[string]T{}
+	}
+	r.mu.RUnlock()
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !r.isBuilt {
+		r.buildLocked()
+	}
+	out := make(map[string]T, len(r.items))
+	for k, ri := range r.items {
+		out[k] = ri.Item
+	}
+	return out
 }
 
-func (r *Registry[T]) AllStable() *[]Pair[string, T] {
-	if !r.isBuilt {
-		r.Build()
+// AllStable returns an internal cached slice ordered by sorter. Pass a stable sorter value
+// (e.g. [AlphabeticalByKey] zero value) so cache lookups match.
+// Treat the returned slice as immutable and do not mutate it.
+func (r *Registry[T]) AllStable(sorter RegistrySorter[T]) *[]Pair[string, T] {
+	r.mu.RLock()
+	if r.isBuilt {
+		ent := r.itemsList[sorter]
+		r.mu.RUnlock()
+		if ent != nil && ent.isBuilt {
+			return &ent.items
+		}
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if !r.isBuilt {
+			r.buildLocked()
+		}
+	} else {
+		if r.isBuilding {
+			r.mu.RUnlock()
+			empty := []Pair[string, T]{}
+			return &empty
+		}
+		r.mu.RUnlock()
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if !r.isBuilt {
+			r.buildLocked()
+		}
 	}
-	return &r.itemsList
+
+	if !r.isBuilt {
+		empty := []Pair[string, T]{}
+		return &empty
+	}
+	ent := r.itemsList[sorter]
+	if ent == nil {
+		ent = &registryItems[T]{}
+		r.itemsList[sorter] = ent
+	}
+	if !ent.isBuilt {
+		buf := make([]Pair[string, RegistryItem[T]], 0, len(r.items))
+		for k, v := range r.items {
+			buf = append(buf, Pair[string, RegistryItem[T]]{Key: k, Value: v})
+		}
+		sort.SliceStable(buf, func(i, j int) bool {
+			return sorter.Compare(buf[i], buf[j]) < 0
+		})
+		out := make([]Pair[string, T], len(buf))
+		for i := range buf {
+			out[i] = Pair[string, T]{Key: buf[i].Key, Value: buf[i].Value.Item}
+		}
+		ent.items = out
+		ent.isBuilt = true
+	}
+	return &ent.items
 }

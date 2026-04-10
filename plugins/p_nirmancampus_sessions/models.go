@@ -47,7 +47,7 @@ func (s *Session) BeforeSave(tx *gorm.DB) error {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_sessions.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Session](d)
 		return d
 	})

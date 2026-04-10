@@ -32,7 +32,7 @@ type StudentApplication struct {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_studentapplications.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[StudentApplication](d)
 		return d
 	})

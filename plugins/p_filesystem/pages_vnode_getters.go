@@ -271,17 +271,8 @@ func vnodeSizeForKey(key string) getters.Getter[string] {
 		if err != nil {
 			return "", err
 		}
-		if path == "" {
-			return "-", nil
-		}
-		size, err := Store.StoredSize(path)
-		if err != nil {
-			if IsStoredFileMissing(err) {
-				return "Missing", nil
-			}
-			return "Error", nil
-		}
-		return humanReadableSize(size), nil
+		vn := VNode{FilePath: path}
+		return vn.FileSizeDisplay(), nil
 	}
 }
 

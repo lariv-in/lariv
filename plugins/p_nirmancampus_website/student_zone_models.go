@@ -29,7 +29,7 @@ type StudentZoneItem struct {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_website.student_zone_models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[StudentZoneSection](d)
 		lago.RegisterModel[StudentZoneItem](d)
 		return d

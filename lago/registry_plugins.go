@@ -28,4 +28,4 @@ type Plugin struct {
 	Roles       []string
 }
 
-var RegistryPlugin registry.Registry[Plugin] = registry.NewRegistry[Plugin]()
+var RegistryPlugin *registry.Registry[Plugin] = registry.NewRegistry[Plugin]()

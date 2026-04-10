@@ -17,7 +17,7 @@ type Contact struct {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_contacts.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Contact](d)
 		return d
 	})

@@ -15,6 +15,10 @@ import (
 
 const vnodeTableName = "filesystem_nodes"
 
+// ErrVNodeNoFileSize is returned by [VNode.GetFileSize] for directories and for file
+// nodes with an empty storage path.
+var ErrVNodeNoFileSize = errors.New("p_filesystem: vnode has no file size")
+
 type VNode struct {
 	gorm.Model
 
@@ -289,19 +293,39 @@ func (n *VNode) GetItemType() string {
 	return "File"
 }
 
-func (n *VNode) GetFileSize() string {
+func (n *VNode) GetFileSize() (uint64, error) {
 	if n.IsDirectory || n.FilePath == "" {
-		return "-"
+		return 0, ErrVNodeNoFileSize
+	}
+	if Store == nil {
+		return 0, fmt.Errorf("p_filesystem: store not configured")
 	}
 	size, err := Store.StoredSize(n.FilePath)
 	if err != nil {
+		if !IsStoredFileMissing(err) {
+			slog.Error("failed to stat stored file", "path", n.FilePath, "error", err)
+		}
+		return 0, err
+	}
+	if size < 0 {
+		return 0, fmt.Errorf("p_filesystem: negative stored size %d", size)
+	}
+	return uint64(size), nil
+}
+
+// FileSizeDisplay returns a short label for UI: human-readable size, "-", "Missing", or "Error".
+func (n *VNode) FileSizeDisplay() string {
+	sz, err := n.GetFileSize()
+	if err != nil {
+		if errors.Is(err, ErrVNodeNoFileSize) {
+			return "-"
+		}
 		if IsStoredFileMissing(err) {
 			return "Missing"
 		}
-		slog.Error("failed to stat stored file", "path", n.FilePath, "error", err)
 		return "Error"
 	}
-	return humanReadableSize(size)
+	return HumanReadableSize(sz)
 }
 
 func (n *VNode) GetChildrenCount(db *gorm.DB) string {
@@ -334,7 +358,7 @@ func (n *VNode) AfterDelete(*gorm.DB) error {
 	return nil
 }
 
-func humanReadableSize(size int64) string {
+func HumanReadableSize(size uint64) string {
 	units := []string{"B", "KB", "MB", "GB", "TB"}
 	value := float64(size)
 	for _, unit := range units {
@@ -347,7 +371,7 @@ func humanReadableSize(size int64) string {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_filesystem.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[VNode](d)
 		// Replace the earlier index with a partial unique index so soft-deleted
 		// rows do not block re-creating files/folders with the same name.

@@ -1,12 +1,13 @@
 package lago
 
 func BuildAllRegistries() {
-	RegistryCommand.Build()
-	RegistryGenerator.Build()
-	RegistryLayer.Build()
-	RegistryPage.Build()
-	RegistryPlugin.Build()
-	RegistryRoute.Build()
-	RegistryView.Build()
-	RegistryConfig.Build()
+	_ = RegistryCommand.All()
+	_ = RegistryDBInit.All()
+	_ = RegistryGenerator.All()
+	_ = RegistryLayer.All()
+	_ = RegistryPage.All()
+	_ = RegistryPlugin.All()
+	_ = RegistryRoute.All()
+	_ = RegistryView.All()
+	_ = RegistryConfig.All()
 }

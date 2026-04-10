@@ -5,4 +5,4 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-var RegistryPage registry.Registry[components.PageInterface] = registry.NewRegistry[components.PageInterface]()
+var RegistryPage *registry.Registry[components.PageInterface] = registry.NewRegistry[components.PageInterface]()

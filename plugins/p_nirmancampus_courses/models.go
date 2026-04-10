@@ -16,7 +16,7 @@ type Course struct {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_courses.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Course](d)
 		return d
 	})

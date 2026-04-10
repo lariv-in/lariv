@@ -54,7 +54,7 @@ func (e ShellBase) Body(ctx context.Context) Node {
 
 func (e ShellBase) Build(ctx context.Context) Node {
 	registryHeadGroup := Group{}
-	for _, item := range *RegistryShellHeadNodes.AllStable() {
+	for _, item := range *RegistryShellHeadNodes.AllStable(registry.RegisterOrder[Node]{}) {
 		registryHeadGroup = append(registryHeadGroup, item.Value)
 	}
 
@@ -100,13 +100,13 @@ func (e ShellBase) Build(ctx context.Context) Node {
 			Script(Raw(`function toggleTheme() { const d = Alpine.$data(document.body); d.theme = d.theme === 'light' ? 'dark' : 'light'; localStorage.setItem('theme', d.theme); }`)),
 			Script(Src("//unpkg.com/alpinejs"), Defer()),
 			Script(Raw(
-				`htmx.config.defaultSwapStyle = 'morph';` +
-					`htmx.config.responseHandling = [` +
-					`{code:"422", swap: true},` +
-					`{code:"204", swap: false},` +
-					`{code:"[23]..", swap: true},` +
-					`{code:"[45]..", swap: false, error: true},` +
-					`{code:"...", swap: false}` +
+				`htmx.config.defaultSwapStyle = 'morph';`+
+					`htmx.config.responseHandling = [`+
+					`{code:"422", swap: true},`+
+					`{code:"204", swap: false},`+
+					`{code:"[23]..", swap: true},`+
+					`{code:"[45]..", swap: false, error: true},`+
+					`{code:"...", swap: false}`+
 					`];`,
 			)),
 			Link(Href("https://cdn.jsdelivr.net/npm/daisyui@5/daisyui.css"), Rel("stylesheet"), Type("text/css")),

@@ -41,6 +41,7 @@ func registerFilterPages() {
 		},
 	})
 }
+
 func applicationCreateUrlGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		role, err := getters.Key[string]("$role")(ctx)
@@ -53,6 +54,7 @@ func applicationCreateUrlGetter() getters.Getter[string] {
 		return "", fmt.Errorf("you do not have permission to do this action")
 	}
 }
+
 func registerTablePages() {
 	lago.RegistryPage.Register("studentapplications.ApplicationTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{

@@ -58,6 +58,7 @@ func registerFilterPages() {
 		},
 	})
 }
+
 func announcementCreateUrlGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		role, err := getters.Key[string]("$role")(ctx)
@@ -70,6 +71,7 @@ func announcementCreateUrlGetter() getters.Getter[string] {
 		return "", fmt.Errorf("you do not have permission to do this action")
 	}
 }
+
 func registerTablePages() {
 	lago.RegistryPage.Register("announcements.AnnouncementTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -127,6 +129,7 @@ func registerTablePages() {
 		},
 	})
 }
+
 func registerSelectionPages() {
 	lago.RegistryPage.Register("announcements.AnnouncementSelectionTable", &components.Modal{
 		UID: "announcement-selection-modal",

@@ -26,12 +26,12 @@ use (
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp
 	./plugins/p_pwa
+	./plugins/p_lacerate
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally
 	./plugins/p_totschool_users
 	./plugins/p_users
-	./plugins/p_spider
 	./registry
 	./views
 )

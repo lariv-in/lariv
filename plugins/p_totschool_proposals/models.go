@@ -71,7 +71,7 @@ func (p *Proposal) FormatAnswersForAI() (string, error) {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_totschool_proposals.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Proposal](d)
 		// Mark any stuck generating proposals as not generating on startup
 		d.Model(&Proposal{}).Where("generation_id IS NOT NULL").Update("generation_id", nil)

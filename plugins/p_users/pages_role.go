@@ -139,7 +139,7 @@ func registerRolePages() {
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",
-										Name:        getters.Static("users.RoleDeleteForm"),
+												Name:        getters.Static("users.RoleDeleteForm"),
 												Url:         lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 												FormPostURL: lago.RoutePath("users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 												ModalUID:    "role-delete-modal",

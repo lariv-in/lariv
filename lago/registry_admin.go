@@ -274,4 +274,4 @@ type AdminPanelInterface interface {
 	ExportCSV(db *gorm.DB, path string) (int, error)
 }
 
-var RegistryAdmin registry.Registry[AdminPanelInterface] = registry.NewRegistry[AdminPanelInterface]()
+var RegistryAdmin *registry.Registry[AdminPanelInterface] = registry.NewRegistry[AdminPanelInterface]()

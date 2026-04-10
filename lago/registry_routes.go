@@ -11,7 +11,7 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-var RegistryRoute registry.Registry[Route] = registry.NewRegistry[Route]()
+var RegistryRoute *registry.Registry[Route] = registry.NewRegistry[Route]()
 
 type Route struct {
 	Path    string

@@ -26,9 +26,9 @@ type InputSelect[T comparable] struct {
 	// EmptyLabel is the visible label for the empty value option when Required is false.
 	// If empty, "—" is used.
 	EmptyLabel string
-	Classes string
-	Hidden  bool
-	Attr    getters.Getter[Node]
+	Classes    string
+	Hidden     bool
+	Attr       getters.Getter[Node]
 }
 
 func (e InputSelect[T]) GetKey() string {

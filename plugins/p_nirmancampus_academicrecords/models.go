@@ -39,7 +39,7 @@ type AcademicRecord struct {
 }
 
 func init() {
-	lago.OnDBInit(func(d *gorm.DB) *gorm.DB {
+	lago.OnDBInit("p_nirmancampus_academicrecords.models", func(d *gorm.DB) *gorm.DB {
 		lago.RegisterModel[AcademicRecord](d)
 		return d
 	})
