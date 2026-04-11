@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,6 +42,28 @@ type twitterFetchedTweet struct {
 	CreatedAt time.Time
 	Permalink string
 	ImageURL  string
+}
+
+// twitterSnowflakeEpochMs is Twitter's snowflake epoch in Unix milliseconds (2010-11-04).
+const twitterSnowflakeEpochMs int64 = 1288834974657
+
+// twitterPostedTime returns CreatedAt when set, otherwise UTC time from a numeric snowflake tweet ID.
+func twitterPostedTime(tw twitterFetchedTweet) time.Time {
+	if !tw.CreatedAt.IsZero() {
+		return tw.CreatedAt.UTC()
+	}
+	id := strings.TrimSpace(tw.ID)
+	if id == "" {
+		return time.Time{}
+	}
+	n, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return time.Time{}
+	}
+	if n < 1<<22 {
+		return time.Time{}
+	}
+	return time.UnixMilli(int64(n>>22) + twitterSnowflakeEpochMs).UTC()
 }
 
 // IntelDedupHash returns a stable dedupe key from the tweet stable id.

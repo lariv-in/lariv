@@ -30,8 +30,8 @@ func twitterTweetToMarkdown(handle string, tw twitterFetchedTweet) string {
 	}
 	b.WriteString("---\n\n")
 	fmt.Fprintf(&b, "- **Handle:** @%s\n", handle)
-	if !tw.CreatedAt.IsZero() {
-		fmt.Fprintf(&b, "- **Posted:** %s\n", tw.CreatedAt.UTC().Format(time.RFC3339))
+	if posted := twitterPostedTime(tw); !posted.IsZero() {
+		fmt.Fprintf(&b, "- **Posted:** %s\n", posted.Format(time.RFC3339))
 	}
 	if tw.Permalink != "" {
 		fmt.Fprintf(&b, "- **Link:** %s\n", tw.Permalink)
