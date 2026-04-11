@@ -21,14 +21,14 @@ func unmarshalToolArgs(args map[string]any, dst any) error {
 	return nil
 }
 
-type createTargetOfInterestArgs struct {
+type createReportArgs struct {
 	Name        string  `json:"name"`
 	TargetType  string  `json:"target_type"`
 	Description *string `json:"description"`
 	Content     string  `json:"content"`
 }
 
-type editTargetOfInterestArgs struct {
+type editReportArgs struct {
 	ID          uint    `json:"id"`
 	Name        *string `json:"name"`
 	TargetType  *string `json:"target_type"`

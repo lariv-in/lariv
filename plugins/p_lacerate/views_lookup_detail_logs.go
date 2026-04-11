@@ -16,42 +16,45 @@ import (
 // ctxKeyLookupLogEntries stores components.ObjectList[LookupLogDisplay] for the lookup detail page ([lookupDetailLogsLayer]).
 const ctxKeyLookupLogEntries = "lookupLogEntries"
 
-// ctxKeyLookupTouchedTargetsOfInterest stores []LookupTouchedTargetOfInterestDisplay from tool_call rows ([buildLookupTouchedTargetOfInterestDisplays]).
-const ctxKeyLookupTouchedTargetsOfInterest = "lookupTouchedTargetsOfInterest"
+// ctxKeyLookupTouchedReports stores []LookupTouchedReportDisplay from tool_call rows ([buildLookupTouchedReportDisplays]).
+const ctxKeyLookupTouchedReports = "lookupTouchedReports"
 
-// LookupTouchedTargetOfInterestDisplay is a read bundle for the lookup detail UI (not a GORM model).
-type LookupTouchedTargetOfInterestDisplay struct {
-	TargetOfInterest TargetOfInterest
-	Action           string // create | edit
-	LogCreatedAt     time.Time
+// LookupTouchedReportDisplay is a read bundle for the lookup detail UI (not a GORM model).
+type LookupTouchedReportDisplay struct {
+	Report       Report
+	Action       string // create | edit
+	LogCreatedAt time.Time
 }
 
-// lookupLogToolTouchTOILabel maps create/edit Target-of-Interest tool names to the short label in the lookup detail sidebar.
-var lookupLogToolTouchTOILabel = map[string]string{
+// lookupLogToolTouchReportLabel maps create/edit report tool names to the short label in the lookup detail sidebar.
+var lookupLogToolTouchReportLabel = map[string]string{
+	"create_report": "create",
+	"edit_report":   "edit",
+	// Legacy tool names (pre-rename); safe to remove once no old lookup logs remain.
 	"create_target_of_interest": "create",
 	"edit_target_of_interest":   "edit",
 }
 
-type lookupTOITouchPending struct {
-	targetID uint
+type lookupReportTouchPending struct {
+	reportID uint
 	action   string
 	logAt    time.Time
 }
 
-// buildLookupTouchedTargetOfInterestDisplays derives “Targets of Interest touched by this lookup” from
-// successful create/edit tool_call rows (first occurrence per target ID, log order is newest-first).
-func buildLookupTouchedTargetOfInterestDisplays(db *gorm.DB, displays []LookupLogDisplay) []LookupTouchedTargetOfInterestDisplay {
+// buildLookupTouchedReportDisplays derives reports touched by this lookup from
+// successful create/edit tool_call rows (first occurrence per report ID, log order is newest-first).
+func buildLookupTouchedReportDisplays(db *gorm.DB, displays []LookupLogDisplay) []LookupTouchedReportDisplay {
 	if db == nil {
 		return nil
 	}
-	var pending []lookupTOITouchPending
+	var pending []lookupReportTouchPending
 	seen := make(map[uint]struct{})
 	for _, d := range displays {
 		tc := d.ToolCall
 		if tc == nil || len(tc.Result) == 0 {
 			continue
 		}
-		label, ok := lookupLogToolTouchTOILabel[tc.Name]
+		label, ok := lookupLogToolTouchReportLabel[tc.Name]
 		if !ok {
 			continue
 		}
@@ -69,34 +72,34 @@ func buildLookupTouchedTargetOfInterestDisplays(db *gorm.DB, displays []LookupLo
 			continue
 		}
 		seen[res.ID] = struct{}{}
-		pending = append(pending, lookupTOITouchPending{targetID: res.ID, action: label, logAt: d.CreatedAt})
+		pending = append(pending, lookupReportTouchPending{reportID: res.ID, action: label, logAt: d.CreatedAt})
 	}
 	if len(pending) == 0 {
 		return nil
 	}
 	ids := make([]uint, len(pending))
 	for i := range pending {
-		ids[i] = pending[i].targetID
+		ids[i] = pending[i].reportID
 	}
-	var targets []TargetOfInterest
-	if err := db.Where("id IN ?", ids).Find(&targets).Error; err != nil {
-		slog.Error("lacerate: lookup touched Targets of Interest load", "error", err)
+	var reports []Report
+	if err := db.Where("id IN ?", ids).Find(&reports).Error; err != nil {
+		slog.Error("lacerate: lookup touched reports load", "error", err)
 		return nil
 	}
-	byID := make(map[uint]TargetOfInterest, len(targets))
-	for _, t := range targets {
+	byID := make(map[uint]Report, len(reports))
+	for _, t := range reports {
 		byID[t.ID] = t
 	}
-	out := make([]LookupTouchedTargetOfInterestDisplay, 0, len(pending))
+	out := make([]LookupTouchedReportDisplay, 0, len(pending))
 	for _, p := range pending {
-		t, ok := byID[p.targetID]
+		t, ok := byID[p.reportID]
 		if !ok {
 			continue
 		}
-		out = append(out, LookupTouchedTargetOfInterestDisplay{
-			TargetOfInterest: t,
-			Action:           p.action,
-			LogCreatedAt:     p.logAt,
+		out = append(out, LookupTouchedReportDisplay{
+			Report:       t,
+			Action:       p.action,
+			LogCreatedAt: p.logAt,
 		})
 	}
 	return out
@@ -180,7 +183,7 @@ func (lookupDetailLogsLayer) Next(view views.View, next http.Handler) http.Handl
 			return
 		}
 		displays := lookupLogDisplaysWithPayloads(db, entries)
-		touched := buildLookupTouchedTargetOfInterestDisplays(db, displays)
+		touched := buildLookupTouchedReportDisplays(db, displays)
 		n := uint64(len(displays))
 		ctx = context.WithValue(ctx, ctxKeyLookupLogEntries, components.ObjectList[LookupLogDisplay]{
 			Items:    displays,
@@ -188,7 +191,7 @@ func (lookupDetailLogsLayer) Next(view views.View, next http.Handler) http.Handl
 			NumPages: 1,
 			Total:    n,
 		})
-		ctx = context.WithValue(ctx, ctxKeyLookupTouchedTargetsOfInterest, touched)
+		ctx = context.WithValue(ctx, ctxKeyLookupTouchedReports, touched)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

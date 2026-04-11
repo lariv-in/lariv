@@ -356,7 +356,7 @@ func registerLookupDetail() {
 									},
 								},
 							},
-							lookupDetailTouchedTargetsOfInterestSection(),
+							lookupDetailTouchedReportsSection(),
 							lookupDetailLogSection(),
 						},
 					},

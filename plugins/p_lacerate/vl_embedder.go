@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// IntelEmbeddingDim is the embedding width stored in [Intel.Embedding] and [TargetOfInterest.Embedding].
+// IntelEmbeddingDim is the embedding width stored in [Intel.Embedding] and [Report.Embedding].
 // It must match the configured [VLEmbedder] output; the GORM column type uses the same numeric literal.
 const IntelEmbeddingDim = 1024
 
@@ -80,9 +80,9 @@ func prepareIntelEmbeddingForSave(ctx context.Context, db *gorm.DB, intel *Intel
 	return nil
 }
 
-// prepareTargetOfInterestEmbeddingForSave sets [TargetOfInterest.Embedding] on the struct before INSERT/UPDATE.
-// With no [VLEmbedder] or empty [TargetOfInterest.String], leaves embedding cleared or unchanged. On embed failure or wrong dimension, returns an error without updating the embedding.
-func prepareTargetOfInterestEmbeddingForSave(ctx context.Context, a *TargetOfInterest) error {
+// prepareReportEmbeddingForSave sets [Report.Embedding] on the struct before INSERT/UPDATE.
+// With no [VLEmbedder] or empty [Report.String], leaves embedding cleared or unchanged. On embed failure or wrong dimension, returns an error without updating the embedding.
+func prepareReportEmbeddingForSave(ctx context.Context, a *Report) error {
 	if a == nil {
 		return nil
 	}
@@ -97,16 +97,16 @@ func prepareTargetOfInterestEmbeddingForSave(ctx context.Context, a *TargetOfInt
 	}
 	vec, err := e.Embed(ctx, text)
 	if err != nil {
-		slog.Error("lacerate: vl embed Target of Interest", "error", err, "target_of_interest_id", a.ID)
-		return fmt.Errorf("lacerate: vl embed Target of Interest: %w", err)
+		slog.Error("lacerate: vl embed report", "error", err, "report_id", a.ID)
+		return fmt.Errorf("lacerate: vl embed report: %w", err)
 	}
 	if len(vec) != IntelEmbeddingDim {
-		slog.Error("lacerate: vl embed Target of Interest wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "target_of_interest_id", a.ID)
-		return fmt.Errorf("lacerate: vl embed Target of Interest: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
+		slog.Error("lacerate: vl embed report wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "report_id", a.ID)
+		return fmt.Errorf("lacerate: vl embed report: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
 	}
 	v := pgvector.NewVector(vec)
 	a.Embedding = &v
-	slog.Info("lacerate: vl embed Target of Interest success", "target_of_interest_id", a.ID, "dim", len(vec))
+	slog.Info("lacerate: vl embed report success", "report_id", a.ID, "dim", len(vec))
 	return nil
 }
 

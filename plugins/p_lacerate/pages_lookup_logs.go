@@ -16,21 +16,21 @@ import (
 	"gorm.io/datatypes"
 )
 
-func touchedTargetOfInterestRowLabelGetter() getters.Getter[string] {
+func touchedReportRowLabelGetter() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		row, ok := ctx.Value("$row").(LookupTouchedTargetOfInterestDisplay)
+		row, ok := ctx.Value("$row").(LookupTouchedReportDisplay)
 		if !ok {
 			return "", nil
 		}
-		if row.TargetOfInterest.ID == 0 {
-			return "(missing Target of Interest)", nil
+		if row.Report.ID == 0 {
+			return "(missing report)", nil
 		}
-		name := strings.TrimSpace(row.TargetOfInterest.Name)
+		name := strings.TrimSpace(row.Report.Name)
 		if name == "" {
-			name = fmt.Sprintf("#%d", row.TargetOfInterest.ID)
+			name = fmt.Sprintf("#%d", row.Report.ID)
 		}
 		actLabel := row.Action
-		if p, ok := registry.PairFromPairs(row.Action, LookupTargetOfInterestTouchActionChoices); ok {
+		if p, ok := registry.PairFromPairs(row.Action, LookupReportTouchActionChoices); ok {
 			actLabel = p.Value
 		}
 		tz, _ := ctx.Value("$tz").(*time.Location)
@@ -42,27 +42,27 @@ func touchedTargetOfInterestRowLabelGetter() getters.Getter[string] {
 	}
 }
 
-func lookupDetailTouchedTargetsOfInterestSection() components.PageInterface {
+func lookupDetailTouchedReportsSection() components.PageInterface {
 	return &components.ContainerColumn{
-		Page:    components.Page{Key: "lacerate.LookupDetailTouchedTargetsOfInterest"},
+		Page:    components.Page{Key: "lacerate.LookupDetailTouchedReports"},
 		Classes: "w-full mt-8",
 		Children: []components.PageInterface{
 			&components.FieldTitle{
-				Getter:  getters.Static("Targets of Interest touched by agent"),
+				Getter:  getters.Static("Reports touched by agent"),
 				Classes: "mb-3",
 			},
-			&components.FieldList[LookupTouchedTargetOfInterestDisplay]{
-				Page:    components.Page{Key: "lacerate.LookupDetailTouchedTargetsOfInterestList"},
-				Getter:  getters.Key[[]LookupTouchedTargetOfInterestDisplay](ctxKeyLookupTouchedTargetsOfInterest),
+			&components.FieldList[LookupTouchedReportDisplay]{
+				Page:    components.Page{Key: "lacerate.LookupDetailTouchedReportsList"},
+				Getter:  getters.Key[[]LookupTouchedReportDisplay](ctxKeyLookupTouchedReports),
 				Classes: "space-y-2",
 				Children: []components.PageInterface{
 					&components.ButtonLink{
-						GetterLabel: touchedTargetOfInterestRowLabelGetter(),
-						Link: lago.RoutePath("lacerate.TargetOfInterestDetailRoute", map[string]getters.Getter[any]{
-							"id": getters.Any(getters.Key[uint]("$row.TargetOfInterest.ID")),
+						GetterLabel: touchedReportRowLabelGetter(),
+						Link: lago.RoutePath("lacerate.ReportDetailRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("$row.Report.ID")),
 						}),
-						Icon:        "document-text",
-						Classes:     "btn btn-ghost btn-sm justify-start h-auto min-h-10 whitespace-normal text-left",
+						Icon:    "document-text",
+						Classes: "btn btn-ghost btn-sm justify-start h-auto min-h-10 whitespace-normal text-left",
 					},
 				},
 			},

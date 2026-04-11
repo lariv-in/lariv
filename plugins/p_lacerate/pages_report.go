@@ -10,55 +10,55 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-func registerTargetOfInterestPages() {
-	registerTargetOfInterestlacerateMenuPatch()
-	registerTargetOfInterestMenus()
-	registerTargetOfInterestTable()
-	registerTargetOfInterestForms()
-	registerTargetOfInterestDetail()
+func registerReportPages() {
+	registerReportLacerateMenuPatch()
+	registerReportMenus()
+	registerReportTable()
+	registerReportForms()
+	registerReportDetail()
 }
 
-func registerTargetOfInterestlacerateMenuPatch() {
+func registerReportLacerateMenuPatch() {
 	lago.RegistryPage.Patch("lacerate.LacerateMenu", func(page components.PageInterface) components.PageInterface {
 		menu, ok := page.(*components.SidebarMenu)
 		if !ok {
 			return page
 		}
 		menu.Children = append(menu.Children, &components.SidebarMenuItem{
-			Title: getters.Static("Targets of Interest"),
-			Url:   lago.RoutePath("lacerate.TargetOfInterestListRoute", nil),
+			Title: getters.Static("Reports"),
+			Url:   lago.RoutePath("lacerate.ReportListRoute", nil),
 		})
 		return menu
 	})
 }
 
-func registerTargetOfInterestMenus() {
-	lago.RegistryPage.Register("lacerate.TargetOfInterestDetailMenu", &components.SidebarMenu{
-		Title: getters.Format("Target of Interest — %s", getters.Any(getters.Key[string]("targetOfInterest.Name"))),
+func registerReportMenus() {
+	lago.RegistryPage.Register("lacerate.ReportDetailMenu", &components.SidebarMenu{
+		Title: getters.Format("Report — %s", getters.Any(getters.Key[string]("report.Name"))),
 		Back: &components.SidebarMenuItem{
-			Title: getters.Static("Back to Targets of Interest"),
-			Url:   lago.RoutePath("lacerate.TargetOfInterestListRoute", nil),
+			Title: getters.Static("Back to Reports"),
+			Url:   lago.RoutePath("lacerate.ReportListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Detail"),
-				Url: lago.RoutePath("lacerate.TargetOfInterestDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("targetOfInterest.ID")),
+				Url: lago.RoutePath("lacerate.ReportDetailRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("report.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit"),
-				Url: lago.RoutePath("lacerate.TargetOfInterestUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("targetOfInterest.ID")),
+				Url: lago.RoutePath("lacerate.ReportUpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("report.ID")),
 				}),
 			},
 		},
 	})
 }
 
-func targetOfInterestFormFields() components.PageInterface {
+func reportFormFields() components.PageInterface {
 	return &components.ContainerColumn{
-		Page: components.Page{Key: "lacerate.TargetOfInterestFormFields"},
+		Page: components.Page{Key: "lacerate.ReportFormFields"},
 		Children: []components.PageInterface{
 			&components.ContainerError{
 				Error: getters.Key[error]("$error.Name"),
@@ -90,13 +90,13 @@ func targetOfInterestFormFields() components.PageInterface {
 						Label:    "Type",
 						Name:     "Type",
 						Required: true,
-						Choices:  getters.Static(TargetOfInterestTypeChoices),
+						Choices:  getters.Static(ReportTypeChoices),
 						Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
 							s, err := getters.Key[string]("$in.Type")(ctx)
 							if err != nil || s == "" {
 								return registry.Pair[string, string]{}, nil
 							}
-							if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
+							if p, ok := registry.PairFromPairs(s, ReportTypeChoices); ok {
 								return p, nil
 							}
 							return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -120,22 +120,22 @@ func targetOfInterestFormFields() components.PageInterface {
 	}
 }
 
-func registerTargetOfInterestTable() {
-	lago.RegistryPage.Register("lacerate.TargetOfInterestsTable", &components.ShellScaffold{
+func registerReportTable() {
+	lago.RegistryPage.Register("lacerate.ReportsTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "lacerate.LacerateMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.DataTable[TargetOfInterest]{
-				Page:    components.Page{Key: "lacerate.TargetOfInterestsTableBody"},
-				UID:     "lacerate-targets-of-interest-table",
+			&components.DataTable[Report]{
+				Page:    components.Page{Key: "lacerate.ReportsTableBody"},
+				UID:     "lacerate-reports-table",
 				Classes: "w-full",
-				Data:    getters.Key[components.ObjectList[TargetOfInterest]]("targets_of_interest"),
+				Data:    getters.Key[components.ObjectList[Report]]("reports"),
 				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("lacerate.TargetOfInterestCreateRoute", nil)},
+					&components.TableButtonCreate{Link: lago.RoutePath("lacerate.ReportCreateRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("lacerate.TargetOfInterestDetailRoute", map[string]getters.Getter[any]{
+					lago.RoutePath("lacerate.ReportDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
@@ -151,7 +151,7 @@ func registerTargetOfInterestTable() {
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.IfOrElse(
 								getters.Map(getters.Key[string]("$row.Type"), func(_ context.Context, s string) (string, error) {
-									if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
+									if p, ok := registry.PairFromPairs(s, ReportTypeChoices); ok {
 										return p.Value, nil
 									}
 									if s == "" {
@@ -187,27 +187,27 @@ func registerTargetOfInterestTable() {
 	})
 }
 
-func registerTargetOfInterestForms() {
-	createName := getters.Static("lacerate.TargetOfInterestCreateForm")
-	updateName := getters.Static("lacerate.TargetOfInterestUpdateForm")
-	deleteName := getters.Static("lacerate.TargetOfInterestDeleteForm")
+func registerReportForms() {
+	createName := getters.Static("lacerate.ReportCreateForm")
+	updateName := getters.Static("lacerate.ReportUpdateForm")
+	deleteName := getters.Static("lacerate.ReportDeleteForm")
 
-	lago.RegistryPage.Register("lacerate.TargetOfInterestCreateForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("lacerate.ReportCreateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "lacerate.LacerateMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      createName,
-				ActionURL: lago.RoutePath("lacerate.TargetOfInterestCreateRoute", nil),
+				ActionURL: lago.RoutePath("lacerate.ReportCreateRoute", nil),
 				Children: []components.PageInterface{
-					&components.FormComponent[TargetOfInterest]{
+					&components.FormComponent[Report]{
 						Attr:     getters.FormBubbling(createName),
-						Title:    "New Target of Interest",
-						Subtitle: "Reports and other curated content; embedding is refreshed automatically on save.",
+						Title:    "New report",
+						Subtitle: "Curated content; embedding is refreshed automatically on save.",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
-							targetOfInterestFormFields(),
+							reportFormFields(),
 						},
 						ChildrenAction: []components.PageInterface{
 							&components.ButtonSubmit{Label: "Create"},
@@ -218,24 +218,24 @@ func registerTargetOfInterestForms() {
 		},
 	})
 
-	lago.RegistryPage.Register("lacerate.TargetOfInterestUpdateForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("lacerate.ReportUpdateForm", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "lacerate.TargetOfInterestDetailMenu"},
+			lago.DynamicPage{Name: "lacerate.ReportDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: updateName,
-				ActionURL: lago.RoutePath("lacerate.TargetOfInterestUpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("targetOfInterest.ID")),
+				ActionURL: lago.RoutePath("lacerate.ReportUpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("report.ID")),
 				}),
 				Children: []components.PageInterface{
-					&components.FormComponent[TargetOfInterest]{
-						Getter:  getters.Key[TargetOfInterest]("targetOfInterest"),
+					&components.FormComponent[Report]{
+						Getter:  getters.Key[Report]("report"),
 						Attr:    getters.FormBubbling(updateName),
-						Title:   "Edit Target of Interest",
+						Title:   "Edit report",
 						Classes: "@container",
 						ChildrenInput: []components.PageInterface{
-							targetOfInterestFormFields(),
+							reportFormFields(),
 						},
 						ChildrenAction: []components.PageInterface{
 							&components.ContainerRow{
@@ -249,13 +249,13 @@ func registerTargetOfInterestForms() {
 												Label: "Delete",
 												Icon:  "trash",
 												Name:  deleteName,
-												Url: lago.RoutePath("lacerate.TargetOfInterestDeleteRoute", map[string]getters.Getter[any]{
-													"id": getters.Any(getters.Key[uint]("targetOfInterest.ID")),
+												Url: lago.RoutePath("lacerate.ReportDeleteRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("report.ID")),
 												}),
-												FormPostURL: lago.RoutePath("lacerate.TargetOfInterestDeleteRoute", map[string]getters.Getter[any]{
-													"id": getters.Any(getters.Key[uint]("targetOfInterest.ID")),
+												FormPostURL: lago.RoutePath("lacerate.ReportDeleteRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("report.ID")),
 												}),
-												ModalUID: "lacerate-target-of-interest-delete-modal",
+												ModalUID: "lacerate-report-delete-modal",
 												Classes:  "btn-error",
 											},
 										},
@@ -270,21 +270,21 @@ func registerTargetOfInterestForms() {
 	})
 }
 
-func registerTargetOfInterestDetail() {
-	lago.RegistryPage.Register("lacerate.TargetOfInterestDetail", &components.ShellScaffold{
+func registerReportDetail() {
+	lago.RegistryPage.Register("lacerate.ReportDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "lacerate.TargetOfInterestDetailMenu"},
+			lago.DynamicPage{Name: "lacerate.ReportDetailMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.Detail[TargetOfInterest]{
-				Getter: getters.Key[TargetOfInterest]("targetOfInterest"),
+			&components.Detail[Report]{
+				Getter: getters.Key[Report]("report"),
 				Children: []components.PageInterface{
 					components.ContainerColumn{
-						Page: components.Page{Key: "lacerate.TargetOfInterestDetailContent"},
+						Page: components.Page{Key: "lacerate.ReportDetailContent"},
 						Children: []components.PageInterface{
 							&components.FieldTitle{Getter: getters.Key[string]("$in.Name")},
 							&components.FieldSubtitle{Getter: getters.Map(getters.Key[string]("$in.Type"), func(_ context.Context, s string) (string, error) {
-								if p, ok := registry.PairFromPairs(s, TargetOfInterestTypeChoices); ok {
+								if p, ok := registry.PairFromPairs(s, ReportTypeChoices); ok {
 									return p.Value, nil
 								}
 								return s, nil
@@ -314,15 +314,14 @@ func registerTargetOfInterestDetail() {
 		},
 	})
 
-	lago.RegistryPage.Register("lacerate.TargetOfInterestDeleteForm", &components.Modal{
-		UID: "lacerate-target-of-interest-delete-modal",
+	lago.RegistryPage.Register("lacerate.ReportDeleteForm", &components.Modal{
+		UID: "lacerate-report-delete-modal",
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
-				Title:   "Delete Target of Interest",
-				Message: "Delete this Target of Interest? This cannot be undone.",
+				Title:   "Delete report",
+				Message: "Delete this report? This cannot be undone.",
 				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},
 	})
 }
-

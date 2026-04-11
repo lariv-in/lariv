@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// TargetOfInterestTypeChoices is the persisted value (Key) and UI label (Value) for [TargetOfInterest.Type].
-var TargetOfInterestTypeChoices = []registry.Pair[string, string]{
+// ReportTypeChoices is the persisted value (Key) and UI label (Value) for [Report.Type].
+var ReportTypeChoices = []registry.Pair[string, string]{
 	{Key: "report", Value: "Report"},
 	{Key: "briefing", Value: "Briefing"},
 	{Key: "memo", Value: "Memo"},
@@ -20,22 +20,22 @@ var TargetOfInterestTypeChoices = []registry.Pair[string, string]{
 	{Key: "other", Value: "Other"},
 }
 
-// TargetOfInterest is a Target of Interest: a manually curated document (reports, etc.) with an optional embedding for retrieval when [GeminiEmbeddingConfig] / [VLEmbedder] is configured.
-type TargetOfInterest struct {
+// Report is a manually curated document (reports, briefings, etc.) with an optional embedding for retrieval when [GeminiEmbeddingConfig] / [VLEmbedder] is configured.
+type Report struct {
 	gorm.Model
 	Name        string `gorm:"not null"`
 	Description string `gorm:"type:text"`
-	// Type is a key from [TargetOfInterestTypeChoices].
+	// Type is a key from [ReportTypeChoices].
 	Type    string `gorm:"not null"`
 	Content string `gorm:"type:text;not null;default:''"`
 	// Embedding matches [IntelEmbeddingDim] and the configured [VLEmbedder].
 	Embedding *pgvector.Vector `gorm:"type:vector(1024)"`
 }
 
-func (TargetOfInterest) TableName() string { return "targets_of_interest" }
+func (Report) TableName() string { return "targets_of_interest" }
 
 // String returns markdown-shaped text for display and for [VLEmbedder] input (name, type, description, content).
-func (a *TargetOfInterest) String() string {
+func (a *Report) String() string {
 	if a == nil {
 		return ""
 	}
@@ -56,17 +56,17 @@ func (a *TargetOfInterest) String() string {
 	return strings.TrimSpace(b.String())
 }
 
-// BeforeSave sets [TargetOfInterest.Embedding] from name/type/description/content ([prepareTargetOfInterestEmbeddingForSave]).
-func (a *TargetOfInterest) BeforeSave(tx *gorm.DB) error {
+// BeforeSave sets [Report.Embedding] from name/type/description/content ([prepareReportEmbeddingForSave]).
+func (a *Report) BeforeSave(tx *gorm.DB) error {
 	if tx.Statement.SkipHooks {
 		return nil
 	}
-	return prepareTargetOfInterestEmbeddingForSave(context.Background(), a)
+	return prepareReportEmbeddingForSave(context.Background(), a)
 }
 
 func init() {
-	lago.OnDBInit("p_lacerate.target_of_interest_model", func(db *gorm.DB) *gorm.DB {
-		lago.RegisterModel[TargetOfInterest](db)
+	lago.OnDBInit("p_lacerate.report_model", func(db *gorm.DB) *gorm.DB {
+		lago.RegisterModel[Report](db)
 		return db
 	})
 }

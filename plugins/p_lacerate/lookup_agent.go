@@ -44,7 +44,7 @@ func functionCallsFromContent(content *genai.Content) []*genai.FunctionCall {
 	return out
 }
 
-const osintSpecialistSystem = `You are an OSINT Specialist: methodical, careful, and ethical. You only use the provided tools to gather and record intelligence from this application's corpora. Prefer verifiable facts from tool results over speculation. Before creating a new Target of Interest, check for an existing relevant report first; if one already exists for the same subject, update it with edit_target_of_interest instead of creating a duplicate. When done, give a concise summary of what you did and what you learned.`
+const osintSpecialistSystem = `You are an OSINT Specialist: methodical, careful, and ethical. You only use the provided tools to gather and record intelligence from this application's corpora. Prefer verifiable facts from tool results over speculation. Before creating a new report, search for an existing one for the same subject; if one already exists, update it with edit_report instead of creating a duplicate. When done, give a concise summary of what you did and what you learned.`
 
 func runLookupAgent(ctx context.Context, db *gorm.DB, lu *Lookup) error {
 	if lu == nil {
@@ -161,9 +161,9 @@ var lookupAgentTools = registry.NewRegistry[lookupAgentTool]()
 
 func init() {
 	for _, t := range []lookupAgentTool{
-		createTargetOfInterestTool{},
-		editTargetOfInterestTool{},
-		getRelevantTargetsOfInterestTool{},
+		createReportTool{},
+		editReportTool{},
+		getRelevantReportsTool{},
 		getRelevantIntelTool{},
 	} {
 		if err := lookupAgentTools.Register(t.Name(), t); err != nil {
@@ -277,31 +277,31 @@ func (r *lookupRun) dispatchTool(ctx context.Context, name string, args map[stri
 	return t.Run(ctx, r, args)
 }
 
-type createTargetOfInterestTool struct{}
+type createReportTool struct{}
 
-func (createTargetOfInterestTool) Name() string { return "create_target_of_interest" }
+func (createReportTool) Name() string { return "create_report" }
 
-func (createTargetOfInterestTool) Declaration() *genai.FunctionDeclaration {
+func (createReportTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
-		Name:        "create_target_of_interest",
-		Description: "Create a curated Target of Interest (report, briefing, etc.) in the database. Before creating a report, check for an existing relevant report and use edit_target_of_interest instead if one already exists.",
+		Name:        "create_report",
+		Description: "Create a curated report (briefing, memo, etc.) in the database. Before creating, check for an existing relevant report and use edit_report instead if one already exists.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"name":        map[string]any{"type": "string", "description": "Short title for the Target of Interest."},
+				"name":        map[string]any{"type": "string", "description": "Short title for the report."},
 				"target_type": map[string]any{"type": "string", "description": "One of: report, briefing, memo, dataset, other."},
 				"description": map[string]any{"type": "string", "description": "Summary or context."},
-				"content":     map[string]any{"type": "string", "description": "Body text / markdown for the Target of Interest."},
+				"content":     map[string]any{"type": "string", "description": "Body text / markdown for the report."},
 			},
 			"required": []string{"name", "target_type", "content"},
 		},
 	}
 }
 
-func (createTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
-	var p createTargetOfInterestArgs
+func (createReportTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
+	var p createReportArgs
 	if err := unmarshalToolArgs(args, &p); err != nil {
-		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool create_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	name := strings.TrimSpace(p.Name)
@@ -313,39 +313,39 @@ func (createTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args ma
 	content := strings.TrimSpace(p.Content)
 	if name == "" {
 		err := fmt.Errorf("name is required")
-		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool create_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	if content == "" {
 		err := fmt.Errorf("content is required")
-		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool create_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	if !validTargetOfInterestType(typ) {
+	if !validReportType(typ) {
 		err := fmt.Errorf("target_type must be one of the allowed keys (report, briefing, memo, dataset, other)")
-		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool create_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	a := TargetOfInterest{Name: name, Type: typ, Description: desc, Content: content}
+	a := Report{Name: name, Type: typ, Description: desc, Content: content}
 	if err := r.db.WithContext(ctx).Create(&a).Error; err != nil {
-		slog.Error("lacerate: lookup tool create_target_of_interest db", "error", err, "lookup_id", r.lookupID)
+		slog.Error("lacerate: lookup tool create_report db", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	return map[string]any{"id": a.ID, "name": a.Name, "type": a.Type}, nil
 }
 
-type editTargetOfInterestTool struct{}
+type editReportTool struct{}
 
-func (editTargetOfInterestTool) Name() string { return "edit_target_of_interest" }
+func (editReportTool) Name() string { return "edit_report" }
 
-func (editTargetOfInterestTool) Declaration() *genai.FunctionDeclaration {
+func (editReportTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
-		Name:        "edit_target_of_interest",
-		Description: "Update an existing Target of Interest by ID. Use this when you found an existing report for the same subject and want to revise it instead of creating a duplicate. Only include fields you want to change.",
+		Name:        "edit_report",
+		Description: "Update an existing report by ID. Use when an existing report covers the same subject and should be revised instead of creating a duplicate. Only include fields you want to change.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"id":          map[string]any{"type": "integer", "description": "Target of Interest ID."},
+				"id":          map[string]any{"type": "integer", "description": "Report ID."},
 				"name":        map[string]any{"type": "string"},
 				"target_type": map[string]any{"type": "string"},
 				"description": map[string]any{"type": "string"},
@@ -356,21 +356,21 @@ func (editTargetOfInterestTool) Declaration() *genai.FunctionDeclaration {
 	}
 }
 
-func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
-	var p editTargetOfInterestArgs
+func (editReportTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
+	var p editReportArgs
 	if err := unmarshalToolArgs(args, &p); err != nil {
-		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	id := p.ID
 	if id == 0 {
 		err := fmt.Errorf("id is required")
-		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	var a TargetOfInterest
+	var a Report
 	if err := r.db.WithContext(ctx).First(&a, id).Error; err != nil {
-		slog.Error("lacerate: lookup tool edit_target_of_interest load", "error", err, "lookup_id", r.lookupID)
+		slog.Error("lacerate: lookup tool edit_report load", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	changed := false
@@ -378,7 +378,7 @@ func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[
 		s := strings.TrimSpace(*p.Name)
 		if s == "" {
 			err := fmt.Errorf("name cannot be empty")
-			slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+			slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 			return nil, err
 		}
 		a.Name = s
@@ -386,9 +386,9 @@ func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[
 	}
 	if p.TargetType != nil {
 		s := strings.TrimSpace(*p.TargetType)
-		if !validTargetOfInterestType(s) {
+		if !validReportType(s) {
 			err := fmt.Errorf("invalid target_type")
-			slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+			slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 			return nil, err
 		}
 		a.Type = s
@@ -404,24 +404,24 @@ func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[
 	}
 	if !changed {
 		err := fmt.Errorf("no fields to update")
-		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	if err := r.db.WithContext(ctx).Save(&a).Error; err != nil {
-		slog.Error("lacerate: lookup tool edit_target_of_interest save", "error", err, "lookup_id", r.lookupID)
+		slog.Error("lacerate: lookup tool edit_report save", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	return map[string]any{"id": a.ID, "name": a.Name, "type": a.Type}, nil
 }
 
-type getRelevantTargetsOfInterestTool struct{}
+type getRelevantReportsTool struct{}
 
-func (getRelevantTargetsOfInterestTool) Name() string { return "get_relevant_targets_of_interest" }
+func (getRelevantReportsTool) Name() string { return "get_relevant_reports" }
 
-func (getRelevantTargetsOfInterestTool) Declaration() *genai.FunctionDeclaration {
+func (getRelevantReportsTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
-		Name:        "get_relevant_targets_of_interest",
-		Description: "Ranked cosine similarity search over Targets of Interest with embeddings.",
+		Name:        "get_relevant_reports",
+		Description: "Ranked cosine similarity search over reports with embeddings.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
@@ -433,46 +433,46 @@ func (getRelevantTargetsOfInterestTool) Declaration() *genai.FunctionDeclaration
 	}
 }
 
-func (getRelevantTargetsOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
+func (getRelevantReportsTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
 	var p embeddingSearchArgs
 	if err := unmarshalToolArgs(args, &p); err != nil {
-		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool get_relevant_reports", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	q := strings.TrimSpace(p.Query)
 	if q == "" {
 		err := fmt.Errorf("query is required")
-		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool get_relevant_reports", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	limit, err := parseLookupSearchLimit(p.Limit, 10, 50)
 	if err != nil {
-		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool get_relevant_reports", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	e := vlEmbedder()
 	if e == nil {
 		err := fmt.Errorf("embedding service not configured")
-		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Warn("lacerate: lookup tool get_relevant_reports", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	vec, err := e.Embed(ctx, q)
 	if err != nil {
-		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest embed", "error", err, "lookup_id", r.lookupID)
+		slog.Error("lacerate: lookup tool get_relevant_reports embed", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
 	if len(vec) != IntelEmbeddingDim {
 		err := fmt.Errorf("embedding dimension %d, want %d", len(vec), IntelEmbeddingDim)
-		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		slog.Error("lacerate: lookup tool get_relevant_reports", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	targets, err := searchTargetsOfInterestByEmbedding(r.db.WithContext(ctx), pgvector.NewVector(vec), limit)
+	reports, err := searchReportsByEmbedding(r.db.WithContext(ctx), pgvector.NewVector(vec), limit)
 	if err != nil {
-		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest search", "error", err, "lookup_id", r.lookupID)
+		slog.Error("lacerate: lookup tool get_relevant_reports search", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	out := make([]map[string]any, 0, len(targets))
-	for _, t := range targets {
+	out := make([]map[string]any, 0, len(reports))
+	for _, t := range reports {
 		snippet := strings.TrimSpace(t.Description)
 		if snippet == "" {
 			snippet = strings.TrimSpace(t.Content)
@@ -484,7 +484,7 @@ func (getRelevantTargetsOfInterestTool) Run(ctx context.Context, r *lookupRun, a
 			"id": t.ID, "name": t.Name, "type": t.Type, "snippet": snippet,
 		})
 	}
-	return map[string]any{"targets_of_interest": out}, nil
+	return map[string]any{"reports": out}, nil
 }
 
 type getRelevantIntelTool struct{}
@@ -555,12 +555,12 @@ func (getRelevantIntelTool) Run(ctx context.Context, r *lookupRun, args map[stri
 	return map[string]any{"intel": out}, nil
 }
 
-func validTargetOfInterestType(k string) bool {
+func validReportType(k string) bool {
 	k = strings.TrimSpace(k)
 	if k == "" {
 		return false
 	}
-	for _, p := range TargetOfInterestTypeChoices {
+	for _, p := range ReportTypeChoices {
 		if p.Key == k {
 			return true
 		}
