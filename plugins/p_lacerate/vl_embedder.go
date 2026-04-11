@@ -2,6 +2,7 @@ package p_lacerate
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// IntelEmbeddingDim is the embedding width stored in [Intel.Embedding] and [Report.Embedding].
+// IntelEmbeddingDim is the embedding width stored in [Intel.Embedding], [Report.Embedding], [Lookup.Embedding], and [TargetOfInterest.Embedding].
 // It must match the configured [VLEmbedder] output; the GORM column type uses the same numeric literal.
 const IntelEmbeddingDim = 1024
 
@@ -80,33 +81,105 @@ func prepareIntelEmbeddingForSave(ctx context.Context, db *gorm.DB, intel *Intel
 	return nil
 }
 
-// prepareReportEmbeddingForSave sets [Report.Embedding] on the struct before INSERT/UPDATE.
-// With no [VLEmbedder] or empty [Report.String], leaves embedding cleared or unchanged. On embed failure or wrong dimension, returns an error without updating the embedding.
-func prepareReportEmbeddingForSave(ctx context.Context, a *Report) error {
-	if a == nil {
+// refreshReportEmbedding rebuilds and stores [Report.Embedding] from the loaded kind-specific report content.
+// With no [VLEmbedder] or empty rendered report text, clears the embedding.
+func refreshReportEmbedding(ctx context.Context, tx *gorm.DB, reportID uint) error {
+	if tx == nil || reportID == 0 {
 		return nil
 	}
 	e := vlEmbedder()
 	if e == nil {
 		return nil
 	}
-	text := a.String()
+	data, err := loadReportPageDataForEmbedding(ctx, tx, reportID)
+	if err != nil {
+		slog.Error("lacerate: load report page data for embed", "error", err, "report_id", reportID)
+		return fmt.Errorf("lacerate: load report for embed: %w", err)
+	}
+	text := reportPageDataString(data)
 	if text == "" {
-		a.Embedding = nil
+		if err := tx.Model(&Report{Model: gorm.Model{ID: reportID}}).Update("embedding", nil).Error; err != nil {
+			slog.Error("lacerate: clear report embedding", "error", err, "report_id", reportID)
+			return err
+		}
 		return nil
 	}
 	vec, err := e.Embed(ctx, text)
 	if err != nil {
-		slog.Error("lacerate: vl embed report", "error", err, "report_id", a.ID)
+		slog.Error("lacerate: vl embed report", "error", err, "report_id", reportID)
 		return fmt.Errorf("lacerate: vl embed report: %w", err)
 	}
 	if len(vec) != IntelEmbeddingDim {
-		slog.Error("lacerate: vl embed report wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "report_id", a.ID)
+		slog.Error("lacerate: vl embed report wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "report_id", reportID)
 		return fmt.Errorf("lacerate: vl embed report: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
 	}
 	v := pgvector.NewVector(vec)
-	a.Embedding = &v
-	slog.Info("lacerate: vl embed report success", "report_id", a.ID, "dim", len(vec))
+	if err := tx.Model(&Report{Model: gorm.Model{ID: reportID}}).Update("embedding", &v).Error; err != nil {
+		slog.Error("lacerate: save report embedding", "error", err, "report_id", reportID)
+		return err
+	}
+	slog.Info("lacerate: vl embed report success", "report_id", reportID, "dim", len(vec))
+	return nil
+}
+
+func loadReportPageDataForEmbedding(ctx context.Context, db *gorm.DB, reportID uint) (ReportPageData, error) {
+	var data ReportPageData
+	if err := db.WithContext(ctx).First(&data.Report, reportID).Error; err != nil {
+		return data, err
+	}
+	switch data.Report.Kind {
+	case "briefing":
+		var row BriefingReport
+		if err := db.WithContext(ctx).Where("report_id = ?", reportID).First(&row).Error; err == nil {
+			row.Report = data.Report
+			data.Briefing = &row
+		} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return data, err
+		}
+	case "timeline":
+		var row TimelineReport
+		if err := db.WithContext(ctx).
+			Preload("Entries", func(tx *gorm.DB) *gorm.DB {
+				return tx.Order("datetime ASC").Order("position ASC").Order("id ASC")
+			}).
+			Where("report_id = ?", reportID).
+			First(&row).Error; err == nil {
+			row.Report = data.Report
+			data.Timeline = &row
+		} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return data, err
+		}
+	}
+	return data, nil
+}
+
+// prepareTargetOfInterestEmbeddingForSave sets [TargetOfInterest.Embedding] on the struct before INSERT/UPDATE.
+// With no [VLEmbedder] or empty [TargetOfInterest.String], clears embedding. On embed failure or wrong dimension, returns an error.
+func prepareTargetOfInterestEmbeddingForSave(ctx context.Context, t *TargetOfInterest) error {
+	if t == nil {
+		return nil
+	}
+	e := vlEmbedder()
+	if e == nil {
+		return nil
+	}
+	text := t.String()
+	if text == "" {
+		t.Embedding = nil
+		return nil
+	}
+	vec, err := e.Embed(ctx, text)
+	if err != nil {
+		slog.Error("lacerate: vl embed target of interest", "error", err, "target_of_interest_id", t.ID)
+		return fmt.Errorf("lacerate: vl embed target of interest: %w", err)
+	}
+	if len(vec) != IntelEmbeddingDim {
+		slog.Error("lacerate: vl embed target of interest wrong dimension", "got", len(vec), "want", IntelEmbeddingDim, "target_of_interest_id", t.ID)
+		return fmt.Errorf("lacerate: vl embed target of interest: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
+	}
+	v := pgvector.NewVector(vec)
+	t.Embedding = &v
+	slog.Info("lacerate: vl embed target of interest success", "target_of_interest_id", t.ID, "dim", len(vec))
 	return nil
 }
 

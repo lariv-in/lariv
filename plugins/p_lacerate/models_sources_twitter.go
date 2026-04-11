@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"gorm.io/datatypes"
@@ -31,9 +30,6 @@ func twitterTweetToMarkdown(handle string, tw twitterFetchedTweet) string {
 	}
 	b.WriteString("---\n\n")
 	fmt.Fprintf(&b, "- **Handle:** @%s\n", handle)
-	if posted := twitterPostedTime(tw); !posted.IsZero() {
-		fmt.Fprintf(&b, "- **Posted:** %s\n", posted.Format(time.RFC3339))
-	}
 	if tw.Permalink != "" {
 		fmt.Fprintf(&b, "- **Link:** %s\n", tw.Permalink)
 	}
@@ -97,10 +93,17 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map
 
 			dedupeCopy := dedupe
 			sourceID := t.SourceID
+			datetime := twitterPostedTime(tw)
+			if datetime.IsZero() {
+				err := fmt.Errorf("twitter item %q missing datetime", tw.ID)
+				slog.Error("lacerate: twitter item datetime", "error", err, "handle", handle, "source_id", t.SourceID)
+				return nil, err
+			}
 			i := Intel{
 				SourceID:       &sourceID,
 				DedupHash:      &dedupeCopy,
 				Content:        twitterTweetToMarkdown(handle, tw),
+				Datetime:       datetime.UTC(),
 				PreviewImageID: previewID,
 			}
 			existingDedup[dedupe] = struct{}{}

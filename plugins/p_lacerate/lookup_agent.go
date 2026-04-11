@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/lariv-in/lago/registry"
 	"github.com/pgvector/pgvector-go"
@@ -44,7 +46,15 @@ func functionCallsFromContent(content *genai.Content) []*genai.FunctionCall {
 	return out
 }
 
-const osintSpecialistSystem = `You are an OSINT Specialist: methodical, careful, and ethical. You only use the provided tools to gather and record intelligence from this application's corpora. Prefer verifiable facts from tool results over speculation. Before creating a new report, search for an existing one for the same subject; if one already exists, update it with edit_report instead of creating a duplicate. When done, give a concise summary of what you did and what you learned.`
+const osintSpecialistSystem = `You are an OSINT Specialist: methodical, careful, and ethical. You only use the provided tools to gather and record intelligence from this application's corpora. Prefer verifiable facts from tool results over speculation.
+
+Actively work with targets of interest (TOI) as part of every lookup: use get_relevant_targets_of_interest when the briefing or intel involves specific people, organizations, places, or other entities, so you know what the user already tracks; use create_target_of_interest and edit_target_of_interest when warranted below. Treat TOIs as a first-class store alongside reports and ingested intel, not an afterthought.
+
+Targets of interest are very short, accurate descriptions of entities the user cares about. Create or edit a TOI only when you find information that materially changes the context of that entity—not for minor or redundant intel. Before creating a new TOI, search with get_relevant_targets_of_interest to avoid duplicates and to pick the right row to edit.
+
+For reports: strongly prefer editing an existing report with edit_report over creating a new report with create_report when the same subject is already covered. Before creating a new report, search for an existing one for the same subject; if one already exists, update it instead of creating a duplicate. For timeline reports, edit_report.timeline_entries replaces the whole timeline; use append_timeline_entries when you only need to add new events.
+
+When done, give a concise summary of what you did and what you learned.`
 
 func runLookupAgent(ctx context.Context, db *gorm.DB, lu *Lookup) error {
 	if lu == nil {
@@ -163,8 +173,12 @@ func init() {
 	for _, t := range []lookupAgentTool{
 		createReportTool{},
 		editReportTool{},
+		appendTimelineEntriesTool{},
 		getRelevantReportsTool{},
 		getRelevantIntelTool{},
+		createTargetOfInterestTool{},
+		editTargetOfInterestTool{},
+		getRelevantTargetsOfInterestTool{},
 	} {
 		if err := lookupAgentTools.Register(t.Name(), t); err != nil {
 			panic(err)
@@ -284,16 +298,29 @@ func (createReportTool) Name() string { return "create_report" }
 func (createReportTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
 		Name:        "create_report",
-		Description: "Create a curated report (briefing, memo, etc.) in the database. Before creating, check for an existing relevant report and use edit_report instead if one already exists.",
+		Description: "Create a curated report in the database. Before creating, check for an existing relevant report and use edit_report instead if one already exists.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"name":        map[string]any{"type": "string", "description": "Short title for the report."},
-				"target_type": map[string]any{"type": "string", "description": "One of: report, briefing, memo, dataset, other."},
-				"description": map[string]any{"type": "string", "description": "Summary or context."},
-				"content":     map[string]any{"type": "string", "description": "Body text / markdown for the report."},
+				"name":             map[string]any{"type": "string", "description": "Short title for the report."},
+				"target_kind":      map[string]any{"type": "string", "description": "One of: briefing, timeline."},
+				"description":      map[string]any{"type": "string", "description": "Summary or context."},
+				"briefing_content": map[string]any{"type": "string", "description": "Required when target_kind is briefing. Large markdown body for the briefing."},
+				"timeline_entries": map[string]any{
+					"type":        "array",
+					"description": "Required when target_kind is timeline. Timeline entries in chronological order.",
+					"items": map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"datetime": map[string]any{"type": "string", "description": "Entry datetime in RFC3339."},
+							"title":    map[string]any{"type": "string", "description": "Short entry title."},
+							"content":  map[string]any{"type": "string", "description": "Markdown body for the entry."},
+						},
+						"required": []string{"datetime", "title", "content"},
+					},
+				},
 			},
-			"required": []string{"name", "target_type", "content"},
+			"required": []string{"name", "target_kind"},
 		},
 	}
 }
@@ -305,33 +332,43 @@ func (createReportTool) Run(ctx context.Context, r *lookupRun, args map[string]a
 		return nil, err
 	}
 	name := strings.TrimSpace(p.Name)
-	typ := strings.TrimSpace(p.TargetType)
+	kind := strings.TrimSpace(p.TargetKind)
 	desc := ""
 	if p.Description != nil {
 		desc = strings.TrimSpace(*p.Description)
 	}
-	content := strings.TrimSpace(p.Content)
 	if name == "" {
 		err := fmt.Errorf("name is required")
 		slog.Warn("lacerate: lookup tool create_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	if content == "" {
-		err := fmt.Errorf("content is required")
+	if !validReportKind(kind) {
+		err := fmt.Errorf("target_kind must be one of: briefing, timeline")
 		slog.Warn("lacerate: lookup tool create_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	if !validReportType(typ) {
-		err := fmt.Errorf("target_type must be one of the allowed keys (report, briefing, memo, dataset, other)")
+	formData, err := reportFormDataFromToolArgs(ctx, kind, p.BriefingContent, p.TimelineEntries)
+	if err != nil {
 		slog.Warn("lacerate: lookup tool create_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	a := Report{Name: name, Type: typ, Description: desc, Content: content}
-	if err := r.db.WithContext(ctx).Create(&a).Error; err != nil {
+	formData.Name = name
+	formData.Description = desc
+	var report Report
+	if err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		report = Report{Name: name, Description: desc, Kind: kind}
+		if err := tx.Create(&report).Error; err != nil {
+			return err
+		}
+		if err := createReportKindRow(tx, report.ID, formData); err != nil {
+			return err
+		}
+		return refreshReportEmbedding(ctx, tx, report.ID)
+	}); err != nil {
 		slog.Error("lacerate: lookup tool create_report db", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	return map[string]any{"id": a.ID, "name": a.Name, "type": a.Type}, nil
+	return map[string]any{"id": report.ID, "name": report.Name, "kind": report.Kind}, nil
 }
 
 type editReportTool struct{}
@@ -341,15 +378,28 @@ func (editReportTool) Name() string { return "edit_report" }
 func (editReportTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
 		Name:        "edit_report",
-		Description: "Update an existing report by ID. Use when an existing report covers the same subject and should be revised instead of creating a duplicate. Only include fields you want to change.",
+		Description: "Update an existing report by ID. Use when an existing report covers the same subject and should be revised instead of creating a duplicate. Only include scalar fields you want to change; if you provide timeline_entries, they replace the entire timeline.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"id":          map[string]any{"type": "integer", "description": "Report ID."},
-				"name":        map[string]any{"type": "string"},
-				"target_type": map[string]any{"type": "string"},
-				"description": map[string]any{"type": "string"},
-				"content":     map[string]any{"type": "string"},
+				"id":               map[string]any{"type": "integer", "description": "Report ID."},
+				"name":             map[string]any{"type": "string"},
+				"target_kind":      map[string]any{"type": "string"},
+				"description":      map[string]any{"type": "string"},
+				"briefing_content": map[string]any{"type": "string"},
+				"timeline_entries": map[string]any{
+					"type":        "array",
+					"description": "Full replacement timeline. When provided, existing timeline rows are deleted and replaced by this exact list.",
+					"items": map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"datetime": map[string]any{"type": "string"},
+							"title":    map[string]any{"type": "string"},
+							"content":  map[string]any{"type": "string"},
+						},
+						"required": []string{"datetime", "title", "content"},
+					},
+				},
 			},
 			"required": []string{"id"},
 		},
@@ -368,12 +418,20 @@ func (editReportTool) Run(ctx context.Context, r *lookupRun, args map[string]any
 		slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	var a Report
-	if err := r.db.WithContext(ctx).First(&a, id).Error; err != nil {
+	var report Report
+	if err := r.db.WithContext(ctx).First(&report, id).Error; err != nil {
 		slog.Error("lacerate: lookup tool edit_report load", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
+	existing, err := loadReportPageData(ctx, r.db.WithContext(ctx), id)
+	if err != nil {
+		slog.Error("lacerate: lookup tool edit_report load page data", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
 	changed := false
+	name := report.Name
+	desc := report.Description
+	kind := report.Kind
 	if p.Name != nil {
 		s := strings.TrimSpace(*p.Name)
 		if s == "" {
@@ -381,25 +439,29 @@ func (editReportTool) Run(ctx context.Context, r *lookupRun, args map[string]any
 			slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 			return nil, err
 		}
-		a.Name = s
+		name = s
 		changed = true
 	}
-	if p.TargetType != nil {
-		s := strings.TrimSpace(*p.TargetType)
-		if !validReportType(s) {
-			err := fmt.Errorf("invalid target_type")
+	if p.TargetKind != nil {
+		s := strings.TrimSpace(*p.TargetKind)
+		if !validReportKind(s) {
+			err := fmt.Errorf("invalid target_kind")
 			slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 			return nil, err
 		}
-		a.Type = s
+		kind = s
 		changed = true
 	}
 	if p.Description != nil {
-		a.Description = *p.Description
+		desc = strings.TrimSpace(*p.Description)
 		changed = true
 	}
-	if p.Content != nil {
-		a.Content = *p.Content
+	formData, err := reportFormDataFromExistingToolArgs(ctx, existing, kind, p.BriefingContent, p.TimelineEntries)
+	if err != nil {
+		slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	if p.BriefingContent != nil || p.TimelineEntries != nil || kind != report.Kind {
 		changed = true
 	}
 	if !changed {
@@ -407,11 +469,123 @@ func (editReportTool) Run(ctx context.Context, r *lookupRun, args map[string]any
 		slog.Warn("lacerate: lookup tool edit_report", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	if err := r.db.WithContext(ctx).Save(&a).Error; err != nil {
+	formData.Name = name
+	formData.Description = desc
+	if err := saveReportToolUpdate(ctx, r.db, id, name, desc, kind, formData); err != nil {
 		slog.Error("lacerate: lookup tool edit_report save", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	return map[string]any{"id": a.ID, "name": a.Name, "type": a.Type}, nil
+	return map[string]any{"id": id, "name": name, "kind": kind}, nil
+}
+
+type appendTimelineEntriesTool struct{}
+
+func (appendTimelineEntriesTool) Name() string { return "append_timeline_entries" }
+
+func (appendTimelineEntriesTool) Declaration() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
+		Name:        "append_timeline_entries",
+		Description: "Append new entries to an existing timeline report by ID. Use this when you want to keep the current timeline intact and add more events in chronological order.",
+		ParametersJsonSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"id": map[string]any{"type": "integer", "description": "Timeline report ID."},
+				"timeline_entries": map[string]any{
+					"type":        "array",
+					"description": "New timeline entries to append. Existing entries are kept.",
+					"items": map[string]any{
+						"type": "object",
+						"properties": map[string]any{
+							"datetime": map[string]any{"type": "string", "description": "Entry datetime in RFC3339."},
+							"title":    map[string]any{"type": "string", "description": "Short entry title."},
+							"content":  map[string]any{"type": "string", "description": "Markdown body for the entry."},
+						},
+						"required": []string{"datetime", "title", "content"},
+					},
+				},
+			},
+			"required": []string{"id", "timeline_entries"},
+		},
+	}
+}
+
+func (appendTimelineEntriesTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
+	var p appendTimelineEntriesArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool append_timeline_entries", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	if p.ID == 0 {
+		err := fmt.Errorf("id is required")
+		slog.Warn("lacerate: lookup tool append_timeline_entries", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	if len(p.TimelineEntries) == 0 {
+		err := fmt.Errorf("timeline_entries is required")
+		slog.Warn("lacerate: lookup tool append_timeline_entries", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	var report Report
+	if err := r.db.WithContext(ctx).First(&report, p.ID).Error; err != nil {
+		slog.Error("lacerate: lookup tool append_timeline_entries load", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	if report.Kind != "timeline" {
+		err := fmt.Errorf("report %d is %q, not timeline", p.ID, report.Kind)
+		slog.Warn("lacerate: lookup tool append_timeline_entries", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	existing, err := loadReportPageData(ctx, r.db.WithContext(ctx), p.ID)
+	if err != nil {
+		slog.Error("lacerate: lookup tool append_timeline_entries load page data", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	currentEntries, err := parsedTimelineEntriesFromExisting(existing)
+	if err != nil {
+		slog.Warn("lacerate: lookup tool append_timeline_entries", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	newEntries, err := parseToolTimelineEntries(ctx, p.TimelineEntries)
+	if err != nil {
+		slog.Warn("lacerate: lookup tool append_timeline_entries", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	formData := parsedReportFormData{
+		Name:            report.Name,
+		Description:     report.Description,
+		Kind:            "timeline",
+		TimelineEntries: append(currentEntries, newEntries...),
+	}
+	if err := saveReportToolUpdate(ctx, r.db, p.ID, report.Name, report.Description, report.Kind, formData); err != nil {
+		slog.Error("lacerate: lookup tool append_timeline_entries save", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	return map[string]any{
+		"id":             p.ID,
+		"name":           report.Name,
+		"kind":           report.Kind,
+		"appended_count": len(newEntries),
+		"total_entries":  len(formData.TimelineEntries),
+	}, nil
+}
+
+func saveReportToolUpdate(ctx context.Context, db *gorm.DB, id uint, name, desc, kind string, formData parsedReportFormData) error {
+	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&Report{Model: gorm.Model{ID: id}}).Updates(map[string]any{
+			"Name":        name,
+			"Description": desc,
+			"Kind":        kind,
+		}).Error; err != nil {
+			return err
+		}
+		if err := deleteReportKindExtensionRows(tx, id); err != nil {
+			return err
+		}
+		if err := createReportKindRow(tx, id, formData); err != nil {
+			return err
+		}
+		return refreshReportEmbedding(ctx, tx, id)
+	})
 }
 
 type getRelevantReportsTool struct{}
@@ -471,17 +645,19 @@ func (getRelevantReportsTool) Run(ctx context.Context, r *lookupRun, args map[st
 		slog.Error("lacerate: lookup tool get_relevant_reports search", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
-	out := make([]map[string]any, 0, len(reports))
-	for _, t := range reports {
-		snippet := strings.TrimSpace(t.Description)
-		if snippet == "" {
-			snippet = strings.TrimSpace(t.Content)
-		}
+	pageData, err := loadReportPageDataList(ctx, r.db.WithContext(ctx), reports)
+	if err != nil {
+		slog.Error("lacerate: lookup tool get_relevant_reports page data", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	out := make([]map[string]any, 0, len(pageData))
+	for _, data := range pageData {
+		snippet := reportPageDataSnippet(data)
 		if len(snippet) > 400 {
 			snippet = snippet[:397] + "..."
 		}
 		out = append(out, map[string]any{
-			"id": t.ID, "name": t.Name, "type": t.Type, "snippet": snippet,
+			"id": data.Report.ID, "name": data.Report.Name, "kind": data.Report.Kind, "snippet": snippet,
 		})
 	}
 	return map[string]any{"reports": out}, nil
@@ -550,20 +726,311 @@ func (getRelevantIntelTool) Run(ctx context.Context, r *lookupRun, args map[stri
 		if len(c) > 500 {
 			c = c[:497] + "..."
 		}
-		out = append(out, map[string]any{"id": i.ID, "source_id": i.SourceID, "snippet": c})
+		out = append(out, map[string]any{
+			"id":        i.ID,
+			"source_id": i.SourceID,
+			"datetime":  i.Datetime.UTC().Format(time.RFC3339),
+			"snippet":   c,
+		})
 	}
 	return map[string]any{"intel": out}, nil
 }
 
-func validReportType(k string) bool {
+type createTargetOfInterestTool struct{}
+
+func (createTargetOfInterestTool) Name() string { return "create_target_of_interest" }
+
+func (createTargetOfInterestTool) Declaration() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
+		Name:        "create_target_of_interest",
+		Description: "Create a target of interest (TOI): a short, accurate summary of an entity the user tracks. Use sparingly—only when a new entity needs tracking or context warrants a new row.",
+		ParametersJsonSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"name":        map[string]any{"type": "string", "description": "Distinct entity label."},
+				"description": map[string]any{"type": "string", "description": "Brief factual description."},
+			},
+			"required": []string{"name"},
+		},
+	}
+}
+
+func (createTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
+	var p createTargetOfInterestArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	name := strings.TrimSpace(p.Name)
+	if name == "" {
+		err := fmt.Errorf("name is required")
+		slog.Warn("lacerate: lookup tool create_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	desc := ""
+	if p.Description != nil {
+		desc = strings.TrimSpace(*p.Description)
+	}
+	t := TargetOfInterest{Name: name, Description: desc}
+	if err := r.db.WithContext(ctx).Create(&t).Error; err != nil {
+		slog.Error("lacerate: lookup tool create_target_of_interest db", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	return map[string]any{"id": t.ID, "name": t.Name}, nil
+}
+
+type editTargetOfInterestTool struct{}
+
+func (editTargetOfInterestTool) Name() string { return "edit_target_of_interest" }
+
+func (editTargetOfInterestTool) Declaration() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
+		Name:        "edit_target_of_interest",
+		Description: "Update an existing target of interest by ID. Use only when new information materially changes the entity's context. Only include fields to change.",
+		ParametersJsonSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"id":          map[string]any{"type": "integer", "description": "Target of interest ID."},
+				"name":        map[string]any{"type": "string"},
+				"description": map[string]any{"type": "string"},
+			},
+			"required": []string{"id"},
+		},
+	}
+}
+
+func (editTargetOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
+	var p editTargetOfInterestArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	if p.ID == 0 {
+		err := fmt.Errorf("id is required")
+		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	var t TargetOfInterest
+	if err := r.db.WithContext(ctx).First(&t, p.ID).Error; err != nil {
+		slog.Error("lacerate: lookup tool edit_target_of_interest load", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	changed := false
+	if p.Name != nil {
+		s := strings.TrimSpace(*p.Name)
+		if s == "" {
+			err := fmt.Errorf("name cannot be empty")
+			slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+			return nil, err
+		}
+		t.Name = s
+		changed = true
+	}
+	if p.Description != nil {
+		t.Description = strings.TrimSpace(*p.Description)
+		changed = true
+	}
+	if !changed {
+		err := fmt.Errorf("no fields to update")
+		slog.Warn("lacerate: lookup tool edit_target_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	if err := r.db.WithContext(ctx).Save(&t).Error; err != nil {
+		slog.Error("lacerate: lookup tool edit_target_of_interest save", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	return map[string]any{"id": t.ID, "name": t.Name}, nil
+}
+
+type getRelevantTargetsOfInterestTool struct{}
+
+func (getRelevantTargetsOfInterestTool) Name() string { return "get_relevant_targets_of_interest" }
+
+func (getRelevantTargetsOfInterestTool) Declaration() *genai.FunctionDeclaration {
+	return &genai.FunctionDeclaration{
+		Name:        "get_relevant_targets_of_interest",
+		Description: "Ranked cosine similarity search over targets of interest with embeddings. Use natural-language query text to find related entities.",
+		ParametersJsonSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"query": map[string]any{"type": "string", "description": "Natural language query text."},
+				"limit": map[string]any{"type": "integer", "description": "Max rows (default 10)."},
+			},
+			"required": []string{"query"},
+		},
+	}
+}
+
+func (getRelevantTargetsOfInterestTool) Run(ctx context.Context, r *lookupRun, args map[string]any) (any, error) {
+	var p embeddingSearchArgs
+	if err := unmarshalToolArgs(args, &p); err != nil {
+		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	q := strings.TrimSpace(p.Query)
+	if q == "" {
+		err := fmt.Errorf("query is required")
+		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	limit, err := parseLookupSearchLimit(p.Limit, 10, 50)
+	if err != nil {
+		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	e := vlEmbedder()
+	if e == nil {
+		err := fmt.Errorf("embedding service not configured")
+		slog.Warn("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	vec, err := e.Embed(ctx, q)
+	if err != nil {
+		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest embed", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	if len(vec) != IntelEmbeddingDim {
+		err := fmt.Errorf("embedding dimension %d, want %d", len(vec), IntelEmbeddingDim)
+		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	rows, err := searchTargetsOfInterestByEmbedding(r.db.WithContext(ctx), pgvector.NewVector(vec), limit)
+	if err != nil {
+		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest search", "error", err, "lookup_id", r.lookupID)
+		return nil, err
+	}
+	out := make([]map[string]any, 0, len(rows))
+	for _, row := range rows {
+		snippet := strings.TrimSpace(row.Description)
+		if len(snippet) > 400 {
+			snippet = snippet[:397] + "..."
+		}
+		out = append(out, map[string]any{"id": row.ID, "name": row.Name, "snippet": snippet})
+	}
+	return map[string]any{"targets_of_interest": out}, nil
+}
+
+func validReportKind(k string) bool {
 	k = strings.TrimSpace(k)
 	if k == "" {
 		return false
 	}
-	for _, p := range ReportTypeChoices {
+	for _, p := range ReportKindChoices {
 		if p.Key == k {
 			return true
 		}
 	}
 	return false
+}
+
+func reportFormDataFromToolArgs(ctx context.Context, kind string, briefingContent *string, timelineEntries []reportTimelineEntryArgs) (parsedReportFormData, error) {
+	out := parsedReportFormData{Kind: kind}
+	switch kind {
+	case "briefing":
+		if briefingContent == nil || strings.TrimSpace(*briefingContent) == "" {
+			return out, fmt.Errorf("briefing_content is required for briefing reports")
+		}
+		out.BriefingContent = strings.TrimSpace(*briefingContent)
+	case "timeline":
+		entries, err := parseToolTimelineEntries(ctx, timelineEntries)
+		if err != nil {
+			return out, err
+		}
+		out.TimelineEntries = entries
+	default:
+		return out, fmt.Errorf("unsupported report kind %q", kind)
+	}
+	return out, nil
+}
+
+func reportFormDataFromExistingToolArgs(ctx context.Context, existing ReportPageData, kind string, briefingContent *string, timelineEntries *[]reportTimelineEntryArgs) (parsedReportFormData, error) {
+	out := parsedReportFormData{Kind: kind}
+	switch kind {
+	case "briefing":
+		if briefingContent != nil {
+			s := strings.TrimSpace(*briefingContent)
+			if s == "" {
+				return out, fmt.Errorf("briefing_content cannot be empty")
+			}
+			out.BriefingContent = s
+			return out, nil
+		}
+		if existing.Briefing == nil {
+			return out, fmt.Errorf("briefing_content is required when switching to briefing")
+		}
+		out.BriefingContent = existing.Briefing.Content
+	case "timeline":
+		if timelineEntries != nil {
+			entries, err := parseToolTimelineEntries(ctx, *timelineEntries)
+			if err != nil {
+				return out, err
+			}
+			out.TimelineEntries = entries
+			return out, nil
+		}
+		entries, err := parsedTimelineEntriesFromExisting(existing)
+		if err != nil {
+			return out, err
+		}
+		out.TimelineEntries = entries
+	default:
+		return out, fmt.Errorf("unsupported report kind %q", kind)
+	}
+	return out, nil
+}
+
+func parsedTimelineEntriesFromExisting(existing ReportPageData) ([]parsedReportTimelineEntry, error) {
+	if existing.Timeline == nil {
+		return nil, fmt.Errorf("timeline_entries are required when switching to timeline")
+	}
+	out := make([]parsedReportTimelineEntry, 0, len(existing.Timeline.Entries))
+	for _, entry := range existing.Timeline.Entries {
+		out = append(out, parsedReportTimelineEntry{
+			Datetime: entry.Datetime,
+			Title:    entry.Title,
+			Content:  entry.Content,
+		})
+	}
+	return out, nil
+}
+
+func parseToolTimelineEntries(ctx context.Context, rows []reportTimelineEntryArgs) ([]parsedReportTimelineEntry, error) {
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("timeline_entries are required for timeline reports")
+	}
+	tz, _ := ctx.Value("$tz").(*time.Location)
+	if tz == nil {
+		tz = time.UTC
+	}
+	out := make([]parsedReportTimelineEntry, 0, len(rows))
+	for i, row := range rows {
+		title := strings.TrimSpace(row.Title)
+		content := strings.TrimSpace(row.Content)
+		if title == "" {
+			return nil, fmt.Errorf("timeline entry %d title is required", i+1)
+		}
+		if content == "" {
+			return nil, fmt.Errorf("timeline entry %d content is required", i+1)
+		}
+		dtRaw := strings.TrimSpace(row.Datetime)
+		if dtRaw == "" {
+			return nil, fmt.Errorf("timeline entry %d datetime is required", i+1)
+		}
+		dt, err := time.Parse(time.RFC3339, dtRaw)
+		if err != nil {
+			dt, err = time.ParseInLocation("2006-01-02T15:04", dtRaw, tz)
+			if err != nil {
+				return nil, fmt.Errorf("timeline entry %d datetime must be RFC3339", i+1)
+			}
+		}
+		out = append(out, parsedReportTimelineEntry{
+			Datetime: dt,
+			Title:    title,
+			Content:  content,
+		})
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].Datetime.Before(out[j].Datetime)
+	})
+	return out, nil
 }

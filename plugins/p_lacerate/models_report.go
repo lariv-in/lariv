@@ -1,67 +1,75 @@
 package p_lacerate
 
 import (
-	"context"
-	"fmt"
-	"strings"
-
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/registry"
 	"github.com/pgvector/pgvector-go"
 	"gorm.io/gorm"
 )
 
-// ReportTypeChoices is the persisted value (Key) and UI label (Value) for [Report.Type].
-var ReportTypeChoices = []registry.Pair[string, string]{
-	{Key: "report", Value: "Report"},
-	{Key: "briefing", Value: "Briefing"},
-	{Key: "memo", Value: "Memo"},
-	{Key: "dataset", Value: "Dataset summary"},
-	{Key: "other", Value: "Other"},
+// ReportInterface is implemented per [Report.Kind].
+type ReportInterface interface {
+	reportKindRow()
+	ReportString(*Report) string
+	ReportSnippet(*Report) string
 }
 
-// Report is a manually curated document (reports, briefings, etc.) with an optional embedding for retrieval when [GeminiEmbeddingConfig] / [VLEmbedder] is configured.
+type ReportDesc struct {
+	Name string
+}
+
+var ReportKindMap = map[string]ReportDesc{}
+
+// ReportKindChoices is persisted key (Key) and UI label (Value) for [Report.Kind].
+var ReportKindChoices = []registry.Pair[string, string]{
+	{Key: "briefing", Value: "Briefing"},
+	{Key: "timeline", Value: "Timeline"},
+}
+
+// RegistryReportKind holds a constructor per [Report.Kind] that returns a new kind row
+// (for example `&BriefingReport{}`) for GORM to scan into.
+var RegistryReportKind = registry.NewRegistry[func() ReportInterface]()
+
+// Report is base row shared by all report kinds.
+// Embedding text depends on kind-specific child rows, so keep it in sync from
+// report-kind writes rather than relying on base-row fields alone.
 type Report struct {
 	gorm.Model
 	Name        string `gorm:"not null"`
 	Description string `gorm:"type:text"`
-	// Type is a key from [ReportTypeChoices].
-	Type    string `gorm:"not null"`
-	Content string `gorm:"type:text;not null;default:''"`
-	// Embedding matches [IntelEmbeddingDim] and the configured [VLEmbedder].
+	Kind        string `gorm:"not null"`
+	// Embedding is derived from base fields plus kind-specific child content.
 	Embedding *pgvector.Vector `gorm:"type:vector(1024)"`
 }
 
-func (Report) TableName() string { return "targets_of_interest" }
+func (Report) TableName() string { return "reports" }
 
-// String returns markdown-shaped text for display and for [VLEmbedder] input (name, type, description, content).
-func (a *Report) String() string {
-	if a == nil {
-		return ""
-	}
-	var b strings.Builder
-	if t := strings.TrimSpace(a.Name); t != "" {
-		fmt.Fprintf(&b, "# %s\n\n", t)
-	}
-	if t := strings.TrimSpace(a.Type); t != "" {
-		fmt.Fprintf(&b, "**Type:** %s\n\n", t)
-	}
-	if t := strings.TrimSpace(a.Description); t != "" {
-		b.WriteString(t)
-		b.WriteString("\n\n")
-	}
-	if t := strings.TrimSpace(a.Content); t != "" {
-		b.WriteString(t)
-	}
-	return strings.TrimSpace(b.String())
-}
-
-// BeforeSave sets [Report.Embedding] from name/type/description/content ([prepareReportEmbeddingForSave]).
-func (a *Report) BeforeSave(tx *gorm.DB) error {
-	if tx.Statement.SkipHooks {
+// deleteReportKindExtensionRows removes every per-kind row tied to this [Report].
+// Call inside a transaction before deleting or replacing kind-specific data.
+func deleteReportKindExtensionRows(tx *gorm.DB, reportID uint) error {
+	if reportID == 0 {
 		return nil
 	}
-	return prepareReportEmbeddingForSave(context.Background(), a)
+	var timelines []TimelineReport
+	if err := tx.Where("report_id = ?", reportID).Find(&timelines).Error; err != nil {
+		return err
+	}
+	if len(timelines) != 0 {
+		ids := make([]uint, 0, len(timelines))
+		for _, row := range timelines {
+			ids = append(ids, row.ID)
+		}
+		if err := tx.Where("timeline_report_id IN ?", ids).Delete(&TimelineReportEntry{}).Error; err != nil {
+			return err
+		}
+	}
+	if err := tx.Where("report_id = ?", reportID).Delete(&TimelineReport{}).Error; err != nil {
+		return err
+	}
+	if err := tx.Where("report_id = ?", reportID).Delete(&BriefingReport{}).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func init() {

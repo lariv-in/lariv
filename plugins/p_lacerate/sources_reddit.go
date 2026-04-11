@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 type RedditObject[T RedditObjectInterface] struct {
@@ -119,9 +118,6 @@ func (p RedditPostData) Markdown(ctx context.Context) string {
 	b.WriteString("---\n\n")
 	fmt.Fprintf(&b, "- **Author:** u/%s\n", p.Author)
 	fmt.Fprintf(&b, "- **Subreddit:** r/%s\n", p.Subreddit)
-	if p.CreatedUTC > 0 {
-		fmt.Fprintf(&b, "- **Posted:** %s\n", time.Unix(int64(p.CreatedUTC), 0).UTC().Format(time.RFC3339))
-	}
 	fmt.Fprintf(&b, "- **Score:** %d (up %d / down %d)\n", p.Score, p.Ups, p.Downs)
 	fmt.Fprintf(&b, "- **Comments:** %d\n", p.NumComments)
 	if p.Permalink != "" {

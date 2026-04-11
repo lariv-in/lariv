@@ -3,8 +3,10 @@ package p_lacerate
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"gorm.io/datatypes"
@@ -16,11 +18,11 @@ const redditListingMaxPages = 25
 
 type RedditSource struct {
 	gorm.Model
-	Subreddits     datatypes.JSON `gorm:"type:json"`
-	SearchQuery    string
-	MaxFreshPosts  uint `gorm:"not null;default:25"`
-	SourceID       uint `gorm:"not null;uniqueIndex"`
-	Source         Source `gorm:"foreignKey:SourceID"`
+	Subreddits    datatypes.JSON `gorm:"type:json"`
+	SearchQuery   string
+	MaxFreshPosts uint   `gorm:"not null;default:25"`
+	SourceID      uint   `gorm:"not null;uniqueIndex"`
+	Source        Source `gorm:"foreignKey:SourceID"`
 }
 
 func (r RedditSource) effectiveMaxFreshPosts() int {
@@ -67,10 +69,16 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 			}
 			dedupeCopy := dedupe
 			sourceID := r.SourceID
+			if post.CreatedUTC <= 0 {
+				err := fmt.Errorf("reddit post %q missing datetime", post.ID)
+				slog.Error("lacerate: reddit post datetime", "error", err, "source_id", r.SourceID)
+				return err
+			}
 			i := Intel{
 				SourceID:       &sourceID,
 				DedupHash:      &dedupeCopy,
 				Content:        post.Markdown(ctx),
+				Datetime:       time.Unix(int64(post.CreatedUTC), 0).UTC(),
 				PreviewImageID: previewID,
 			}
 			existingDedup[dedupe] = struct{}{}

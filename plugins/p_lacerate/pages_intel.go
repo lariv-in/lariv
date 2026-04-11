@@ -96,6 +96,17 @@ func intelFormFields() components.PageInterface {
 				},
 			},
 			&components.ContainerError{
+				Error: getters.Key[error]("$error.Datetime"),
+				Children: []components.PageInterface{
+					&components.InputDatetime{
+						Label:    "Datetime",
+						Name:     "Datetime",
+						Required: true,
+						Getter:   getters.Key[time.Time]("$in.Datetime"),
+					},
+				},
+			},
+			&components.ContainerError{
 				Error: getters.Key[error]("$error.Content"),
 				Children: []components.PageInterface{
 					&components.InputTextarea{
@@ -179,6 +190,12 @@ func registerIntelTable() {
 						},
 					},
 					{
+						Label: "Datetime",
+						Children: []components.PageInterface{
+							&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Datetime")},
+						},
+					},
+					{
 						Label: "Content",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: intelContentPreviewCell()},
@@ -207,7 +224,7 @@ func registerIntelForms() {
 					&components.FormComponent[Intel]{
 						Attr:     getters.FormBubbling(createName),
 						Title:    "New Intel",
-						Subtitle: "Link a source, add markdown content, and optionally attach a preview image.",
+						Subtitle: "Link a source, set event datetime, add markdown content, and optionally attach a preview image.",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							intelFormFields(),
@@ -236,7 +253,7 @@ func registerIntelForms() {
 						Getter:   getters.Key[Intel]("intel"),
 						Attr:     getters.FormBubbling(updateName),
 						Title:    "Edit Intel",
-						Subtitle: "Update content, source, or preview image.",
+						Subtitle: "Update datetime, content, source, or preview image.",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							intelFormFields(),
@@ -298,6 +315,12 @@ func registerIntelDetail() {
 									getters.Any(getters.Key[string]("$in.Source.Kind")),
 									getters.Any(getters.Key[uint]("$in.ID")),
 								),
+							},
+							&components.LabelInline{
+								Title: "Datetime",
+								Children: []components.PageInterface{
+									&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.Datetime")},
+								},
 							},
 							&components.LabelInline{
 								Title: "Preview",

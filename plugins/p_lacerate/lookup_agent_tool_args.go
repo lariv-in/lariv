@@ -22,18 +22,42 @@ func unmarshalToolArgs(args map[string]any, dst any) error {
 }
 
 type createReportArgs struct {
-	Name        string  `json:"name"`
-	TargetType  string  `json:"target_type"`
-	Description *string `json:"description"`
-	Content     string  `json:"content"`
+	Name            string                    `json:"name"`
+	TargetKind      string                    `json:"target_kind"`
+	Description     *string                   `json:"description"`
+	BriefingContent *string                   `json:"briefing_content"`
+	TimelineEntries []reportTimelineEntryArgs `json:"timeline_entries"`
 }
 
 type editReportArgs struct {
+	ID              uint                       `json:"id"`
+	Name            *string                    `json:"name"`
+	TargetKind      *string                    `json:"target_kind"`
+	Description     *string                    `json:"description"`
+	BriefingContent *string                    `json:"briefing_content"`
+	TimelineEntries *[]reportTimelineEntryArgs `json:"timeline_entries"`
+}
+
+type appendTimelineEntriesArgs struct {
+	ID              uint                      `json:"id"`
+	TimelineEntries []reportTimelineEntryArgs `json:"timeline_entries"`
+}
+
+type reportTimelineEntryArgs struct {
+	Datetime string `json:"datetime"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+}
+
+type createTargetOfInterestArgs struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+}
+
+type editTargetOfInterestArgs struct {
 	ID          uint    `json:"id"`
 	Name        *string `json:"name"`
-	TargetType  *string `json:"target_type"`
 	Description *string `json:"description"`
-	Content     *string `json:"content"`
 }
 
 type embeddingSearchArgs struct {
