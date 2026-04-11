@@ -28,7 +28,7 @@ var (
 	loggedNilEmbedder sync.Once  // one-time hint when apiKey is unset
 )
 
-// RegisterVLEmbedder sets the package-default embedder used after Reddit (and other) ingest creates an [Intel].
+// RegisterVLEmbedder sets the package-default embedder used when [runSourceFetch] prepares [Intel] embeddings before batch insert.
 // Pass nil to clear.
 func RegisterVLEmbedder(e VLEmbedder) {
 	vlEmbedderMu.Lock()
@@ -77,7 +77,6 @@ func prepareIntelEmbeddingForSave(ctx context.Context, db *gorm.DB, intel *Intel
 		return fmt.Errorf("lacerate: vl embed intel: got dimension %d, want %d", len(vec), IntelEmbeddingDim)
 	}
 	intel.Embedding = pgvector.NewVector(vec)
-	slog.Info("lacerate: vl embed intel success", "intel_id", intel.ID, "dim", len(vec))
 	return nil
 }
 

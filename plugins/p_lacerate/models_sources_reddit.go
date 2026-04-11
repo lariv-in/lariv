@@ -11,19 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// redditListingMaxPages caps extra listing fetches when a page contains duplicates already stored for this source.
+// redditListingMaxPages caps extra listing fetches when a page contains duplicates already known for this source.
 const redditListingMaxPages = 25
-
-func lacerateUniqueViolation(err error) bool {
-	if err == nil {
-		return false
-	}
-	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "unique constraint") ||
-		strings.Contains(msg, "duplicate key value") ||
-		strings.Contains(msg, "sqlstate 23505") ||
-		strings.Contains(msg, "violates unique constraint")
-}
 
 type RedditSource struct {
 	gorm.Model
@@ -33,7 +22,7 @@ type RedditSource struct {
 	Source      Source `gorm:"foreignKey:SourceID"`
 }
 
-func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, ctx context.Context, db *gorm.DB, out *[]Intel) error {
+func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}, out *[]Intel) error {
 	afterStr := ""
 	for range redditListingMaxPages {
 		var afterPtr *string
@@ -58,12 +47,7 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 				slog.Warn("lacerate: reddit post missing id, skip", "subreddit", subredditName)
 				continue
 			}
-			var n int64
-			if err := db.Model(&Intel{}).Where("source_id = ? AND dedup_hash = ?", r.SourceID, dedupe).Count(&n).Error; err != nil {
-				slog.Error("lacerate: reddit source dedupe count", "error", err, "source_id", r.SourceID)
-				return err
-			}
-			if n > 0 {
+			if _, dup := existingDedup[dedupe]; dup {
 				pageHadDup = true
 				continue
 			}
@@ -79,14 +63,7 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 				Content:        post.Markdown(ctx),
 				PreviewImageID: previewID,
 			}
-			if err := db.Create(&i).Error; err != nil {
-				if lacerateUniqueViolation(err) {
-					pageHadDup = true
-					continue
-				}
-				slog.Error("lacerate: reddit source create intel", "error", err, "source_id", r.SourceID)
-				return err
-			}
+			existingDedup[dedupe] = struct{}{}
 			*out = append(*out, i)
 		}
 		if listing.Data.After == nil {
@@ -100,7 +77,7 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 	return nil
 }
 
-func (r RedditSource) Fetch(ctx context.Context, db *gorm.DB) ([]Intel, error) {
+func (r RedditSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}) ([]Intel, error) {
 	var subs []string
 	if len(r.Subreddits) > 0 {
 		if err := json.Unmarshal(r.Subreddits, &subs); err != nil {
@@ -115,7 +92,7 @@ func (r RedditSource) Fetch(ctx context.Context, db *gorm.DB) ([]Intel, error) {
 		if name == "" {
 			continue
 		}
-		if err := r.fetchSubredditListings(name, query, ctx, db, &out); err != nil {
+		if err := r.fetchSubredditListings(name, query, ctx, db, existingDedup, &out); err != nil {
 			return nil, err
 		}
 	}

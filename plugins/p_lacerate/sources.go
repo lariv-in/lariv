@@ -10,7 +10,11 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
+
+// intelCreateBatchSize is chunk size for [runSourceFetch] batch insert after embeddings.
+const intelCreateBatchSize = 100
 
 // sourceWorkerHandle holds a cancellable context for one [Source] worker goroutine.
 type sourceWorkerHandle struct {
@@ -135,6 +139,56 @@ func runSourceFetch(ctx context.Context, db *gorm.DB, src *Source) error {
 		slog.Error("lacerate: source fetch load kind row", "error", err, "source_id", src.ID, "kind", src.Kind)
 		return err
 	}
-	_, err := row.Fetch(ctx, db.WithContext(ctx))
-	return err
+
+	dbw := db.WithContext(ctx)
+	var hashRows []string
+	if err := dbw.Model(&Intel{}).Where("source_id = ? AND dedup_hash IS NOT NULL AND dedup_hash <> ''", src.ID).Pluck("dedup_hash", &hashRows).Error; err != nil {
+		slog.Error("lacerate: source fetch pluck dedup hashes", "error", err, "source_id", src.ID)
+		return err
+	}
+	existingDedup := make(map[string]struct{}, len(hashRows))
+	for _, h := range hashRows {
+		existingDedup[h] = struct{}{}
+	}
+
+	intels, err := row.Fetch(ctx, dbw, existingDedup)
+	if err != nil {
+		return err
+	}
+	if len(intels) == 0 {
+		return nil
+	}
+
+	toSave := make([]Intel, 0, len(intels))
+	for i := range intels {
+		dh := intels[i].DedupHash
+		if dh == nil || *dh == "" {
+			continue
+		}
+		toSave = append(toSave, intels[i])
+	}
+	if len(toSave) == 0 {
+		return nil
+	}
+
+	for i := range toSave {
+		if err := prepareIntelEmbeddingForSave(ctx, dbw, &toSave[i]); err != nil {
+			return err
+		}
+	}
+
+	intelOnConflict := clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "source_id"},
+			{Name: "dedup_hash"},
+		},
+		DoNothing: true,
+	}
+	if err := dbw.Session(&gorm.Session{SkipHooks: true}).
+		Clauses(intelOnConflict).
+		CreateInBatches(toSave, intelCreateBatchSize).Error; err != nil {
+		slog.Error("lacerate: source fetch batch create intel", "error", err, "source_id", src.ID)
+		return err
+	}
+	return nil
 }

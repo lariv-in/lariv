@@ -39,7 +39,7 @@ func twitterTweetToMarkdown(handle string, tw twitterFetchedTweet) string {
 	return strings.TrimSpace(b.String())
 }
 
-func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB) ([]Intel, error) {
+func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}) ([]Intel, error) {
 	if Config == nil || Config.Twitter.FetchMode == "" {
 		err := fmt.Errorf("twitter source: configure [plugins.p_lacerate] twitter.fetchMode in totschool.toml")
 		slog.Error("lacerate: twitter source fetch", "error", err, "source_id", t.SourceID)
@@ -71,12 +71,7 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB) ([]Intel, error) 
 				slog.Warn("lacerate: twitter item missing id, skip", "handle", handle)
 				continue
 			}
-			var n int64
-			if err := db.Model(&Intel{}).Where("source_id = ? AND dedup_hash = ?", t.SourceID, dedupe).Count(&n).Error; err != nil {
-				slog.Error("lacerate: twitter source dedupe count", "error", err, "source_id", t.SourceID)
-				return nil, err
-			}
-			if n > 0 {
+			if _, dup := existingDedup[dedupe]; dup {
 				continue
 			}
 
@@ -98,13 +93,7 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB) ([]Intel, error) 
 				Content:        twitterTweetToMarkdown(handle, tw),
 				PreviewImageID: previewID,
 			}
-			if err := db.Create(&i).Error; err != nil {
-				if lacerateUniqueViolation(err) {
-					continue
-				}
-				slog.Error("lacerate: twitter source create intel", "error", err, "source_id", t.SourceID)
-				return nil, err
-			}
+			existingDedup[dedupe] = struct{}{}
 			out = append(out, i)
 		}
 	}

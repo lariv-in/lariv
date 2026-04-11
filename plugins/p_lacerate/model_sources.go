@@ -9,8 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// SourceInterface is implemented per [Source.Kind]. Fetch must only build [Intel] rows; persistence runs in [runSourceFetch].
+// existingDedup holds dedup_hash values already in DB for this source plus hashes appended during this run (mutated by Fetch).
 type SourceInterface interface {
-	Fetch(context.Context, *gorm.DB) ([]Intel, error)
+	Fetch(ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}) ([]Intel, error)
 }
 
 type SourceDesc struct {
