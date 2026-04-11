@@ -12,8 +12,8 @@ import (
 type Intel struct {
 	gorm.Model
 	// uniqueIndex name is shared with DedupHash so GORM creates one composite UNIQUE(source_id, dedup_hash), not a unique source_id alone.
-	SourceID uint   `gorm:"not null;uniqueIndex:idx_intel_source_dedup"`
-	Source   Source `gorm:"foreignKey:SourceID"`
+	SourceID *uint   `gorm:"uniqueIndex:idx_intel_source_dedup"`
+	Source   *Source `gorm:"foreignKey:SourceID;constraint:OnDelete:SET NULL"`
 	// DedupHash is a fixed-width digest for ingest deduplication (e.g. Reddit: SHA-256 hex of post.ID); nil for rows with no dedupe key.
 	DedupHash *string `gorm:"size:64;uniqueIndex:idx_intel_source_dedup"`
 	// Content is canonical markdown for display and VL text input.

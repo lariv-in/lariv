@@ -22,6 +22,11 @@ type SourceDesc struct {
 
 var SourceKindMap = map[string]SourceDesc{}
 
+var SourceKindChoices = []registry.Pair[string, string]{
+	{Key: "reddit", Value: "Reddit"},
+	{Key: "twitter", Value: "Twitter / X"},
+}
+
 // RegistrySourceKind holds a constructor per [Source.Kind] that returns a new row value (e.g. &RedditSource{})
 // for GORM to scan into; the dynamic type must implement [SourceInterface].
 var RegistrySourceKind = registry.NewRegistry[func() SourceInterface]()
@@ -37,6 +42,21 @@ type Source struct {
 func (s *Source) AfterDelete(tx *gorm.DB) error {
 	if s != nil && s.ID != 0 {
 		StopSourceWorker(s.ID)
+	}
+	return nil
+}
+
+// deleteSourceKindExtensionRows removes every per-kind row tied to this [Source] (reddit, twitter, …).
+// Call inside a transaction before deleting the [Source] row.
+func deleteSourceKindExtensionRows(tx *gorm.DB, sourceID uint) error {
+	if sourceID == 0 {
+		return nil
+	}
+	if err := tx.Where("source_id = ?", sourceID).Delete(&RedditSource{}).Error; err != nil {
+		return err
+	}
+	if err := tx.Where("source_id = ?", sourceID).Delete(&TwitterSource{}).Error; err != nil {
+		return err
 	}
 	return nil
 }

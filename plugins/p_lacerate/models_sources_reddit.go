@@ -11,20 +11,28 @@ import (
 	"gorm.io/gorm"
 )
 
-// redditListingMaxPages caps extra listing fetches when a page contains duplicates already known for this source.
+// redditListingMaxPages caps Reddit listing pagination per subreddit (safety bound).
 const redditListingMaxPages = 25
 
 type RedditSource struct {
 	gorm.Model
-	Subreddits  datatypes.JSON `gorm:"type:json"`
-	SearchQuery string
-	SourceID    uint   `gorm:"not null;uniqueIndex"`
-	Source      Source `gorm:"foreignKey:SourceID"`
+	Subreddits     datatypes.JSON `gorm:"type:json"`
+	SearchQuery    string
+	MaxFreshPosts  uint `gorm:"not null;default:25"`
+	SourceID       uint `gorm:"not null;uniqueIndex"`
+	Source         Source `gorm:"foreignKey:SourceID"`
 }
 
-func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}, out *[]Intel) error {
+func (r RedditSource) effectiveMaxFreshPosts() int {
+	return sourceEffectiveMaxFreshPosts(r.MaxFreshPosts)
+}
+
+func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}, out *[]Intel, freshTotal *int, maxFresh int) error {
 	afterStr := ""
 	for range redditListingMaxPages {
+		if *freshTotal >= maxFresh {
+			return nil
+		}
 		var afterPtr *string
 		if afterStr != "" {
 			afterPtr = &afterStr
@@ -39,8 +47,10 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 		if err != nil {
 			return err
 		}
-		pageHadDup := false
 		for _, child := range listing.Data.Children {
+			if *freshTotal >= maxFresh {
+				return nil
+			}
 			post := child.Data
 			dedupe := post.IntelDedupHash()
 			if dedupe == "" {
@@ -48,7 +58,6 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 				continue
 			}
 			if _, dup := existingDedup[dedupe]; dup {
-				pageHadDup = true
 				continue
 			}
 			previewURL := post.PreviewImageURL()
@@ -57,19 +66,18 @@ func (r RedditSource) fetchSubredditListings(subredditName, searchQuery string, 
 				previewID = persistRedditPreviewImage(ctx, db, post, previewURL)
 			}
 			dedupeCopy := dedupe
+			sourceID := r.SourceID
 			i := Intel{
-				SourceID:       r.SourceID,
+				SourceID:       &sourceID,
 				DedupHash:      &dedupeCopy,
 				Content:        post.Markdown(ctx),
 				PreviewImageID: previewID,
 			}
 			existingDedup[dedupe] = struct{}{}
 			*out = append(*out, i)
+			*freshTotal++
 		}
 		if listing.Data.After == nil {
-			break
-		}
-		if !pageHadDup {
 			break
 		}
 		afterStr = *listing.Data.After
@@ -86,13 +94,18 @@ func (r RedditSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map[
 		}
 	}
 	query := strings.TrimSpace(r.SearchQuery)
+	maxFresh := r.effectiveMaxFreshPosts()
 	var out []Intel
+	freshTotal := 0
 	for _, raw := range subs {
+		if freshTotal >= maxFresh {
+			break
+		}
 		name := strings.TrimSpace(strings.TrimPrefix(raw, "r/"))
 		if name == "" {
 			continue
 		}
-		if err := r.fetchSubredditListings(name, query, ctx, db, existingDedup, &out); err != nil {
+		if err := r.fetchSubredditListings(name, query, ctx, db, existingDedup, &out, &freshTotal, maxFresh); err != nil {
 			return nil, err
 		}
 	}

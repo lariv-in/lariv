@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/lariv-in/lago/getters"
@@ -16,6 +17,8 @@ type ButtonPost struct {
 	Icon        string
 	IconClasses string
 	Classes     string
+	// Attr is merged onto the submit button (e.g. Disabled(), extra classes).
+	Attr getters.Getter[Node]
 }
 
 func (e ButtonPost) GetKey() string {
@@ -54,6 +57,21 @@ func (e ButtonPost) Build(ctx context.Context) Node {
 		// showing "Generating..." state) will be swapped in-place.
 		Attr("hx-boost", "true"),
 		Attr("@click.stop", ""),
-		Button(Type("submit"), Class(buttonClasses), content),
+		Button(
+			Type("submit"),
+			Class(buttonClasses),
+			Iff(e.Attr != nil, func() Node {
+				n, err := e.Attr(ctx)
+				if err != nil {
+					slog.Error("ButtonPost Attr getter failed", "error", err, "key", e.Key)
+					return Raw("")
+				}
+				if n == nil {
+					return Raw("")
+				}
+				return n
+			}),
+			content,
+		),
 	)
 }

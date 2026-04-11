@@ -1,8 +1,7 @@
 package p_lacerate
 
 func init() {
-	registerRedditSourcePages()
-	registerTwitterSourcePages()
+	registerSourcePages()
 	registerIntelPages()
 	registerTargetOfInterestPages()
 	registerLookupPages()

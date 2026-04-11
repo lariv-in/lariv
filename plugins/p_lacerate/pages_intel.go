@@ -91,7 +91,7 @@ func intelFormFields() components.PageInterface {
 						Url:         lago.RoutePath("lacerate.SourceSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Source.Name"),
 						Placeholder: "Select a source…",
-						Getter:      getters.Association[Source](getters.Key[uint]("$in.SourceID")),
+						Getter:      getters.Association[Source](getters.Deref(getters.Key[*uint]("$in.SourceID"))),
 					},
 				},
 			},

@@ -7,52 +7,42 @@ import (
 func registerRoutes() {
 	_ = lago.RegistryRoute.Register("lacerate.DefaultRoute", lago.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("lacerate.ListView"),
+		Handler: lago.NewDynamicView("lacerate.SourceListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.CreateRoute", lago.Route{
-		Path:    AppUrl + "reddit/sources/create/",
-		Handler: lago.NewDynamicView("lacerate.CreateView"),
+	_ = lago.RegistryRoute.Register("lacerate.SourceListRoute", lago.Route{
+		Path:    AppUrl + "sources/",
+		Handler: lago.NewDynamicView("lacerate.SourceListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.DetailRoute", lago.Route{
-		Path:    AppUrl + "reddit/sources/{id}/",
-		Handler: lago.NewDynamicView("lacerate.DetailView"),
+	_ = lago.RegistryRoute.Register("lacerate.SourceCreateRoute", lago.Route{
+		Path:    AppUrl + "sources/create/",
+		Handler: lago.NewDynamicView("lacerate.SourceCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.UpdateRoute", lago.Route{
-		Path:    AppUrl + "reddit/sources/{id}/edit/",
-		Handler: lago.NewDynamicView("lacerate.UpdateView"),
+	_ = lago.RegistryRoute.Register("lacerate.SourceDetailRoute", lago.Route{
+		Path:    AppUrl + "sources/{id}/",
+		Handler: lago.NewDynamicView("lacerate.SourceDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.DeleteRoute", lago.Route{
-		Path:    AppUrl + "reddit/sources/{id}/delete/",
-		Handler: lago.NewDynamicView("lacerate.DeleteView"),
+	_ = lago.RegistryRoute.Register("lacerate.SourceUpdateRoute", lago.Route{
+		Path:    AppUrl + "sources/{id}/edit/",
+		Handler: lago.NewDynamicView("lacerate.SourceUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.TwitterDefaultRoute", lago.Route{
-		Path:    AppUrl + "twitter/sources/",
-		Handler: lago.NewDynamicView("lacerate.TwitterListView"),
+	_ = lago.RegistryRoute.Register("lacerate.SourceDeleteRoute", lago.Route{
+		Path:    AppUrl + "sources/{id}/delete/",
+		Handler: lago.NewDynamicView("lacerate.SourceDeleteView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.TwitterCreateRoute", lago.Route{
-		Path:    AppUrl + "twitter/sources/create/",
-		Handler: lago.NewDynamicView("lacerate.TwitterCreateView"),
+	_ = lago.RegistryRoute.Register("lacerate.SourceRestartWorkerRoute", lago.Route{
+		Path:    AppUrl + "sources/{id}/restart-worker/",
+		Handler: lago.NewDynamicView("lacerate.SourceRestartWorkerView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.TwitterDetailRoute", lago.Route{
-		Path:    AppUrl + "twitter/sources/{id}/",
-		Handler: lago.NewDynamicView("lacerate.TwitterDetailView"),
-	})
-
-	_ = lago.RegistryRoute.Register("lacerate.TwitterUpdateRoute", lago.Route{
-		Path:    AppUrl + "twitter/sources/{id}/edit/",
-		Handler: lago.NewDynamicView("lacerate.TwitterUpdateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("lacerate.TwitterDeleteRoute", lago.Route{
-		Path:    AppUrl + "twitter/sources/{id}/delete/",
-		Handler: lago.NewDynamicView("lacerate.TwitterDeleteView"),
+	_ = lago.RegistryRoute.Register("lacerate.SourceStopWorkerRoute", lago.Route{
+		Path:    AppUrl + "sources/{id}/stop-worker/",
+		Handler: lago.NewDynamicView("lacerate.SourceStopWorkerView"),
 	})
 
 	registerIntelRoutes()
@@ -84,6 +74,16 @@ func registerLookupRoutes() {
 	_ = lago.RegistryRoute.Register("lacerate.LookupDeleteRoute", lago.Route{
 		Path:    AppUrl + "lookups/{id}/delete/",
 		Handler: lago.NewDynamicView("lacerate.LookupDeleteView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.LookupRestartWorkerRoute", lago.Route{
+		Path:    AppUrl + "lookups/{id}/restart-worker/",
+		Handler: lago.NewDynamicView("lacerate.LookupRestartWorkerView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.LookupStopWorkerRoute", lago.Route{
+		Path:    AppUrl + "lookups/{id}/stop-worker/",
+		Handler: lago.NewDynamicView("lacerate.LookupStopWorkerView"),
 	})
 }
 

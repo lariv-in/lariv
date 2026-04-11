@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
-	"sort"
 	"slices"
+	"sort"
 	"strings"
 	"sync"
 
@@ -356,4 +356,22 @@ func (r *Registry[T]) AllStable(sorter RegistrySorter[T]) *[]Pair[string, T] {
 		ent.isBuilt = true
 	}
 	return &ent.items
+}
+
+func PairGetter[K comparable, V any](keyGetter getters.Getter[K], mapGetter getters.Getter[map[K]V]) getters.Getter[Pair[K, V]] {
+	return func(ctx context.Context) (Pair[K, V], error) {
+		key, err := keyGetter(ctx)
+		if err != nil {
+			return Pair[K, V]{}, err
+		}
+		values, err := mapGetter(ctx)
+		if err != nil {
+			return Pair[K, V]{}, err
+		}
+		value, ok := values[key]
+		if !ok {
+			return Pair[K, V]{}, fmt.Errorf("key %v not found in map", key)
+		}
+		return Pair[K, V]{Key: key, Value: value}, nil
+	}
 }

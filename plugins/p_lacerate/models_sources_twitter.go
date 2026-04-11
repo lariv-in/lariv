@@ -16,9 +16,10 @@ import (
 // TwitterSource configures ingestion from Twitter / X accounts (see global [lacerateConfig.Twitter]).
 type TwitterSource struct {
 	gorm.Model
-	Handles  datatypes.JSON `gorm:"type:json"`
-	SourceID uint           `gorm:"not null;uniqueIndex"`
-	Source   Source         `gorm:"foreignKey:SourceID"`
+	Handles       datatypes.JSON `gorm:"type:json"`
+	MaxFreshPosts uint           `gorm:"not null;default:25"`
+	SourceID      uint           `gorm:"not null;uniqueIndex"`
+	Source        Source         `gorm:"foreignKey:SourceID"`
 }
 
 func twitterTweetToMarkdown(handle string, tw twitterFetchedTweet) string {
@@ -54,8 +55,13 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map
 		}
 	}
 
+	maxFresh := sourceEffectiveMaxFreshPosts(t.MaxFreshPosts)
 	var out []Intel
+	freshTotal := 0
 	for _, handle := range handles {
+		if freshTotal >= maxFresh {
+			break
+		}
 		handle = strings.TrimSpace(handle)
 		if handle == "" {
 			continue
@@ -66,6 +72,9 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map
 		}
 
 		for _, tw := range tweets {
+			if freshTotal >= maxFresh {
+				return out, nil
+			}
 			dedupe := tw.IntelDedupHash()
 			if dedupe == "" {
 				slog.Warn("lacerate: twitter item missing id, skip", "handle", handle)
@@ -87,14 +96,16 @@ func (t TwitterSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map
 			}
 
 			dedupeCopy := dedupe
+			sourceID := t.SourceID
 			i := Intel{
-				SourceID:       t.SourceID,
+				SourceID:       &sourceID,
 				DedupHash:      &dedupeCopy,
 				Content:        twitterTweetToMarkdown(handle, tw),
 				PreviewImageID: previewID,
 			}
 			existingDedup[dedupe] = struct{}{}
 			out = append(out, i)
+			freshTotal++
 		}
 	}
 	return out, nil

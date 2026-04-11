@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/lariv-in/lago/lago"
@@ -16,15 +17,24 @@ import (
 // intelCreateBatchSize is chunk size for [runSourceFetch] batch insert after embeddings.
 const intelCreateBatchSize = 100
 
+type sourceWorkerPhase uint32
+
+const (
+	sourceWorkerPhaseWaiting sourceWorkerPhase = iota
+	sourceWorkerPhaseRunning
+)
+
 // sourceWorkerHandle holds a cancellable context for one [Source] worker goroutine.
+// phase is [sourceWorkerPhaseRunning] during [runSourceFetch] and reload; [sourceWorkerPhaseWaiting] during sleep.
 type sourceWorkerHandle struct {
 	ctx    context.Context
 	cancel context.CancelFunc
+	phase  atomic.Uint32
 }
 
 var (
 	sourceWorkerMu sync.Mutex
-	sourceWorkers  = map[uint]sourceWorkerHandle{}
+	sourceWorkers  = map[uint]*sourceWorkerHandle{}
 )
 
 func init() {
@@ -64,6 +74,43 @@ func StopSourceWorker(sourceID uint) {
 	}
 }
 
+func sourceWorkerSetPhase(sourceID uint, p sourceWorkerPhase) {
+	sourceWorkerMu.Lock()
+	h := sourceWorkers[sourceID]
+	sourceWorkerMu.Unlock()
+	if h == nil {
+		return
+	}
+	h.phase.Store(uint32(p))
+}
+
+// SourceWorkerIsRunning reports whether a background fetch goroutine is registered for this source
+// (including idle time between polls). False when [Source.Duration] is zero or worker has exited.
+func SourceWorkerIsRunning(sourceID uint) bool {
+	if sourceID == 0 {
+		return false
+	}
+	sourceWorkerMu.Lock()
+	defer sourceWorkerMu.Unlock()
+	_, ok := sourceWorkers[sourceID]
+	return ok
+}
+
+// SourceWorkerRunning reports whether the source worker is in an active fetch (true) or between polls (false).
+// ok is false when no worker is registered for sourceID.
+func SourceWorkerRunning(sourceID uint) (running bool, ok bool) {
+	if sourceID == 0 {
+		return false, false
+	}
+	sourceWorkerMu.Lock()
+	h := sourceWorkers[sourceID]
+	sourceWorkerMu.Unlock()
+	if h == nil {
+		return false, false
+	}
+	return sourceWorkerPhase(h.phase.Load()) == sourceWorkerPhaseRunning, true
+}
+
 // RestartSourceWorker stops an existing worker (if any), then starts a new one using the
 // current row from the DB. No worker is started if the source is missing or [Source.Duration] <= 0.
 func RestartSourceWorker(db *gorm.DB, sourceID uint) {
@@ -86,8 +133,10 @@ func RestartSourceWorker(db *gorm.DB, sourceID uint) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	h := &sourceWorkerHandle{ctx: ctx, cancel: cancel}
+	h.phase.Store(uint32(sourceWorkerPhaseRunning))
 	sourceWorkerMu.Lock()
-	sourceWorkers[sourceID] = sourceWorkerHandle{ctx: ctx, cancel: cancel}
+	sourceWorkers[sourceID] = h
 	sourceWorkerMu.Unlock()
 
 	go runSourceWorker(db, sourceID, ctx)
@@ -102,6 +151,8 @@ func runSourceWorker(db *gorm.DB, sourceID uint, ctx context.Context) {
 			return
 		default:
 		}
+
+		sourceWorkerSetPhase(sourceID, sourceWorkerPhaseRunning)
 
 		var src Source
 		if err := db.WithContext(ctx).First(&src, sourceID).Error; err != nil {
@@ -119,6 +170,7 @@ func runSourceWorker(db *gorm.DB, sourceID uint, ctx context.Context) {
 			slog.Error("lacerate: source worker fetch", "error", err, "source_id", sourceID, "kind", src.Kind)
 		}
 
+		sourceWorkerSetPhase(sourceID, sourceWorkerPhaseWaiting)
 		select {
 		case <-ctx.Done():
 			return

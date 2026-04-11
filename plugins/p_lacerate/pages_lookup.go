@@ -9,6 +9,8 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"maragu.dev/gomponents"
+	html "maragu.dev/gomponents/html"
 )
 
 func registerLookupPages() {
@@ -241,6 +243,79 @@ func registerLookupForms() {
 	})
 }
 
+func lookupDetailWorkerStatusGetter() getters.Getter[components.PageInterface] {
+	return func(ctx context.Context) (components.PageInterface, error) {
+		intervalPtr, err := getters.Key[*time.Duration]("$in.UpdateInterval")(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if intervalPtr == nil || *intervalPtr <= 0 {
+			return nil, nil
+		}
+		id, err := getters.Key[uint]("$in.ID")(ctx)
+		if err != nil {
+			return nil, err
+		}
+		active := LookupWorkerIsRunning(id)
+		text := "Stopped (not polling)"
+		if active {
+			if running, _ := LookupWorkerRunning(id); running {
+				text = "Running (lookup agent)"
+			} else {
+				text = "Waiting (between runs)"
+			}
+		}
+		return &components.LabelInline{
+			Title: "Worker",
+			Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Static(text)},
+			},
+		}, nil
+	}
+}
+
+func lookupDetailWorkerActionsGetter() getters.Getter[components.PageInterface] {
+	return func(ctx context.Context) (components.PageInterface, error) {
+		id, err := getters.Key[uint]("$in.ID")(ctx)
+		if err != nil {
+			return nil, err
+		}
+		active := LookupWorkerIsRunning(id)
+		running, _ := LookupWorkerRunning(id)
+		label := "Restart worker"
+		var attr getters.Getter[gomponents.Node]
+		if running {
+			attr = func(context.Context) (gomponents.Node, error) {
+				return gomponents.Group{html.Disabled(), html.Class("btn-disabled")}, nil
+			}
+		}
+		restart := &components.ButtonPost{
+			Label: label,
+			Attr:  attr,
+			URL: lago.RoutePath("lacerate.LookupRestartWorkerRoute", map[string]getters.Getter[any]{
+				"id": getters.Any(getters.Key[uint]("$in.ID")),
+			}),
+			Icon:    "arrow-path",
+			Classes: "btn-outline btn-primary btn-sm",
+		}
+		children := []components.PageInterface{restart}
+		if active {
+			children = append(children, &components.ButtonPost{
+				Label: "Stop worker",
+				URL: lago.RoutePath("lacerate.LookupStopWorkerRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("$in.ID")),
+				}),
+				Icon:    "stop",
+				Classes: "btn-outline btn-error btn-sm",
+			})
+		}
+		return &components.ContainerRow{
+			Classes:  "flex flex-wrap gap-2 items-center mb-2",
+			Children: children,
+		}, nil
+	}
+}
+
 func registerLookupDetail() {
 	lago.RegistryPage.Register("lacerate.LookupDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -256,6 +331,8 @@ func registerLookupDetail() {
 							&components.FieldTitle{
 								Getter: getters.Format("Lookup #%d", getters.Any(getters.Key[uint]("$in.ID"))),
 							},
+							&components.GetterPage{Getter: lookupDetailWorkerStatusGetter()},
+							&components.GetterPage{Getter: lookupDetailWorkerActionsGetter()},
 							&components.LabelInline{
 								Title: "Update interval",
 								Children: []components.PageInterface{
