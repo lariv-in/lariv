@@ -243,6 +243,57 @@ func registerTargetOfInterestDetail() {
 								},
 							},
 							&components.FieldTitle{
+								Getter:  getters.Static("Locations"),
+								Classes: "mt-8",
+							},
+							&components.DataTable[TargetOfInterestLocation]{
+								Page:     components.Page{Key: "lacerate.TargetOfInterestDetailLocationsTable"},
+								UID:      "lacerate-target-of-interest-locations-table",
+								Subtitle: "Addresses and times for this target; each row is tied to intel (coordinates are stored but not listed here).",
+								Classes:  "w-full",
+								Data:     getters.Key[components.ObjectList[TargetOfInterestLocation]](ctxKeyTargetOfInterestLocations),
+								RowAttr: getters.RowAttrNavigate(
+									lago.RoutePath("lacerate.IntelDetailRoute", map[string]getters.Getter[any]{
+										"id": getters.Any(getters.Key[uint]("$row.IntelID")),
+									}),
+								),
+								Columns: []components.TableColumn{
+									{
+										Label: "Datetime",
+										Children: []components.PageInterface{
+											&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Datetime")},
+										},
+									},
+									{
+										Label: "Intel",
+										Children: []components.PageInterface{
+											&components.FieldText{
+												Getter: getters.IfOrElse(
+													getters.Map(getters.Key[string]("$row.Intel.Content"), func(_ context.Context, s string) (string, error) {
+														s = strings.TrimSpace(s)
+														if s == "" {
+															return "", nil
+														}
+														if len(s) > 96 {
+															return s[:93] + "...", nil
+														}
+														return s, nil
+													}),
+													getters.Format("Intel #%d", getters.Any(getters.Key[uint]("$row.IntelID"))),
+												),
+												Classes: "text-sm text-base-content/70",
+											},
+										},
+									},
+									{
+										Label: "Address",
+										Children: []components.PageInterface{
+											&components.FieldText{Getter: getters.Key[string]("$row.Address")},
+										},
+									},
+								},
+							},
+							&components.FieldTitle{
 								Getter:  getters.Static("Related data"),
 								Classes: "mt-8",
 							},

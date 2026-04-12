@@ -38,6 +38,13 @@ type GeminiAgentConfig struct {
 	Model string `toml:"model"`
 }
 
+// GoogleGeocodingConfig holds the API key for Google's Geocoding API, used by the lookup agent
+// when attaching target-of-interest locations ([attachTargetOfInterestLocationTool]). When APIKey is empty,
+// that tool returns a configuration error.
+type GoogleGeocodingConfig struct {
+	APIKey string `toml:"apiKey"`
+}
+
 const (
 	defaultIntelPreviewDirectory = "lacerate/intel_previews"
 	// defaultIntelPreviewUserAgent is a normal browser UA so CDNs (e.g. external-preview.redd.it) accept preview fetches.
@@ -55,6 +62,7 @@ type lacerateConfig struct {
 	Twitter         TwitterConfig         `toml:"twitter"`
 	GeminiEmbedding GeminiEmbeddingConfig `toml:"geminiEmbedding"`
 	GeminiAgent     GeminiAgentConfig     `toml:"geminiAgent"`
+	GoogleGeocoding GoogleGeocodingConfig `toml:"googleGeocoding"`
 	IntelPreview    IntelPreviewConfig    `toml:"intelPreview"`
 }
 

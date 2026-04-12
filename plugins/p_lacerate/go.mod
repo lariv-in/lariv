@@ -15,9 +15,11 @@ require (
 	github.com/lariv-in/lago/registry v0.5.9
 	github.com/lariv-in/lago/views v0.5.10
 	github.com/pgvector/pgvector-go v0.3.0
+	github.com/twpayne/go-geom v1.6.1
 	google.golang.org/genai v1.53.0
 	gorm.io/datatypes v1.2.7
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.2.0
 )
 
 require (
@@ -96,5 +98,4 @@ require (
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.2.0 // indirect
 )

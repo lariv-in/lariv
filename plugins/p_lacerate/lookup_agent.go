@@ -54,6 +54,8 @@ Targets of interest are very short, accurate descriptions of entities the user c
 
 For reports: strongly prefer editing an existing report with edit_report over creating a new report with create_report when the same subject is already covered. Before creating a new report, search for an existing one for the same subject; if one already exists, update it instead of creating a duplicate. For timeline reports, edit_report.timeline_entries replaces the whole timeline; use append_timeline_entries when you only need to add new events.
 
+Target-of-interest locations: get_relevant_targets_of_interest includes a locations array per target (each entry has id, intel_id, intel_snippet, datetime, address). Coordinates are never shown to you or the user; they are derived internally. To add a location, call attach_target_of_interest_location with intel_id, datetime, and a precise address string—that address is sent to the Google Geocoding API to set the stored point (required but not exposed). To drop a row, use remove_target_of_interest_location with the location id from that list.
+
 When done, give a concise summary of what you did and what you learned.`
 
 func runLookupAgent(ctx context.Context, db *gorm.DB, lu *Lookup) error {
@@ -171,6 +173,7 @@ var lookupAgentTools = registry.NewRegistry[lookupAgentTool]()
 
 func init() {
 	for _, t := range []lookupAgentTool{
+		attachTargetOfInterestLocationTool{},
 		createReportTool{},
 		editReportTool{},
 		appendTimelineEntriesTool{},
@@ -179,6 +182,7 @@ func init() {
 		createTargetOfInterestTool{},
 		editTargetOfInterestTool{},
 		getRelevantTargetsOfInterestTool{},
+		removeTargetOfInterestLocationTool{},
 	} {
 		if err := lookupAgentTools.Register(t.Name(), t); err != nil {
 			panic(err)
@@ -848,8 +852,9 @@ func (getRelevantTargetsOfInterestTool) Name() string { return "get_relevant_tar
 
 func (getRelevantTargetsOfInterestTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
-		Name:        "get_relevant_targets_of_interest",
-		Description: "Ranked cosine similarity search over targets of interest with embeddings. Use natural-language query text to find related entities.",
+		Name: "get_relevant_targets_of_interest",
+		Description: "Ranked cosine similarity search over targets of interest with embeddings. Use natural-language query text to find related entities. " +
+			"Each target includes locations: [{id, intel_id, intel_snippet, datetime, address}] with no coordinate fields; map positions exist only in the database.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
@@ -899,13 +904,29 @@ func (getRelevantTargetsOfInterestTool) Run(ctx context.Context, r *lookupRun, a
 		slog.Error("lacerate: lookup tool get_relevant_targets_of_interest search", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
+	targetIDs := make([]uint, 0, len(rows))
+	for _, row := range rows {
+		if row.ID != 0 {
+			targetIDs = append(targetIDs, row.ID)
+		}
+	}
+	locByTOI := targetOfInterestLocationsMapsByTargetID(ctx, r.db, targetIDs)
 	out := make([]map[string]any, 0, len(rows))
 	for _, row := range rows {
 		snippet := strings.TrimSpace(row.Description)
 		if len(snippet) > 400 {
 			snippet = snippet[:397] + "..."
 		}
-		out = append(out, map[string]any{"id": row.ID, "name": row.Name, "snippet": snippet})
+		locs := locByTOI[row.ID]
+		if locs == nil {
+			locs = []map[string]any{}
+		}
+		out = append(out, map[string]any{
+			"id":        row.ID,
+			"name":      row.Name,
+			"snippet":   snippet,
+			"locations": locs,
+		})
 	}
 	return map[string]any{"targets_of_interest": out}, nil
 }

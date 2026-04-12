@@ -65,6 +65,17 @@ type embeddingSearchArgs struct {
 	Limit *int   `json:"limit"`
 }
 
+type attachTargetOfInterestLocationArgs struct {
+	TargetOfInterestID uint   `json:"target_of_interest_id"`
+	IntelID            uint   `json:"intel_id"`
+	Datetime           string `json:"datetime"`
+	Address            string `json:"address"`
+}
+
+type removeTargetOfInterestLocationArgs struct {
+	ID uint `json:"id"`
+}
+
 func parseLookupSearchLimit(limit *int, defaultLimit, max int) (int, error) {
 	if limit == nil {
 		return defaultLimit, nil
