@@ -27,6 +27,8 @@ type Intel struct {
 	PreviewImage   p_filesystem.VNode `gorm:"foreignKey:PreviewImageID"`
 	// Embedding is pgvector storage; dimension must match [IntelEmbeddingDim]. Set in [Intel.BeforeSave] via [prepareIntelEmbeddingForSave].
 	Embedding pgvector.Vector `gorm:"type:vector(1024);not null"`
+	// Events are geocoded map points for this intel (see [Event]).
+	Events []Event `gorm:"foreignKey:IntelID"`
 }
 
 // BeforeSave fills [Intel.Embedding] before INSERT/UPDATE ([prepareIntelEmbeddingForSave]).

@@ -65,14 +65,13 @@ type embeddingSearchArgs struct {
 	Limit *int   `json:"limit"`
 }
 
-type attachTargetOfInterestLocationArgs struct {
-	TargetOfInterestID uint   `json:"target_of_interest_id"`
-	IntelID            uint   `json:"intel_id"`
-	Datetime           string `json:"datetime"`
-	Address            string `json:"address"`
+type attachEventArgs struct {
+	IntelID  uint   `json:"intel_id"`
+	Datetime string `json:"datetime"`
+	Address  string `json:"address"`
 }
 
-type removeTargetOfInterestLocationArgs struct {
+type removeEventArgs struct {
 	ID uint `json:"id"`
 }
 

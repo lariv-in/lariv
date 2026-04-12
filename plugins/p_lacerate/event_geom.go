@@ -53,7 +53,7 @@ func (g *GeomPoint4326) Scan(src interface{}) error {
 	return g.P.Scan(raw)
 }
 
-// Value implements [driver.Valuer] for rare GORM writes; prefer insertTargetOfInterestLocation for inserts.
+// Value implements [driver.Valuer] for rare GORM writes; prefer insertEvent for inserts.
 func (g GeomPoint4326) Value() (driver.Value, error) {
 	if g.P == nil {
 		return nil, nil
@@ -74,9 +74,9 @@ func geomPoint4326EWKB(lon, lat float64) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// insertTargetOfInterestLocation inserts a row with point = ST_GeomFromEWKB(decode(?, 'hex')).
+// insertEvent inserts a row with point = ST_GeomFromEWKB(decode(?, 'hex')).
 // GORM expands []byte into one placeholder per byte in Raw SQL; binding hex text keeps a single argument.
-func insertTargetOfInterestLocation(ctx context.Context, db *gorm.DB, targetID, intelID uint, dt time.Time, address string, pointEWKB []byte) (TargetOfInterestLocation, error) {
+func insertEvent(ctx context.Context, db *gorm.DB, intelID uint, dt time.Time, address string, pointEWKB []byte) (Event, error) {
 	var row struct {
 		ID        uint
 		CreatedAt time.Time
@@ -85,23 +85,22 @@ func insertTargetOfInterestLocation(ctx context.Context, db *gorm.DB, targetID, 
 	now := time.Now()
 	hexEWKB := hex.EncodeToString(pointEWKB)
 	err := db.WithContext(ctx).Raw(`
-INSERT INTO targets_of_interest_locations (created_at, updated_at, deleted_at, target_of_interest_id, intel_id, datetime, address, point)
-VALUES (?, ?, NULL, ?, ?, ?, ?, ST_GeomFromEWKB(decode(?, 'hex')))
+INSERT INTO events (created_at, updated_at, deleted_at, intel_id, datetime, address, point)
+VALUES (?, ?, NULL, ?, ?, ?, ST_GeomFromEWKB(decode(?, 'hex')))
 RETURNING id, created_at, updated_at`,
-		now, now, targetID, intelID, dt, address, hexEWKB,
+		now, now, intelID, dt, address, hexEWKB,
 	).Scan(&row).Error
 	if err != nil {
-		return TargetOfInterestLocation{}, err
+		return Event{}, err
 	}
-	return TargetOfInterestLocation{
+	return Event{
 		Model: gorm.Model{
 			ID:        row.ID,
 			CreatedAt: row.CreatedAt,
 			UpdatedAt: row.UpdatedAt,
 		},
-		TargetOfInterestID: targetID,
-		IntelID:            intelID,
-		Datetime:           dt,
-		Address:            address,
+		IntelID:  intelID,
+		Datetime: dt,
+		Address:  address,
 	}, nil
 }

@@ -16,7 +16,6 @@ import (
 const ctxKeyRelatedTargetsOfInterest = "relatedTargetsOfInterest"
 const ctxKeyRelatedReports = "relatedReports"
 const ctxKeyRelatedIntel = "relatedIntel"
-const ctxKeyTargetOfInterestLocations = "targetOfInterestLocations"
 
 func loadIntelListWithSource(ctx context.Context, db *gorm.DB, rows []Intel) ([]Intel, error) {
 	if len(rows) == 0 {
@@ -50,26 +49,6 @@ func loadIntelListWithSource(ctx context.Context, db *gorm.DB, rows []Intel) ([]
 
 type targetOfInterestRelatedLayer struct{}
 
-func ctxWithTargetOfInterestLocations(ctx context.Context, db *gorm.DB, targetID uint) context.Context {
-	if db.Name() != "postgres" {
-		return ctx
-	}
-	var locs []TargetOfInterestLocation
-	if err := db.WithContext(ctx).Preload("Intel").Where("target_of_interest_id = ?", targetID).Order("datetime DESC, id DESC").Find(&locs).Error; err != nil {
-		slog.Error("lacerate: load target of interest locations", "error", err, "target_of_interest_id", targetID)
-		return context.WithValue(ctx, ctxKeyTargetOfInterestLocations, components.ObjectList[TargetOfInterestLocation]{
-			Number:   1,
-			NumPages: 1,
-		})
-	}
-	return context.WithValue(ctx, ctxKeyTargetOfInterestLocations, components.ObjectList[TargetOfInterestLocation]{
-		Items:    locs,
-		Number:   1,
-		NumPages: 1,
-		Total:    uint64(len(locs)),
-	})
-}
-
 func (targetOfInterestRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -84,8 +63,6 @@ func (targetOfInterestRelatedLayer) Next(_ views.View, next http.Handler) http.H
 			next.ServeHTTP(w, r)
 			return
 		}
-		ctx = ctxWithTargetOfInterestLocations(ctx, db, target.ID)
-
 		if target.Embedding == nil {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return

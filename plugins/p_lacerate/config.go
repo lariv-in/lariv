@@ -39,7 +39,7 @@ type GeminiAgentConfig struct {
 }
 
 // GoogleGeocodingConfig holds the API key for Google's Geocoding API, used by the lookup agent
-// when attaching target-of-interest locations ([attachTargetOfInterestLocationTool]). When APIKey is empty,
+// when attaching geocoded events ([attachEventTool]). When APIKey is empty,
 // that tool returns a configuration error.
 type GoogleGeocodingConfig struct {
 	APIKey string `toml:"apiKey"`

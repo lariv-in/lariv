@@ -5,5 +5,6 @@ func init() {
 	registerIntelPages()
 	registerReportPages()
 	registerTargetOfInterestPages()
+	registerMapPages()
 	registerLookupPages()
 }
