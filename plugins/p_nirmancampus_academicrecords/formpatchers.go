@@ -14,6 +14,25 @@ import (
 	"gorm.io/gorm"
 )
 
+const academicRecordTermMax = 6
+
+// formPatcherAcademicRecordTermMax rejects Term greater than academicRecordTermMax.
+type formPatcherAcademicRecordTermMax struct{}
+
+func (formPatcherAcademicRecordTermMax) Patch(_ views.View, _ *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+	if formErrors == nil {
+		formErrors = map[string]error{}
+	}
+	term, ok := values["Term"].(uint)
+	if !ok {
+		return values, formErrors
+	}
+	if term > academicRecordTermMax {
+		formErrors["Term"] = fmt.Errorf("term must be less than or equal to %d", academicRecordTermMax)
+	}
+	return values, formErrors
+}
+
 // formPatcherAcademicRecordCreate sets Status (default) and CompulsoryCourses
 // from the program's ProgramStructureUnit for the submitted Term (TermNumber).
 type formPatcherAcademicRecordCreate struct{}

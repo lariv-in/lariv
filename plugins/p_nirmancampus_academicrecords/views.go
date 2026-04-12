@@ -58,6 +58,7 @@ func init() {
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
+					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.term_max", Value: formPatcherAcademicRecordTermMax{}},
 					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.create_from_program_structure", Value: formPatcherAcademicRecordCreate{}},
 				},
 			}),
@@ -90,6 +91,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 				FormPatchers: views.FormPatchers{
+					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.term_max", Value: formPatcherAcademicRecordTermMax{}},
 					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.optional_course_count", Value: formPatcherAcademicRecordUpdate{}},
 				},
 			}),
