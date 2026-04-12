@@ -18,6 +18,9 @@ import (
 // the dialog is removed, "lago:modal-closed" is dispatched, and the browser navigates.
 // On 2xx success without redirect, the dialog is closed. On other statuses (e.g. 422),
 // the dialog is replaced by the response body HTML.
+// The POST URL always carries a "name" query param (same as Name) so the request URL query
+// is populated on POST; FormBubbling(getters.Key("$get.name")) then renders the same
+// registry name after validation errors (422) as on the initial GET modal open.
 type ButtonModalForm struct {
 	Page
 	Label       string
@@ -56,6 +59,13 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	}
 	if postURL == "" || e.ModalUID == "" {
 		return ContainerError{Error: getters.Static(fmt.Errorf("ButtonModalForm: FormPostURL and ModalUID are required"))}.Build(ctx)
+	}
+
+	if postParsed, err := neturl.Parse(postURL); err == nil {
+		pq := postParsed.Query()
+		pq.Set("name", name)
+		postParsed.RawQuery = pq.Encode()
+		postURL = postParsed.String()
 	}
 
 	if href != "" {
@@ -106,7 +116,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
   };
   var onBeforeSwap = function (e) {
     var detail = e.detail || {};
-    if (detail.elt !== f) return;
+    if (detail.elt !== m) return;
     var xhr = detail.xhr;
     if (!xhr) return;
     var hxLoc = xhr.getResponseHeader('HX-Redirect');

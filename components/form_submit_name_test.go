@@ -53,6 +53,9 @@ func TestButtonModalFormThreadsNameIntoGetAndGuard(t *testing.T) {
 	if !strings.Contains(html, `d.name !==`) {
 		t.Fatalf("expected modal submit listener to guard on name, got %s", html)
 	}
+	if !strings.Contains(html, `/modal/post?name=example.modal`) {
+		t.Fatalf("expected modal POST URL to carry name query for $get on validation re-render, got %s", html)
+	}
 	if strings.Index(html, `d.name !==`) > strings.Index(html, `evt.stopPropagation()`) {
 		t.Fatalf("expected stopPropagation after the name guard, got %s", html)
 	}
