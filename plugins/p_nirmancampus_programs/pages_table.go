@@ -15,7 +15,7 @@ func universityFilterPairGetter() getters.Getter[registry.Pair[string, string]] 
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromPairs(s, universityChoices); ok {
+		if p, ok := registry.PairFromPairs(s, UniversityChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -26,7 +26,7 @@ func universityFilterSelect() *components.InputSelect[string] {
 	return &components.InputSelect[string]{
 		Label:   "University",
 		Name:    "University",
-		Choices: getters.Static(universityChoices),
+		Choices: getters.Static(UniversityChoices),
 		Getter:  universityFilterPairGetter(),
 	}
 }
@@ -178,11 +178,14 @@ func registerSelectionPages() {
 		UID: "program-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[Program]{
-				Page:    components.Page{Key: "programs.ProgramSelectionTableBody"},
-				UID:     "program-selection-table",
-				Title:   "Select Program",
-				Data:    getters.Key[components.ObjectList[Program]]("programs"),
-				RowAttr: getters.RowAttrSelect("ProgramID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+				Page:  components.Page{Key: "programs.ProgramSelectionTableBody"},
+				UID:   "program-selection-table",
+				Title: "Select Program",
+				Data:  getters.Key[components.ObjectList[Program]]("programs"),
+				RowAttr: getters.RowAttrSelect("ProgramID", getters.Key[uint]("$row.ID"), ProgramDisplayLabel(
+					getters.Key[string]("$row.Name"),
+					getters.Key[string]("$row.University"),
+				)),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "programs.ProgramSelectionFilter"}},
 				},
@@ -226,10 +229,10 @@ func registerProgramMediaMultiSelectPages() {
 		UID: "program-media-multi-selection-modal",
 		Children: []components.PageInterface{
 			&components.DataTable[ProgramMedia]{
-				Page:    components.Page{Key: "programs.ProgramMediaMultiSelectionTableBody"},
-				UID:     "program-media-multi-selection-table",
-				Title:   "Select languages",
-				Data:    getters.Key[components.ObjectList[ProgramMedia]]("program_media"),
+				Page:  components.Page{Key: "programs.ProgramMediaMultiSelectionTableBody"},
+				UID:   "program-media-multi-selection-table",
+				Title: "Select languages",
+				Data:  getters.Key[components.ObjectList[ProgramMedia]]("program_media"),
 				RowAttr: getters.RowAttrSelectMulti(
 					getters.IfOrElse(
 						getters.Key[string]("$get.target_input"),

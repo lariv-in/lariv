@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -86,10 +87,17 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		}
 	}
 
-	alpineData := fmt.Sprintf("{ value: '%s', display: '%s', placeholder: '%s' }", valuePk, displayValue, placeholder)
-	// Close the topmost body-level selector dialog (same stacking model as ButtonModal / Modal).
-	closeTopBodyModal := `(()=>{const d=document.querySelectorAll('body > dialog.modal');if(d.length)d[d.length-1].remove();})()`
-	eventHandler := fmt.Sprintf("if ($event.detail.name === '%s') { value = $event.detail.value; display = $event.detail.display; %s }", e.Name, closeTopBodyModal)
+	alpinePayload, errAlpine := json.Marshal(map[string]string{
+		"value":       valuePk,
+		"display":     displayValue,
+		"placeholder": placeholder,
+	})
+	if errAlpine != nil {
+		alpinePayload = []byte(`{"value":"","display":"","placeholder":""}`)
+	}
+	alpineData := string(alpinePayload)
+	// Selector dialog is closed from the table row @click (getters.Select); avoid removing the wrong dialog here.
+	eventHandler := fmt.Sprintf("if ($event.detail.name === '%s') { value = $event.detail.value; display = $event.detail.display }", e.Name)
 
 	return Div(
 		Class(fmt.Sprintf("my-1 relative %s", e.Classes)),

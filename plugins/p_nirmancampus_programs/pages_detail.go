@@ -52,7 +52,7 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "University",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$in.University"), universityChoices)},
+									&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$in.University"), UniversityChoices)},
 								},
 							},
 							&components.LabelInline{

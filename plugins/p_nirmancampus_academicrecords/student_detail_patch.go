@@ -9,6 +9,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -99,7 +100,10 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 				Label: "Program",
 				Name:  "Program.Name",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.Key[string]("$row.Program.Name")},
+					&components.FieldText{Getter: p_nirmancampus_programs.ProgramDisplayLabel(
+						getters.Key[string]("$row.Program.Name"),
+						getters.Key[string]("$row.Program.University"),
+					)},
 				},
 			},
 			{

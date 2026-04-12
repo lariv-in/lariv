@@ -16,7 +16,7 @@ func programUniversityPairGetter() getters.Getter[registry.Pair[string, string]]
 		if err != nil || s == "" {
 			return registry.Pair[string, string]{}, nil
 		}
-		if p, ok := registry.PairFromPairs(s, universityChoices); ok {
+		if p, ok := registry.PairFromPairs(s, UniversityChoices); ok {
 			return p, nil
 		}
 		return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -28,7 +28,7 @@ func universityFormSelect() *components.InputSelect[string] {
 		Label:    "University",
 		Name:     "University",
 		Required: false,
-		Choices:  getters.Static(universityChoices),
+		Choices:  getters.Static(UniversityChoices),
 		Getter:   programUniversityPairGetter(),
 	}
 }

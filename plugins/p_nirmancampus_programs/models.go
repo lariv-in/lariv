@@ -58,7 +58,8 @@ type Program struct {
 	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
 }
 
-var universityChoices = []registry.Pair[string, string]{
+// UniversityChoices maps stored Program.University keys to UI labels (slice order = dropdown order).
+var UniversityChoices = []registry.Pair[string, string]{
 	{Key: "IGNOU", Value: "IGNOU"},
 	{Key: "MRSPTU", Value: "MRSPTU"},
 }

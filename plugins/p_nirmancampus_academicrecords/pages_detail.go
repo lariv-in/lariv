@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 )
 
 func registerDetailPages() {
@@ -26,7 +27,10 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Program",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.Program.Name")},
+									&components.FieldText{Getter: p_nirmancampus_programs.ProgramDisplayLabel(
+										getters.Key[string]("$in.Program.Name"),
+										getters.Key[string]("$in.Program.University"),
+									)},
 								},
 							},
 							&components.LabelInline{

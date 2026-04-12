@@ -3,6 +3,7 @@ package getters
 import (
 	"context"
 	"fmt"
+	"strconv"
 )
 
 // Select returns an Alpine @click expression that dispatches an 'fk-select' event for single selection.
@@ -20,6 +21,16 @@ func Select[T, D comparable](name string, valueGetter Getter[T], displayGetter G
 			return "", err
 		}
 
-		return fmt.Sprintf("$dispatch('fk-select',{name:'%s',value:'%v',display:'%v'})", name, value, display), nil
+		vStr := fmt.Sprint(value)
+		dStr := fmt.Sprint(display)
+
+		// Double-quoted JS strings (strconv.Quote); gomponents.Attr HTML-escapes the full @click value once.
+		// Close the dialog that contains this row (not "last body dialog") so nested/stacked modals cannot remove the wrong one.
+		js := fmt.Sprintf("$dispatch('fk-select', {name:%s,value:%s,display:%s}); $event.currentTarget.closest('dialog.modal')?.remove()",
+			strconv.Quote(name),
+			strconv.Quote(vStr),
+			strconv.Quote(dStr),
+		)
+		return js, nil
 	}
 }

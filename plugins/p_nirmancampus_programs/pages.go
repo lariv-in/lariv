@@ -1,10 +1,32 @@
 package p_nirmancampus_programs
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 )
+
+// ProgramDisplayLabel returns "Name (University label)" using [UniversityChoices]; empty university key → name only.
+func ProgramDisplayLabel(nameGetter, universityKeyGetter getters.Getter[string]) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		name, err := nameGetter(ctx)
+		if err != nil {
+			return "", err
+		}
+		ukey, errU := universityKeyGetter(ctx)
+		if errU != nil || ukey == "" {
+			return name, nil
+		}
+		if p, ok := registry.PairFromPairs(ukey, UniversityChoices); ok {
+			return fmt.Sprintf("%s (%s)", name, p.Value), nil
+		}
+		return fmt.Sprintf("%s (%s)", name, ukey), nil
+	}
+}
 
 func init() {
 	registerMenuPages()

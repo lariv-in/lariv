@@ -24,12 +24,15 @@ func applicationFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.ProgramID"),
 						Children: []components.PageInterface{
 							&components.InputForeignKey[p_nirmancampus_programs.Program]{
-								Label:       "Program",
-								Name:        "ProgramID",
-								Required:    true,
-								Getter:      getters.Association[p_nirmancampus_programs.Program](getters.Key[uint]("$in.ProgramID")),
-								Url:         lago.RoutePath("programs.SelectRoute", nil),
-								Display:     getters.Key[string]("$in.Name"),
+								Label:    "Program",
+								Name:     "ProgramID",
+								Required: true,
+								Getter:   getters.Association[p_nirmancampus_programs.Program](getters.Key[uint]("$in.ProgramID")),
+								Url:      lago.RoutePath("programs.SelectRoute", nil),
+								Display: p_nirmancampus_programs.ProgramDisplayLabel(
+									getters.Key[string]("$in.Name"),
+									getters.Key[string]("$in.University"),
+								),
 								Placeholder: "Select a program...",
 							},
 						},

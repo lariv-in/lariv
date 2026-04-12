@@ -16,7 +16,10 @@ func tableColumns() []components.TableColumn {
 			&components.FieldText{Getter: getters.Key[string]("$row.Student.Name")},
 		}},
 		{Label: "Program", Name: "Program.Name", Children: []components.PageInterface{
-			&components.FieldText{Getter: getters.Key[string]("$row.Program.Name")},
+			&components.FieldText{Getter: p_nirmancampus_programs.ProgramDisplayLabel(
+				getters.Key[string]("$row.Program.Name"),
+				getters.Key[string]("$row.Program.University"),
+			)},
 		}},
 		{Label: "Session", Name: "Session.Name", Children: []components.PageInterface{
 			&components.FieldText{Getter: getters.Key[string]("$row.Session.Name")},
@@ -67,7 +70,10 @@ func registerFilterPages() {
 				Name:        "ProgramID",
 				Url:         lago.RoutePath("programs.SelectRoute", nil),
 				Placeholder: "Filter by program...",
-				Display:     getters.Key[string]("$in.Name"),
+				Display: p_nirmancampus_programs.ProgramDisplayLabel(
+					getters.Key[string]("$in.Name"),
+					getters.Key[string]("$in.University"),
+				),
 				Getter: getters.Association[p_nirmancampus_programs.Program](
 					getters.Key[uint]("$get.ProgramID"),
 				),
@@ -144,7 +150,10 @@ func registerSelectionPages() {
 				Data:  getters.Key[components.ObjectList[AcademicRecord]]("academicrecords"),
 				RowAttr: getters.RowAttrSelect("AcademicRecordID", getters.Key[uint]("$row.ID"), getters.Format(
 					"%s (%s) · term %s",
-					getters.Any(getters.Key[string]("$row.Program.Name")),
+					getters.Any(p_nirmancampus_programs.ProgramDisplayLabel(
+						getters.Key[string]("$row.Program.Name"),
+						getters.Key[string]("$row.Program.University"),
+					)),
 					getters.Any(getters.Key[string]("$row.Status")),
 					getters.Any(getters.Format("%d", getters.Any(getters.Key[uint]("$row.Term")))),
 				)),

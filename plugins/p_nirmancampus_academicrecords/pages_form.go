@@ -99,11 +99,14 @@ func createFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.ProgramID"),
 						Children: []components.PageInterface{
 							&components.InputForeignKey[p_nirmancampus_programs.Program]{
-								Label:       "Program",
-								Name:        "ProgramID",
-								Required:    true,
-								Url:         lago.RoutePath("programs.SelectRoute", nil),
-								Display:     getters.Key[string]("$in.Name"),
+								Label:    "Program",
+								Name:     "ProgramID",
+								Required: true,
+								Url:      lago.RoutePath("programs.SelectRoute", nil),
+								Display: p_nirmancampus_programs.ProgramDisplayLabel(
+									getters.Key[string]("$in.Name"),
+									getters.Key[string]("$in.University"),
+								),
 								Placeholder: "Select a program...",
 								Getter: getters.Association[p_nirmancampus_programs.Program](
 									getters.Key[uint]("$in.ProgramID"),
@@ -204,9 +207,9 @@ func editFormFields() components.ContainerColumn {
 						Title: "Program",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.ForeignKey[p_nirmancampus_programs.Program, uint, string](
-									getters.Key[uint]("$in.ProgramID"),
-									"Name",
+								Getter: p_nirmancampus_programs.ProgramDisplayLabel(
+									getters.Key[string]("$in.Program.Name"),
+									getters.Key[string]("$in.Program.University"),
 								),
 							},
 						},
@@ -248,6 +251,10 @@ func editFormFields() components.ContainerColumn {
 			&components.InputForeignKey[p_nirmancampus_programs.Program]{
 				Hidden: true,
 				Name:   "ProgramID",
+				Display: p_nirmancampus_programs.ProgramDisplayLabel(
+					getters.Key[string]("$in.Name"),
+					getters.Key[string]("$in.University"),
+				),
 				Getter: getters.Association[p_nirmancampus_programs.Program](
 					getters.Key[uint]("$in.ProgramID"),
 				),

@@ -7,6 +7,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 )
 
 func registerFilterPages() {
@@ -83,7 +84,10 @@ func registerTablePages() {
 						Label: "Program",
 						Name:  "Program.Name",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.Program.Name")},
+							&components.FieldText{Getter: p_nirmancampus_programs.ProgramDisplayLabel(
+								getters.Key[string]("$row.Program.Name"),
+								getters.Key[string]("$row.Program.University"),
+							)},
 						},
 					},
 					{
