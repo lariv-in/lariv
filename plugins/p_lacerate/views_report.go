@@ -32,7 +32,8 @@ func init() {
 			WithLayer("lacerate.reports.detail", reportDetailLayer{
 				Key:          getters.Static("reportPageData"),
 				PathParamKey: getters.Static("id"),
-			}))
+			}).
+			WithLayer("lacerate.reports.related", reportRelatedLayer{}))
 
 	lago.RegistryView.Register("lacerate.ReportCreateView",
 		lago.GetPageView("lacerate.ReportCreateForm").
@@ -95,6 +96,79 @@ func (reportListLayer) Next(view views.View, next http.Handler) http.Handler {
 			Number:   1,
 			NumPages: 1,
 			Total:    uint64(len(items)),
+		})
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+type reportRelatedLayer struct{}
+
+func (reportRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		data, ok := ctx.Value("reportPageData").(ReportPageData)
+		if !ok || data.Report.ID == 0 || data.Report.Embedding == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		db := ctx.Value("$db").(*gorm.DB)
+		targetRows, err := searchTargetsOfInterestByEmbedding(db.WithContext(ctx), *data.Report.Embedding, 6)
+		if err != nil {
+			slog.Error("lacerate: report related targets search", "error", err, "report_id", data.Report.ID)
+			next.ServeHTTP(w, r)
+			return
+		}
+		ctx = context.WithValue(ctx, ctxKeyRelatedTargetsOfInterest, components.ObjectList[TargetOfInterest]{
+			Items:    targetRows,
+			Number:   1,
+			NumPages: 1,
+			Total:    uint64(len(targetRows)),
+		})
+		reportRows, err := searchReportsByEmbedding(db.WithContext(ctx), *data.Report.Embedding, 7)
+		if err != nil {
+			slog.Error("lacerate: report related reports search", "error", err, "report_id", data.Report.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		relatedReports := make([]Report, 0, 6)
+		for _, row := range reportRows {
+			if row.ID == 0 || row.ID == data.Report.ID {
+				continue
+			}
+			relatedReports = append(relatedReports, row)
+			if len(relatedReports) == 6 {
+				break
+			}
+		}
+		reportItems, err := loadReportPageDataList(ctx, db, relatedReports)
+		if err != nil {
+			slog.Error("lacerate: report related reports page data", "error", err, "report_id", data.Report.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ctx = context.WithValue(ctx, ctxKeyRelatedReports, components.ObjectList[ReportPageData]{
+			Items:    reportItems,
+			Number:   1,
+			NumPages: 1,
+			Total:    uint64(len(reportItems)),
+		})
+		intelRows, err := searchIntelByEmbedding(db.WithContext(ctx), *data.Report.Embedding, 6)
+		if err != nil {
+			slog.Error("lacerate: report related intel search", "error", err, "report_id", data.Report.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		intelItems, err := loadIntelListWithSource(ctx, db, intelRows)
+		if err != nil {
+			slog.Error("lacerate: report related intel load", "error", err, "report_id", data.Report.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ctx = context.WithValue(ctx, ctxKeyRelatedIntel, components.ObjectList[Intel]{
+			Items:    intelItems,
+			Number:   1,
+			NumPages: 1,
+			Total:    uint64(len(intelItems)),
 		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

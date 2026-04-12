@@ -82,7 +82,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
-	// Alpine @lago-form-submit: POST the bubbling form, then close or swap the dialog.
+	// Alpine @lago-form-submit: POST the bubbling form via htmx.ajax, then close or swap the dialog.
 	// %s/%s are JSON string literals for modal id and POST URL (see json.Marshal above).
 	script := fmt.Sprintf(
 		`(function(evt){
@@ -95,35 +95,43 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
   if (f.dataset.lagoPostPending) return;
   f.dataset.lagoPostPending = '1';
   var u = %s;
+  var body = document.body;
   function closeModal(x) {
     document.dispatchEvent(new CustomEvent('lago:modal-closed', { bubbles: true, detail: Object.assign({ dialog: m }, x) }));
     m.remove();
   }
-  fetch(u, {
-    method: 'POST',
-    body: new FormData(f),
-    headers: { 'HX-Request': 'true' },
-    credentials: 'same-origin',
-    redirect: 'manual'
-  }).then(function (r) {
-    var hxLoc = r.headers.get('HX-Redirect');
+  var cleanup = function () {
+    body.removeEventListener('htmx:beforeSwap', onBeforeSwap);
+    delete f.dataset.lagoPostPending;
+  };
+  var onBeforeSwap = function (e) {
+    var detail = e.detail || {};
+    if (detail.elt !== f) return;
+    var xhr = detail.xhr;
+    if (!xhr) return;
+    var hxLoc = xhr.getResponseHeader('HX-Redirect');
     if (hxLoc) {
-      closeModal({ httpStatus: r.status, location: hxLoc });
+      detail.shouldSwap = false;
+      closeModal({ httpStatus: xhr.status, location: hxLoc });
       window.location.assign(hxLoc);
       return;
     }
-    if (r.type === 'opaqueredirect' || (r.status >= 300 && r.status < 400)) {
-      var loc = r.headers.get('Location');
-      closeModal({ httpStatus: r.status, location: loc });
-      if (loc) window.location.assign(loc);
+    if (xhr.status >= 200 && xhr.status < 300) {
+      detail.shouldSwap = false;
+      closeModal({ httpStatus: xhr.status });
       return;
     }
-    if (r.ok) {
-      closeModal({});
-      return;
-    }
-    return r.text().then(function (x) { m.outerHTML = x; });
-  }).finally(function () { delete f.dataset.lagoPostPending; });
+    detail.shouldSwap = true;
+    detail.target = m;
+  };
+  body.addEventListener('htmx:beforeSwap', onBeforeSwap);
+  htmx.ajax('POST', u, {
+    source: f,
+    target: m,
+    swap: 'outerHTML',
+    values: htmx.values(f),
+    headers: { 'HX-Boosted': 'true' }
+  }).finally(cleanup);
 })($event)`,
 		string(nameLit),
 		string(uidLit),

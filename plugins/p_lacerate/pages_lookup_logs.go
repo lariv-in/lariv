@@ -44,8 +44,7 @@ func touchedReportRowLabelGetter() getters.Getter[string] {
 
 func lookupDetailTouchedReportsSection() components.PageInterface {
 	return &components.ContainerColumn{
-		Page:    components.Page{Key: "lacerate.LookupDetailTouchedReports"},
-		Classes: "w-full mt-8",
+		Page: components.Page{Key: "lacerate.LookupDetailTouchedReports"},
 		Children: []components.PageInterface{
 			&components.FieldTitle{
 				Getter:  getters.Static("Reports touched by agent"),
@@ -161,11 +160,10 @@ func lookupLogRowMarkdownGetter() getters.Getter[string] {
 
 func lookupDetailLogSection() components.PageInterface {
 	return &components.Timeline[LookupLogDisplay]{
-		Page:    components.Page{Key: "lacerate.LookupDetailLogs"},
-		UID:     "lacerate-lookup-log-timeline",
-		Title:   "Activity log",
-		Classes: "w-full mt-8",
-		Data:    getters.Key[components.ObjectList[LookupLogDisplay]](ctxKeyLookupLogEntries),
+		Page:  components.Page{Key: "lacerate.LookupDetailLogs"},
+		UID:   "lacerate-lookup-log-timeline",
+		Title: "Activity log",
+		Data:  getters.Key[components.ObjectList[LookupLogDisplay]](ctxKeyLookupLogEntries),
 		Children: []components.PageInterface{
 			&components.ContainerColumn{
 				Page: components.Page{Key: "lacerate.LookupDetailLogRow"},

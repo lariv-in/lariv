@@ -399,6 +399,20 @@ func registerReportDetail() {
 								},
 							},
 							&components.GetterPage{Getter: reportDetailConfigPageGetter()},
+							&components.FieldTitle{
+								Getter:  getters.Static("Related data"),
+								Classes: "mt-8",
+							},
+							&components.ClientTabs{
+								Page:     components.Page{Key: "lacerate.ReportDetailRelatedTabs"},
+								StateKey: "related_tab",
+								Default:  getters.Static("Reports"),
+								Tabs: map[string]getters.Getter[components.PageInterface]{
+									"Targets": getters.Static[components.PageInterface](targetOfInterestRelatedSection()),
+									"Reports": getters.Static[components.PageInterface](targetOfInterestRelatedReportsSection()),
+									"Intel":   getters.Static[components.PageInterface](targetOfInterestRelatedIntelSection()),
+								},
+							},
 						},
 					},
 				},
