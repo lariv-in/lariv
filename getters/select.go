@@ -21,10 +21,10 @@ func Select[T, D comparable](name string, valueGetter Getter[T], displayGetter G
 			return "", err
 		}
 
-		detail, err := json.Marshal(map[string]string{
+		detail, err := json.Marshal(map[string]any{
 			"name":    name,
-			"value":   fmt.Sprint(value),
-			"display": fmt.Sprint(display),
+			"value":   value,
+			"display": display,
 		})
 		if err != nil {
 			return "", err
