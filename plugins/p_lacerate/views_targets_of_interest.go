@@ -13,7 +13,7 @@ func init() {
 	}
 
 	lago.RegistryView.Register("lacerate.TargetOfInterestListView",
-		lago.GetPageView("lacerate.TargetOfInterestsTable").
+		lago.GetPageView("lacerate.TargetsOfInterestTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("lacerate.targets_of_interest.list", views.LayerList[TargetOfInterest]{
 				Key:           getters.Static("targets_of_interest"),
@@ -24,7 +24,7 @@ func init() {
 		lago.GetPageView("lacerate.TargetOfInterestDetail").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("lacerate.targets_of_interest.detail", views.LayerDetail[TargetOfInterest]{
-				Key:          getters.Static("targetOfInterest"),
+				Key:          getters.Static("target_of_interest"),
 				PathParamKey: getters.Static("id"),
 			}))
 
@@ -41,13 +41,13 @@ func init() {
 		lago.GetPageView("lacerate.TargetOfInterestUpdateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("lacerate.targets_of_interest.update_detail", views.LayerDetail[TargetOfInterest]{
-				Key:          getters.Static("targetOfInterest"),
+				Key:          getters.Static("target_of_interest"),
 				PathParamKey: getters.Static("id"),
 			}).
 			WithLayer("lacerate.targets_of_interest.update", views.LayerUpdate[TargetOfInterest]{
-				Key: getters.Static("targetOfInterest"),
+				Key: getters.Static("target_of_interest"),
 				SuccessURL: lago.RoutePath("lacerate.TargetOfInterestDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("targetOfInterest.ID")),
+					"id": getters.Any(getters.Key[uint]("target_of_interest.ID")),
 				}),
 			}))
 
@@ -55,11 +55,11 @@ func init() {
 		lago.GetPageView("lacerate.TargetOfInterestDeleteForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("lacerate.targets_of_interest.delete_detail", views.LayerDetail[TargetOfInterest]{
-				Key:          getters.Static("targetOfInterest"),
+				Key:          getters.Static("target_of_interest"),
 				PathParamKey: getters.Static("id"),
 			}).
 			WithLayer("lacerate.targets_of_interest.delete", views.LayerDelete[TargetOfInterest]{
-				Key:        getters.Static("targetOfInterest"),
+				Key:        getters.Static("target_of_interest"),
 				SuccessURL: lago.RoutePath("lacerate.TargetOfInterestListRoute", nil),
 			}))
 }

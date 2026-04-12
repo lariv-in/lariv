@@ -46,8 +46,36 @@ func registerRoutes() {
 	})
 
 	registerIntelRoutes()
+	registerReportRoutes()
 	registerTargetOfInterestRoutes()
 	registerLookupRoutes()
+}
+
+func registerTargetOfInterestRoutes() {
+	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestListRoute", lago.Route{
+		Path:    AppUrl + "toi/",
+		Handler: lago.NewDynamicView("lacerate.TargetOfInterestListView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestCreateRoute", lago.Route{
+		Path:    AppUrl + "toi/create/",
+		Handler: lago.NewDynamicView("lacerate.TargetOfInterestCreateView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestDetailRoute", lago.Route{
+		Path:    AppUrl + "toi/{id}/",
+		Handler: lago.NewDynamicView("lacerate.TargetOfInterestDetailView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestUpdateRoute", lago.Route{
+		Path:    AppUrl + "toi/{id}/edit/",
+		Handler: lago.NewDynamicView("lacerate.TargetOfInterestUpdateView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestDeleteRoute", lago.Route{
+		Path:    AppUrl + "toi/{id}/delete/",
+		Handler: lago.NewDynamicView("lacerate.TargetOfInterestDeleteView"),
+	})
 }
 
 func registerLookupRoutes() {
@@ -87,30 +115,30 @@ func registerLookupRoutes() {
 	})
 }
 
-func registerTargetOfInterestRoutes() {
-	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestListRoute", lago.Route{
-		Path:    AppUrl + "targets-of-interest/",
-		Handler: lago.NewDynamicView("lacerate.TargetOfInterestListView"),
+func registerReportRoutes() {
+	_ = lago.RegistryRoute.Register("lacerate.ReportListRoute", lago.Route{
+		Path:    AppUrl + "reports/",
+		Handler: lago.NewDynamicView("lacerate.ReportListView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestCreateRoute", lago.Route{
-		Path:    AppUrl + "targets-of-interest/create/",
-		Handler: lago.NewDynamicView("lacerate.TargetOfInterestCreateView"),
+	_ = lago.RegistryRoute.Register("lacerate.ReportCreateRoute", lago.Route{
+		Path:    AppUrl + "reports/create/",
+		Handler: lago.NewDynamicView("lacerate.ReportCreateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestDetailRoute", lago.Route{
-		Path:    AppUrl + "targets-of-interest/{id}/",
-		Handler: lago.NewDynamicView("lacerate.TargetOfInterestDetailView"),
+	_ = lago.RegistryRoute.Register("lacerate.ReportDetailRoute", lago.Route{
+		Path:    AppUrl + "reports/{id}/",
+		Handler: lago.NewDynamicView("lacerate.ReportDetailView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestUpdateRoute", lago.Route{
-		Path:    AppUrl + "targets-of-interest/{id}/edit/",
-		Handler: lago.NewDynamicView("lacerate.TargetOfInterestUpdateView"),
+	_ = lago.RegistryRoute.Register("lacerate.ReportUpdateRoute", lago.Route{
+		Path:    AppUrl + "reports/{id}/edit/",
+		Handler: lago.NewDynamicView("lacerate.ReportUpdateView"),
 	})
 
-	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestDeleteRoute", lago.Route{
-		Path:    AppUrl + "targets-of-interest/{id}/delete/",
-		Handler: lago.NewDynamicView("lacerate.TargetOfInterestDeleteView"),
+	_ = lago.RegistryRoute.Register("lacerate.ReportDeleteRoute", lago.Route{
+		Path:    AppUrl + "reports/{id}/delete/",
+		Handler: lago.NewDynamicView("lacerate.ReportDeleteView"),
 	})
 }
 

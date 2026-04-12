@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// LookupTargetOfInterestTouchActionChoices labels create/edit actions derived from lookup tool calls (see [buildLookupTouchedTargetOfInterestDisplays]).
-var LookupTargetOfInterestTouchActionChoices = []registry.Pair[string, string]{
+// LookupReportTouchActionChoices labels create/edit actions derived from lookup tool calls (see [buildLookupTouchedReportDisplays]).
+var LookupReportTouchActionChoices = []registry.Pair[string, string]{
 	{Key: "create", Value: "Created"},
 	{Key: "edit", Value: "Edited"},
 }

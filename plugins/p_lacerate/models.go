@@ -2,6 +2,8 @@ package p_lacerate
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
@@ -18,6 +20,8 @@ type Intel struct {
 	DedupHash *string `gorm:"size:64;uniqueIndex:idx_intel_source_dedup"`
 	// Content is canonical markdown for display and VL text input.
 	Content string `gorm:"type:text;not null;default:''"`
+	// Datetime is canonical event time for this intel item.
+	Datetime time.Time `gorm:"not null"`
 	// PreviewImageID optionally points at a copied thumbnail in [p_filesystem] (see [persistRedditPreviewImage]).
 	PreviewImageID *uint
 	PreviewImage   p_filesystem.VNode `gorm:"foreignKey:PreviewImageID"`
@@ -29,6 +33,9 @@ type Intel struct {
 func (i *Intel) BeforeSave(tx *gorm.DB) error {
 	if tx.Statement.SkipHooks {
 		return nil
+	}
+	if i.Datetime.IsZero() {
+		return fmt.Errorf("intel datetime is required")
 	}
 	return prepareIntelEmbeddingForSave(context.Background(), tx, i)
 }
