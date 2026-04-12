@@ -1,12 +1,91 @@
 package p_lacerate
 
 import (
+	"context"
+	"log/slog"
+	"net/http"
+
+	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
+	"gorm.io/gorm"
 )
+
+type intelRelatedLayer struct{}
+
+func (intelRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		intel, ok := ctx.Value("intel").(Intel)
+		if !ok || intel.ID == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+		db := ctx.Value("$db").(*gorm.DB)
+		targetRows, err := searchTargetsOfInterestByEmbedding(db.WithContext(ctx), intel.Embedding, 6)
+		if err != nil {
+			slog.Error("lacerate: intel related targets search", "error", err, "intel_id", intel.ID)
+			next.ServeHTTP(w, r)
+			return
+		}
+		ctx = context.WithValue(ctx, ctxKeyRelatedTargetsOfInterest, components.ObjectList[TargetOfInterest]{
+			Items:    targetRows,
+			Number:   1,
+			NumPages: 1,
+			Total:    uint64(len(targetRows)),
+		})
+		reportRows, err := searchReportsByEmbedding(db.WithContext(ctx), intel.Embedding, 6)
+		if err != nil {
+			slog.Error("lacerate: intel related reports search", "error", err, "intel_id", intel.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		reportItems, err := loadReportPageDataList(ctx, db, reportRows)
+		if err != nil {
+			slog.Error("lacerate: intel related reports page data", "error", err, "intel_id", intel.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ctx = context.WithValue(ctx, ctxKeyRelatedReports, components.ObjectList[ReportPageData]{
+			Items:    reportItems,
+			Number:   1,
+			NumPages: 1,
+			Total:    uint64(len(reportItems)),
+		})
+		intelRows, err := searchIntelByEmbedding(db.WithContext(ctx), intel.Embedding, 7)
+		if err != nil {
+			slog.Error("lacerate: intel related intel search", "error", err, "intel_id", intel.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		relatedIntel := make([]Intel, 0, 6)
+		for _, row := range intelRows {
+			if row.ID == 0 || row.ID == intel.ID {
+				continue
+			}
+			relatedIntel = append(relatedIntel, row)
+			if len(relatedIntel) == 6 {
+				break
+			}
+		}
+		intelItems, err := loadIntelListWithSource(ctx, db, relatedIntel)
+		if err != nil {
+			slog.Error("lacerate: intel related intel load", "error", err, "intel_id", intel.ID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		ctx = context.WithValue(ctx, ctxKeyRelatedIntel, components.ObjectList[Intel]{
+			Items:    intelItems,
+			Number:   1,
+			NumPages: 1,
+			Total:    uint64(len(intelItems)),
+		})
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func init() {
 	intelListPatchers := views.QueryPatchers[Intel]{
@@ -37,7 +116,8 @@ func init() {
 						Field: "PreviewImage",
 					}},
 				},
-			}))
+			}).
+			WithLayer("lacerate.intel.related", intelRelatedLayer{}))
 
 	lago.RegistryView.Register("lacerate.IntelCreateView",
 		lago.GetPageView("lacerate.IntelCreateForm").

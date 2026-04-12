@@ -3,6 +3,7 @@ package p_lacerate
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -241,6 +242,20 @@ func registerTargetOfInterestDetail() {
 									},
 								},
 							},
+							&components.FieldTitle{
+								Getter:  getters.Static("Related data"),
+								Classes: "mt-8",
+							},
+							&components.ClientTabs{
+								Page:     components.Page{Key: "lacerate.TargetOfInterestDetailRelatedTabs"},
+								StateKey: "related_tab",
+								Default:  getters.Static("Targets"),
+								Tabs: map[string]getters.Getter[components.PageInterface]{
+									"Targets": getters.Static(targetOfInterestRelatedSection()),
+									"Reports": getters.Static(targetOfInterestRelatedReportsSection()),
+									"Intel":   getters.Static(targetOfInterestRelatedIntelSection()),
+								},
+							},
 						},
 					},
 				},
@@ -258,4 +273,172 @@ func registerTargetOfInterestDetail() {
 			},
 		},
 	})
+}
+
+func targetOfInterestRelatedSection() components.PageInterface {
+	return &components.ContainerColumn{
+		Page: components.Page{Key: "lacerate.TargetOfInterestDetailRelated"},
+		Children: []components.PageInterface{
+			&components.DataTable[TargetOfInterest]{
+				Page:     components.Page{Key: "lacerate.TargetOfInterestDetailRelatedTable"},
+				UID:      "lacerate-target-of-interest-related-table",
+				Title:    "Related targets of interest",
+				Subtitle: "Nearest embedding matches for this target.",
+				Classes:  "w-full",
+				Data:     getters.Key[components.ObjectList[TargetOfInterest]](ctxKeyRelatedTargetsOfInterest),
+				RowAttr: getters.RowAttrNavigate(
+					lago.RoutePath("lacerate.TargetOfInterestDetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("$row.ID")),
+					}),
+				),
+				Columns: []components.TableColumn{
+					{
+						Label: "Name",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.IfOrElse(
+									getters.Map(getters.Key[string]("$row.Name"), func(_ context.Context, s string) (string, error) {
+										return strings.TrimSpace(s), nil
+									}),
+									getters.Format("#%d", getters.Any(getters.Key[uint]("$row.ID"))),
+								),
+							},
+						},
+					},
+					{
+						Label: "Description",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.IfOrElse(
+									getters.Map(getters.Key[string]("$row.Description"), func(_ context.Context, s string) (string, error) {
+										s = strings.TrimSpace(s)
+										if s == "" {
+											return "", nil
+										}
+										if len(s) > 180 {
+											return s[:177] + "...", nil
+										}
+										return s, nil
+									}),
+									getters.Static("No description"),
+								),
+								Classes: "text-sm text-base-content/70",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func targetOfInterestRelatedReportsSection() components.PageInterface {
+	return &components.ContainerColumn{
+		Page: components.Page{Key: "lacerate.TargetOfInterestDetailRelatedReports"},
+		Children: []components.PageInterface{
+			&components.DataTable[ReportPageData]{
+				Page:     components.Page{Key: "lacerate.TargetOfInterestDetailRelatedReportsTable"},
+				UID:      "lacerate-target-of-interest-related-reports-table",
+				Title:    "Related reports",
+				Subtitle: "Nearest embedding matches for this target.",
+				Classes:  "w-full",
+				Data:     getters.Key[components.ObjectList[ReportPageData]](ctxKeyRelatedReports),
+				RowAttr: getters.RowAttrNavigate(
+					lago.RoutePath("lacerate.ReportDetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("$row.Report.ID")),
+					}),
+				),
+				Columns: []components.TableColumn{
+					{
+						Label: "Name",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.IfOrElse(
+									getters.Map(getters.Key[string]("$row.Report.Name"), func(_ context.Context, s string) (string, error) {
+										return strings.TrimSpace(s), nil
+									}),
+									getters.Format("#%d", getters.Any(getters.Key[uint]("$row.Report.ID"))),
+								),
+							},
+						},
+					},
+					{
+						Label: "Kind",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Map(getters.Key[string]("$row.Report.Kind"), func(_ context.Context, s string) (string, error) {
+								return reportKindLabel(s), nil
+							})},
+						},
+					},
+					{
+						Label: "Details",
+						Children: []components.PageInterface{
+							&components.GetterPage{Getter: reportListConfigPageGetter()},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func targetOfInterestRelatedIntelSection() components.PageInterface {
+	return &components.ContainerColumn{
+		Page: components.Page{Key: "lacerate.TargetOfInterestDetailRelatedIntel"},
+		Children: []components.PageInterface{
+			&components.DataTable[Intel]{
+				Page:     components.Page{Key: "lacerate.TargetOfInterestDetailRelatedIntelTable"},
+				UID:      "lacerate-target-of-interest-related-intel-table",
+				Title:    "Related intel",
+				Subtitle: "Nearest embedding matches for this target.",
+				Classes:  "w-full",
+				Data:     getters.Key[components.ObjectList[Intel]](ctxKeyRelatedIntel),
+				RowAttr: getters.RowAttrNavigate(
+					lago.RoutePath("lacerate.IntelDetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("$row.ID")),
+					}),
+				),
+				Columns: []components.TableColumn{
+					{
+						Label: "Source",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.IfOrElse(
+									getters.Map(getters.Key[string]("$row.Source.Name"), func(_ context.Context, s string) (string, error) {
+										return strings.TrimSpace(s), nil
+									}),
+									getters.Static("—"),
+								),
+							},
+						},
+					},
+					{
+						Label: "Kind",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.IfOrElse(
+									getters.Map(getters.Key[string]("$row.Source.Kind"), func(_ context.Context, s string) (string, error) {
+										return strings.TrimSpace(s), nil
+									}),
+									getters.Static("—"),
+								),
+							},
+						},
+					},
+					{
+						Label: "Datetime",
+						Children: []components.PageInterface{
+							&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Datetime")},
+						},
+					},
+					{
+						Label: "Content",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: intelContentPreviewCell()},
+						},
+					},
+				},
+			},
+		},
+	}
 }
