@@ -142,6 +142,17 @@ func studentFormFields() components.ContainerColumn {
 				},
 			},
 			&components.ContainerError{
+				Error: getters.Key[error]("$error.Remarks"),
+				Children: []components.PageInterface{
+					&components.InputTextarea{
+						Label:  "Remarks",
+						Name:   "Remarks",
+						Rows:   4,
+						Getter: getters.Key[string]("$in.Remarks"),
+					},
+				},
+			},
+			&components.ContainerError{
 				Error: getters.Key[error]("$error.Handicapped"),
 				Children: []components.PageInterface{
 					&components.InputCheckbox{

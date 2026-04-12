@@ -33,6 +33,7 @@ type Student struct {
 	Category    string `gorm:"type:varchar(100);default:''"`
 	Handicapped bool   `gorm:"default:false"`
 	Address     string `gorm:"type:text"`
+	Remarks     string `gorm:"type:text"`
 	PhotoID    *uint
 	Photo      p_filesystem.VNode
 	Documents  []p_filesystem.VNode `gorm:"many2many:student_documents;"`

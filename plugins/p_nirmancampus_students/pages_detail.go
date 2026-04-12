@@ -78,6 +78,14 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelNewline{
+								Title: "Remarks",
+								Children: []components.PageInterface{
+									&components.FieldText{
+										Getter: getters.Key[string]("$in.Remarks"),
+									},
+								},
+							},
+							&components.LabelNewline{
 								Title: "Photo",
 								Children: []components.PageInterface{
 									&p_filesystem.FieldPhoto{
