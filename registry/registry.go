@@ -85,6 +85,24 @@ func KeysFromPairs[K comparable, V any](pairs []Pair[K, V]) []K {
 	return out
 }
 
+// PairValueFromKey maps a stored string key to its value using [PairFromPairs].
+// Empty key returns "". Unknown keys return the key unchanged (same fallback as form selects in Caveats).
+func PairValueFromKey(keyGetter getters.Getter[string], pairs []Pair[string, string]) getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		s, err := keyGetter(ctx)
+		if err != nil {
+			return "", err
+		}
+		if s == "" {
+			return "", nil
+		}
+		if p, ok := PairFromPairs(s, pairs); ok {
+			return p.Value, nil
+		}
+		return s, nil
+	}
+}
+
 func (p Pair[K, V]) ToKVJson() string {
 	b, err := json.Marshal(map[K]V{p.Key: p.Value})
 	if err != nil {

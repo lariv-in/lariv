@@ -11,32 +11,6 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-func programAdmissionSessionsDisplayGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$in.AdmissionSessions")(ctx)
-		if err != nil || s == "" {
-			return "—", nil
-		}
-		if p, ok := registry.PairFromPairs(s, admissionSessionChoices); ok {
-			return p.Value, nil
-		}
-		return s, nil
-	}
-}
-
-func programTermTypeDisplayGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		s, err := getters.Key[string]("$in.TermType")(ctx)
-		if err != nil || s == "" {
-			return "—", nil
-		}
-		if p, ok := registry.PairFromPairs(s, termTypeChoices); ok {
-			return p.Value, nil
-		}
-		return s, nil
-	}
-}
-
 func courseListDisplayGetter(g getters.Getter[[]courses.Course]) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		list, err := g(ctx)
@@ -44,7 +18,7 @@ func courseListDisplayGetter(g getters.Getter[[]courses.Course]) getters.Getter[
 			return "", err
 		}
 		if len(list) == 0 {
-			return "—", nil
+			return "", nil
 		}
 		codes := make([]string, 0, len(list))
 		for _, c := range list {
@@ -54,17 +28,14 @@ func courseListDisplayGetter(g getters.Getter[[]courses.Course]) getters.Getter[
 	}
 }
 
-func programStructureNonEmptyGetter() getters.Getter[bool] {
-	return func(ctx context.Context) (bool, error) {
-		units, err := getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits")(ctx)
-		if err != nil {
-			return false, err
-		}
-		return len(units) > 0, nil
-	}
-}
-
 func registerDetailPages() {
+	programStructureNonEmpty := getters.Map(
+		getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits"),
+		func(_ context.Context, units []ProgramStructureUnit) (bool, error) {
+			return len(units) > 0, nil
+		},
+	)
+
 	lago.RegistryPage.Register("programs.ProgramDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "programs.ProgramDetailMenu"},
@@ -81,25 +52,25 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "University",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.University")},
+									&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$in.University"), universityChoices)},
 								},
 							},
 							&components.LabelInline{
 								Title: "Program type",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.ProgramType")},
+									&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$in.ProgramType"), programTypeChoices)},
 								},
 							},
 							&components.LabelInline{
 								Title: "Admission sessions",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: programAdmissionSessionsDisplayGetter()},
+									&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$in.AdmissionSessions"), admissionSessionChoices)},
 								},
 							},
 							&components.LabelInline{
 								Title: "Term type",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: programTermTypeDisplayGetter()},
+									&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$in.TermType"), termTypeChoices)},
 								},
 							},
 							&components.LabelInline{
@@ -118,7 +89,7 @@ func registerDetailPages() {
 								Title: "Program structure",
 								Children: []components.PageInterface{
 									&components.ShowIf{
-										Getter: getters.Any(programStructureNonEmptyGetter()),
+										Getter: getters.Any(programStructureNonEmpty),
 										Children: []components.PageInterface{
 											&components.FieldList[ProgramStructureUnit]{
 												Getter:  getters.Key[[]ProgramStructureUnit]("$in.ProgramStructureUnits"),
@@ -176,7 +147,7 @@ func registerDetailPages() {
 										},
 									},
 									&components.ShowIf{
-										Getter: getters.BoolNot(programStructureNonEmptyGetter()),
+										Getter: getters.BoolNot(programStructureNonEmpty),
 										Children: []components.PageInterface{
 											&components.ButtonLink{
 												Page:  components.Page{Roles: []string{"admin", "superuser"}},

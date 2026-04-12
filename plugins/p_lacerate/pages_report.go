@@ -98,12 +98,6 @@ func reportKindGetter() getters.Getter[registry.Pair[string, string]] {
 	}
 }
 
-func reportKindSelectAttr() getters.Getter[gomponents.Node] {
-	return func(context.Context) (gomponents.Node, error) {
-		return gomponents.Attr("x-model", "kind"), nil
-	}
-}
-
 func reportFormContextGetter() getters.Getter[map[string]any] {
 	return func(ctx context.Context) (map[string]any, error) {
 		data, err := getters.Key[ReportPageData]("reportPageData")(ctx)
@@ -169,7 +163,7 @@ func reportBaseFormFields() components.PageInterface {
 						Choices:  getters.Static(ReportKindChoices),
 						Getter:   reportKindGetter(),
 						Classes:  "w-full",
-						Attr:     reportKindSelectAttr(),
+						Attr:     getters.Static(gomponents.Attr("x-model", "kind")),
 					},
 				},
 			},

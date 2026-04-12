@@ -81,15 +81,6 @@ func timelineReportFormFields() components.PageInterface {
 	}
 }
 
-func timelineReportEntriesGetter() getters.Getter[[]TimelineReportEntry] {
-	return func(ctx context.Context) ([]TimelineReportEntry, error) {
-		if timeline, err := getters.Key[*TimelineReport]("$in.Timeline")(ctx); err == nil && timeline != nil {
-			return timeline.Entries, nil
-		}
-		return nil, nil
-	}
-}
-
 func timelineReportDetailFields() components.PageInterface {
 	return &components.ContainerColumn{
 		Page: components.Page{Key: "lacerate.ReportTimelineDetailFields"},
@@ -99,7 +90,12 @@ func timelineReportDetailFields() components.PageInterface {
 				Children: []components.PageInterface{
 					&components.FieldList[TimelineReportEntry]{
 						Page:    components.Page{Key: "lacerate.ReportTimelineEntries"},
-						Getter:  timelineReportEntriesGetter(),
+						Getter: func(ctx context.Context) ([]TimelineReportEntry, error) {
+							if timeline, err := getters.Key[*TimelineReport]("$in.Timeline")(ctx); err == nil && timeline != nil {
+								return timeline.Entries, nil
+							}
+							return nil, nil
+						},
 						Classes: "space-y-4",
 						Children: []components.PageInterface{
 							&components.ContainerColumn{
