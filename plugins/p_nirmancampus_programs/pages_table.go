@@ -220,3 +220,34 @@ func registerSelectionPages() {
 		},
 	})
 }
+
+func registerProgramMediaMultiSelectPages() {
+	lago.RegistryPage.Register("programs.ProgramMediaMultiSelectionTable", &components.Modal{
+		UID: "program-media-multi-selection-modal",
+		Children: []components.PageInterface{
+			&components.DataTable[ProgramMedia]{
+				Page:    components.Page{Key: "programs.ProgramMediaMultiSelectionTableBody"},
+				UID:     "program-media-multi-selection-table",
+				Title:   "Select languages",
+				Data:    getters.Key[components.ObjectList[ProgramMedia]]("program_media"),
+				RowAttr: getters.RowAttrSelectMulti(
+					getters.IfOrElse(
+						getters.Key[string]("$get.target_input"),
+						getters.Static("ProgramMedia"),
+					),
+					getters.Key[uint]("$row.ID"),
+					getters.Key[string]("$row.Language"),
+				),
+				Columns: []components.TableColumn{
+					{
+						Label: "Language",
+						Name:  "Language",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.Language")},
+						},
+					},
+				},
+			},
+		},
+	})
+}

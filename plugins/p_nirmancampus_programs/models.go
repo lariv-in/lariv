@@ -1,6 +1,8 @@
 package p_nirmancampus_programs
 
 import (
+	"log/slog"
+
 	"github.com/lariv-in/lago/lago"
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/registry"
@@ -34,6 +36,12 @@ type ProgramStructureUnit struct {
 	Program Program `gorm:"constraint:OnDelete:CASCADE"`
 }
 
+// ProgramMedia is a language label attachable to programs (many-to-many).
+type ProgramMedia struct {
+	gorm.Model
+	Language string `gorm:"not null"`
+}
+
 type Program struct {
 	gorm.Model
 
@@ -46,6 +54,7 @@ type Program struct {
 	TermType          string `gorm:"type:varchar(32);not null;default:''"`
 	ProgramFee        uint   `gorm:"not null;default:0"`
 
+	ProgramMedia          []ProgramMedia         `gorm:"many2many:program_program_media;"`
 	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
 }
 
@@ -63,8 +72,15 @@ var programTypeChoices = []registry.Pair[string, string]{
 
 func init() {
 	lago.OnDBInit("p_nirmancampus_programs.models", func(d *gorm.DB) *gorm.DB {
+		lago.RegisterModel[ProgramMedia](d)
 		lago.RegisterModel[Program](d)
 		lago.RegisterModel[ProgramStructureUnit](d)
+		for _, lang := range []string{"Hindi", "English", "Punjabi"} {
+			res := d.FirstOrCreate(&ProgramMedia{}, ProgramMedia{Language: lang})
+			if res.Error != nil {
+				slog.Error("seed program_media", "language", lang, "error", res.Error)
+			}
+		}
 		return d
 	})
 

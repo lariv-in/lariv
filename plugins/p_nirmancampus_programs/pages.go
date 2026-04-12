@@ -14,6 +14,7 @@ func init() {
 	registerDetailPages()
 	registerDeletePages()
 	registerSelectionPages()
+	registerProgramMediaMultiSelectPages()
 	registerStructurePages()
 }
 

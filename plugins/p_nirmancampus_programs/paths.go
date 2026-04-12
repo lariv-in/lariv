@@ -35,6 +35,11 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("programs.SelectView"),
 	})
 
+	_ = lago.RegistryRoute.Register("programs.ProgramMediaMultiSelectRoute", lago.Route{
+		Path:    AppUrl + "program-media/multiselect/",
+		Handler: lago.NewDynamicView("programs.ProgramMediaMultiSelectView"),
+	})
+
 	_ = lago.RegistryRoute.Register("programs.StructureEditRoute", lago.Route{
 		Path:    AppUrl + "{id}/structure/edit/",
 		Handler: lago.NewDynamicView("programs.StructureEditView"),

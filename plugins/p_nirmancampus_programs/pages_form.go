@@ -201,6 +201,25 @@ func programFormFields() components.ContainerColumn {
 					},
 				},
 			},
+			&components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.ProgramMedia"),
+						Children: []components.PageInterface{
+							&components.InputManyToMany[ProgramMedia]{
+								Label:       "Media languages",
+								Name:        "ProgramMedia",
+								Getter:      getters.Key[[]ProgramMedia]("$in.ProgramMedia"),
+								Url:         lago.RoutePath("programs.ProgramMediaMultiSelectRoute", nil),
+								Display:     getters.Key[string]("$in.Language"),
+								Placeholder: "Select instruction languages…",
+								Classes:     "w-full",
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }

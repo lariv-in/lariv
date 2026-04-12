@@ -103,6 +103,17 @@ func init() {
 				QueryPatchers: programListQueryPatchers,
 			}))
 
+	lago.RegistryView.Register("programs.ProgramMediaMultiSelectView",
+		lago.GetPageView("programs.ProgramMediaMultiSelectionTable").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("programs.program_media_multiselect_admin", programsAdminRoleLayer).
+			WithLayer("programs.program_media_multiselect", views.LayerList[ProgramMedia]{
+				Key: getters.Static("program_media"),
+				QueryPatchers: views.QueryPatchers[ProgramMedia]{
+					{Key: "programs.program_media_order", Value: queryPatcherProgramMediaOrder{}},
+				},
+			}))
+
 	structureLayers := []struct {
 		key string
 		val views.Layer

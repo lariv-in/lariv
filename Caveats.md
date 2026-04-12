@@ -19,6 +19,8 @@
    - For route params like `id`, prefer `getters.Any(getters.Key[uint]("$id"))` instead of writing custom `uint -> string` wrapper getters.
    - For many-to-many filter state stored in `$get`, prefer `getters.AssociationIDs(getters.ContextKeyGet, "Field")` instead of manually unpacking `AssociationIDs`.
 
+- **Avoid unnecessary getter functions:** Do not introduce a plugin-local `func …() getters.Getter[T]` that only forwards to a single existing combinator (e.g. wrapping `getters.Key` or `lago.RoutePath` with no extra logic). Use the combinator directly at the component field. Static HTML attrs are `getters.Static(...)`, not a custom closure.
+- **When a named getter *is* justified:** DB loads (including preload requirements), permission or role branching, merging multiple context shapes, worker/agent state, formatting that is not covered by `getters.Format` / `getters.Map`, or other non-trivial logic. If the only goal was an empty placeholder like `"—"` for blank fields, prefer leaving `FieldText` empty unless the product explicitly requires a dash.
 - When defining getter arguments, use the most restrictive type possible. `any` is almost always a bad idea.
 
 - For foreign key selectors, the `InputForeignKey.Name`, the selector route/page it opens, and the `GetterSelect(...)` event name all need to match. If a `ParentID` input opens a selector table built for `DestinationID`, the selection event will be dispatched with the wrong name and the input will not update or close its modal.
@@ -54,6 +56,7 @@ var MyFieldChoices = []registry.Pair[string, string]{
 
 - **`Key`** is the persisted value (database column, `<option value>`, form POST). **`Value`** is the label shown in selects and read-only views.
 - **Slice order** is the option order in the UI (`InputSelect`, list filters, etc.). Do not add a parallel `const` block or `switch` that repeats those keys; use the same string literals everywhere.
+- **Detail / read-only:** For a stored string key, use `registry.ChoiceLabelGetter(getters.Key[string]("$in.Field"), MyFieldChoices)` so the UI shows the pair **`Value`** via `PairFromPairs`; unknown keys fall back to the raw key (aligned with form behavior). Do not add a one-off display getter that duplicates that logic.
 - **Forms and filters:** `components.InputSelect[string]` with `Choices: getters.Static(MyFieldChoices)`. Resolve the current selection with `registry.PairFromPairs(s, MyFieldChoices)` when `s` is non-empty; for unknown legacy values fall back to `registry.Pair[string, string]{Key: s, Value: s}` so the UI still renders.
 - **Maps when needed:** `registry.MapFromPairs(MyFieldChoices)` builds a `map[string]string` for ad-hoc lookups; `registry.PairFromMap` works on that map. Prefer the slice + `PairFromPairs` when you only need a single lookup—no package-level map is required.
 - **Helpers:** `registry.PairFromPairs`, `registry.MapFromPairs`, and (for legacy or map-based code paths) `registry.PairFromMap` / `registry.PairsFromMap` live in `registry/registry.go`. **`registry.KeysFromPairs`** returns keys in slice order (e.g. generators picking a random allowed value).

@@ -176,6 +176,9 @@ func init() {
 			return nil
 		},
 		Remove: func(db *gorm.DB) error {
+			if err := db.Exec("DELETE FROM program_program_media").Error; err != nil {
+				return err
+			}
 			if err := db.Exec("DELETE FROM program_structure_unit_compulsory_courses").Error; err != nil {
 				return err
 			}

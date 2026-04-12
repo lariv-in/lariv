@@ -80,6 +80,16 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelNewline{
+								Title: "Media languages",
+								Children: []components.PageInterface{
+									&components.FieldManyToMany[ProgramMedia]{
+										Getter:  getters.Key[[]ProgramMedia]("$in.ProgramMedia"),
+										Display: getters.Key[string]("$in.Language"),
+										Classes: "w-full",
+									},
+								},
+							},
+							&components.LabelNewline{
 								Title: "Description",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.Description")},

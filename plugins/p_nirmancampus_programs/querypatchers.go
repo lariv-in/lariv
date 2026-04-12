@@ -96,11 +96,21 @@ func (p queryPatcherProgramType) Patch(_ views.View, r *http.Request, q gorm.Cha
 type queryPatcherPreloadProgramStructureUnits struct{}
 
 func (queryPatcherPreloadProgramStructureUnits) Patch(_ views.View, _ *http.Request, q gorm.ChainInterface[Program]) gorm.ChainInterface[Program] {
-	return q.Preload("ProgramStructureUnits", func(pb gorm.PreloadBuilder) error {
+	return q.Preload("ProgramMedia", func(pb gorm.PreloadBuilder) error {
+		pb.Order("language ASC")
+		return nil
+	}).Preload("ProgramStructureUnits", func(pb gorm.PreloadBuilder) error {
 		pb.Order("term_number ASC")
 		return nil
 	}).Preload("ProgramStructureUnits.CompulsoryCourses", nil).
 		Preload("ProgramStructureUnits.OptionalCourseSelectionPool", nil)
+}
+
+// queryPatcherProgramMediaOrder sorts languages for the program media multi-select list.
+type queryPatcherProgramMediaOrder struct{}
+
+func (queryPatcherProgramMediaOrder) Patch(_ views.View, _ *http.Request, q gorm.ChainInterface[ProgramMedia]) gorm.ChainInterface[ProgramMedia] {
+	return q.Order("language ASC")
 }
 
 type queryPatcherPreloadStructureUnitCourseAssociations struct{}
