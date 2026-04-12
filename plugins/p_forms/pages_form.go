@@ -7,17 +7,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/registry"
-	gomponents "maragu.dev/gomponents"
 )
-
-func fieldTableRowNavigateEdit() getters.Getter[gomponents.Node] {
-	return getters.RowAttrNavigate(
-		lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
-			"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
-			"id":      getters.Any(getters.Key[uint]("$row.ID")),
-		}),
-	)
-}
 
 func formFieldTableColumns() []components.TableColumn {
 	return []components.TableColumn{
@@ -182,7 +172,12 @@ func registerFormCRUDPages() {
 										}),
 									},
 								},
-								RowAttr: fieldTableRowNavigateEdit(),
+								RowAttr: getters.RowAttrNavigate(
+									lago.RoutePath("forms.FieldUpdateRoute", map[string]getters.Getter[any]{
+										"form_id": getters.Any(getters.Key[uint]("$row.FormID")),
+										"id":      getters.Any(getters.Key[uint]("$row.ID")),
+									}),
+								),
 								Columns: formFieldTableColumns(),
 							},
 						},

@@ -137,12 +137,6 @@ func registerSourceTable() {
 	})
 }
 
-func sourceKindSelectAttr() getters.Getter[gomponents.Node] {
-	return func(context.Context) (gomponents.Node, error) {
-		return gomponents.Attr("x-model", "kind"), nil
-	}
-}
-
 func sourceBaseFormFields() components.PageInterface {
 	return &components.ContainerColumn{
 		Page: components.Page{Key: "lacerate.SourceBaseFormFields"},
@@ -188,7 +182,7 @@ func sourceBaseFormFields() components.PageInterface {
 							getters.Static(registry.MapFromPairs(SourceKindChoices)),
 						),
 						Classes: "w-full",
-						Attr:    sourceKindSelectAttr(),
+						Attr:    getters.Static(gomponents.Attr("x-model", "kind")),
 					},
 				},
 			},

@@ -65,6 +65,12 @@ func registerDetailPages() {
 									&components.FieldText{Getter: getters.Key[string]("$in.Category")},
 								},
 							},
+							&components.LabelInline{
+								Title: "Handicapped",
+								Children: []components.PageInterface{
+									&components.FieldCheckbox{Getter: getters.Key[bool]("$in.Handicapped")},
+								},
+							},
 							&components.LabelNewline{
 								Title: "Address",
 								Children: []components.PageInterface{

@@ -141,6 +141,16 @@ func studentFormFields() components.ContainerColumn {
 					},
 				},
 			},
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.Handicapped"),
+				Children: []components.PageInterface{
+					&components.InputCheckbox{
+						Label:  "Handicapped",
+						Name:   "Handicapped",
+						Getter: getters.Key[bool]("$in.Handicapped"),
+					},
+				},
+			},
 			components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{

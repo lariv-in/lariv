@@ -16,7 +16,7 @@ var admissionSessionChoices = []registry.Pair[string, string]{
 
 // termTypeChoices: stored TermType Key -> label.
 var termTypeChoices = []registry.Pair[string, string]{
-	{Key: "semester", Value: "Session"},
+	{Key: "semester", Value: "Semester"},
 	{Key: "year", Value: "Year"},
 }
 

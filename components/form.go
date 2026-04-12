@@ -48,7 +48,7 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	for _, child := range e.ChildrenInput {
 		inputGroup = append(inputGroup, Render(child, childCtx))
 	}
-	submitGroup := gomponents.Group{}
+	submitGroup := gomponents.Group{html.Class("my-2")}
 	for _, child := range e.ChildrenAction {
 		submitGroup = append(submitGroup, Render(child, childCtx))
 	}
@@ -75,7 +75,7 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	}
 
 	formNodes := []gomponents.Node{
-		html.Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
+		html.Class(fmt.Sprintf("flex flex-col gap-2 %s", e.Classes)),
 	}
 	if e.Attr != nil {
 		extra, err := e.Attr(childCtx)
@@ -100,10 +100,10 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	}
 
 	formNodes = append(formNodes,
-		gomponents.Group(headerNodes),
-		inputGroup,
+		html.Div(headerNodes...),
+		html.Div(inputGroup...),
 		formErrorNode,
-		submitGroup,
+		html.Div(submitGroup...),
 	)
 	return html.Form(formNodes...)
 }

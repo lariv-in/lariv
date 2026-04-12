@@ -1,43 +1,12 @@
 package p_nirmancampus_sessions
 
 import (
-	"context"
 	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 )
-
-func isActiveGetter() getters.Getter[bool] {
-	return func(ctx context.Context) (bool, error) {
-		in := ctx.Value(getters.ContextKeyIn)
-		if in == nil {
-			// Create forms don't provide $in; default the checkbox to "true".
-			return true, nil
-		}
-		m, ok := in.(map[string]any)
-		if !ok {
-			return true, nil
-		}
-		raw, ok := m["IsActive"]
-		if !ok || raw == nil {
-			return true, nil
-		}
-		v, ok := raw.(bool)
-		if !ok {
-			return true, nil
-		}
-		return v, nil
-	}
-}
-
-func sessionCodeInputGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		// Code is auto-generated in BeforeSave when blank, so keep it empty on create.
-		return getters.Key[string]("$in.Code")(ctx)
-	}
-}
 
 func sessionFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
@@ -65,7 +34,8 @@ func sessionFormFields() components.ContainerColumn {
 							&components.InputText{
 								Label:  "Code",
 								Name:   "Code",
-								Getter: sessionCodeInputGetter(),
+								// Empty on create; auto-generated in BeforeSave when blank.
+								Getter: getters.Key[string]("$in.Code"),
 							},
 						},
 					},
@@ -104,7 +74,7 @@ func sessionFormFields() components.ContainerColumn {
 					&components.InputCheckbox{
 						Label:    "Active",
 						Name:     "IsActive",
-						Getter:   isActiveGetter(),
+						Getter:   getters.Key[bool]("$in.IsActive"),
 						Required: false,
 					},
 				},

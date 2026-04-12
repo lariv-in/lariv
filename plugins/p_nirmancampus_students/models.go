@@ -30,8 +30,9 @@ type Student struct {
 
 	MotherName string `gorm:"type:varchar(255);default:''"`
 	FatherName string `gorm:"column:fathers_name;type:varchar(255);default:''"`
-	Category   string `gorm:"type:varchar(100);default:''"`
-	Address    string `gorm:"type:text"`
+	Category    string `gorm:"type:varchar(100);default:''"`
+	Handicapped bool   `gorm:"default:false"`
+	Address     string `gorm:"type:text"`
 	PhotoID    *uint
 	Photo      p_filesystem.VNode
 	Documents  []p_filesystem.VNode `gorm:"many2many:student_documents;"`
@@ -77,6 +78,7 @@ func init() {
 			"MotherName",
 			"FatherName",
 			"Category",
+			"Handicapped",
 			"UpdatedAt",
 		},
 		Preload: []string{},

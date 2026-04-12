@@ -236,15 +236,16 @@ func init() {
 				mn, fn, cat, addr := randomNirmancampusFields(r)
 
 				student := Student{
-					Name:       name,
-					Email:      email,
-					Phone:      phone,
-					StudentNo:  studentNo,
-					DOB:        dob,
-					MotherName: mn,
-					FatherName: fn,
-					Category:   cat,
-					Address:    addr,
+					Name:        name,
+					Email:       email,
+					Phone:       phone,
+					StudentNo:   studentNo,
+					DOB:         dob,
+					MotherName:  mn,
+					FatherName:  fn,
+					Category:    cat,
+					Handicapped: r.Intn(100) < 12,
+					Address:     addr,
 				}
 				var photoErr error
 				student.PhotoID, files, photoErr = assignStudentPhoto(db, files)
