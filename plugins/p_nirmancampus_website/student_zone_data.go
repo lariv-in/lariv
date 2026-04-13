@@ -48,7 +48,7 @@ func buildStudentZonePageData(ctx context.Context) studentZonePageData {
 		for _, item := range items {
 			sectionItems = append(sectionItems, studentZoneItem{
 				Title: item.Title,
-				URL:   fmt.Sprintf("/students-zone/item/%d/", item.ID),
+				URL:   fmt.Sprintf("%s%d/", StudentZoneItemURLPrefix, item.ID),
 			})
 		}
 

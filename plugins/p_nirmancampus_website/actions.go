@@ -15,7 +15,7 @@ import (
 
 type homePageData struct {
 	Announcements  []homeAnnouncement
-	ImportantLinks []homeImportantLink
+	ImportantLinks []importantLinkHomeItem
 }
 
 type homeAnnouncement struct {
@@ -23,11 +23,6 @@ type homeAnnouncement struct {
 	Description template.HTML
 	Date        string
 	URL         string
-}
-
-type homeImportantLink struct {
-	Title string
-	URL   string
 }
 
 func buildHomePageData(ctx context.Context) homePageData {
@@ -39,7 +34,7 @@ func buildHomePageData(ctx context.Context) homePageData {
 
 	return homePageData{
 		Announcements:  loadHomeAnnouncements(ctx, db, time.Now()),
-		ImportantLinks: loadHomeImportantLinks(ctx, db),
+		ImportantLinks: buildImportantLinksHomeItems(ctx, db),
 	}
 }
 
@@ -67,28 +62,6 @@ func loadHomeAnnouncements(ctx context.Context, db *gorm.DB, now time.Time) []ho
 			Date:        a.ReleaseAt.Format("Jan 2, 2006"),
 			URL:         strings.TrimSpace(a.URL),
 		})
-	}
-	return items
-}
-
-func loadHomeImportantLinks(ctx context.Context, db *gorm.DB) []homeImportantLink {
-	links, err := gorm.G[ImportantLink](db).Order(`"order" ASC`).Find(ctx)
-	if err != nil {
-		slog.Error("nirmancampus_website: failed loading important links", "error", err)
-		return nil
-	}
-
-	items := make([]homeImportantLink, 0, len(links))
-	for _, l := range links {
-		title := strings.TrimSpace(l.Title)
-		if title == "" {
-			continue
-		}
-		url := strings.TrimSpace(ImportantLinkPublicURL(l))
-		if url == "" {
-			continue
-		}
-		items = append(items, homeImportantLink{Title: title, URL: url})
 	}
 	return items
 }

@@ -30,6 +30,16 @@ func init() {
 		Handler: lago.NewDynamicView("nirmancampus_website.StudentZoneView"),
 	})
 
+	_ = lago.RegistryRoute.Register("nirmancampus_website.StudentZoneItemRoute", lago.Route{
+		Path:    StudentZoneItemURLPrefix + "{id}/",
+		Handler: lago.NewDynamicView("nirmancampus_website.StudentZoneItemView"),
+	})
+
+	_ = lago.RegistryRoute.Register("nirmancampus_website.ImportantLinkItemRoute", lago.Route{
+		Path:    ImportantLinkItemURLPrefix + "{id}/",
+		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinkItemView"),
+	})
+
 	// Override the root route to serve the Nirman Campus home page.
 	lago.RegistryRoute.Patch("base.HomeRoute", func(old lago.Route) lago.Route {
 		old.Handler = lago.NewDynamicView("nirmancampus_website.HomeView")
