@@ -12,7 +12,6 @@ import (
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
-	"gorm.io/gorm"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -112,7 +111,10 @@ func (e InputMultiVNode) Build(ctx context.Context) Node {
 }
 
 func (e InputMultiVNode) ParseMultipart(uploadedFiles []*multipart.FileHeader, ctx context.Context) (any, error) {
-	db := ctx.Value("$db").(*gorm.DB)
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// Collect kept IDs from the hidden inputs (available when $request is in context).
 	keptIDs := map[uint]struct{}{}

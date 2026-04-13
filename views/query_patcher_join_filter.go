@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	"gorm.io/gorm"
 )
 
@@ -65,8 +66,9 @@ func (p QueryPatcherJoinFilter[T, TJoin]) Patch(_ View, r *http.Request, db gorm
 		return db
 	}
 
-	dbConn, ok := r.Context().Value("$db").(*gorm.DB)
-	if !ok || dbConn == nil {
+	dbConn, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		slog.Error("QueryPatcherJoinFilter: db from context", "error", err)
 		return db
 	}
 

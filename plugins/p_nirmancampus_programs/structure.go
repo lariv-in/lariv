@@ -41,7 +41,12 @@ func (programsStructureLoadProgramLayer) Next(_ views.View, next http.Handler) h
 			http.NotFound(w, r)
 			return
 		}
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("structure load program: db from context", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		query := programScopeByRole{}.Patch(views.View{}, r, gorm.G[Program](db).Scopes())
 		query = queryPatcherPreloadProgramStructureUnits{}.Patch(views.View{}, r, query)
 		p, err := query.Where("id = ?", uint(id)).First(r.Context())
@@ -170,7 +175,14 @@ func handleStructureUnitCreate(v *views.View) http.Handler {
 			v.RenderPage(w, r.WithContext(ctx))
 			return
 		}
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("structure unit create: db from context", "error", dberr)
+			fieldErrors["_form"] = dberr
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := gorm.G[ProgramStructureUnit](tx).Create(r.Context(), record); err != nil {
 				return err
@@ -218,7 +230,12 @@ func handleStructureUnitUpdate(v *views.View) http.Handler {
 			http.Error(w, "invalid unit", http.StatusBadRequest)
 			return
 		}
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("structure unit update: db from context", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		existing, err := gorm.G[ProgramStructureUnit](db).Where("id = ? AND program_id = ?", unitID, parentID).First(r.Context())
 		if err != nil {
 			http.NotFound(w, r)
@@ -273,7 +290,12 @@ func handleStructureUnitDelete(v *views.View) http.Handler {
 			http.Error(w, "invalid unit", http.StatusBadRequest)
 			return
 		}
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("structure unit delete: db from context", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		existing, err := gorm.G[ProgramStructureUnit](db).Where("id = ? AND program_id = ?", unitID, parentID).First(r.Context())
 		if err != nil {
 			http.NotFound(w, r)

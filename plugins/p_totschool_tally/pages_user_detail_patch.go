@@ -8,10 +8,8 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
-	"gorm.io/gorm"
 )
 
-// tallySessionEnvironmentDefault returns the TotSchoolSession id for the current quarter.
 func registerTallyUserDetailPatch() {
 	// Patch the users.UserDetail page using InsertChildAfter to append
 	// a session environment input that allows changing the active session.
@@ -49,9 +47,9 @@ func registerTallyUserDetailPatch() {
 									Key: "tally.UserSessionTalliesChart",
 								},
 								TalliesGetter: func(ctx context.Context) ([]Tally, error) {
-									db, ok := ctx.Value("$db").(*gorm.DB)
-									if !ok || db == nil {
-										return nil, fmt.Errorf("StatLineChart: missing $db in context")
+									db, err := getters.DBFromContext(ctx)
+									if err != nil {
+										return nil, fmt.Errorf("StatLineChart: %w", err)
 									}
 									user, ok := ctx.Value("user").(p_users.User)
 									if !ok {

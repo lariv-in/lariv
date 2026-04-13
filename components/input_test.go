@@ -243,7 +243,7 @@ func TestInputManyToManyParse(t *testing.T) {
 	}
 
 	input := InputManyToMany[testAssociationModel]{Name: "Teachers"}
-	value, err := input.Parse([]string{"1", "2", "2"}, context.WithValue(context.Background(), "$db", db))
+	value, err := input.Parse([]string{"1", "2", "2"}, context.WithValue(context.Background(), getters.ContextKeyDB, db))
 	if err != nil {
 		t.Fatalf("Parse returned error: %v", err)
 	}
@@ -278,7 +278,7 @@ func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
 		Name:    "Teachers",
 		Display: getters.Key[string]("$in.Name"),
 	}
-	ctx := context.WithValue(context.Background(), "$db", db)
+	ctx := context.WithValue(context.Background(), getters.ContextKeyDB, db)
 	ctx = context.WithValue(ctx, getters.ContextKeyIn, map[string]any{
 		"Teachers": AssociationIDs{Field: "Teachers", IDs: []uint{2, 1}},
 	})
@@ -343,7 +343,7 @@ func TestFormComponentParseFormUsesRepeatedValuesForManyToMany(t *testing.T) {
 		"Teachers": {"1", "2"},
 	}.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req = req.WithContext(context.WithValue(req.Context(), "$db", db))
+	req = req.WithContext(context.WithValue(req.Context(), getters.ContextKeyDB, db))
 
 	values, errs, err := form.ParseForm(req)
 	if err != nil {

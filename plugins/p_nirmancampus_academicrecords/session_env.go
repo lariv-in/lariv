@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lariv-in/lago/getters"
 	sessions "github.com/lariv-in/lago/plugins/p_nirmancampus_sessions"
 	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
@@ -17,9 +18,8 @@ const academicRecordsEnvironmentSessionKey = "academicrecords_session"
 
 // AcademicSessionsListGetter returns session id / display label pairs for Environment[uint].
 func AcademicSessionsListGetter(ctx context.Context) ([]registry.Pair[uint, string], error) {
-	dbVal := ctx.Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
 		return []registry.Pair[uint, string]{}, nil
 	}
 	rows, err := gorm.G[sessions.Session](db).Order(`"start" DESC`).Find(ctx)
@@ -35,9 +35,8 @@ func AcademicSessionsListGetter(ctx context.Context) ([]registry.Pair[uint, stri
 
 // academicRecordsSessionEnvironmentDefault picks the active session, or the most recent by start.
 func academicRecordsSessionEnvironmentDefault(ctx context.Context) (uint, error) {
-	dbVal := ctx.Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
 		return 0, nil
 	}
 	id, err := defaultAcademicSessionID(ctx, db)

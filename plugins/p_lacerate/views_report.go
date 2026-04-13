@@ -76,7 +76,13 @@ type reportListLayer struct{}
 func (reportListLayer) Next(view views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		var reports []Report
 		if err := db.WithContext(ctx).Order("id DESC").Find(&reports).Error; err != nil {
 			slog.Error("lacerate: report list load", "error", err)
@@ -111,7 +117,13 @@ func (reportRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		targetRows, err := searchTargetsOfInterestByEmbedding(db.WithContext(ctx), *data.Report.Embedding, 6)
 		if err != nil {
 			slog.Error("lacerate: report related targets search", "error", err, "report_id", data.Report.ID)
@@ -196,7 +208,13 @@ func (m reportDetailLayer) Next(view views.View, next http.Handler) http.Handler
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		data, err := loadReportPageData(ctx, db, uint(id))
 		if err != nil {
 			slog.Error("lacerate: report detail load", "error", err, "id", id)
@@ -242,7 +260,13 @@ func (m reportCreateLayer) Next(view views.View, next http.Handler) http.Handler
 			return
 		}
 
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		var reportID uint
 		err = db.Transaction(func(tx *gorm.DB) error {
 			report := Report{Name: formData.Name, Description: formData.Description, Kind: formData.Kind}
@@ -313,7 +337,13 @@ func (m reportUpdateLayer) Next(view views.View, next http.Handler) http.Handler
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		reportID := record.Report.ID
 		err = db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Model(&Report{Model: gorm.Model{ID: reportID}}).Updates(map[string]any{
@@ -375,7 +405,13 @@ func (m reportDeleteLayer) Next(view views.View, next http.Handler) http.Handler
 			return
 		}
 		reportID := record.Report.ID
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		err = db.Transaction(func(tx *gorm.DB) error {
 			if err := deleteReportKindExtensionRows(tx, reportID); err != nil {
 				return err

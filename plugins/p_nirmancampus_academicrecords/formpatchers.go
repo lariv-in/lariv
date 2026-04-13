@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -51,10 +52,9 @@ func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, valu
 		values["Date"] = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, tz)
 	}
 
-	dbVal := r.Context().Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("formPatcherAcademicRecordCreateFromProgramStructure: missing $db in context")
+	db, dberr := getters.DBFromContext(r.Context())
+	if dberr != nil {
+		slog.Error("formPatcherAcademicRecordCreateFromProgramStructure: db from context", "error", dberr)
 		return values, formErrors
 	}
 	if formErrors == nil {
@@ -108,9 +108,8 @@ func (formPatcherAcademicRecordUpdate) Patch(_ views.View, r *http.Request, valu
 	if err != nil {
 		return values, formErrors
 	}
-	dbVal := r.Context().Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
+	db, dberr := getters.DBFromContext(r.Context())
+	if dberr != nil {
 		return values, formErrors
 	}
 	rec, err := gorm.G[AcademicRecord](db).Where("id = ?", id).First(r.Context())

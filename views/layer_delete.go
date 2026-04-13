@@ -56,7 +56,15 @@ func (m LayerDelete[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 		id := uint(reflect.ValueOf(record).FieldByName("ID").Uint())
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("views: layer delete: db from context", "error", dberr)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": dberr,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		query := gorm.G[T](db).Where("id = ?", id)
 		query = m.QueryPatchers.Apply(view, r, query)
 		_, err = query.Delete(ctx)

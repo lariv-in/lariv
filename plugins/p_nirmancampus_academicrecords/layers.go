@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -27,9 +28,9 @@ func (academicRecordProgramStructureUnitContextLayer) Next(_ views.View, next ht
 			return
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("attachAcademicRecordProgramStructureUnitContext: missing $db in context")
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("attachAcademicRecordProgramStructureUnitContext: db from context", "error", dberr)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -73,7 +74,7 @@ func (academicRecordCreateQueryDefaultsLayer) Next(_ views.View, next http.Handl
 			}
 		}
 		if r.URL.Query().Get("SessionID") == "" {
-			if db, ok := r.Context().Value("$db").(*gorm.DB); ok && db != nil {
+			if db, err := getters.DBFromContext(r.Context()); err == nil {
 				sessionID, restrict := selectedAcademicRecordSessionFilter(db, r.Context())
 				if restrict && sessionID > 0 {
 					vals["SessionID"] = sessionID

@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/lariv-in/lago/getters"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +22,7 @@ type DBLayer struct {
 
 func (m DBLayer) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "$db", m.DB)))
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), getters.ContextKeyDB, m.DB)))
 	})
 }
 

@@ -6,23 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lariv-in/lago/lago"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
-
-type AIConfig struct {
-	APIKey string `toml:"apiKey"`
-	Model  string `toml:"model"`
-}
-
-var aiConfig = &AIConfig{}
-
-func (c *AIConfig) PostConfig() {}
-
-func init() {
-	lago.RegistryConfig.Register("p_totschool_proposals", aiConfig)
-}
 
 // generationTask is sent through the work channel to the AI worker.
 type generationTask struct {

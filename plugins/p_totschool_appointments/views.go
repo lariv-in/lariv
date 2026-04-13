@@ -2,6 +2,7 @@ package p_totschool_appointments
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -26,8 +27,9 @@ func (AppointmentDetailCtxLayer) Next(_ views.View, next http.Handler) http.Hand
 			return
 		}
 
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok {
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("AppointmentDetailCtxLayer: db from context", "error", dberr)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -77,7 +79,11 @@ func generateHandler(v *views.View) http.Handler {
 			return
 		}
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 		user := p_users.UserFromContext(r.Context(), "appointments.generateHandler")
 
 		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
@@ -100,7 +106,11 @@ func cancelHandler(v *views.View) http.Handler {
 			return
 		}
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
 		if err != nil {
@@ -119,7 +129,11 @@ func cancelHandler(v *views.View) http.Handler {
 func aiEditFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
 		if err != nil {
@@ -139,7 +153,11 @@ func aiEditHandler(v *views.View) http.Handler {
 			return
 		}
 		idStr := r.PathValue("id")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
 		if err != nil {

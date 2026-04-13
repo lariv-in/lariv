@@ -2,7 +2,6 @@ package getters
 
 import (
 	"context"
-	"errors"
 
 	"gorm.io/gorm"
 )
@@ -16,9 +15,9 @@ func Association[T, V any](foreignKeyGetter Getter[V]) Getter[T] {
 			return zero, err
 		}
 
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok {
-			return zero, errors.New("Couldn't load db connection from context")
+		db, err := DBFromContext(ctx)
+		if err != nil {
+			return zero, err
 		}
 
 		result, err := gorm.G[T](db).Where("id = ?", fkValue).Take(ctx)

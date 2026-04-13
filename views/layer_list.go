@@ -45,7 +45,15 @@ type LayerList[T any] struct {
 func (m LayerList[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("views: layer list: db from context", "error", dberr)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": dberr,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		var query gorm.ChainInterface[T] = gorm.G[T](db).Scopes()
 
 		var rootSchema *schema.Schema

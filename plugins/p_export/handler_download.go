@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
 
 func exportDB(r *http.Request, op string) *gorm.DB {
-	raw := r.Context().Value("$db")
-	db, ok := raw.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("export: missing $db", "operation", op, "dbType", fmt.Sprintf("%T", raw))
+	db, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		slog.Error("export: db from context", "operation", op, "error", err)
 		return nil
 	}
 	return db

@@ -57,9 +57,9 @@ func (targetOfInterestRelatedLayer) Next(_ views.View, next http.Handler) http.H
 			next.ServeHTTP(w, r)
 			return
 		}
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("lacerate: related targets of interest: missing db in context")
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: related targets of interest: db from context", "error", dberr)
 			next.ServeHTTP(w, r)
 			return
 		}

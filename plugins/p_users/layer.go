@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -50,9 +51,9 @@ func resolveAuth(r *http.Request) context.Context {
 		return nil
 	}
 
-	db, ok := r.Context().Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		slog.Warn("resolveAuth: missing $db in context")
+	db, dberr := getters.DBFromContext(r.Context())
+	if dberr != nil {
+		slog.Warn("resolveAuth: db from context", "err", dberr)
 		return nil
 	}
 	user, err := gorm.G[User](db).Where("id = ?", uint(userID)).Last(r.Context())
@@ -117,9 +118,9 @@ func (m RoleAuthorizationLayer) Next(_ views.View, next http.Handler) http.Handl
 		user := UserFromContext(r.Context(), "RoleAuthorizationLayer")
 
 		var roleName string
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok {
-			slog.Error("RoleAuthorizationLayer: missing $db in context")
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("RoleAuthorizationLayer: db from context", "error", dberr)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}

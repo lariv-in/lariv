@@ -1,11 +1,11 @@
 package p_nirmancampus_programs
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
@@ -51,7 +51,11 @@ func (p queryPatcherUniversity) Patch(_ views.View, r *http.Request, q gorm.Chai
 		return q
 	}
 
-	db := r.Context().Value("$db").(*gorm.DB)
+	db, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		slog.Error("queryPatcherProgramUniversity: db from context", "error", err)
+		return q
+	}
 	col, ok := fieldDBName[Program](db, "University")
 	if !ok {
 		return q
@@ -84,7 +88,11 @@ func (p queryPatcherProgramType) Patch(_ views.View, r *http.Request, q gorm.Cha
 		return q
 	}
 
-	db := r.Context().Value("$db").(*gorm.DB)
+	db, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		slog.Error("queryPatcherProgramType: db from context", "error", err)
+		return q
+	}
 	col, ok := fieldDBName[Program](db, "ProgramType")
 	if !ok {
 		return q
@@ -126,13 +134,10 @@ func (programScopeByRole) Patch(_ views.View, r *http.Request, q gorm.ChainInter
 	ctx := r.Context()
 	user, roleName := p_users.UserAndRoleFromContext(ctx, "ProgramScopeByRole")
 
-	dbVal := ctx.Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("ProgramScopeByRole: missing or invalid $db in context",
-			"type", fmt.Sprintf("%T", dbVal),
-		)
-		panic("ProgramScopeByRole: $db is nil or wrong type in context")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("ProgramScopeByRole: db from context", "error", err)
+		panic("ProgramScopeByRole: " + err.Error())
 	}
 
 	switch roleName {

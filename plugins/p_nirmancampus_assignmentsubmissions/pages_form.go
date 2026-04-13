@@ -23,8 +23,8 @@ func assignmentSubmissionFormAcademicRecordGetter() getters.Getter[p_nirmancampu
 		if err != nil || id == 0 {
 			return zero, nil
 		}
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok || db == nil {
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
 			return zero, nil
 		}
 		var rec p_nirmancampus_academicrecords.AcademicRecord

@@ -58,7 +58,15 @@ func (m LayerDetail[T]) Next(view View, next http.Handler) http.Handler {
 				return
 			}
 
-			db := ctx.Value("$db").(*gorm.DB)
+			db, dberr := getters.DBFromContext(ctx)
+			if dberr != nil {
+				slog.Error("views: layer detail: db from context", "error", dberr)
+				ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+					"_global": dberr,
+				})
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
 			query := m.QueryPatchers.Apply(view, r, gorm.G[T](db).Scopes())
 			instance, err := query.Where("ID = ?", id).First(ctx)
 			if err != nil {

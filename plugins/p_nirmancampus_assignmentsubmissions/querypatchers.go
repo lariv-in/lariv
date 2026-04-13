@@ -1,11 +1,11 @@
 package p_nirmancampus_assignmentsubmissions
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
@@ -22,11 +22,10 @@ func (assignmentSubmissionScopeByRole) Patch(_ views.View, r *http.Request, quer
 	ctx := r.Context()
 	user, roleName := p_users.UserAndRoleFromContext(ctx, "AssignmentSubmissionScopeByRole")
 
-	dbVal := ctx.Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("AssignmentSubmissionScopeByRole: missing or invalid $db in context", "type", fmt.Sprintf("%T", dbVal))
-		panic("AssignmentSubmissionScopeByRole: $db is nil or wrong type in context")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("AssignmentSubmissionScopeByRole: db from context", "error", err)
+		panic("AssignmentSubmissionScopeByRole: " + err.Error())
 	}
 
 	switch roleName {

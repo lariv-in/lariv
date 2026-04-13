@@ -37,7 +37,15 @@ type LayerSingleton[T any] struct {
 func (m LayerSingleton[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("views: layer singleton: db from context", "error", dberr)
+			ctx = ContextWithErrorsAndValues(ctx, nil, map[string]error{
+				"_global": dberr,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 
 		if r.Method != http.MethodPost {
 			instance := new(T)

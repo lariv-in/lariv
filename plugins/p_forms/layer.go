@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
@@ -67,8 +68,8 @@ func (AttachFormForParentFieldsPath) Next(_ views.View, next http.Handler) http.
 			next.ServeHTTP(w, r)
 			return
 		}
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
 			next.ServeHTTP(w, r)
 			return
 		}

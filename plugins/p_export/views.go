@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
-	"gorm.io/gorm"
 )
 
 const exportCatalogContextKey = "export.catalog"
@@ -18,9 +18,9 @@ type catalogLayer struct{}
 
 func (catalogLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("export: missing $db in catalog layer")
+		db, err := getters.DBFromContext(r.Context())
+		if err != nil {
+			slog.Error("export: catalog layer db from context", "error", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}

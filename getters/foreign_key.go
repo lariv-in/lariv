@@ -22,9 +22,9 @@ func ForeignKey[T any, K comparable, V any](foreignKeyGetter Getter[K], fieldPat
 			return zeroV, err
 		}
 
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok {
-			return zeroV, errors.New("Couldn't load db connection from context")
+		db, err := DBFromContext(ctx)
+		if err != nil {
+			return zeroV, err
 		}
 
 		instance, err := gorm.G[T](db).Where("id = ?", fkValue).First(ctx)

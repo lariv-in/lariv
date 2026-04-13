@@ -11,7 +11,6 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/views"
-	"gorm.io/gorm"
 )
 
 const academicRecordDetailSubmissionsContextKey = "academic_record_submissions_table"
@@ -34,9 +33,9 @@ func (academicRecordSubmissionsContextLayer) Next(_ views.View, next http.Handle
 			return
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("attachAcademicRecordSubmissionsContext: missing $db in context")
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("attachAcademicRecordSubmissionsContext: db from context", "error", dberr)
 			next.ServeHTTP(w, r)
 			return
 		}

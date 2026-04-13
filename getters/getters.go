@@ -8,6 +8,7 @@ import (
 
 // Context key constants for shared use across packages.
 const (
+	ContextKeyDB    = "$db"
 	ContextKeyError = "$error"
 	ContextKeyGet   = "$get"
 	ContextKeyIn    = "$in"

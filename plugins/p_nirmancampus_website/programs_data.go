@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 )
 
@@ -19,7 +20,7 @@ type websiteProgram struct {
 }
 
 func buildProgramsPageData(ctx context.Context) programsPageData {
-	db, err := homePageDB(ctx)
+	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		slog.Error("nirmancampus_website: missing db while building programs page", "error", err)
 		return programsPageData{}

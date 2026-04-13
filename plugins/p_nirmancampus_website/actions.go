@@ -2,13 +2,13 @@ package p_nirmancampus_website
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_announcements"
 	"gorm.io/gorm"
 )
@@ -31,7 +31,7 @@ type homeImportantLink struct {
 }
 
 func buildHomePageData(ctx context.Context) homePageData {
-	db, err := homePageDB(ctx)
+	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		slog.Error("nirmancampus_website: missing db while building home page", "error", err)
 		return homePageData{}
@@ -41,14 +41,6 @@ func buildHomePageData(ctx context.Context) homePageData {
 		Announcements:  loadHomeAnnouncements(ctx, db, time.Now()),
 		ImportantLinks: loadHomeImportantLinks(ctx, db),
 	}
-}
-
-func homePageDB(ctx context.Context) (*gorm.DB, error) {
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		return nil, fmt.Errorf("missing $db in context")
-	}
-	return db, nil
 }
 
 func loadHomeAnnouncements(ctx context.Context, db *gorm.DB, now time.Time) []homeAnnouncement {
@@ -92,22 +84,11 @@ func loadHomeImportantLinks(ctx context.Context, db *gorm.DB) []homeImportantLin
 		if title == "" {
 			continue
 		}
-
-		url := ""
-		if l.IsLink {
-			url = strings.TrimSpace(l.Link)
-		} else {
-			url = fmt.Sprintf("/important-links/item/%d/", l.ID)
-		}
-
-		if strings.TrimSpace(url) == "" {
+		url := strings.TrimSpace(ImportantLinkPublicURL(l))
+		if url == "" {
 			continue
 		}
-
-		items = append(items, homeImportantLink{
-			Title: title,
-			URL:   url,
-		})
+		items = append(items, homeImportantLink{Title: title, URL: url})
 	}
 	return items
 }

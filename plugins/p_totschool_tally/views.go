@@ -48,7 +48,12 @@ func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSessio
 func TallyDashboardHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := p_users.UserFromContext(r.Context(), "TallyDashboardHandler")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("TallyDashboardHandler: db from context", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		var roleName string
 		if !user.IsSuperuser {
@@ -84,7 +89,12 @@ func TallyDashboardHandler(v *views.View) http.Handler {
 func TallyLeaderboardHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := p_users.UserFromContext(r.Context(), "TallyLeaderboardHandler")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("TallyLeaderboardHandler: db from context", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		session := getSessionFromEnvironment(db, r.Context())
 
@@ -106,7 +116,11 @@ type tallyDetailQueryPatcher struct{}
 func (tallyDetailQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
 	user := p_users.UserFromContext(r.Context(), "TallyDetailQueryPatcher")
 
-	db := r.Context().Value("$db").(*gorm.DB)
+	db, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		slog.Error("TallyDetailQueryPatcher: db from context", "error", err)
+		panic("TallyDetailQueryPatcher: " + err.Error())
+	}
 	var roleName string
 	if !user.IsSuperuser {
 		db.Model(&p_users.Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
@@ -128,7 +142,12 @@ func (requireAdminLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := p_users.UserFromContext(r.Context(), "tally.requireAdminLayer")
 
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("tally.requireAdminLayer: db from context", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		var roleName string
 		if !user.IsSuperuser {
 			db.Model(&p_users.Role{}).Where("id = ?", user.RoleID).Select("name").Scan(&roleName)
@@ -149,13 +168,10 @@ func (tallyListQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.Cha
 	ctx := r.Context()
 	user := p_users.UserFromContext(ctx, "TallyListQueryPatcher")
 
-	dbVal := ctx.Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("TallyListQueryPatcher: missing or invalid $db in context",
-			"type", fmt.Sprintf("%T", dbVal),
-		)
-		panic("TallyListQueryPatcher: $db is nil or wrong type in context")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("TallyListQueryPatcher: db from context", "error", err)
+		panic("TallyListQueryPatcher: " + err.Error())
 	}
 	// Always join the related user so table columns can access User.Name.
 	query = query.Joins(clause.JoinTarget{Association: "User"}, nil)
@@ -224,7 +240,12 @@ var TallyListQueryPatcher views.QueryPatcher[Tally] = tallyListQueryPatcher{}
 func TallyDailyFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := p_users.UserFromContext(r.Context(), "TallyDailyFormHandler")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("TallyDailyFormHandler: db from context", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		today := time.Now().Truncate(24 * time.Hour)
 
 		tally, err := gorm.G[Tally](db).Where("user_id = ? AND date = ?", user.ID, today).First(r.Context())

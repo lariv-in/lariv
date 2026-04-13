@@ -12,7 +12,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/views"
-	"gorm.io/gorm"
 )
 
 const studentDetailAcademicRecordsContextKey = "student_academic_records_table"
@@ -34,9 +33,9 @@ func (studentAcademicRecordsContextLayer) Next(_ views.View, next http.Handler) 
 			return
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("attachStudentAcademicRecordsContext: missing $db in context")
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("attachStudentAcademicRecordsContext: db from context", "error", dberr)
 			next.ServeHTTP(w, r)
 			return
 		}

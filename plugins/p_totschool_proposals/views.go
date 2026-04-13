@@ -20,11 +20,9 @@ import (
 
 // proposalDB returns $db from context; logs and returns nil if missing or wrong type.
 func proposalDB(r *http.Request, op string) *gorm.DB {
-	raw := r.Context().Value("$db")
-	db, ok := raw.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error(op+": missing or invalid $db in context",
-			"dbType", fmt.Sprintf("%T", raw))
+	db, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		slog.Error(op+": db from context", "error", err)
 		return nil
 	}
 	return db

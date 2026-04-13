@@ -9,7 +9,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_users"
 )
 
-// tallySessionEnvironmentDefault returns the TotSchoolSession id for the current quarter.
 func registerTallyPages() {
 	lago.RegistryPage.Register("tally.TallyMenu", components.SidebarMenu{
 		Title: getters.Static("Totschool Tally"),

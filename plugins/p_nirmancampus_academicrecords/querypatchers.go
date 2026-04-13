@@ -1,11 +1,11 @@
 package p_nirmancampus_academicrecords
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
@@ -22,13 +22,10 @@ func (academicRecordScopeByRole) Patch(_ views.View, r *http.Request, query gorm
 	ctx := r.Context()
 	user, roleName := p_users.UserAndRoleFromContext(ctx, "AcademicRecordScopeByRole")
 
-	dbVal := ctx.Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("AcademicRecordScopeByRole: missing or invalid $db in context",
-			"type", fmt.Sprintf("%T", dbVal),
-		)
-		panic("AcademicRecordScopeByRole: $db is nil or wrong type in context")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("AcademicRecordScopeByRole: db from context", "error", err)
+		panic("AcademicRecordScopeByRole: " + err.Error())
 	}
 
 	// AuthenticationLayer sets $role to "superuser" for superusers, else Role.name from DB.
@@ -54,12 +51,9 @@ var AcademicRecordScopeByRole views.QueryPatcher[AcademicRecord] = academicRecor
 type academicRecordListSessionFilter struct{}
 
 func (academicRecordListSessionFilter) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[AcademicRecord]) gorm.ChainInterface[AcademicRecord] {
-	dbVal := r.Context().Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("academicRecordListSessionFilter: missing or invalid $db in context",
-			"type", fmt.Sprintf("%T", dbVal),
-		)
+	db, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		slog.Error("academicRecordListSessionFilter: db from context", "error", err)
 		return query
 	}
 	id, restrict := selectedAcademicRecordSessionFilter(db, r.Context())

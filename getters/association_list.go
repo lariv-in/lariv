@@ -2,7 +2,6 @@ package getters
 
 import (
 	"context"
-	"errors"
 
 	"gorm.io/gorm"
 )
@@ -19,9 +18,9 @@ func AssociationList[T any](idsGetter Getter[[]uint], order string, preloads ...
 			return nil, nil
 		}
 
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok {
-			return nil, errors.New("Couldn't load db connection from context")
+		db, err := DBFromContext(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		chain := gorm.G[T](db).Where("id IN ?", ids)

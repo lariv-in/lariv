@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -20,8 +21,8 @@ func importantLinkItemHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -69,7 +70,7 @@ func importantLinkItemHandler(_ *views.View) http.Handler {
 
 func init() {
 	_ = lago.RegistryRoute.Register("nirmancampus_website.ImportantLinkItemRoute", lago.Route{
-		Path:    "/important-links/item/{id}/",
+		Path:    importantLinkItemBasePath + "{id}/",
 		Handler: lago.NewDynamicView("nirmancampus_website.ImportantLinkItemView"),
 	})
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/lariv-in/lago/getters"
 	"gorm.io/gorm"
 )
 
@@ -23,9 +24,9 @@ type studentZoneItem struct {
 }
 
 func buildStudentZonePageData(ctx context.Context) studentZonePageData {
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("nirmancampus_website: missing db while building student zone page")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("nirmancampus_website: missing db while building student zone page", "error", err)
 		return studentZonePageData{}
 	}
 

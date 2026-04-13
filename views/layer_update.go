@@ -61,7 +61,15 @@ func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("views: layer update: db from context", "error", dberr)
+			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
+				"_global": dberr,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		regularValues, associationValues := SplitAssociationValues(values)
 		key, err := m.Key(ctx)
 		if err != nil {

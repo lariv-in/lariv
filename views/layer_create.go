@@ -56,7 +56,15 @@ func (m LayerCreate[T]) Next(view View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("views: layer create: db from context", "error", dberr)
+			ctx = ContextWithErrorsAndValues(ctx, values, map[string]error{
+				"_global": dberr,
+			})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		regularValues, associationValues := SplitAssociationValues(values)
 		record := new(T)
 		err = db.Transaction(func(tx *gorm.DB) error {

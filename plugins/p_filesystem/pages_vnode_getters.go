@@ -85,7 +85,7 @@ func currentVNodePath() getters.Getter[string] {
 		if err != nil {
 			return "", err
 		}
-		db, _ := ctx.Value("$db").(*gorm.DB)
+		db, _ := getters.DBFromContext(ctx)
 		if db == nil {
 			return "", fmt.Errorf("missing database in context")
 		}
@@ -289,7 +289,7 @@ func vnodeChildrenCountForKey(key string) getters.Getter[string] {
 		if err != nil {
 			return "", err
 		}
-		db, _ := ctx.Value("$db").(*gorm.DB)
+		db, _ := getters.DBFromContext(ctx)
 		if db == nil {
 			return "", fmt.Errorf("missing database in context")
 		}
@@ -337,7 +337,7 @@ func parentOfCurrentVNodeGetter() getters.Getter[VNode] {
 			var zero VNode
 			return zero, fmt.Errorf("no parent directory")
 		}
-		db, _ := ctx.Value("$db").(*gorm.DB)
+		db, _ := getters.DBFromContext(ctx)
 		if db == nil {
 			var zero VNode
 			return zero, fmt.Errorf("missing database in context")

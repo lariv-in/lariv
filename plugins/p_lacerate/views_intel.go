@@ -49,7 +49,12 @@ func (intelRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: intel related: db from context", "error", dberr)
+			next.ServeHTTP(w, r)
+			return
+		}
 		ctx = ctxWithIntelEvents(ctx, db, intel.ID)
 		targetRows, err := searchTargetsOfInterestByEmbedding(db.WithContext(ctx), intel.Embedding, 6)
 		if err != nil {

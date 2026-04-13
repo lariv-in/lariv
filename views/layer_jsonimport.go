@@ -72,7 +72,14 @@ func (m LayerJsonImport[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("views: layer json import: db from context", "error", dberr)
+			fieldErrors["_form"] = dberr
+			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		if len(records) > 0 {
 			if err := db.Transaction(func(tx *gorm.DB) error {
 				return gorm.G[T](tx).CreateInBatches(r.Context(), &records, 100)

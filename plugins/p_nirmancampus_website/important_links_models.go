@@ -1,10 +1,24 @@
 package p_nirmancampus_website
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"gorm.io/gorm"
 )
+
+// importantLinkItemBasePath is the URL prefix for ImportantLinkItemRoute (file/download handler).
+const importantLinkItemBasePath = "/important-links/item/"
+
+// ImportantLinkPublicURL returns the public href for a row (trimmed external link, or item path for downloads).
+func ImportantLinkPublicURL(l ImportantLink) string {
+	if l.IsLink {
+		return strings.TrimSpace(l.Link)
+	}
+	return fmt.Sprintf("%s%d/", importantLinkItemBasePath, l.ID)
+}
 
 type ImportantLink struct {
 	gorm.Model

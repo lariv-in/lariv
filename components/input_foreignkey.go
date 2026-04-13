@@ -145,7 +145,11 @@ func (e InputForeignKey[T]) Parse(v any, ctx context.Context) (any, error) {
 	}
 	modelValue := new(T)
 
-	db := ctx.Value("$db").(*gorm.DB)
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("InputForeignKey: db from context", "error", err)
+		return nil, err
+	}
 
 	row, err := gorm.G[T](db).Where("ID = ?", i).First(ctx)
 	if err != nil {

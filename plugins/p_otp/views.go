@@ -54,9 +54,9 @@ func phoneOtpRequestHandler(v *views.View) http.Handler {
 			fieldErrors["Identifier"] = fmt.Errorf("phone number is required")
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("PhoneOtpRequestHandler: missing or invalid *gorm.DB in context")
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("PhoneOtpRequestHandler: db from context", "error", dberr)
 			fieldErrors["Identifier"] = fmt.Errorf("internal error. please try again later")
 		}
 
@@ -107,9 +107,9 @@ func emailOtpRequestHandler(v *views.View) http.Handler {
 			fieldErrors["Identifier"] = fmt.Errorf("email address is required")
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("EmailOtpRequestHandler: missing or invalid *gorm.DB in context")
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("EmailOtpRequestHandler: db from context", "error", dberr)
 			fieldErrors["Identifier"] = fmt.Errorf("internal error. please try again later")
 		}
 
@@ -181,9 +181,9 @@ func otpVerifyHandler(v *views.View) http.Handler {
 			fieldErrors["Otp"] = fmt.Errorf("OTP must be 6 digits")
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("OtpVerifyHandler: missing or invalid *gorm.DB in context")
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("OtpVerifyHandler: db from context", "error", dberr)
 			fieldErrors["Otp"] = fmt.Errorf("internal error. please try again later")
 		}
 

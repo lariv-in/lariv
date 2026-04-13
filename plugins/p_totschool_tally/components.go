@@ -13,7 +13,6 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
-	"gorm.io/gorm"
 
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -303,9 +302,9 @@ func (t *TallySessionEntries) SetChildren(children []components.PageInterface) {
 }
 
 func (t TallySessionEntries) Build(ctx context.Context) Node {
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("TallySessionEntries: missing or invalid $db in context")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("TallySessionEntries: db from context", "error", err)
 		return Div(Text("Error loading tally entries"))
 	}
 

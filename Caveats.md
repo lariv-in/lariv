@@ -1,7 +1,7 @@
 # Caveats When Working On This Codebase
 
 - NEVER write go.mod or go.sum manually, use go mod init, go mod tidy -e, go work use for project management, If you can't run the required commands to manage go.mod and go.sum, then ask the user to run the commands.
-- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patcher*.go`, layer types, and helpers in `crud.go`), `registry/`, and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
+- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patcher*.go`, layer types, and helpers in `crud.go`), `registry/`, plugin `actions*.go` (business logic on models), and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
 - In nearly all cases, take the address of components before inserting them into something that requires `PageInterface`. Otherwise, the value will not implement `MutableParentInterface` and its children will not be patchable.
 
 - When you do add a component, it should implement at least `PageInterface` from `components/page.go`.
@@ -10,7 +10,7 @@
 - If a component allows modifying its children, it should implement `MutableParentInterface` from `components/parent.go`.
 - If a component is an input, it needs to implement `InputInterface` from `components/input.go` so that `FormComponent` can detect it and parse its fields.
 
-- Whenever something requires a value that can depend on the request, it should use a `Getter` from `getters/getters.go` (shared context key constants live there too: `ContextKeyError`, `ContextKeyGet`, `ContextKeyIn`).
+- Whenever something requires a value that can depend on the request, it should use a `Getter` from `getters/getters.go` (shared context key constants live there too: `ContextKeyDB`, `ContextKeyError`, `ContextKeyGet`, `ContextKeyIn`).
 - The `getters/` package is organized by topic in sibling files (no subpackages), e.g. `key.go` for `Key`, `deref.go`, `format.go`, `any.go`, `association.go`, `association_list.go`, `join_association_list.go`, `association_ids.go`, `foreign_key.go`, `select.go` / `select_multi.go`, `navigate.go`, and helpers like `parse_int.go` / `parse_uint.go`. Browse those files or `grep` for `func ` when looking for an existing combinator.
 
 - Before writing a custom getter, always confirm that no existing getter in `getters/` (and no small composition of existing getters) already covers the use case:
@@ -42,6 +42,13 @@
    - `filesystem.MultiSelectRoute` is a file picker for asset-style many-to-many fields; files are selectable, but clicking a directory should browse into it instead of selecting it.
 
 - time.Time should always be handled with consideration to the timezone, timezone is injected into the context in $tz key (*time.Location).
+
+# Database in request context
+
+- The app’s global HTTP stack attaches a `*gorm.DB` to each request context under **`getters.ContextKeyDB`** (string value `"$db"`). See `lago.DBLayer` in `lago/layers.go`.
+- **Do not** duplicate `ctx.Value("$db").(*gorm.DB)` or `r.Context().Value("$db")` type-assert patterns across the codebase. Use **`getters.DBFromContext(ctx)`** (`getters/db_context.go`), which returns `(*gorm.DB, error)` when the value is missing, not a `*gorm.DB`, or nil.
+- In HTTP handlers, call `getters.DBFromContext(r.Context())` (or your plugin’s thin wrapper if it only forwards to that, e.g. `filesystemDB`, `exportDB`).
+- **Tests** that need a DB in context should use `context.WithValue(ctx, getters.ContextKeyDB, db)` so the key stays consistent with production.
 
 # Choice fields (string columns)
 
@@ -102,6 +109,13 @@ For plugins with many registered pages, prefer **several files in the plugin roo
 
 See `plugins/p_nirmancampus_programs` for a concrete layout using this pattern.
 
+# Plugin actions (`actions.go`, `actions_*.go`)
+
+- **Files:** `actions.go` holds action functions for the plugin; split into **`actions_<area>.go`** when one file gets large or concerns separate domains (same idea as `pages_<area>.go`). Keep everything in the **plugin root package**, not a subpackage.
+- **Role:** functions that **take, mutate, load, or return** one or more **data models** (GORM structs and related types). This is where **domain / business logic** lives—rules, invariants, orchestration across models, and operations that are not just HTTP or UI wiring.
+- **Not here:** page trees (`pages*.go`), view layers and handlers, thin `init()` registration only, or getters whose job is only to read request context for components. Call actions from views, commands, generators, or other actions when behavior belongs in the domain layer.
+- **Mental model:** like **methods on a Django model class** (or small groups of related model operations): behavior centered on the model(s), callable from multiple entry points (HTTP, CLI, jobs), instead of duplicating the same logic inside each handler.
+
 # HTTP routes nested under another app's prefix
 
 When a plugin mounts HTTP routes under another plugin's `AppUrl` (e.g. Students at `/students/`), use an **`addon/<slug>/`** segment after that base so your subtree does not structurally overlap the host's dynamic routes.
@@ -117,7 +131,7 @@ A view is the primary HTTP handler for a route. A `*views.View` (`views/views.go
 - which `PageInterface` to render (`PageName` + `PageLookup`)
 - an **ordered** list of per-route layers (`Layers`), each implementing `views.Layer` (`Next(View, http.Handler) http.Handler`)
 
-Global HTTP concerns (DB, `$request`, etc.) live in `views.GlobalLayer` and app registration, not inside the view struct. Build routes from `lago.GetPageView("plugin.PageName")`, then chain `WithLayer("stable.key", layer)`.
+Global HTTP concerns (DB via `getters.ContextKeyDB`, `$request`, etc.) live in `views.GlobalLayer` and app registration, not inside the view struct. Build routes from `lago.GetPageView("plugin.PageName")`, then chain `WithLayer("stable.key", layer)`.
 
 
 **HTMX redirects:** use `views.HtmxRedirect(w, r, url, code)` (`views/htmx_redirect.go`) anywhere you would call `http.Redirect` for user-visible navigation. When `HX-Request` is `true`, it sets the `HX-Redirect` header and responds with `200`; otherwise it calls `http.Redirect` with the same `code` you pass (e.g. `http.StatusSeeOther` after POST, `http.StatusMovedPermanently` where appropriate). Do not call `http.Redirect` directly in app or plugin handlers unless you have a rare reason to bypass HTMX. `lago.RedirectView` registers a view whose `RedirectLayer` resolves a URL getter and ends with `views.HtmxRedirect(..., http.StatusMovedPermanently)`.

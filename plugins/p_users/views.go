@@ -41,7 +41,11 @@ type authenticatedUserDetailLayer struct{}
 func (authenticatedUserDetailLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authUser := UserFromContext(r.Context(), "authenticatedUserDetailLayer")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 		user, err := gorm.G[User](db).Where("id = ?", authUser.ID).First(r.Context())
 		if err != nil {
 			http.NotFound(w, r)
@@ -70,7 +74,11 @@ func loginHandler(v *views.View) http.Handler {
 
 		email, _ := values["Email"].(string)
 		password, _ := values["Password"].(string)
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 		user, err := Authenticate(db, email, password)
 		if err != nil {
 			fieldErrors["Password"] = fmt.Errorf("invalid email or password")
@@ -112,7 +120,11 @@ func signupHandler(v *views.View) http.Handler {
 		name, _ := values["Name"].(string)
 		email, _ := values["Email"].(string)
 		phone, _ := values["Phone"].(string)
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		if _, err := gorm.G[User](db).Where("email = ?", email).Last(r.Context()); err == nil {
 			fieldErrors["Email"] = fmt.Errorf("an account with this email already exists")
@@ -187,7 +199,11 @@ func changePasswordHandler(v *views.View) http.Handler {
 		}
 
 		authUser := UserFromContext(r.Context(), "changePasswordHandler")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 		id64, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
 		if err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
@@ -238,7 +254,11 @@ func selfChangePasswordHandler(v *views.View) http.Handler {
 		}
 
 		user := UserFromContext(r.Context(), "selfChangePasswordHandler")
-		db := r.Context().Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 		if err := changeUserPassword(db, user.ID, newPassword); err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)
 			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)

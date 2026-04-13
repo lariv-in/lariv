@@ -45,10 +45,9 @@ func sourceRestartWorkerHandler(v *views.View) http.Handler {
 			http.NotFound(w, r)
 			return
 		}
-		rawDB := r.Context().Value("$db")
-		db, ok := rawDB.(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("lacerate: source restart worker missing db", "source_id", idStr)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("lacerate: source restart worker missing db", "source_id", idStr, "error", dberr)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -163,7 +162,13 @@ type sourceListLayer struct{}
 func (sourceListLayer) Next(view views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		var sources []Source
 		if err := db.WithContext(ctx).Order("id DESC").Find(&sources).Error; err != nil {
 			slog.Error("lacerate: source list load", "error", err)
@@ -210,7 +215,13 @@ func (m sourceDetailLayer) Next(view views.View, next http.Handler) http.Handler
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		data, err := loadSourcePageData(ctx, db, uint(id))
 		if err != nil {
 			slog.Error("lacerate: source detail load", "error", err, "id", id)
@@ -256,7 +267,13 @@ func (m sourceCreateLayer) Next(view views.View, next http.Handler) http.Handler
 			return
 		}
 
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		var sourceID uint
 		err = db.Transaction(func(tx *gorm.DB) error {
 			src := Source{Name: formData.Name, Kind: formData.Kind, Duration: formData.Duration}
@@ -329,7 +346,13 @@ func (m sourceUpdateLayer) Next(view views.View, next http.Handler) http.Handler
 			return
 		}
 
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		sourceID := record.Source.ID
 		err = db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Model(&Source{Model: gorm.Model{ID: sourceID}}).Updates(map[string]any{
@@ -391,7 +414,13 @@ func (m sourceDeleteLayer) Next(view views.View, next http.Handler) http.Handler
 			return
 		}
 		sourceID := record.Source.ID
-		db := ctx.Value("$db").(*gorm.DB)
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: db from context", "error", dberr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": dberr})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		err = db.Transaction(func(tx *gorm.DB) error {
 			if err := deleteSourceKindExtensionRows(tx, sourceID); err != nil {
 				return err

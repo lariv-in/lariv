@@ -2,7 +2,6 @@ package getters
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -21,9 +20,9 @@ func JoinAssociationList[TJoin, TTarget any](ownerIDGetter Getter[uint], ownerFi
 			return nil, nil
 		}
 
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok {
-			return nil, errors.New("Couldn't load db connection from context")
+		db, err := DBFromContext(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		ownerDBName, err := schemaFieldDBName[TJoin](db, ownerField)

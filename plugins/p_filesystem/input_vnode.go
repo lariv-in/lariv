@@ -9,7 +9,6 @@ import (
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
-	"gorm.io/gorm"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -80,7 +79,10 @@ func (e InputVNode) ParseMultipart(files []*multipart.FileHeader, ctx context.Co
 		return nil, err
 	}
 
-	db := ctx.Value("$db").(*gorm.DB)
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// Delete the previously linked VNode if one exists.
 	if e.VNode != nil {

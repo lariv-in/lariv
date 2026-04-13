@@ -9,7 +9,6 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
-	"gorm.io/gorm"
 )
 
 // lookupWorkerPOSTOnlyLayer rejects non-POST for lookup worker action routes.
@@ -37,10 +36,9 @@ func lookupRestartWorkerHandler(v *views.View) http.Handler {
 			http.NotFound(w, r)
 			return
 		}
-		rawDB := r.Context().Value("$db")
-		db, ok := rawDB.(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("lacerate: lookup restart worker missing db", "lookup_id", idStr)
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("lacerate: lookup restart worker missing db", "lookup_id", idStr, "error", dberr)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}

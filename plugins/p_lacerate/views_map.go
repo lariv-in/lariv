@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
@@ -203,7 +204,7 @@ func lacerateMapDataFromEvents(ctx context.Context, db *gorm.DB) lacerateMapData
 
 func (lacerateMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		db, _ := r.Context().Value("$db").(*gorm.DB)
+		db, _ := getters.DBFromContext(r.Context())
 		data := lacerateMapDataFromEvents(r.Context(), db)
 		ctx := context.WithValue(r.Context(), ctxKeyLacerateMapData, data)
 		next.ServeHTTP(w, r.WithContext(ctx))

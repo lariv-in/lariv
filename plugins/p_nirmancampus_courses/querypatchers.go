@@ -1,12 +1,12 @@
 package p_nirmancampus_courses
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
@@ -26,13 +26,10 @@ func (courseScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainIn
 	ctx := r.Context()
 	user, roleName := p_users.UserAndRoleFromContext(ctx, "CourseScopeByRole")
 
-	dbVal := ctx.Value("$db")
-	db, ok := dbVal.(*gorm.DB)
-	if !ok || db == nil {
-		slog.Error("CourseScopeByRole: missing or invalid $db in context",
-			"type", fmt.Sprintf("%T", dbVal),
-		)
-		panic("CourseScopeByRole: $db is nil or wrong type in context")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		slog.Error("CourseScopeByRole: db from context", "error", err)
+		panic("CourseScopeByRole: " + err.Error())
 	}
 
 	switch roleName {

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
@@ -25,8 +26,8 @@ func studentZoneItemHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		db, ok := r.Context().Value("$db").(*gorm.DB)
-		if !ok || db == nil {
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}

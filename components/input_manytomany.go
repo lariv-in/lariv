@@ -185,9 +185,9 @@ func (e InputManyToMany[T]) Parse(v any, ctx context.Context) (any, error) {
 		return AssociationIDs{Field: e.Name, IDs: ids}, fmt.Errorf("Please select at least one value")
 	}
 
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok {
-		return AssociationIDs{Field: e.Name, IDs: ids}, fmt.Errorf("Couldn't load db connection from context")
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return AssociationIDs{Field: e.Name, IDs: ids}, err
 	}
 
 	if len(ids) > 0 {
@@ -284,8 +284,8 @@ func (e InputManyToMany[T]) selectionsForIDs(ctx context.Context, ids []uint) []
 		return nil
 	}
 
-	db, ok := ctx.Value("$db").(*gorm.DB)
-	if !ok {
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
 		items := make([]registry.Pair[string, string], 0, len(ids))
 		for _, id := range ids {
 			items = append(items, registry.Pair[string, string]{Key: strconv.FormatUint(uint64(id), 10), Value: strconv.FormatUint(uint64(id), 10)})

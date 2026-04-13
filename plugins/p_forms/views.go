@@ -119,8 +119,8 @@ func (nextSortOrderOnFieldCreate) Patch(_ views.View, r *http.Request, formData 
 	if formID == 0 {
 		return formData, formErrors
 	}
-	db, ok := r.Context().Value("$db").(*gorm.DB)
-	if !ok || db == nil {
+	db, dberr := getters.DBFromContext(r.Context())
+	if dberr != nil {
 		return formData, formErrors
 	}
 	rows, _ := gorm.G[FormField](db).Where("form_id = ?", formID).Order("sort_order DESC").Limit(1).Find(r.Context())
@@ -214,8 +214,8 @@ func (slugFromTitle) Patch(_ views.View, r *http.Request, formData map[string]an
 		}
 	}
 	base := getters.TitleToFormSlug(title)
-	db, ok := r.Context().Value("$db").(*gorm.DB)
-	if !ok || db == nil {
+	db, dberr := getters.DBFromContext(r.Context())
+	if dberr != nil {
 		formData["Slug"] = base
 		return formData, formErrors
 	}
@@ -424,7 +424,11 @@ func fieldMoveHandler(moveUp bool) func(*views.View) http.Handler {
 				http.Error(w, "Invalid form ID", http.StatusBadRequest)
 				return
 			}
-			db := r.Context().Value("$db").(*gorm.DB)
+			db, dberr := getters.DBFromContext(r.Context())
+			if dberr != nil {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
 			ff, err := gorm.G[FormField](db).Where("id = ?", fieldID64).First(r.Context())
 			if err != nil {
 				http.NotFound(w, r)
@@ -470,7 +474,11 @@ func publicSubmitView() *views.View {
 			Handler: func(inner *views.View) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					slug := r.PathValue("slug")
-					db := r.Context().Value("$db").(*gorm.DB)
+					db, dberr := getters.DBFromContext(r.Context())
+					if dberr != nil {
+						http.Error(w, "Internal server error", http.StatusInternalServerError)
+						return
+					}
 					form, err := gorm.G[Form](db).Preload("FormFields", func(p gorm.PreloadBuilder) error {
 						p.Order("sort_order ASC, id ASC")
 						return nil
@@ -497,7 +505,11 @@ func publicSubmitView() *views.View {
 			Handler: func(inner *views.View) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					slug := r.PathValue("slug")
-					db := r.Context().Value("$db").(*gorm.DB)
+					db, dberr := getters.DBFromContext(r.Context())
+					if dberr != nil {
+						http.Error(w, "Internal server error", http.StatusInternalServerError)
+						return
+					}
 					form, err := gorm.G[Form](db).Preload("FormFields", func(p gorm.PreloadBuilder) error {
 						p.Order("sort_order ASC, id ASC")
 						return nil

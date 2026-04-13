@@ -29,11 +29,7 @@ func isUniqueViolation(err error) bool {
 }
 
 func filesystemDB(r *http.Request) (*gorm.DB, error) {
-	db, ok := r.Context().Value("$db").(*gorm.DB)
-	if !ok || db == nil {
-		return nil, fmt.Errorf("missing database in context")
-	}
-	return db, nil
+	return getters.DBFromContext(r.Context())
 }
 
 func parseUintPathValue(r *http.Request, name string) (uint, error) {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
@@ -168,9 +169,9 @@ func (lookupDetailLogsLayer) Next(view views.View, next http.Handler) http.Handl
 			next.ServeHTTP(w, r)
 			return
 		}
-		db, ok := ctx.Value("$db").(*gorm.DB)
-		if !ok || db == nil {
-			slog.Error("lacerate: lookup detail logs: missing db in context")
+		db, dberr := getters.DBFromContext(ctx)
+		if dberr != nil {
+			slog.Error("lacerate: lookup detail logs: db from context", "error", dberr)
 			next.ServeHTTP(w, r)
 			return
 		}
