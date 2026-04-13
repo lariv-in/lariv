@@ -342,6 +342,31 @@ func registerIntelDetail() {
 								},
 							},
 							&components.FieldTitle{
+								Getter:  getters.Static("Events"),
+								Classes: "mt-8",
+							},
+							&components.DataTable[Event]{
+								Page:     components.Page{Key: "lacerate.IntelDetailEventsTable"},
+								UID:      "lacerate-intel-events-table",
+								Subtitle: "Geocoded addresses for this intel; coordinates are stored for the map only.",
+								Classes:  "w-full",
+								Data:     getters.Key[components.ObjectList[Event]](ctxKeyIntelEvents),
+								Columns: []components.TableColumn{
+									{
+										Label: "Datetime",
+										Children: []components.PageInterface{
+											&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.Datetime")},
+										},
+									},
+									{
+										Label: "Address",
+										Children: []components.PageInterface{
+											&components.FieldText{Getter: getters.Key[string]("$row.Address")},
+										},
+									},
+								},
+							},
+							&components.FieldTitle{
 								Getter:  getters.Static("Related data"),
 								Classes: "mt-8",
 							},

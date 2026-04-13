@@ -14,6 +14,31 @@ import (
 	"gorm.io/gorm"
 )
 
+const ctxKeyIntelEvents = "intelEvents"
+
+func ctxWithIntelEvents(ctx context.Context, db *gorm.DB, intelID uint) context.Context {
+	if db == nil || db.Name() != "postgres" {
+		return context.WithValue(ctx, ctxKeyIntelEvents, components.ObjectList[Event]{
+			Number:   1,
+			NumPages: 1,
+		})
+	}
+	var evs []Event
+	if err := db.WithContext(ctx).Where("intel_id = ?", intelID).Order("datetime DESC, id DESC").Find(&evs).Error; err != nil {
+		slog.Error("lacerate: load intel events", "error", err, "intel_id", intelID)
+		return context.WithValue(ctx, ctxKeyIntelEvents, components.ObjectList[Event]{
+			Number:   1,
+			NumPages: 1,
+		})
+	}
+	return context.WithValue(ctx, ctxKeyIntelEvents, components.ObjectList[Event]{
+		Items:    evs,
+		Number:   1,
+		NumPages: 1,
+		Total:    uint64(len(evs)),
+	})
+}
+
 type intelRelatedLayer struct{}
 
 func (intelRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
@@ -25,6 +50,7 @@ func (intelRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
 			return
 		}
 		db := ctx.Value("$db").(*gorm.DB)
+		ctx = ctxWithIntelEvents(ctx, db, intel.ID)
 		targetRows, err := searchTargetsOfInterestByEmbedding(db.WithContext(ctx), intel.Embedding, 6)
 		if err != nil {
 			slog.Error("lacerate: intel related targets search", "error", err, "intel_id", intel.ID)

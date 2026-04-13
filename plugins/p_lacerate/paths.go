@@ -48,6 +48,7 @@ func registerRoutes() {
 	registerIntelRoutes()
 	registerReportRoutes()
 	registerTargetOfInterestRoutes()
+	registerMapRoutes()
 	registerLookupRoutes()
 }
 
@@ -75,6 +76,13 @@ func registerTargetOfInterestRoutes() {
 	_ = lago.RegistryRoute.Register("lacerate.TargetOfInterestDeleteRoute", lago.Route{
 		Path:    AppUrl + "toi/{id}/delete/",
 		Handler: lago.NewDynamicView("lacerate.TargetOfInterestDeleteView"),
+	})
+}
+
+func registerMapRoutes() {
+	_ = lago.RegistryRoute.Register("lacerate.MapRoute", lago.Route{
+		Path:    AppUrl + "map/",
+		Handler: lago.NewDynamicView("lacerate.MapView"),
 	})
 }
 

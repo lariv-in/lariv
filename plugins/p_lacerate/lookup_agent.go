@@ -54,6 +54,8 @@ Targets of interest are very short, accurate descriptions of entities the user c
 
 For reports: strongly prefer editing an existing report with edit_report over creating a new report with create_report when the same subject is already covered. Before creating a new report, search for an existing one for the same subject; if one already exists, update it instead of creating a duplicate. For timeline reports, edit_report.timeline_entries replaces the whole timeline; use append_timeline_entries when you only need to add new events.
 
+Intel events: get_relevant_intel includes an events array per intel row (each entry has id, datetime, address; no coordinates). Coordinates are never shown to you or the user; they are derived internally. To add an event, call attach_event with intel_id, datetime, and a precise address string—that address is sent to the Google Geocoding API to set the stored map point (required but not exposed). To remove an event, use remove_event with the event id from that intel's events list.
+
 When done, give a concise summary of what you did and what you learned.`
 
 func runLookupAgent(ctx context.Context, db *gorm.DB, lu *Lookup) error {
@@ -171,6 +173,7 @@ var lookupAgentTools = registry.NewRegistry[lookupAgentTool]()
 
 func init() {
 	for _, t := range []lookupAgentTool{
+		attachEventTool{},
 		createReportTool{},
 		editReportTool{},
 		appendTimelineEntriesTool{},
@@ -179,6 +182,7 @@ func init() {
 		createTargetOfInterestTool{},
 		editTargetOfInterestTool{},
 		getRelevantTargetsOfInterestTool{},
+		removeEventTool{},
 	} {
 		if err := lookupAgentTools.Register(t.Name(), t); err != nil {
 			panic(err)
@@ -670,7 +674,7 @@ func (getRelevantIntelTool) Name() string { return "get_relevant_intel" }
 func (getRelevantIntelTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
 		Name:        "get_relevant_intel",
-		Description: "Ranked cosine similarity search over ingested intel records.",
+		Description: "Ranked cosine similarity search over ingested intel records. Each intel includes an events array: geocoded address rows (id, datetime, address) with no coordinate fields.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
@@ -720,17 +724,29 @@ func (getRelevantIntelTool) Run(ctx context.Context, r *lookupRun, args map[stri
 		slog.Error("lacerate: lookup tool get_relevant_intel search", "error", err, "lookup_id", r.lookupID)
 		return nil, err
 	}
+	intelIDs := make([]uint, 0, len(intels))
+	for _, i := range intels {
+		if i.ID != 0 {
+			intelIDs = append(intelIDs, i.ID)
+		}
+	}
+	eventsByIntel := eventsMapsByIntelID(ctx, r.db, intelIDs)
 	out := make([]map[string]any, 0, len(intels))
 	for _, i := range intels {
 		c := strings.TrimSpace(i.Content)
 		if len(c) > 500 {
 			c = c[:497] + "..."
 		}
+		evs := eventsByIntel[i.ID]
+		if evs == nil {
+			evs = []map[string]any{}
+		}
 		out = append(out, map[string]any{
 			"id":        i.ID,
 			"source_id": i.SourceID,
 			"datetime":  i.Datetime.UTC().Format(time.RFC3339),
 			"snippet":   c,
+			"events":    evs,
 		})
 	}
 	return map[string]any{"intel": out}, nil
@@ -848,7 +864,7 @@ func (getRelevantTargetsOfInterestTool) Name() string { return "get_relevant_tar
 
 func (getRelevantTargetsOfInterestTool) Declaration() *genai.FunctionDeclaration {
 	return &genai.FunctionDeclaration{
-		Name:        "get_relevant_targets_of_interest",
+		Name: "get_relevant_targets_of_interest",
 		Description: "Ranked cosine similarity search over targets of interest with embeddings. Use natural-language query text to find related entities.",
 		ParametersJsonSchema: map[string]any{
 			"type": "object",
@@ -905,7 +921,11 @@ func (getRelevantTargetsOfInterestTool) Run(ctx context.Context, r *lookupRun, a
 		if len(snippet) > 400 {
 			snippet = snippet[:397] + "..."
 		}
-		out = append(out, map[string]any{"id": row.ID, "name": row.Name, "snippet": snippet})
+		out = append(out, map[string]any{
+			"id":      row.ID,
+			"name":    row.Name,
+			"snippet": snippet,
+		})
 	}
 	return map[string]any{"targets_of_interest": out}, nil
 }

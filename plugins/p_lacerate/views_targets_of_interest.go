@@ -53,7 +53,7 @@ func (targetOfInterestRelatedLayer) Next(_ views.View, next http.Handler) http.H
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		target, ok := ctx.Value("target_of_interest").(TargetOfInterest)
-		if !ok || target.ID == 0 || target.Embedding == nil {
+		if !ok || target.ID == 0 {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -63,6 +63,11 @@ func (targetOfInterestRelatedLayer) Next(_ views.View, next http.Handler) http.H
 			next.ServeHTTP(w, r)
 			return
 		}
+		if target.Embedding == nil {
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
 		rows, err := searchTargetsOfInterestByEmbedding(db.WithContext(ctx), *target.Embedding, 7)
 		if err != nil {
 			slog.Error("lacerate: related targets of interest search", "error", err, "target_of_interest_id", target.ID)
