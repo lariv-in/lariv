@@ -47,7 +47,7 @@ func getSessionFromEnvironment(db *gorm.DB, ctx context.Context) TotSchoolSessio
 // TallyDashboardHandler displays user stats.
 func TallyDashboardHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value("$user").(p_users.User)
+		user := p_users.UserFromContext(r.Context(), "TallyDashboardHandler")
 		db := r.Context().Value("$db").(*gorm.DB)
 
 		var roleName string
@@ -83,7 +83,7 @@ func TallyDashboardHandler(v *views.View) http.Handler {
 // TallyLeaderboardHandler displays top users per metric.
 func TallyLeaderboardHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value("$user").(p_users.User)
+		user := p_users.UserFromContext(r.Context(), "TallyLeaderboardHandler")
 		db := r.Context().Value("$db").(*gorm.DB)
 
 		session := getSessionFromEnvironment(db, r.Context())
@@ -104,10 +104,7 @@ func TallyLeaderboardHandler(v *views.View) http.Handler {
 type tallyDetailQueryPatcher struct{}
 
 func (tallyDetailQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
-	user, ok := r.Context().Value("$user").(p_users.User)
-	if !ok {
-		return query
-	}
+	user := p_users.UserFromContext(r.Context(), "TallyDetailQueryPatcher")
 
 	db := r.Context().Value("$db").(*gorm.DB)
 	var roleName string
@@ -129,11 +126,7 @@ type requireAdminLayer struct{}
 
 func (requireAdminLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok := r.Context().Value("$user").(p_users.User)
-		if !ok {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
+		user := p_users.UserFromContext(r.Context(), "tally.requireAdminLayer")
 
 		db := r.Context().Value("$db").(*gorm.DB)
 		var roleName string
@@ -154,19 +147,7 @@ type tallyListQueryPatcher struct{}
 
 func (tallyListQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Tally]) gorm.ChainInterface[Tally] {
 	ctx := r.Context()
-
-	rawUser := ctx.Value("$user")
-	if rawUser == nil {
-		slog.Error("TallyListQueryPatcher: missing $user in context – auth layer not applied?")
-		panic("TallyListQueryPatcher: $user is nil in context")
-	}
-	user, ok := rawUser.(p_users.User)
-	if !ok {
-		slog.Error("TallyListQueryPatcher: $user has unexpected type",
-			"type", fmt.Sprintf("%T", rawUser),
-		)
-		panic("TallyListQueryPatcher: $user has wrong type in context")
-	}
+	user := p_users.UserFromContext(ctx, "TallyListQueryPatcher")
 
 	dbVal := ctx.Value("$db")
 	db, ok := dbVal.(*gorm.DB)
@@ -242,7 +223,7 @@ var TallyListQueryPatcher views.QueryPatcher[Tally] = tallyListQueryPatcher{}
 // TallyDailyFormHandler handles form submission for the logged-in user's daily tally.
 func TallyDailyFormHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value("$user").(p_users.User)
+		user := p_users.UserFromContext(r.Context(), "TallyDailyFormHandler")
 		db := r.Context().Value("$db").(*gorm.DB)
 		today := time.Now().Truncate(24 * time.Hour)
 

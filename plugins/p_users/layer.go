@@ -114,13 +114,7 @@ type RoleAuthorizationLayer struct {
 
 func (m RoleAuthorizationLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userObj := r.Context().Value("$user")
-		user, ok := userObj.(User)
-		if !ok {
-			slog.Error("RoleAuthorizationLayer: missing $user in context")
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+		user := UserFromContext(r.Context(), "RoleAuthorizationLayer")
 
 		var roleName string
 		db, ok := r.Context().Value("$db").(*gorm.DB)

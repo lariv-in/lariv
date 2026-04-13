@@ -21,7 +21,7 @@ var studentApplicationsAdminLayer = p_users.RoleAuthorizationLayer{Roles: []stri
 type applicationCreatedByFormPatcher struct{}
 
 func (applicationCreatedByFormPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
-	user := r.Context().Value("$user").(p_users.User)
+	user := p_users.UserFromContext(r.Context(), "applicationCreatedByFormPatcher")
 	id := user.ID
 	formData["CreatedByID"] = &id
 	return formData, formErrors
@@ -61,7 +61,7 @@ func init() {
 			WithLayer("studentapplications.list", views.LayerList[StudentApplication]{
 				Key: getters.Static("studentapplications"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload", Value: views.QueryPatcherPreload[StudentApplication]{Fields: []string{"Program"}}},
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
 				},
 			}))
@@ -75,9 +75,7 @@ func init() {
 				Key:          getters.Static("studentapplication"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_photo", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Photo"}},
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_documents", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Documents"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload", Value: views.QueryPatcherPreload[StudentApplication]{Fields: []string{"Program", "Photo", "Documents"}}},
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
 				},
 			}))
@@ -104,9 +102,7 @@ func init() {
 				Key:          getters.Static("studentapplication"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_photo", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Photo"}},
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_documents", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Documents"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload", Value: views.QueryPatcherPreload[StudentApplication]{Fields: []string{"Program", "Photo", "Documents"}}},
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
 				},
 			}).
@@ -131,7 +127,7 @@ func init() {
 				Key:          getters.Static("studentapplication"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentApplication]{
-					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload_program", Value: views.QueryPatcherPreload[StudentApplication]{Field: "Program"}},
+					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.preload", Value: views.QueryPatcherPreload[StudentApplication]{Fields: []string{"Program"}}},
 					registry.Pair[string, views.QueryPatcher[StudentApplication]]{Key: "studentapplications.scope_by_role", Value: StudentApplicationScopeByRole},
 				},
 			}).

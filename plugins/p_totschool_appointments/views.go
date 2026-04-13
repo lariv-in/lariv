@@ -78,7 +78,7 @@ func generateHandler(v *views.View) http.Handler {
 		}
 		idStr := r.PathValue("id")
 		db := r.Context().Value("$db").(*gorm.DB)
-		user := r.Context().Value("$user").(p_users.User)
+		user := p_users.UserFromContext(r.Context(), "appointments.generateHandler")
 
 		appointment, err := gorm.G[Appointment](db).Where("id = ?", idStr).First(r.Context())
 		if err != nil {
@@ -164,14 +164,13 @@ func aiEditHandler(v *views.View) http.Handler {
 type appointmentFormCreatedByPatcher struct{}
 
 func (appointmentFormCreatedByPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
-	user := r.Context().Value("$user").(p_users.User)
+	user := p_users.UserFromContext(r.Context(), "appointmentFormCreatedByPatcher")
 	formData["CreatedByID"] = user.ID
 	return formData, formErrors
 }
 
 func scopeAppointmentsQueryToCurrentUser(r *http.Request, query gorm.ChainInterface[Appointment]) gorm.ChainInterface[Appointment] {
-	user := r.Context().Value("$user").(p_users.User)
-	role, _ := r.Context().Value("$role").(string)
+	user, role := p_users.UserAndRoleFromContext(r.Context(), "scopeAppointmentsQueryToCurrentUser")
 	if user.IsSuperuser || role == "totschool_admin" {
 		return query
 	}

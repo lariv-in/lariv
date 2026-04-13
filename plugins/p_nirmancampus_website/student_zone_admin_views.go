@@ -90,8 +90,7 @@ func init() {
 			WithLayer("student_zone_admin.item_list", views.LayerList[StudentZoneItem]{
 				Key: getters.Static("items"),
 				QueryPatchers: views.QueryPatchers[StudentZoneItem]{
-					{Key: "student_zone_admin.preload_section", Value: views.QueryPatcherPreload[StudentZoneItem]{Field: "StudentZoneSection"}},
-					{Key: "student_zone_admin.preload_file", Value: views.QueryPatcherPreload[StudentZoneItem]{Field: "File"}},
+					{Key: "student_zone_admin.preload", Value: views.QueryPatcherPreload[StudentZoneItem]{Fields: []string{"StudentZoneSection", "File"}}},
 				},
 			}))
 
@@ -103,8 +102,7 @@ func init() {
 				Key:          getters.Static("item"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentZoneItem]{
-					{Key: "student_zone_admin.preload_section", Value: views.QueryPatcherPreload[StudentZoneItem]{Field: "StudentZoneSection"}},
-					{Key: "student_zone_admin.preload_file", Value: views.QueryPatcherPreload[StudentZoneItem]{Field: "File"}},
+					{Key: "student_zone_admin.preload", Value: views.QueryPatcherPreload[StudentZoneItem]{Fields: []string{"StudentZoneSection", "File"}}},
 				},
 			}))
 
@@ -126,8 +124,7 @@ func init() {
 				Key:          getters.Static("item"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[StudentZoneItem]{
-					{Key: "student_zone_admin.preload_section", Value: views.QueryPatcherPreload[StudentZoneItem]{Field: "StudentZoneSection"}},
-					{Key: "student_zone_admin.preload_file", Value: views.QueryPatcherPreload[StudentZoneItem]{Field: "File"}},
+					{Key: "student_zone_admin.preload", Value: views.QueryPatcherPreload[StudentZoneItem]{Fields: []string{"StudentZoneSection", "File"}}},
 				},
 			}).
 			WithLayer("student_zone_admin.item_update", views.LayerUpdate[StudentZoneItem]{

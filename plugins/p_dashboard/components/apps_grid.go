@@ -9,6 +9,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/registry"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -37,7 +38,7 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 
 	if len(apps) == 0 {
 		pluginsMap := lago.RegistryPlugin.AllStable(registry.RegisterOrder[lago.Plugin]{})
-		roleName, _ := ctx.Value("$role").(string)
+		roleName := p_users.RoleFromContext(ctx, "dashboard.AppsGrid")
 		for _, pluginItem := range *pluginsMap {
 			plugin := pluginItem.Value
 			if plugin.Type == lago.PluginTypeApp {

@@ -135,6 +135,9 @@ Global HTTP concerns (DB, `$request`, etc.) live in `views.GlobalLayer` and app 
 
 **Query patching:** attach `views.QueryPatchers[T]` (named `registry.Pair`s) on `LayerList`, `LayerDetail`, or `LayerUpdate`. Prefer the built-in patchers in `views/query_patcher_*.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T, TJoin]` (reads filter values from `$get`). Do not duplicate ad-hoc query logic when these suffice.
 
+- **`QueryPatcherPreload[T]`** (`views/query_patcher_preload.go`): set **`Fields []string`** to GORM association names or dotted paths (same strings you would pass to `Preload`, e.g. `"Student"`, `"AcademicRecord.Program"`, many-to-many field names). Each string is preloaded in order; **`Fields` empty → no preloads** for that patcher.
+- **One preload patcher per layer:** prefer a **single** `registry.Pair` whose `Value` is one `QueryPatcherPreload[T]{Fields: []string{...}}` listing every association needed for that layer, instead of multiple pairs each preloading one field. Use a **stable key** such as **`"myplugin.preload"`** (or another clear single name) for that pair so other plugins can replace or wrap one logical preload hook.
+
 **Form patching:** attach `views.FormPatchers` on `LayerCreate` and `LayerUpdate` (`views/form_patchers.go`). `InputManyToMany.Parse` still yields `AssociationIDs`; create/update/singleton layer persists many-to-many via GORM after the row save—do not model those inputs as plain scalar columns.
 
 **Patching views across plugins:** give every layer a stable string key (e.g. `"students.detail"`). Other packages should use `InsertLayerBefore`, `InsertLayerAfter`, or `PatchLayer` against those keys—not fragile positional assumptions.

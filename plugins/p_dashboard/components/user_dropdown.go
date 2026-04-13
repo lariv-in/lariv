@@ -25,15 +25,15 @@ func (e UserDropdown) GetRoles() []string {
 }
 
 func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
-	userObj := ctx.Value("$user")
-	roleObj := ctx.Value("$role")
+	user, userOK := p_users.UserFromContextOptional(ctx)
+	roleName, roleOK := p_users.RoleFromContextOptional(ctx)
 
-	var name, roleName string
-	if user, ok := userObj.(p_users.User); ok {
+	var name, roleDisplay string
+	if userOK {
 		name = user.Name
 	}
-	if role, ok := roleObj.(string); ok {
-		roleName = role
+	if roleOK {
+		roleDisplay = roleName
 	}
 
 	avatarText := "?"
@@ -45,10 +45,10 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		html.Div(
 			html.Class("flex flex-col gap-1"),
 			html.Div(html.Class("font-bold text-lg"), gomponents.Text(name)),
-			html.Div(html.Class("text-sm opacity-70 cursor-default"), gomponents.Text(roleName)),
+			html.Div(html.Class("text-sm opacity-70 cursor-default"), gomponents.Text(roleDisplay)),
 		),
 	}
-	if _, ok := userObj.(p_users.User); ok {
+	if userOK {
 		selfDetailHref, err := getters.IfOr(lago.RoutePath("users.SelfDetailRoute", nil), ctx, "")
 		if err != nil {
 			slog.Error("user dropdown: resolve self detail route", "error", err)

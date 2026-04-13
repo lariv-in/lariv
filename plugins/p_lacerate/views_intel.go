@@ -115,8 +115,7 @@ func (intelRelatedLayer) Next(_ views.View, next http.Handler) http.Handler {
 
 func init() {
 	intelListPatchers := views.QueryPatchers[Intel]{
-		{Key: "lacerate.intel.preload_source", Value: views.QueryPatcherPreload[Intel]{Field: "Source"}},
-		{Key: "lacerate.intel.preload_preview", Value: views.QueryPatcherPreload[Intel]{Field: "PreviewImage"}},
+		{Key: "lacerate.intel.preload", Value: views.QueryPatcherPreload[Intel]{Fields: []string{"Source", "PreviewImage"}}},
 		{Key: "lacerate.intel.order_id", Value: views.QueryPatcherOrderBy[Intel]{Order: "id DESC"}},
 	}
 
@@ -135,12 +134,7 @@ func init() {
 				Key:          getters.Static("intel"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Intel]{
-					{Key: "lacerate.intel.detail_preload", Value: views.QueryPatcherPreload[Intel]{
-						Field: "Source",
-					}},
-					{Key: "lacerate.intel.detail_preload_preview", Value: views.QueryPatcherPreload[Intel]{
-						Field: "PreviewImage",
-					}},
+					{Key: "lacerate.intel.preload", Value: views.QueryPatcherPreload[Intel]{Fields: []string{"Source", "PreviewImage"}}},
 				},
 			}).
 			WithLayer("lacerate.intel.related", intelRelatedLayer{}))
@@ -161,8 +155,7 @@ func init() {
 				Key:          getters.Static("intel"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Intel]{
-					{Key: "lacerate.intel.update_preload_src", Value: views.QueryPatcherPreload[Intel]{Field: "Source"}},
-					{Key: "lacerate.intel.update_preload_preview", Value: views.QueryPatcherPreload[Intel]{Field: "PreviewImage"}},
+					{Key: "lacerate.intel.preload", Value: views.QueryPatcherPreload[Intel]{Fields: []string{"Source", "PreviewImage"}}},
 				},
 			}).
 			WithLayer("lacerate.intel.update", views.LayerUpdate[Intel]{
@@ -179,7 +172,7 @@ func init() {
 				Key:          getters.Static("intel"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Intel]{
-					{Key: "lacerate.intel.delete_preload", Value: views.QueryPatcherPreload[Intel]{Field: "Source"}},
+					{Key: "lacerate.intel.preload", Value: views.QueryPatcherPreload[Intel]{Fields: []string{"Source"}}},
 				},
 			}).
 			WithLayer("lacerate.intel.delete", views.LayerDelete[Intel]{

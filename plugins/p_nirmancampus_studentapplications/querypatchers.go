@@ -1,8 +1,6 @@
 package p_nirmancampus_studentapplications
 
 import (
-	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -21,32 +19,7 @@ type studentApplicationScopeByRole struct{}
 //   - student and any other role: empty queryset (routes should reject student via layer)
 func (studentApplicationScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[StudentApplication]) gorm.ChainInterface[StudentApplication] {
 	ctx := r.Context()
-
-	rawUser := ctx.Value("$user")
-	if rawUser == nil {
-		slog.Error("StudentApplicationScopeByRole: missing $user in context – auth layer not applied?")
-		panic("StudentApplicationScopeByRole: $user is nil in context")
-	}
-	user, ok := rawUser.(p_users.User)
-	if !ok {
-		slog.Error("StudentApplicationScopeByRole: $user has unexpected type",
-			"type", fmt.Sprintf("%T", rawUser),
-		)
-		panic("StudentApplicationScopeByRole: $user has wrong type in context")
-	}
-
-	rawRole := ctx.Value("$role")
-	if rawRole == nil {
-		slog.Error("StudentApplicationScopeByRole: missing $role in context – auth layer not applied?")
-		panic("StudentApplicationScopeByRole: $role is nil in context")
-	}
-	roleName, ok := rawRole.(string)
-	if !ok {
-		slog.Error("StudentApplicationScopeByRole: $role has unexpected type",
-			"type", fmt.Sprintf("%T", rawRole),
-		)
-		panic("StudentApplicationScopeByRole: $role has wrong type in context")
-	}
+	user, roleName := p_users.UserAndRoleFromContext(ctx, "StudentApplicationScopeByRole")
 
 	switch roleName {
 	case "superuser", "admin":

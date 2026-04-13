@@ -24,32 +24,7 @@ type courseScopeByRole struct{}
 // to avoid a module import cycle (academicrecords → courses).
 func (courseScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Course]) gorm.ChainInterface[Course] {
 	ctx := r.Context()
-
-	rawUser := ctx.Value("$user")
-	if rawUser == nil {
-		slog.Error("CourseScopeByRole: missing $user in context – auth layer not applied?")
-		panic("CourseScopeByRole: $user is nil in context")
-	}
-	user, ok := rawUser.(p_users.User)
-	if !ok {
-		slog.Error("CourseScopeByRole: $user has unexpected type",
-			"type", fmt.Sprintf("%T", rawUser),
-		)
-		panic("CourseScopeByRole: $user has wrong type in context")
-	}
-
-	rawRole := ctx.Value("$role")
-	if rawRole == nil {
-		slog.Error("CourseScopeByRole: missing $role in context – auth layer not applied?")
-		panic("CourseScopeByRole: $role is nil in context")
-	}
-	roleName, ok := rawRole.(string)
-	if !ok {
-		slog.Error("CourseScopeByRole: $role has unexpected type",
-			"type", fmt.Sprintf("%T", rawRole),
-		)
-		panic("CourseScopeByRole: $role has wrong type in context")
-	}
+	user, roleName := p_users.UserAndRoleFromContext(ctx, "CourseScopeByRole")
 
 	dbVal := ctx.Value("$db")
 	db, ok := dbVal.(*gorm.DB)

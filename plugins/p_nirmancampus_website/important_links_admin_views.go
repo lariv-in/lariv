@@ -19,7 +19,7 @@ func init() {
 				Key: getters.Static("links"),
 				QueryPatchers: views.QueryPatchers[ImportantLink]{
 					{Key: "important_links_admin.order", Value: views.QueryPatcherOrderBy[ImportantLink]{Order: "\"order\" ASC"}},
-					{Key: "important_links_admin.preload_file", Value: views.QueryPatcherPreload[ImportantLink]{Field: "File"}},
+					{Key: "important_links_admin.preload", Value: views.QueryPatcherPreload[ImportantLink]{Fields: []string{"File"}}},
 				},
 			}))
 
@@ -32,7 +32,7 @@ func init() {
 				Key:          getters.Static("link"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[ImportantLink]{
-					{Key: "important_links_admin.preload_file", Value: views.QueryPatcherPreload[ImportantLink]{Field: "File"}},
+					{Key: "important_links_admin.preload", Value: views.QueryPatcherPreload[ImportantLink]{Fields: []string{"File"}}},
 				},
 			}))
 
@@ -66,7 +66,7 @@ func init() {
 				Key:          getters.Static("link"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[ImportantLink]{
-					{Key: "important_links_admin.preload_file", Value: views.QueryPatcherPreload[ImportantLink]{Field: "File"}},
+					{Key: "important_links_admin.preload", Value: views.QueryPatcherPreload[ImportantLink]{Fields: []string{"File"}}},
 				},
 			}).
 			WithLayer("important_links_admin.update", views.LayerUpdate[ImportantLink]{

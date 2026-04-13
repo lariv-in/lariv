@@ -10,6 +10,7 @@ import (
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_users"
 	"maragu.dev/gomponents"
 )
 
@@ -70,7 +71,7 @@ var studentZonePageTmpl = template.Must(template.New("student_zone.tmpl").Funcs(
 ))
 
 func isAuthenticated(ctx context.Context) bool {
-	return ctx.Value("$user") != nil
+	return p_users.UserPresentInContext(ctx)
 }
 
 func renderTopbar(ctx context.Context) string {

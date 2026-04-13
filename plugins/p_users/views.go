@@ -40,7 +40,7 @@ type authenticatedUserDetailLayer struct{}
 
 func (authenticatedUserDetailLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authUser := r.Context().Value("$user").(User)
+		authUser := UserFromContext(r.Context(), "authenticatedUserDetailLayer")
 		db := r.Context().Value("$db").(*gorm.DB)
 		user, err := gorm.G[User](db).Where("id = ?", authUser.ID).First(r.Context())
 		if err != nil {
@@ -186,7 +186,7 @@ func changePasswordHandler(v *views.View) http.Handler {
 			return
 		}
 
-		authUser := r.Context().Value("$user").(User)
+		authUser := UserFromContext(r.Context(), "changePasswordHandler")
 		db := r.Context().Value("$db").(*gorm.DB)
 		id64, err := strconv.ParseUint(r.PathValue("id"), 10, 64)
 		if err != nil {
@@ -237,7 +237,7 @@ func selfChangePasswordHandler(v *views.View) http.Handler {
 			return
 		}
 
-		user := r.Context().Value("$user").(User)
+		user := UserFromContext(r.Context(), "selfChangePasswordHandler")
 		db := r.Context().Value("$db").(*gorm.DB)
 		if err := changeUserPassword(db, user.ID, newPassword); err != nil {
 			fieldErrors["_form"] = fmt.Errorf("%v", err)

@@ -30,8 +30,7 @@ func init() {
 				Key:          getters.Static("student"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_photo", Value: views.QueryPatcherPreload[Student]{Field: "Photo"}},
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_documents", Value: views.QueryPatcherPreload[Student]{Field: "Documents"}},
+					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload", Value: views.QueryPatcherPreload[Student]{Fields: []string{"Photo", "Documents"}}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
 				},
 			}))
@@ -52,8 +51,7 @@ func init() {
 				Key:          getters.Static("student"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_photo", Value: views.QueryPatcherPreload[Student]{Field: "Photo"}},
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_documents", Value: views.QueryPatcherPreload[Student]{Field: "Documents"}},
+					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload", Value: views.QueryPatcherPreload[Student]{Fields: []string{"Photo", "Documents"}}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
 				},
 			}).
@@ -73,8 +71,7 @@ func init() {
 				Key:          getters.Static("student"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[Student]{
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_photo", Value: views.QueryPatcherPreload[Student]{Field: "Photo"}},
-					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload_documents", Value: views.QueryPatcherPreload[Student]{Field: "Documents"}},
+					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.preload", Value: views.QueryPatcherPreload[Student]{Fields: []string{"Photo", "Documents"}}},
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
 				},
 			}).

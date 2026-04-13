@@ -32,16 +32,8 @@ func proposalDB(r *http.Request, op string) *gorm.DB {
 
 type proposalQueryPatcher struct{}
 
-func (proposalQueryPatcher) Patch(v views.View, r *http.Request, query gorm.ChainInterface[Proposal]) gorm.ChainInterface[Proposal] {
-	rawUser := r.Context().Value("$user")
-	user, ok := rawUser.(p_users.User)
-	if !ok {
-		slog.Error("proposalQueryPatcher: missing or invalid $user in context",
-			"pageName", v.PageName,
-			"userType", fmt.Sprintf("%T", rawUser))
-		return query
-	}
-	role, _ := r.Context().Value("$role").(string)
+func (proposalQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[Proposal]) gorm.ChainInterface[Proposal] {
+	user, role := p_users.UserAndRoleFromContext(r.Context(), "proposalQueryPatcher")
 	if user.IsSuperuser || role == "totschool_admin" {
 		return query
 	}
@@ -78,15 +70,8 @@ func (proposalDetailCtxLayer) Next(_ views.View, next http.Handler) http.Handler
 
 type proposalFormPatcher struct{}
 
-func (proposalFormPatcher) Patch(v views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
-	rawUser := r.Context().Value("$user")
-	user, ok := rawUser.(p_users.User)
-	if !ok {
-		slog.Error("proposalFormPatcher: missing or invalid $user in context",
-			"pageName", v.PageName,
-			"userType", fmt.Sprintf("%T", rawUser))
-		return formData, formErrors
-	}
+func (proposalFormPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+	user := p_users.UserFromContext(r.Context(), "proposalFormPatcher")
 	formData["CreatedByID"] = user.ID
 	return formData, formErrors
 }
@@ -119,15 +104,7 @@ func generateHandler(v *views.View) http.Handler {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		rawUser := r.Context().Value("$user")
-		user, ok := rawUser.(p_users.User)
-		if !ok {
-			slog.Error("generateHandler: missing or invalid $user in context",
-				"pageName", v.PageName,
-				"userType", fmt.Sprintf("%T", rawUser))
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+		user := p_users.UserFromContext(r.Context(), "proposals.generateHandler")
 
 		proposal, err := gorm.G[Proposal](db).Where("id = ?", idStr).First(r.Context())
 		if err != nil {

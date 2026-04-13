@@ -18,7 +18,7 @@ var announcementsAdminRoleLayer = p_users.RoleAuthorizationLayer{Roles: []string
 type announcementsFormCreatedByPatcher struct{}
 
 func (announcementsFormCreatedByPatcher) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
-	user := r.Context().Value("$user").(p_users.User)
+	user := p_users.UserFromContext(r.Context(), "announcementsFormCreatedByPatcher")
 	id := user.ID
 	formData["CreatedByID"] = &id
 	return formData, formErrors

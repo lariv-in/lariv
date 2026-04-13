@@ -124,32 +124,7 @@ type programScopeByRole struct{}
 
 func (programScopeByRole) Patch(_ views.View, r *http.Request, q gorm.ChainInterface[Program]) gorm.ChainInterface[Program] {
 	ctx := r.Context()
-
-	rawUser := ctx.Value("$user")
-	if rawUser == nil {
-		slog.Error("ProgramScopeByRole: missing $user in context – auth layer not applied?")
-		panic("ProgramScopeByRole: $user is nil in context")
-	}
-	user, ok := rawUser.(p_users.User)
-	if !ok {
-		slog.Error("ProgramScopeByRole: $user has unexpected type",
-			"type", fmt.Sprintf("%T", rawUser),
-		)
-		panic("ProgramScopeByRole: $user has wrong type in context")
-	}
-
-	rawRole := ctx.Value("$role")
-	if rawRole == nil {
-		slog.Error("ProgramScopeByRole: missing $role in context – auth layer not applied?")
-		panic("ProgramScopeByRole: $role is nil in context")
-	}
-	roleName, ok := rawRole.(string)
-	if !ok {
-		slog.Error("ProgramScopeByRole: $role has unexpected type",
-			"type", fmt.Sprintf("%T", rawRole),
-		)
-		panic("ProgramScopeByRole: $role has wrong type in context")
-	}
+	user, roleName := p_users.UserAndRoleFromContext(ctx, "ProgramScopeByRole")
 
 	dbVal := ctx.Value("$db")
 	db, ok := dbVal.(*gorm.DB)

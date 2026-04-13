@@ -31,7 +31,7 @@ func redirectToRoute(w http.ResponseWriter, r *http.Request, routeKey string, ar
 
 func phoneOtpRequestHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Context().Value("$user") != nil {
+		if p_users.UserPresentInContext(r.Context()) {
 			_ = redirectToRoute(w, r, "users.ListRoute")
 			return
 		}
@@ -84,7 +84,7 @@ func phoneOtpRequestHandler(v *views.View) http.Handler {
 
 func emailOtpRequestHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Context().Value("$user") != nil {
+		if p_users.UserPresentInContext(r.Context()) {
 			_ = redirectToRoute(w, r, "users.ListRoute")
 			return
 		}
