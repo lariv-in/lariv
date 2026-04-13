@@ -21,7 +21,7 @@ func (e LabelNewline) Build(ctx context.Context) Node {
 	for _, child := range e.Children {
 		childNodes = append(childNodes, Render(child, ctx))
 	}
-	return Div(Class(fmt.Sprintf("flex flex-col gap-1 %s", e.Classes)),
+	return Div(Class(fmt.Sprintf("flex flex-col %s", e.Classes)),
 		Span(Class("text-primary font-bold"), Text(e.Title+":")),
 		Group(childNodes),
 	)
