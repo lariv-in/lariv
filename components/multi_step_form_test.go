@@ -1,0 +1,100 @@
+package components
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/lariv-in/lago/getters"
+)
+
+func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {
+	when := time.Date(2026, time.April, 15, 14, 30, 0, 0, time.UTC)
+	form := MultiStepForm{
+		Stage:         getters.Static(1),
+		Values:        getters.Static(map[string]any{"First": "alpha", "When": when}),
+		MultiStageURL: getters.Static("/wizard"),
+		Stages: []FormInterface{
+			FormComponent[struct{}]{
+				Attr: getters.FormBubbling(getters.Static("wizard")),
+				ChildrenInput: []PageInterface{
+					InputText{Name: "First", Label: "First"},
+					InputDate{Name: "When", Label: "When"},
+				},
+			},
+			FormComponent[struct{}]{
+				Attr: getters.FormBubbling(getters.Static("wizard")),
+				ChildrenInput: []PageInterface{
+					InputText{Name: "Second", Label: "Second"},
+				},
+				ChildrenAction: []PageInterface{
+					ButtonSubmit{Label: "Save"},
+				},
+			},
+		},
+	}
+
+	html := renderNode(t, form.Build(context.Background()))
+	if !strings.Contains(html, `action="/wizard"`) {
+		t.Fatalf("expected multistage action on rendered form, got %s", html)
+	}
+	if !strings.Contains(html, `name="$stage"`) || !strings.Contains(html, `value="1"`) {
+		t.Fatalf("expected hidden stage field, got %s", html)
+	}
+	if !strings.Contains(html, `name="Second"`) {
+		t.Fatalf("expected active stage field in html, got %s", html)
+	}
+	if !strings.Contains(html, `name="First"`) || !strings.Contains(html, `value="alpha"`) {
+		t.Fatalf("expected hidden carry field for previous stage, got %s", html)
+	}
+	if !strings.Contains(html, `name="When"`) || !strings.Contains(html, `value="2026-04-15"`) {
+		t.Fatalf("expected typed hidden carry field for date input, got %s", html)
+	}
+}
+
+func TestMultiStepFormParseFormIncludesCarryForwardValues(t *testing.T) {
+	form := MultiStepForm{
+		Stages: []FormInterface{
+			FormComponent[struct{}]{
+				ChildrenInput: []PageInterface{
+					InputText{Name: "First"},
+					InputCheckbox{Name: "Enabled"},
+				},
+			},
+			FormComponent[struct{}]{
+				ChildrenInput: []PageInterface{
+					InputNumber[uint]{Name: "Count"},
+				},
+			},
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{
+		"$stage":  {"1"},
+		"First":   {"alpha"},
+		"Enabled": {"false"},
+		"Count":   {"12"},
+	}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	values, errs, err := form.ParseForm(req)
+	if err != nil {
+		t.Fatalf("ParseForm returned error: %v", err)
+	}
+	if len(errs) != 0 {
+		t.Fatalf("expected no field errors, got %#v", errs)
+	}
+	if got, _ := values["First"].(string); got != "alpha" {
+		t.Fatalf("expected First alpha, got %#v", values["First"])
+	}
+	if got, _ := values["Enabled"].(bool); got {
+		t.Fatalf("expected Enabled false, got %#v", values["Enabled"])
+	}
+	if got, _ := values["Count"].(uint); got != 12 {
+		t.Fatalf("expected Count 12, got %#v", values["Count"])
+	}
+}

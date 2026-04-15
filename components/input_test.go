@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/registry"
@@ -101,6 +102,49 @@ func TestInputSelectBuildSelected(t *testing.T) {
 	}
 	if !strings.Contains(html, `name="pick"`) {
 		t.Fatalf("expected name pick: %s", html)
+	}
+}
+
+func TestHiddenInputsRenderTypedValues(t *testing.T) {
+	ctx := context.WithValue(context.Background(), "$tz", time.UTC)
+	dateValue := time.Date(2026, time.April, 15, 10, 45, 0, 0, time.UTC)
+
+	cases := []struct {
+		name     string
+		html     string
+		wantType string
+		wantVal  string
+	}{
+		{
+			name:     "checkbox",
+			html:     renderNode(t, InputCheckbox{Name: "Enabled", Hidden: true, Getter: getters.Static(false)}.Build(context.Background())),
+			wantType: `type="hidden"`,
+			wantVal:  `value="false"`,
+		},
+		{
+			name:     "date",
+			html:     renderNode(t, InputDate{Name: "Date", Hidden: true, Getter: getters.Static(dateValue)}.Build(ctx)),
+			wantType: `type="hidden"`,
+			wantVal:  `value="2026-04-15"`,
+		},
+		{
+			name:     "time",
+			html:     renderNode(t, InputTime{Name: "Time", Hidden: true, Getter: getters.Static(dateValue)}.Build(ctx)),
+			wantType: `type="hidden"`,
+			wantVal:  `value="10:45"`,
+		},
+		{
+			name:     "datetime",
+			html:     renderNode(t, InputDatetime{Name: "Datetime", Hidden: true, Getter: getters.Static(dateValue)}.Build(ctx)),
+			wantType: `type="hidden"`,
+			wantVal:  `value="2026-04-15T10:45"`,
+		},
+	}
+
+	for _, tc := range cases {
+		if !strings.Contains(tc.html, tc.wantType) || !strings.Contains(tc.html, tc.wantVal) {
+			t.Fatalf("%s: expected %s and %s in html: %s", tc.name, tc.wantType, tc.wantVal, tc.html)
+		}
 	}
 }
 

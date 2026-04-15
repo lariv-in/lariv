@@ -3,6 +3,7 @@ package p_nirmancampus_academicrecords
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -51,6 +52,16 @@ func optionalCoursesMultiSelectURLGetter() getters.Getter[string] {
 		}
 		u.RawQuery = q.Encode()
 		return u.String(), nil
+	}
+}
+
+func academicRecordCreateStageURLGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		r, ok := ctx.Value("$request").(*http.Request)
+		if !ok || r == nil || r.URL == nil {
+			return lago.RoutePath("academicrecords.CreateRoute", nil)(ctx)
+		}
+		return r.URL.RequestURI(), nil
 	}
 }
 
@@ -159,6 +170,47 @@ func createFormFields() components.ContainerColumn {
 								Getter:   academicRecordDefaultGetter(getters.Key[time.Time]("$in.Date")),
 							},
 						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func createCourseSelectionFields() components.ContainerColumn {
+	return components.ContainerColumn{
+		Page: components.Page{
+			Key: "academicrecords.AcademicRecordCreateCourseSelectionBody",
+		},
+		Children: []components.PageInterface{
+			&components.LabelNewline{
+				Title: "Compulsory courses",
+				Children: []components.PageInterface{
+					&components.FieldManyToMany[p_nirmancampus_courses.Course]{
+						Getter:  getters.Key[[]p_nirmancampus_courses.Course](academicRecordProgramStructureUnitContextKey + ".CompulsoryCourses"),
+						Display: getters.Key[string]("$in.Name"),
+						Link:    courseDetailLink,
+						Classes: "w-full",
+					},
+				},
+			},
+			&components.LabelInline{
+				Title: "Optional course count",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: optionalCourseCountDisplayGetter()},
+				},
+			},
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.OptionalCourses"),
+				Children: []components.PageInterface{
+					&components.InputManyToMany[p_nirmancampus_courses.Course]{
+						Label:       "Optional courses",
+						Name:        "OptionalCourses",
+						Getter:      getters.Key[[]p_nirmancampus_courses.Course]("$in.OptionalCourses"),
+						Url:         optionalCoursesMultiSelectURLGetter(),
+						Display:     getters.Key[string]("$in.Name"),
+						Placeholder: "Select optional courses from the program pool…",
+						Classes:     "w-full",
 					},
 				},
 			},
@@ -338,20 +390,43 @@ func registerFormPages() {
 		},
 		UID: "academicrecords-create-modal",
 		Children: []components.PageInterface{
-			&components.FormComponent[AcademicRecord]{
-				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
+			&components.MultiStepForm{
+				MultiStageURL: academicRecordCreateStageURLGetter(),
+				Stages: []components.FormInterface{
+					&components.FormComponent[AcademicRecord]{
+						Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
-				Title:    "Create Academic Record",
-				Subtitle: "Pick student, program, term, and status. Compulsory courses are copied from that term in the program structure.",
-				Classes:  "@container",
-				ChildrenInput: []components.PageInterface{
-					createFormFields(),
-				},
-				ChildrenAction: []components.PageInterface{
-					&components.ContainerRow{
-						Classes: "flex justify-end gap-2 mt-2",
-						Children: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Save Academic Record", Classes: "btn-primary"},
+						Title:    "Create Academic Record",
+						Subtitle: "Pick student, program, term, and status. Next step will load required and optional courses for that program term.",
+						Classes:  "@container",
+						ChildrenInput: []components.PageInterface{
+							createFormFields(),
+						},
+						ChildrenAction: []components.PageInterface{
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2 mt-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Continue", Classes: "btn-primary"},
+								},
+							},
+						},
+					},
+					&components.FormComponent[AcademicRecord]{
+						Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
+
+						Title:    "Select Courses",
+						Subtitle: "Compulsory courses are prefilled from the selected program term. Choose optional courses from that term's pool.",
+						Classes:  "@container",
+						ChildrenInput: []components.PageInterface{
+							createCourseSelectionFields(),
+						},
+						ChildrenAction: []components.PageInterface{
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2 mt-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Save Academic Record", Classes: "btn-primary"},
+								},
+							},
 						},
 					},
 				},

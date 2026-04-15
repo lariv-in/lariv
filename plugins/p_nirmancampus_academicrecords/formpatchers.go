@@ -75,6 +75,7 @@ func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, valu
 	psu, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).
 		Where("program_id = ? AND term_number = ?", programID, term).
 		Preload("CompulsoryCourses", nil).
+		Preload("OptionalCourseSelectionPool", nil).
 		First(r.Context())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -92,7 +93,7 @@ func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, valu
 		ids = append(ids, c.ID)
 	}
 	values["CompulsoryCourses"] = components.AssociationIDs{Field: "CompulsoryCourses", IDs: ids}
-	return values, formErrors
+	return validateAcademicRecordOptionalCourses(values, formErrors, psu)
 }
 
 // formPatcherAcademicRecordUpdate ensures OptionalCourses length matches
@@ -120,21 +121,41 @@ func (formPatcherAcademicRecordUpdate) Patch(_ views.View, r *http.Request, valu
 		values["Date"] = rec.Date
 	}
 	psu, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).
-		Select("optional_course_count").
+		Preload("OptionalCourseSelectionPool", nil).
 		Where("program_id = ? AND term_number = ?", rec.ProgramID, rec.Term).
 		First(r.Context())
 	if err != nil {
 		return values, formErrors
 	}
-	expected := psu.OptionalCourseCount
-	got := 0
-	if raw, ok := values["OptionalCourses"]; ok {
-		if aids, ok := raw.(components.AssociationIDs); ok {
-			got = len(aids.IDs)
-		}
+	return validateAcademicRecordOptionalCourses(values, formErrors, psu)
+}
+
+func validateAcademicRecordOptionalCourses(values map[string]any, formErrors map[string]error, psu p_nirmancampus_programs.ProgramStructureUnit) (map[string]any, map[string]error) {
+	if formErrors == nil {
+		formErrors = map[string]error{}
 	}
-	if uint(got) != expected {
-		formErrors["OptionalCourses"] = fmt.Errorf("select exactly %d optional course(s) for this program term", expected)
+	raw, ok := values["OptionalCourses"]
+	if !ok {
+		raw = components.AssociationIDs{Field: "OptionalCourses", IDs: nil}
+	}
+	aids, ok := raw.(components.AssociationIDs)
+	if !ok {
+		return values, formErrors
+	}
+	if uint(len(aids.IDs)) != psu.OptionalCourseCount {
+		formErrors["OptionalCourses"] = fmt.Errorf("select exactly %d optional course(s) for this program term", psu.OptionalCourseCount)
+		return values, formErrors
+	}
+
+	allowed := map[uint]struct{}{}
+	for _, course := range psu.OptionalCourseSelectionPool {
+		allowed[course.ID] = struct{}{}
+	}
+	for _, id := range aids.IDs {
+		if _, ok := allowed[id]; !ok {
+			formErrors["OptionalCourses"] = fmt.Errorf("select optional courses from the selected program pool")
+			return values, formErrors
+		}
 	}
 	return values, formErrors
 }

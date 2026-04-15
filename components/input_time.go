@@ -18,6 +18,7 @@ type InputTime struct {
 	Getter   getters.Getter[time.Time]
 	Required bool
 	Classes  string
+	Hidden   bool
 }
 
 func (e InputTime) Build(ctx context.Context) Node {
@@ -33,6 +34,12 @@ func (e InputTime) Build(ctx context.Context) Node {
 		} else if !t.IsZero() {
 			valueNode = Value(t.In(timezone).Format("15:04"))
 		}
+	}
+	if e.Hidden {
+		return Div(
+			Class("hidden"),
+			Input(Type("hidden"), Name(e.Name), valueNode),
+		)
 	}
 	return Div(Class(fmt.Sprintf("my-1 %s", e.Classes)),
 		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),

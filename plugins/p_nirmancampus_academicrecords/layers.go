@@ -17,13 +17,14 @@ const academicRecordProgramStructureUnitContextKey = "academicrecord_program_str
 
 // attachAcademicRecordProgramStructureUnitContext loads the ProgramStructureUnit
 // for the current AcademicRecord (from the "academicrecord" context key set by
-// DetailView) and stores it in context for update-form rendering.
+// DetailView) or the current form values in $in and stores it in context for
+// form rendering.
 type academicRecordProgramStructureUnitContextLayer struct{}
 
 func (academicRecordProgramStructureUnitContextLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		record, ok := r.Context().Value("academicrecord").(AcademicRecord)
-		if !ok || record.ID == 0 {
+		programID, term, ok := academicRecordProgramAndTermFromContext(r.Context())
+		if !ok {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -37,16 +38,16 @@ func (academicRecordProgramStructureUnitContextLayer) Next(_ views.View, next ht
 
 		var psu p_nirmancampus_programs.ProgramStructureUnit
 		err := db.
-			Where("program_id = ? AND term_number = ?", record.ProgramID, record.Term).
+			Where("program_id = ? AND term_number = ?", programID, term).
+			Preload("CompulsoryCourses").
 			Preload("OptionalCourseSelectionPool").
 			First(&psu).Error
 		if err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				slog.Error("attachAcademicRecordProgramStructureUnitContext: query failed",
 					"error", err,
-					"academic_record_id", record.ID,
-					"program_id", record.ProgramID,
-					"term", record.Term)
+					"program_id", programID,
+					"term", term)
 			}
 			next.ServeHTTP(w, r)
 			return
@@ -55,6 +56,23 @@ func (academicRecordProgramStructureUnitContextLayer) Next(_ views.View, next ht
 		ctx := context.WithValue(r.Context(), academicRecordProgramStructureUnitContextKey, psu)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func academicRecordProgramAndTermFromContext(ctx context.Context) (uint, uint, bool) {
+	if record, ok := ctx.Value("academicrecord").(AcademicRecord); ok && record.ID != 0 {
+		return record.ProgramID, record.Term, true
+	}
+
+	values, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
+	if !ok || values == nil {
+		return 0, 0, false
+	}
+	programID, okProgram := values["ProgramID"].(uint)
+	term, okTerm := values["Term"].(uint)
+	if !okProgram || !okTerm || programID == 0 {
+		return 0, 0, false
+	}
+	return programID, term, true
 }
 
 // academicRecordCreateQueryDefaultsLayer merges select query params into $in on GET

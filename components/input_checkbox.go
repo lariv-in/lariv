@@ -18,19 +18,32 @@ type InputCheckbox struct {
 	XModel   string
 	Required bool
 	Classes  string
+	Hidden   bool
 }
 
 func (e InputCheckbox) Build(ctx context.Context) Node {
+	checked := false
 	var checkedNode Node = Raw("")
 	if e.Getter != nil {
-		checked, err := e.Getter(ctx)
+		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputCheckbox getter failed", "error", err, "key", e.Key)
 		} else {
+			checked = value
 			if checked {
 				checkedNode = Checked()
 			}
 		}
+	}
+	if e.Hidden {
+		return Div(
+			Class("hidden"),
+			Input(
+				Type("hidden"),
+				Name(e.Name),
+				Value(strconv.FormatBool(checked)),
+			),
+		)
 	}
 	return Div(
 		Class(e.Classes),
