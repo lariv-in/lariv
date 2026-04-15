@@ -19,7 +19,7 @@ func init() {
 
 	err = lago.RegistryPlugin.Register("p_export", lago.Plugin{
 		Type:        lago.PluginTypeApp,
-		Icon:        "download",
+		Icon:        "arrow-down-tray",
 		URL:         u,
 		VerboseName: "Export",
 	})
