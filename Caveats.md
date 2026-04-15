@@ -154,6 +154,8 @@ Global HTTP concerns (DB via `getters.ContextKeyDB`, `$request`, etc.) live in `
 
 **Form patching:** attach `views.FormPatchers` on `LayerCreate` and `LayerUpdate` (`views/form_patchers.go`). `InputManyToMany.Parse` still yields `AssociationIDs`; create/update/singleton layer persists many-to-many via GORM after the row save—do not model those inputs as plain scalar columns.
 
+- **Form patcher values:** after `view.ParseForm`, each map entry has the **concrete type** produced by that input’s `Parse` (e.g. `InputForeignKey` → `uint` for the FK id). Do **not** add defensive `switch`/`any` coercion across `int`/`float64`/`json.Number`/etc. If the type is not what you expect, return a **field error** (or fail loudly)—fix the input or the patcher’s assumption instead of silently accepting alternate shapes.
+
 **Patching views across plugins:** give every layer a stable string key (e.g. `"students.detail"`). Other packages should use `InsertLayerBefore`, `InsertLayerAfter`, or `PatchLayer` against those keys—not fragile positional assumptions.
 
 **Extra context on another plugin’s page** (e.g. related `ObjectList` on a base detail view): do **not** hide DB access inside a component getter. Implement a small type that satisfies `views.Layer`, load data in `Next`, `context.WithValue` the result, and register or patch it onto the base view **after** the layer that provides the parent record (e.g. `InsertLayerAfter("base.detail", "myplugin.extra", myLayer{})`). Point `DataTable` (or similar) at that context key with `getters.Key[...]`.

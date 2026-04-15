@@ -51,6 +51,12 @@ func init() {
 				SuccessURL: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
+				FormPatchers: views.FormPatchers{
+					registry.Pair[string, views.FormPatcher]{
+						Key:   "assignmentsubmissions.create_defaults",
+						Value: assignmentSubmissionCreateFormPatcher{},
+					},
+				},
 			}),
 	)
 

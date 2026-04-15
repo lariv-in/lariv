@@ -40,7 +40,56 @@ func assignmentSubmissionFormAcademicRecordGetter() getters.Getter[p_nirmancampu
 	}
 }
 
-func assignmentSubmissionFormFields() *components.ContainerColumn {
+func assignmentSubmissionFormCourseAndAcademicRecordRow() *components.ContainerRow {
+	return &components.ContainerRow{
+		Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+		Children: []components.PageInterface{
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.CourseID"),
+				Children: []components.PageInterface{
+					&components.InputForeignKey[p_nirmancampus_courses.Course]{
+						Label:       "Course",
+						Name:        "CourseID",
+						Required:    true,
+						Url:         lago.RoutePath("courses.SelectRoute", nil),
+						Display:     getters.Key[string]("$in.Name"),
+						Placeholder: "Select a course...",
+						Getter: getters.Association[p_nirmancampus_courses.Course](
+							getters.Key[uint]("$in.CourseID"),
+						),
+					},
+				},
+			},
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.AcademicRecordID"),
+				Children: []components.PageInterface{
+					&components.InputForeignKey[p_nirmancampus_academicrecords.AcademicRecord]{
+						Label:       "Academic record",
+						Name:        "AcademicRecordID",
+						Required:    true,
+						Url:         lago.RoutePath("academicrecords.SelectRoute", nil),
+						Display:     getters.Key[string]("$in.Student.StudentNo"),
+						Placeholder: "Select an academic record...",
+						Getter:      assignmentSubmissionFormAcademicRecordGetter(),
+					},
+				},
+			},
+		},
+	}
+}
+
+// assignmentSubmissionCreateFormFields is the minimal create modal: course, academic record.
+// Title, status, marks, and assets are set by form patchers or edited after create.
+func assignmentSubmissionCreateFormFields() *components.ContainerColumn {
+	return &components.ContainerColumn{
+		Page: components.Page{Key: "assignmentsubmissions.CreateFormFieldsBody"},
+		Children: []components.PageInterface{
+			assignmentSubmissionFormCourseAndAcademicRecordRow(),
+		},
+	}
+}
+
+func assignmentSubmissionUpdateFormFields() *components.ContainerColumn {
 	return &components.ContainerColumn{
 		Page: components.Page{Key: "assignmentsubmissions.FormFieldsBody"},
 		Children: []components.PageInterface{
@@ -93,41 +142,7 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 					},
 				},
 			},
-			&components.ContainerRow{
-				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
-				Children: []components.PageInterface{
-					&components.ContainerError{
-						Error: getters.Key[error]("$error.CourseID"),
-						Children: []components.PageInterface{
-							&components.InputForeignKey[p_nirmancampus_courses.Course]{
-								Label:       "Course",
-								Name:        "CourseID",
-								Required:    true,
-								Url:         lago.RoutePath("courses.SelectRoute", nil),
-								Display:     getters.Key[string]("$in.Name"),
-								Placeholder: "Select a course...",
-								Getter: getters.Association[p_nirmancampus_courses.Course](
-									getters.Key[uint]("$in.CourseID"),
-								),
-							},
-						},
-					},
-					&components.ContainerError{
-						Error: getters.Key[error]("$error.AcademicRecordID"),
-						Children: []components.PageInterface{
-							&components.InputForeignKey[p_nirmancampus_academicrecords.AcademicRecord]{
-								Label:       "Academic record",
-								Name:        "AcademicRecordID",
-								Required:    true,
-								Url:         lago.RoutePath("academicrecords.SelectRoute", nil),
-								Display:     getters.Key[string]("$in.Student.StudentNo"),
-								Placeholder: "Select an academic record...",
-								Getter:      assignmentSubmissionFormAcademicRecordGetter(),
-							},
-						},
-					},
-				},
-			},
+			assignmentSubmissionFormCourseAndAcademicRecordRow(),
 			&components.ContainerError{
 				Error: getters.Key[error]("$error.Assets"),
 				Children: []components.PageInterface{
@@ -144,7 +159,7 @@ func assignmentSubmissionFormFields() *components.ContainerColumn {
 }
 
 func registerFormPages() {
-	lago.RegistryPage.Register("assignmentsubmissions.FormFields", assignmentSubmissionFormFields())
+	lago.RegistryPage.Register("assignmentsubmissions.FormFields", assignmentSubmissionUpdateFormFields())
 
 	lago.RegistryPage.Register("assignmentsubmissions.CreateForm", &components.Modal{
 		Page: components.Page{
@@ -157,10 +172,10 @@ func registerFormPages() {
 				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
 				Title:    "Create submission",
-				Subtitle: "Create a new assignment submission",
+				Subtitle: "Course and academic record only — edit submission for title, marks, status, and files.",
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
-					assignmentSubmissionFormFields(),
+					assignmentSubmissionCreateFormFields(),
 				},
 				ChildrenAction: []components.PageInterface{
 					&components.ContainerRow{
@@ -194,7 +209,7 @@ func registerFormPages() {
 						Subtitle: "Update assignment submission details",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
-							assignmentSubmissionFormFields(),
+							assignmentSubmissionUpdateFormFields(),
 						},
 						ChildrenAction: []components.PageInterface{
 							&components.ContainerRow{
