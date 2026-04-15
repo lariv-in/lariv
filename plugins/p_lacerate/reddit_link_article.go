@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"context"
 	"html"
-	"io"
 	"log/slog"
 	"net"
-	"net/http"
 	"net/url"
 	"path"
 	"regexp"
@@ -242,8 +240,8 @@ func normalizeLinkedMarkdown(s string) string {
 	return s
 }
 
-// fetchPostURLAsMarkdown downloads an HTML page linked from a Reddit post, extracts main article content,
-// and converts it to markdown. Returns empty string on failure (caller keeps link in metadata only).
+// fetchPostURLAsMarkdown delegates linked-page extraction to [WebsiteFetchers] and returns the first
+// successful markdown body. Returns empty string on failure (caller keeps link in metadata only).
 func fetchPostURLAsMarkdown(ctx context.Context, raw string) string {
 	raw = strings.TrimSpace(html.UnescapeString(raw))
 	if raw == "" {
@@ -265,47 +263,18 @@ func fetchPostURLAsMarkdown(ctx context.Context, raw string) string {
 		slog.Warn("lacerate: skip linked fetch (ssrf guard)", "host", parsed.Hostname())
 		return ""
 	}
-
-	ctx, cancel := context.WithTimeout(ctx, linkedArticleTimeout)
+	fetchCtx, cancel := context.WithTimeout(ctx, linkedArticleTimeout)
 	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parsed.String(), nil)
+	intels, err := NewWebsiteFetchers(fetchCtx).FetchWebsite(parsed.String(), 1)
 	if err != nil {
-		slog.Warn("lacerate: linked article new request", "error", err, "url", parsed.Redacted())
+		slog.Warn("lacerate: linked article fetch via website fetcher", "error", err, "url", parsed.Redacted())
 		return ""
 	}
-	req.Header.Set("User-Agent", Config.IntelPreview.UserAgent)
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-
-	client := &http.Client{Timeout: linkedArticleTimeout}
-	resp, err := client.Do(req)
-	if err != nil {
-		slog.Warn("lacerate: linked article fetch", "error", err, "url", parsed.Redacted())
-		return ""
+	for i := range intels {
+		out := strings.TrimSpace(intels[i].Content)
+		if out != "" {
+			return out
+		}
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		slog.Warn("lacerate: linked article status", "status", resp.Status, "url", parsed.Redacted())
-		return ""
-	}
-	ct := strings.ToLower(resp.Header.Get("Content-Type"))
-	if !strings.Contains(ct, "text/html") && !strings.Contains(ct, "application/xhtml") {
-		return ""
-	}
-
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxLinkedArticleBytes))
-	if err != nil {
-		slog.Warn("lacerate: linked article read body", "error", err, "url", parsed.Redacted())
-		return ""
-	}
-	fullHTML := string(body)
-	domain := parsed.Scheme + "://" + parsed.Host
-
-	out := extractMarkdownFromFetchedHTML(ctx, fullHTML, parsed, domain, true)
-	out = normalizeLinkedMarkdown(out)
-	if out == "" {
-		return ""
-	}
-	return out
+	return ""
 }

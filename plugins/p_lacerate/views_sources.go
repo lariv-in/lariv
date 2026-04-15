@@ -448,13 +448,14 @@ func (m sourceDeleteLayer) Next(view views.View, next http.Handler) http.Handler
 }
 
 type parsedSourceFormData struct {
-	Name           string
-	Kind           string
-	Duration       time.Duration
-	Subreddits     datatypes.JSON
-	SearchQuery    string
-	MaxFreshPosts  uint
-	Handles        datatypes.JSON
+	Name          string
+	Kind          string
+	Duration      time.Duration
+	Subreddits    datatypes.JSON
+	SearchQuery   string
+	MaxFreshPosts uint
+	Handles       datatypes.JSON
+	URL           string
 }
 
 func parseSourceMaxFreshPostsInto(values map[string]any, fieldErrors map[string]error, out *uint) {
@@ -504,6 +505,18 @@ func sourceFormDataFromValues(values map[string]any, fieldErrors map[string]erro
 				out.Handles = handles
 			}
 		}
+	case "website":
+		rawURL := strings.TrimSpace(fmt.Sprint(values["URL"]))
+		if rawURL == "" {
+			fieldErrors["URL"] = fmt.Errorf("url is required")
+			return out
+		}
+		normalizedURL, err := normalizeWebsiteSeedURL(rawURL)
+		if err != nil {
+			fieldErrors["URL"] = err
+			return out
+		}
+		out.URL = normalizedURL
 	}
 	return out
 }
@@ -522,6 +535,11 @@ func createSourceKindRow(tx *gorm.DB, sourceID uint, formData parsedSourceFormDa
 			SourceID:      sourceID,
 			Handles:       formData.Handles,
 			MaxFreshPosts: sourceMaxFreshPostsForSave(formData.MaxFreshPosts),
+		}).Error
+	case "website":
+		return tx.Create(&WebsiteSource{
+			SourceID: sourceID,
+			URL:      formData.URL,
 		}).Error
 	default:
 		return fmt.Errorf("unsupported source kind %q", formData.Kind)
