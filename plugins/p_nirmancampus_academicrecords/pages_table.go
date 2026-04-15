@@ -29,7 +29,7 @@ func tableColumns() []components.TableColumn {
 		}},
 		{Label: "Term", Name: "Term", Children: []components.PageInterface{
 			&components.FieldText{
-				Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.Term"))),
+				Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.ProgramStructureUnit.TermNumber"))),
 			},
 		}},
 	}
@@ -155,9 +155,46 @@ func registerSelectionPages() {
 						getters.Key[string]("$row.Program.University"),
 					)),
 					getters.Any(getters.Key[string]("$row.Status")),
-					getters.Any(getters.Format("%d", getters.Any(getters.Key[uint]("$row.Term")))),
+					getters.Any(getters.Format("%d", getters.Any(getters.Key[uint]("$row.ProgramStructureUnit.TermNumber")))),
 				)),
 				Columns: tableColumns(),
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("academicrecords.ProgramStructureUnitSelectionTable", &components.Modal{
+		UID: "academicrecords-program-structure-unit-selection-modal",
+		Children: []components.PageInterface{
+			&components.DataTable[p_nirmancampus_programs.ProgramStructureUnit]{
+				Page:  components.Page{Key: "academicrecords.ProgramStructureUnitSelectionTableBody"},
+				UID:   "academicrecords-program-structure-unit-selection-table",
+				Title: "Select Term",
+				Data:  getters.Key[components.ObjectList[p_nirmancampus_programs.ProgramStructureUnit]]("academicrecord_program_structure_units_select"),
+				RowAttr: getters.RowAttrSelect(
+					"ProgramStructureUnitID",
+					getters.Key[uint]("$row.ID"),
+					getters.Format("Term %d", getters.Any(getters.Key[uint]("$row.TermNumber"))),
+				),
+				Columns: []components.TableColumn{
+					{
+						Label: "Term",
+						Name:  "TermNumber",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.TermNumber"))),
+							},
+						},
+					},
+					{
+						Label: "Optional count",
+						Name:  "OptionalCourseCount",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.OptionalCourseCount"))),
+							},
+						},
+					},
+				},
 			},
 		},
 	})

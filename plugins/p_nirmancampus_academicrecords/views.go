@@ -1,16 +1,35 @@
 package p_nirmancampus_academicrecords
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
+	"gorm.io/gorm"
 )
 
 // academicRecordsAdminRoleLayer restricts create/update/delete to admin;
 // superusers are always allowed (see p_users.RoleAuthorizationLayer).
 var academicRecordsAdminRoleLayer = p_users.RoleAuthorizationLayer{Roles: []string{"admin"}}
+
+type academicRecordProgramStructureUnitFilter struct{}
+
+func (academicRecordProgramStructureUnitFilter) Patch(_ views.View, r *http.Request, q gorm.ChainInterface[p_nirmancampus_programs.ProgramStructureUnit]) gorm.ChainInterface[p_nirmancampus_programs.ProgramStructureUnit] {
+	programIDStr := r.URL.Query().Get("ProgramID")
+	if programIDStr == "" {
+		return q.Where("1 = 0")
+	}
+	programID, err := strconv.ParseUint(programIDStr, 10, 64)
+	if err != nil || programID == 0 {
+		return q.Where("1 = 0")
+	}
+	return q.Where("program_id = ?", uint(programID)).Order("term_number ASC")
+}
 
 func init() {
 	// List view
@@ -20,7 +39,7 @@ func init() {
 			WithLayer("academicrecords.list", views.LayerList[AcademicRecord]{
 				Key: getters.Static("academicrecords"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.filter_by_session", Value: AcademicRecordListSessionFilter},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
@@ -35,7 +54,7 @@ func init() {
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "CompulsoryCourses", "OptionalCourses"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}),
@@ -47,6 +66,7 @@ func init() {
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("academicrecords.admin_role", academicRecordsAdminRoleLayer).
 			WithLayer("academicrecords.create_query_defaults", academicRecordCreateQueryDefaultsLayer{}).
+			WithLayer("academicrecords.program_structure_units", academicRecordProgramStructureUnitsContextLayer{}).
 			WithLayer("academicrecords.multistep", views.MultiStepFormLayer{}).
 			WithLayer("academicrecords.program_structure_unit", academicRecordProgramStructureUnitContextLayer{}).
 			WithLayer("academicrecords.create", views.LayerCreate[AcademicRecord]{
@@ -54,7 +74,7 @@ func init() {
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 				FormPatchers: views.FormPatchers{
-					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.term_max", Value: formPatcherAcademicRecordTermMax{}},
+					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.program_structure_unit_required", Value: formPatcherAcademicRecordProgramStructureUnitRequired{}},
 					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.create_from_program_structure", Value: formPatcherAcademicRecordCreate{}},
 				},
 			}),
@@ -69,10 +89,11 @@ func init() {
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "CompulsoryCourses", "OptionalCourses"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}).
+			WithLayer("academicrecords.program_structure_units", academicRecordProgramStructureUnitsContextLayer{}).
 			WithLayer("academicrecords.program_structure_unit", academicRecordProgramStructureUnitContextLayer{}).
 			WithLayer("academicrecords.update", views.LayerUpdate[AcademicRecord]{
 				Key: getters.Static("academicrecord"),
@@ -83,7 +104,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 				FormPatchers: views.FormPatchers{
-					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.term_max", Value: formPatcherAcademicRecordTermMax{}},
+					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.program_structure_unit_required", Value: formPatcherAcademicRecordProgramStructureUnitRequired{}},
 					registry.Pair[string, views.FormPatcher]{Key: "academicrecords.optional_course_count", Value: formPatcherAcademicRecordUpdate{}},
 				},
 			}),
@@ -98,7 +119,7 @@ func init() {
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "CompulsoryCourses", "OptionalCourses"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}).
@@ -118,9 +139,20 @@ func init() {
 			WithLayer("academicrecords.select", views.LayerList[AcademicRecord]{
 				Key: getters.Static("academicrecords"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.filter_by_session", Value: AcademicRecordListSessionFilter},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
+				},
+			}),
+	)
+
+	lago.RegistryView.Register("academicrecords.ProgramStructureUnitSelectView",
+		lago.GetPageView("academicrecords.ProgramStructureUnitSelectionTable").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.program_structure_unit_select", views.LayerList[p_nirmancampus_programs.ProgramStructureUnit]{
+				Key: getters.Static("academicrecord_program_structure_units_select"),
+				QueryPatchers: views.QueryPatchers[p_nirmancampus_programs.ProgramStructureUnit]{
+					registry.Pair[string, views.QueryPatcher[p_nirmancampus_programs.ProgramStructureUnit]]{Key: "academicrecords.program_structure_unit_filter", Value: academicRecordProgramStructureUnitFilter{}},
 				},
 			}),
 	)

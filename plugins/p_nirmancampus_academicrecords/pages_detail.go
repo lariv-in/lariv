@@ -55,7 +55,7 @@ func registerDetailPages() {
 								Title: "Term",
 								Children: []components.PageInterface{
 									&components.FieldText{
-										Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$in.Term"))),
+										Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$in.ProgramStructureUnit.TermNumber"))),
 									},
 								},
 							},

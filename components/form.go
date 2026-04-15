@@ -40,6 +40,11 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 		}
 		if v := reflect.ValueOf(value); v.IsValid() && !v.IsZero() {
 			objMap := getters.MapFromStruct(value)
+			if currentValues, ok := ctx.Value(getters.ContextKeyIn).(map[string]any); ok && len(currentValues) > 0 {
+				for key, value := range currentValues {
+					objMap[key] = value
+				}
+			}
 			childCtx = context.WithValue(ctx, getters.ContextKeyIn, objMap)
 		}
 	}

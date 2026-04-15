@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -15,27 +14,22 @@ import (
 	"gorm.io/gorm"
 )
 
-const academicRecordTermMax = 6
+type formPatcherAcademicRecordProgramStructureUnitRequired struct{}
 
-// formPatcherAcademicRecordTermMax rejects Term greater than academicRecordTermMax.
-type formPatcherAcademicRecordTermMax struct{}
-
-func (formPatcherAcademicRecordTermMax) Patch(_ views.View, _ *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+func (formPatcherAcademicRecordProgramStructureUnitRequired) Patch(_ views.View, _ *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	if formErrors == nil {
 		formErrors = map[string]error{}
 	}
-	term, ok := values["Term"].(uint)
-	if !ok {
+	unitID, ok := values["ProgramStructureUnitID"].(uint)
+	if !ok || unitID == 0 {
+		formErrors["ProgramStructureUnitID"] = fmt.Errorf("select a term")
 		return values, formErrors
-	}
-	if term > academicRecordTermMax {
-		formErrors["Term"] = fmt.Errorf("term must be less than or equal to %d", academicRecordTermMax)
 	}
 	return values, formErrors
 }
 
 // formPatcherAcademicRecordCreate sets Status (default) and CompulsoryCourses
-// from the program's ProgramStructureUnit for the submitted Term (TermNumber).
+// from the selected ProgramStructureUnit.
 type formPatcherAcademicRecordCreate struct{}
 
 func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
@@ -66,24 +60,25 @@ func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, valu
 		formErrors["ProgramID"] = fmt.Errorf("select a program")
 		return values, formErrors
 	}
-	term, okTerm := values["Term"].(uint)
-	if !okTerm {
-		formErrors["Term"] = fmt.Errorf("enter a valid term")
+	unitID, okUnit := values["ProgramStructureUnitID"].(uint)
+	if !okUnit || unitID == 0 {
+		formErrors["ProgramStructureUnitID"] = fmt.Errorf("select a term")
 		return values, formErrors
 	}
 
 	psu, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).
-		Where("program_id = ? AND term_number = ?", programID, term).
+		Where("program_id = ? AND id = ?", programID, unitID).
 		Preload("CompulsoryCourses", nil).
 		Preload("OptionalCourseSelectionPool", nil).
 		First(r.Context())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			slog.Warn("academic record create: no program structure unit for program/term",
-				"program_id", programID, "term", term)
+			slog.Warn("academic record create: no program structure unit for program",
+				"program_id", programID, "program_structure_unit_id", unitID)
 		} else {
 			slog.Error("academic record create: load program structure unit", "error", err)
 		}
+		formErrors["ProgramStructureUnitID"] = fmt.Errorf("select a valid term for this program")
 		values["CompulsoryCourses"] = components.AssociationIDs{Field: "CompulsoryCourses", IDs: nil}
 		return values, formErrors
 	}
@@ -97,24 +92,19 @@ func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, valu
 }
 
 // formPatcherAcademicRecordUpdate ensures OptionalCourses length matches
-// ProgramStructureUnit.OptionalCourseCount for this record's program and term.
+// ProgramStructureUnit.OptionalCourseCount for this record.
 type formPatcherAcademicRecordUpdate struct{}
 
 func (formPatcherAcademicRecordUpdate) Patch(_ views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	if formErrors == nil {
 		formErrors = map[string]error{}
 	}
-	idStr := r.PathValue("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		return values, formErrors
-	}
 	db, dberr := getters.DBFromContext(r.Context())
 	if dberr != nil {
 		return values, formErrors
 	}
-	rec, err := gorm.G[AcademicRecord](db).Where("id = ?", id).First(r.Context())
-	if err != nil {
+	rec, ok := r.Context().Value("academicrecord").(AcademicRecord)
+	if !ok || rec.ID == 0 {
 		return values, formErrors
 	}
 	if d, ok := values["Date"].(time.Time); !ok || d.IsZero() {
@@ -122,7 +112,7 @@ func (formPatcherAcademicRecordUpdate) Patch(_ views.View, r *http.Request, valu
 	}
 	psu, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).
 		Preload("OptionalCourseSelectionPool", nil).
-		Where("program_id = ? AND term_number = ?", rec.ProgramID, rec.Term).
+		Where("id = ? AND program_id = ?", rec.ProgramStructureUnitID, rec.ProgramID).
 		First(r.Context())
 	if err != nil {
 		return values, formErrors

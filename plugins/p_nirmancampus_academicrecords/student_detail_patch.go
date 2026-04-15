@@ -44,6 +44,7 @@ func (studentAcademicRecordsContextLayer) Next(_ views.View, next http.Handler) 
 		if err := db.Model(&AcademicRecord{}).
 			Preload("Program").
 			Preload("Session").
+			Preload("ProgramStructureUnit").
 			Preload("CompulsoryCourses").
 			Preload("OptionalCourses").
 			Where("student_id = ?", student.ID).
@@ -124,7 +125,7 @@ func studentDetailAcademicRecordsSection() components.PageInterface {
 				Name:  "Term",
 				Children: []components.PageInterface{
 					&components.FieldText{
-						Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.Term"))),
+						Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.ProgramStructureUnit.TermNumber"))),
 					},
 				},
 			},

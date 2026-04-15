@@ -44,7 +44,7 @@ func TestAcademicRecordCreateFormFirstStageOnlyShowsInitialFields(t *testing.T) 
 	}
 }
 
-func TestAcademicRecordCreateFormSecondStageShowsProgramCourses(t *testing.T) {
+func TestAcademicRecordCreateFormSecondStageShowsProgramStructureUnitChoices(t *testing.T) {
 	page, ok := lago.RegistryPage.Get("academicrecords.AcademicRecordCreateForm")
 	if !ok {
 		t.Fatal("expected create form page in registry")
@@ -58,15 +58,56 @@ func TestAcademicRecordCreateFormSecondStageShowsProgramCourses(t *testing.T) {
 		"SessionID": uint(1),
 		"StudentID": uint(2),
 		"ProgramID": uint(3),
-		"Term":      uint(1),
 		"Status":    "Enrolled",
 		"Date":      time.Date(2026, time.April, 15, 0, 0, 0, 0, time.UTC),
+	}, nil)
+	ctx = context.WithValue(ctx, academicRecordProgramStructureUnitsContextKey, []p_nirmancampus_programs.ProgramStructureUnit{
+		{Model: gorm.Model{ID: 31}, TermNumber: 1},
+		{Model: gorm.Model{ID: 32}, TermNumber: 2},
+	})
+
+	html := renderAcademicRecordNode(t, components.Render(page, ctx))
+	if !strings.Contains(html, "Select Term") {
+		t.Fatalf("expected second-stage title, got %s", html)
+	}
+	if !strings.Contains(html, `name="ProgramStructureUnitID"`) || !strings.Contains(html, `program-structure-units/select/?ProgramID=3`) {
+		t.Fatalf("expected foreign-key program structure unit field in second stage, got %s", html)
+	}
+	if !strings.Contains(html, "Select...") {
+		t.Fatalf("expected FK placeholder in second stage, got %s", html)
+	}
+	if !strings.Contains(html, "Continue") {
+		t.Fatalf("expected continue button on second stage, got %s", html)
+	}
+	if !strings.Contains(html, `name="$stage"`) || !strings.Contains(html, `value="1"`) {
+		t.Fatalf("expected stage marker for second stage, got %s", html)
+	}
+}
+
+func TestAcademicRecordCreateFormThirdStageShowsProgramCourses(t *testing.T) {
+	page, ok := lago.RegistryPage.Get("academicrecords.AcademicRecordCreateForm")
+	if !ok {
+		t.Fatal("expected create form page in registry")
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/academicrecords/create/?name=academicrecords.AcademicRecordCreateForm", nil)
+	ctx := context.WithValue(context.Background(), "$request", req)
+	ctx = context.WithValue(ctx, "$get", map[string]any{"name": "academicrecords.AcademicRecordCreateForm"})
+	ctx = context.WithValue(ctx, "$stage", 2)
+	ctx = views.ContextWithErrorsAndValues(ctx, map[string]any{
+		"SessionID":              uint(1),
+		"StudentID":              uint(2),
+		"ProgramID":              uint(3),
+		"ProgramStructureUnitID": uint(99),
+		"Status":                 "Enrolled",
+		"Date":                   time.Date(2026, time.April, 15, 0, 0, 0, 0, time.UTC),
 		"OptionalCourses": []p_nirmancampus_courses.Course{
 			{Model: gorm.Model{ID: 21}, Name: "Elective A"},
 		},
 	}, nil)
 	ctx = context.WithValue(ctx, academicRecordProgramStructureUnitContextKey, p_nirmancampus_programs.ProgramStructureUnit{
 		Model:               gorm.Model{ID: 99},
+		TermNumber:          2,
 		OptionalCourseCount: 1,
 		CompulsoryCourses: []p_nirmancampus_courses.Course{
 			{Model: gorm.Model{ID: 11}, Name: "Core Course"},
@@ -78,10 +119,10 @@ func TestAcademicRecordCreateFormSecondStageShowsProgramCourses(t *testing.T) {
 
 	html := renderAcademicRecordNode(t, components.Render(page, ctx))
 	if !strings.Contains(html, "Select Courses") {
-		t.Fatalf("expected second-stage title, got %s", html)
+		t.Fatalf("expected third-stage title, got %s", html)
 	}
 	if !strings.Contains(html, "Core Course") {
-		t.Fatalf("expected compulsory course in second stage, got %s", html)
+		t.Fatalf("expected compulsory course in third stage, got %s", html)
 	}
 	if !strings.Contains(html, "Optional courses") || !strings.Contains(html, "pool_course_ids=21") {
 		t.Fatalf("expected optional course selector limited to pool, got %s", html)
@@ -89,8 +130,8 @@ func TestAcademicRecordCreateFormSecondStageShowsProgramCourses(t *testing.T) {
 	if !strings.Contains(html, "Save Academic Record") {
 		t.Fatalf("expected final submit button, got %s", html)
 	}
-	if !strings.Contains(html, `name="$stage"`) || !strings.Contains(html, `value="1"`) {
-		t.Fatalf("expected stage marker for second stage, got %s", html)
+	if !strings.Contains(html, `name="$stage"`) || !strings.Contains(html, `value="2"`) {
+		t.Fatalf("expected stage marker for third stage, got %s", html)
 	}
 }
 
@@ -126,8 +167,8 @@ func TestAcademicRecordProgramStructureUnitContextLayerUsesCreateValues(t *testi
 	req := httptest.NewRequest(http.MethodGet, "/academicrecords/create/", nil)
 	ctx := context.WithValue(req.Context(), getters.ContextKeyDB, db)
 	ctx = views.ContextWithErrorsAndValues(ctx, map[string]any{
-		"ProgramID": program.ID,
-		"Term":      uint(2),
+		"ProgramID":              program.ID,
+		"ProgramStructureUnitID": psu.ID,
 	}, nil)
 	req = req.WithContext(ctx)
 	rec := httptest.NewRecorder()

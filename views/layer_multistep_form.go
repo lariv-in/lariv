@@ -32,6 +32,10 @@ func (m MultiStepFormLayer) Next(view View, next http.Handler) http.Handler {
 		}
 
 		stage := form.ParseStage(r)
+		targetStage := form.ParseTargetStage(r, stage)
+		if targetStage > stage+1 {
+			targetStage = stage + 1
+		}
 		ctx := context.WithValue(r.Context(), "$stage", stage)
 		if len(fieldErrors) != 0 {
 			for field, ferr := range fieldErrors {
@@ -43,13 +47,21 @@ func (m MultiStepFormLayer) Next(view View, next http.Handler) http.Handler {
 		}
 
 		lastStage := form.StageCount() - 1
-		if stage < lastStage {
+		if targetStage < stage {
 			ctx = ContextWithErrorsAndValues(ctx, values, nil)
-			ctx = context.WithValue(ctx, "$stage", stage+1)
+			ctx = context.WithValue(ctx, "$stage", targetStage)
 			next.ServeHTTP(&multiStepSwapResponseWriter{ResponseWriter: w}, multiStepRenderRequest(r.WithContext(ctx)))
 			return
 		}
 
+		if stage < lastStage {
+			ctx = ContextWithErrorsAndValues(ctx, values, nil)
+			ctx = context.WithValue(ctx, "$stage", min(targetStage, stage+1))
+			next.ServeHTTP(&multiStepSwapResponseWriter{ResponseWriter: w}, multiStepRenderRequest(r.WithContext(ctx)))
+			return
+		}
+
+		ctx = ContextWithErrorsAndValues(ctx, values, nil)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

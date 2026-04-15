@@ -273,6 +273,33 @@ func TestFormComponentBuildAddsMultipartEnctype(t *testing.T) {
 	}
 }
 
+func TestFormComponentBuildPreservesContextValuesOverGetter(t *testing.T) {
+	type testModel struct {
+		Name string
+	}
+
+	form := FormComponent[testModel]{
+		Getter: getters.Static(testModel{Name: "getter value"}),
+		ChildrenInput: []PageInterface{
+			InputText{Name: "Name", Getter: getters.Key[string]("$in.Name")},
+		},
+	}
+	ctx := context.WithValue(context.Background(), getters.ContextKeyIn, map[string]any{
+		"Name": "context value",
+	})
+	ctx = context.WithValue(ctx, getters.ContextKeyError, map[string]error{
+		"Name": fmt.Errorf("required"),
+	})
+
+	html := renderNode(t, form.Build(ctx))
+	if !strings.Contains(html, `value="context value"`) {
+		t.Fatalf("expected rerender context value to win over getter value, got %s", html)
+	}
+	if strings.Contains(html, `value="getter value"`) {
+		t.Fatalf("expected getter value to be overridden by context value, got %s", html)
+	}
+}
+
 func TestInputManyToManyParse(t *testing.T) {
 	db := openTestDB(t)
 	if err := db.AutoMigrate(&testAssociationModel{}); err != nil {

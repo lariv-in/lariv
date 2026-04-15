@@ -24,8 +24,6 @@ var sampleStatuses = []string{
 	"Enrolled",
 }
 
-var sampleTerms = []uint{1, 2, 1, 3, 2, 1, 2, 3}
-
 func init() {
 	lago.RegistryGenerator.Register("academicrecords.Generator", lago.Generator{
 		Create: func(db *gorm.DB) error {
@@ -43,6 +41,13 @@ func init() {
 			}
 			if len(programs) == 0 {
 				return fmt.Errorf("need at least one program before generating academic records")
+			}
+			units, err := gorm.G[p_nirmancampus_programs.ProgramStructureUnit](db).Order("id ASC").Find(context.Background())
+			if err != nil {
+				return fmt.Errorf("failed to load program structure units: %w", err)
+			}
+			if len(units) == 0 {
+				return fmt.Errorf("need at least one program structure unit before generating academic records")
 			}
 
 			sessions, err := gorm.G[sessions.Session](db).Order("id ASC").Find(context.Background())
@@ -65,13 +70,14 @@ func init() {
 			today := time.Now().UTC()
 			admissionDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
 			for k, st := range students {
+				unit := units[k%len(units)]
 				rec := AcademicRecord{
-					StudentID: st.ID,
-					ProgramID: programs[k%len(programs)].ID,
-					SessionID: sessions[k%len(sessions)].ID,
-					Term:      sampleTerms[k%len(sampleTerms)],
-					Date:      admissionDate.AddDate(0, 0, -k),
-					Status:    sampleStatuses[k%len(sampleStatuses)],
+					StudentID:              st.ID,
+					ProgramID:              unit.ProgramID,
+					SessionID:              sessions[k%len(sessions)].ID,
+					ProgramStructureUnitID: unit.ID,
+					Date:                   admissionDate.AddDate(0, 0, -k),
+					Status:                 sampleStatuses[k%len(sampleStatuses)],
 				}
 				if err := gorm.G[AcademicRecord](db).Create(context.Background(), &rec); err != nil {
 					return fmt.Errorf("failed to create academic record (student_id=%d): %w", st.ID, err)

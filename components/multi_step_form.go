@@ -52,7 +52,13 @@ func (e MultiStepForm) Build(ctx context.Context) Node {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
-	html, err := injectIntoRenderedForm(stageHTML, actionURL, hiddenHTML)
+	ribbonHTML, err := e.ribbonHTML(stageIdx)
+	if err != nil {
+		slog.Error("MultiStepForm ribbon render failed", "error", err, "key", e.Key, "stage", stageIdx)
+		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+	}
+
+	html, err := injectIntoRenderedForm(stageHTML, actionURL, ribbonHTML, hiddenHTML)
 	if err != nil {
 		slog.Error("MultiStepForm form injection failed", "error", err, "key", e.Key, "stage", stageIdx)
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
@@ -143,6 +149,29 @@ func (e MultiStepForm) StageCount() int {
 
 func (e MultiStepForm) ParseStage(r *http.Request) int {
 	return e.requestStage(r)
+}
+
+func (e MultiStepForm) ParseTargetStage(r *http.Request, currentStage int) int {
+	target := currentStage
+	raw := ""
+	if r.MultipartForm != nil {
+		raw = firstFormValue(r.MultipartForm.Value["$stage_target"])
+	}
+	if raw == "" && r.Form != nil {
+		raw = firstFormValue(r.Form["$stage_target"])
+	}
+	if raw == "" {
+		if currentStage < len(e.Stages)-1 {
+			return currentStage + 1
+		}
+		return currentStage
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil {
+		slog.Error("MultiStepForm target stage parse failed", "error", err, "key", e.Key, "raw", raw)
+		return target
+	}
+	return clampStageIndex(parsed, len(e.Stages))
 }
 
 func (e MultiStepForm) resolveStage(ctx context.Context) int {
@@ -257,6 +286,48 @@ func (e MultiStepForm) hiddenFieldsHTML(ctx context.Context, stageIdx int, value
 		out.WriteString(html)
 	}
 	return out.String(), nil
+}
+
+func (e MultiStepForm) ribbonHTML(stageIdx int) (string, error) {
+	nodes := []Node{
+		Div(
+			Class("flex flex-wrap items-center gap-2 mb-4"),
+			Group(e.ribbonButtons(stageIdx)),
+		),
+	}
+	return renderNodesToString(nodes)
+}
+
+func (e MultiStepForm) ribbonButtons(stageIdx int) []Node {
+	nodes := make([]Node, 0, len(e.Stages))
+	for i := range e.Stages {
+		label := fmt.Sprintf("Step %d", i+1)
+		classes := "btn btn-sm"
+		switch {
+		case i == stageIdx:
+			nodes = append(nodes, Button(
+				Type("button"),
+				Class(classes+" btn-primary"),
+				Text(label),
+			))
+		case i < stageIdx:
+			nodes = append(nodes, Button(
+				Type("submit"),
+				Name("$stage_target"),
+				Value(strconv.Itoa(i)),
+				Class(classes+" btn-outline"),
+				Text(label),
+			))
+		default:
+			nodes = append(nodes, Button(
+				Type("button"),
+				Class(classes+" btn-disabled"),
+				Disabled(),
+				Text(label),
+			))
+		}
+	}
+	return nodes
 }
 
 func (e MultiStepForm) parseInputsForStage(stageIdx int, requestNames map[string]struct{}) []InputInterface {
@@ -471,7 +542,19 @@ func renderNodeToString(node Node) (string, error) {
 	return out.String(), nil
 }
 
-func injectIntoRenderedForm(html, actionURL, hiddenHTML string) (string, error) {
+func renderNodesToString(nodes []Node) (string, error) {
+	var out strings.Builder
+	for _, node := range nodes {
+		html, err := renderNodeToString(node)
+		if err != nil {
+			return "", err
+		}
+		out.WriteString(html)
+	}
+	return out.String(), nil
+}
+
+func injectIntoRenderedForm(html, actionURL, prefixHTML, hiddenHTML string) (string, error) {
 	formStart := strings.Index(html, "<form")
 	if formStart == -1 {
 		return "", fmt.Errorf("MultiStepForm: rendered stage missing form tag")
@@ -491,13 +574,18 @@ func injectIntoRenderedForm(html, actionURL, hiddenHTML string) (string, error) 
 			formTag = strings.TrimSuffix(formTag, ">") + fmt.Sprintf(` action="%s">`, actionURL)
 		}
 		html = html[:formStart] + formTag + html[formTagEnd+1:]
+		formTagEndOffset = strings.Index(html[formStart:], ">")
+		if formTagEndOffset == -1 {
+			return "", fmt.Errorf("MultiStepForm: rendered stage has malformed form tag after action injection")
+		}
+		formTagEnd = formStart + formTagEndOffset
 	}
 
 	formEnd := strings.LastIndex(html, "</form>")
 	if formEnd == -1 {
 		return "", fmt.Errorf("MultiStepForm: rendered stage missing closing form tag")
 	}
-	return html[:formEnd] + hiddenHTML + html[formEnd:], nil
+	return html[:formTagEnd+1] + prefixHTML + html[formTagEnd+1:formEnd] + hiddenHTML + html[formEnd:], nil
 }
 
 func clampStageIndex(stage, total int) int {

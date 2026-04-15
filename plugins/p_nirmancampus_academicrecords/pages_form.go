@@ -65,6 +65,95 @@ func academicRecordCreateStageURLGetter() getters.Getter[string] {
 	}
 }
 
+func programStructureUnitDisplayGetter() getters.Getter[string] {
+	return getters.Format("Term %d", getters.Any(getters.Key[uint]("$in.TermNumber")))
+}
+
+func programStructureUnitSelectURLGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		base, err := lago.RoutePath("academicrecords.ProgramStructureUnitSelectRoute", nil)(ctx)
+		if err != nil {
+			return "", err
+		}
+		programID, ok := academicRecordProgramIDForChoices(ctx)
+		if !ok || programID == 0 {
+			return base, nil
+		}
+		u, err := url.Parse(base)
+		if err != nil {
+			return base, nil
+		}
+		q := u.Query()
+		q.Set("ProgramID", strconv.FormatUint(uint64(programID), 10))
+		u.RawQuery = q.Encode()
+		return u.String(), nil
+	}
+}
+
+func programStructureUnitChoicesGetter() getters.Getter[[]registry.Pair[uint, string]] {
+	return func(ctx context.Context) ([]registry.Pair[uint, string], error) {
+		units, err := getters.Key[[]p_nirmancampus_programs.ProgramStructureUnit](academicRecordProgramStructureUnitsContextKey)(ctx)
+		if err != nil || len(units) == 0 {
+			programID, ok := academicRecordProgramIDForChoices(ctx)
+			if !ok {
+				return []registry.Pair[uint, string]{}, nil
+			}
+			db, dberr := getters.DBFromContext(ctx)
+			if dberr != nil {
+				return []registry.Pair[uint, string]{}, nil
+			}
+			if qerr := db.Where("program_id = ?", programID).Order("term_number ASC").Find(&units).Error; qerr != nil {
+				return []registry.Pair[uint, string]{}, nil
+			}
+		}
+		choices := make([]registry.Pair[uint, string], 0, len(units))
+		for _, unit := range units {
+			choices = append(choices, registry.Pair[uint, string]{
+				Key:   unit.ID,
+				Value: fmt.Sprintf("Term %d", unit.TermNumber),
+			})
+		}
+		return choices, nil
+	}
+}
+
+func academicRecordProgramIDForChoices(ctx context.Context) (uint, bool) {
+	if programID, ok := academicRecordProgramIDFromContext(ctx); ok {
+		return programID, true
+	}
+	req, ok := ctx.Value("$request").(*http.Request)
+	if !ok || req == nil {
+		return 0, false
+	}
+	raw := req.FormValue("ProgramID")
+	if raw == "" {
+		return 0, false
+	}
+	id, err := strconv.ParseUint(raw, 10, 64)
+	if err != nil || id == 0 {
+		return 0, false
+	}
+	return uint(id), true
+}
+
+func programStructureUnitPairGetter() getters.Getter[registry.Pair[uint, string]] {
+	return func(ctx context.Context) (registry.Pair[uint, string], error) {
+		id, err := getters.Key[uint]("$in.ProgramStructureUnitID")(ctx)
+		if err != nil || id == 0 {
+			return registry.Pair[uint, string]{}, nil
+		}
+		choices, _ := programStructureUnitChoicesGetter()(ctx)
+		if pair, ok := registry.PairFromPairs(id, choices); ok {
+			return pair, nil
+		}
+		psu, err := getters.Key[p_nirmancampus_programs.ProgramStructureUnit](academicRecordProgramStructureUnitContextKey)(ctx)
+		if err == nil && psu.ID == id {
+			return registry.Pair[uint, string]{Key: psu.ID, Value: fmt.Sprintf("Term %d", psu.TermNumber)}, nil
+		}
+		return registry.Pair[uint, string]{Key: id, Value: fmt.Sprintf("Term %d", id)}, nil
+	}
+}
+
 func createFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{
@@ -126,17 +215,6 @@ func createFormFields() components.ContainerColumn {
 						},
 					},
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.Term"),
-						Children: []components.PageInterface{
-							&components.InputNumber[uint]{
-								Label:    "Term",
-								Name:     "Term",
-								Required: true,
-								Getter:   getters.Key[uint]("$in.Term"),
-							},
-						},
-					},
-					&components.ContainerError{
 						Error: getters.Key[error]("$error.Status"),
 						Children: []components.PageInterface{
 							&components.InputSelect[string]{
@@ -170,6 +248,31 @@ func createFormFields() components.ContainerColumn {
 								Getter:   academicRecordDefaultGetter(getters.Key[time.Time]("$in.Date")),
 							},
 						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func createProgramStructureUnitFields() components.ContainerColumn {
+	return components.ContainerColumn{
+		Page: components.Page{
+			Key: "academicrecords.AcademicRecordCreateProgramStructureUnitBody",
+		},
+		Children: []components.PageInterface{
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.ProgramStructureUnitID"),
+				Children: []components.PageInterface{
+					&components.InputForeignKey[p_nirmancampus_programs.ProgramStructureUnit]{
+						Label:    "Term",
+						Name:     "ProgramStructureUnitID",
+						Required: true,
+						Url:      programStructureUnitSelectURLGetter(),
+						Display:  programStructureUnitDisplayGetter(),
+						Getter: getters.Association[p_nirmancampus_programs.ProgramStructureUnit](
+							getters.Key[uint]("$in.ProgramStructureUnitID"),
+						),
 					},
 				},
 			},
@@ -276,7 +379,7 @@ func editFormFields() components.ContainerColumn {
 						Title: "Term",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$in.Term"))),
+								Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$in.ProgramStructureUnit.TermNumber"))),
 							},
 						},
 					},
@@ -311,11 +414,13 @@ func editFormFields() components.ContainerColumn {
 					getters.Key[uint]("$in.ProgramID"),
 				),
 			},
-			&components.InputNumber[uint]{
-				Hidden:   true,
-				Name:     "Term",
-				Getter:   getters.Key[uint]("$in.Term"),
-				Required: true,
+			&components.InputForeignKey[p_nirmancampus_programs.ProgramStructureUnit]{
+				Hidden:  true,
+				Name:    "ProgramStructureUnitID",
+				Display: programStructureUnitDisplayGetter(),
+				Getter: getters.Association[p_nirmancampus_programs.ProgramStructureUnit](
+					getters.Key[uint]("$in.ProgramStructureUnitID"),
+				),
 			},
 			&components.LabelNewline{
 				Title: "Compulsory courses",
@@ -397,7 +502,7 @@ func registerFormPages() {
 						Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
 						Title:    "Create Academic Record",
-						Subtitle: "Pick student, program, term, and status. Next step will load required and optional courses for that program term.",
+						Subtitle: "Pick student, program, session, and status.",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							createFormFields(),
@@ -414,8 +519,26 @@ func registerFormPages() {
 					&components.FormComponent[AcademicRecord]{
 						Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
+						Title:    "Select Term",
+						Subtitle: "Choose the program term from the selected program structure.",
+						Classes:  "@container",
+						ChildrenInput: []components.PageInterface{
+							createProgramStructureUnitFields(),
+						},
+						ChildrenAction: []components.PageInterface{
+							&components.ContainerRow{
+								Classes: "flex justify-end gap-2 mt-2",
+								Children: []components.PageInterface{
+									&components.ButtonSubmit{Label: "Continue", Classes: "btn-primary"},
+								},
+							},
+						},
+					},
+					&components.FormComponent[AcademicRecord]{
+						Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
+
 						Title:    "Select Courses",
-						Subtitle: "Compulsory courses are prefilled from the selected program term. Choose optional courses from that term's pool.",
+						Subtitle: "Compulsory courses are prefilled from the selected term. Choose optional courses from that term's pool.",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							createCourseSelectionFields(),

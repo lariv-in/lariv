@@ -35,6 +35,12 @@ func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {
 					ButtonSubmit{Label: "Save"},
 				},
 			},
+			FormComponent[struct{}]{
+				Attr: getters.FormBubbling(getters.Static("wizard")),
+				ChildrenInput: []PageInterface{
+					InputText{Name: "Third", Label: "Third"},
+				},
+			},
 		},
 	}
 
@@ -44,6 +50,15 @@ func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {
 	}
 	if !strings.Contains(html, `name="$stage"`) || !strings.Contains(html, `value="1"`) {
 		t.Fatalf("expected hidden stage field, got %s", html)
+	}
+	if !strings.Contains(html, `name="$stage_target"`) || !strings.Contains(html, `value="0"`) {
+		t.Fatalf("expected ribbon button for previous stage, got %s", html)
+	}
+	if !strings.Contains(html, `Step 2`) || !strings.Contains(html, `btn-primary`) {
+		t.Fatalf("expected active ribbon state for current stage, got %s", html)
+	}
+	if !strings.Contains(html, `Step 3`) || !strings.Contains(html, `btn-disabled`) {
+		t.Fatalf("expected disabled future ribbon stage, got %s", html)
 	}
 	if !strings.Contains(html, `name="Second"`) {
 		t.Fatalf("expected active stage field in html, got %s", html)
@@ -96,5 +111,27 @@ func TestMultiStepFormParseFormIncludesCarryForwardValues(t *testing.T) {
 	}
 	if got, _ := values["Count"].(uint); got != 12 {
 		t.Fatalf("expected Count 12, got %#v", values["Count"])
+	}
+}
+
+func TestMultiStepFormParseTargetStageDefaultsToNextStage(t *testing.T) {
+	form := MultiStepForm{
+		Stages: []FormInterface{
+			FormComponent[struct{}]{},
+			FormComponent[struct{}]{},
+			FormComponent[struct{}]{},
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{
+		"$stage": {"0"},
+	}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if err := req.ParseForm(); err != nil {
+		t.Fatalf("ParseForm failed: %v", err)
+	}
+
+	if got := form.ParseTargetStage(req, 0); got != 1 {
+		t.Fatalf("expected default next stage, got %d", got)
 	}
 }

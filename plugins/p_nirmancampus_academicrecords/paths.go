@@ -32,6 +32,11 @@ func registerRoutes() {
 		Path:    AppUrl + "select/",
 		Handler: lago.NewDynamicView("academicrecords.SelectView"),
 	})
+
+	_ = lago.RegistryRoute.Register("academicrecords.ProgramStructureUnitSelectRoute", lago.Route{
+		Path:    AppUrl + "program-structure-units/select/",
+		Handler: lago.NewDynamicView("academicrecords.ProgramStructureUnitSelectView"),
+	})
 }
 
 func init() {
