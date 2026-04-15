@@ -22,6 +22,7 @@ use (
 	./plugins/p_nirmancampus_sessions
 	./plugins/p_nirmancampus_studentapplications
 	./plugins/p_nirmancampus_students
+	./plugins/p_nirmancampus_studentpayments
 	./plugins/p_nirmancampus_users
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp

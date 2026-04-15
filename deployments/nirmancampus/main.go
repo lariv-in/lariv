@@ -14,6 +14,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_programs"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_sessions"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_students"
+	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_studentpayments"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_users"
 	_ "github.com/lariv-in/lago/plugins/p_nirmancampus_website"
 	_ "github.com/lariv-in/lago/plugins/p_otp"
