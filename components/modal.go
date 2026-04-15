@@ -39,7 +39,7 @@ func (e Modal) Build(ctx context.Context) Node {
 		Attr("hx-push-url", "false"),
 		Attr("hx-target", "this"),
 		Attr("hx-swap", "outerHTML"),
-		Div(Class("modal-box max-w-4xl "+e.Classes),
+		Div(Class("modal-box max-w-4xl bg-base-200 border border-base-300 "+e.Classes),
 			FormEl(Method("dialog"),
 				Button(Type("button"), Class("btn btn-sm btn-circle btn-outline btn-error absolute right-3 top-3"),
 					Attr("onclick", "document.getElementById('"+uid+"').remove()"), Render(Icon{Name: "x-mark"}, ctx),
