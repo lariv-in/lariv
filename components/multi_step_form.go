@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,8 @@ import (
 )
 
 var multiStepFormActionAttr = regexp.MustCompile(`\saction="[^"]*"`)
+
+const multiStepFormErrorFieldPrefix = "$error."
 
 type MultiStepForm struct {
 	Page
@@ -38,6 +41,7 @@ func (e MultiStepForm) Build(ctx context.Context) Node {
 
 	stageIdx := e.resolveStage(ctx)
 	values := e.resolveValues(ctx)
+	errors := e.resolveErrors(ctx)
 	actionURL := e.resolveMultiStageURL(ctx)
 
 	stageHTML, err := renderNodeToString(Render(e.Stages[stageIdx], ctx))
@@ -46,13 +50,13 @@ func (e MultiStepForm) Build(ctx context.Context) Node {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
-	hiddenHTML, err := e.hiddenFieldsHTML(ctx, stageIdx, values)
+	hiddenHTML, err := e.hiddenFieldsHTML(ctx, stageIdx, values, errors)
 	if err != nil {
 		slog.Error("MultiStepForm hidden render failed", "error", err, "key", e.Key, "stage", stageIdx)
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
-	ribbonHTML, err := e.ribbonHTML(stageIdx)
+	ribbonHTML, err := e.ribbonHTML(stageIdx, errors)
 	if err != nil {
 		slog.Error("MultiStepForm ribbon render failed", "error", err, "key", e.Key, "stage", stageIdx)
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
@@ -229,6 +233,27 @@ func (e MultiStepForm) resolveValues(ctx context.Context) map[string]any {
 	}
 }
 
+func (e MultiStepForm) resolveErrors(ctx context.Context) map[string]error {
+	switch value := ctx.Value(getters.ContextKeyError).(type) {
+	case map[string]error:
+		return cloneErrorMap(value)
+	case map[string]any:
+		out := map[string]error{}
+		for key, item := range value {
+			err, ok := item.(error)
+			if !ok || err == nil {
+				continue
+			}
+			out[key] = err
+		}
+		return out
+	case nil:
+		return map[string]error{}
+	default:
+		return map[string]error{}
+	}
+}
+
 func (e MultiStepForm) resolveMultiStageURL(ctx context.Context) string {
 	if e.MultiStageURL == nil {
 		return ""
@@ -241,7 +266,7 @@ func (e MultiStepForm) resolveMultiStageURL(ctx context.Context) string {
 	return url
 }
 
-func (e MultiStepForm) hiddenFieldsHTML(ctx context.Context, stageIdx int, values map[string]any) (string, error) {
+func (e MultiStepForm) hiddenFieldsHTML(ctx context.Context, stageIdx int, values map[string]any, errors map[string]error) (string, error) {
 	nodes := []Node{
 		Input(Type("hidden"), Name("$stage"), Value(strconv.Itoa(stageIdx))),
 	}
@@ -276,6 +301,7 @@ func (e MultiStepForm) hiddenFieldsHTML(ctx context.Context, stageIdx int, value
 			seen[name] = struct{}{}
 		}
 	}
+	nodes = append(nodes, hiddenErrorNodes(errors)...)
 
 	var out strings.Builder
 	for _, node := range nodes {
@@ -288,26 +314,26 @@ func (e MultiStepForm) hiddenFieldsHTML(ctx context.Context, stageIdx int, value
 	return out.String(), nil
 }
 
-func (e MultiStepForm) ribbonHTML(stageIdx int) (string, error) {
+func (e MultiStepForm) ribbonHTML(stageIdx int, errors map[string]error) (string, error) {
 	nodes := []Node{
 		Div(
 			Class("flex flex-wrap items-center gap-2 mb-4"),
-			Group(e.ribbonButtons(stageIdx)),
+			Group(e.ribbonButtons(stageIdx, e.stageErrors(errors))),
 		),
 	}
 	return renderNodesToString(nodes)
 }
 
-func (e MultiStepForm) ribbonButtons(stageIdx int) []Node {
+func (e MultiStepForm) ribbonButtons(stageIdx int, stageErrors map[int]struct{}) []Node {
 	nodes := make([]Node, 0, len(e.Stages))
 	for i := range e.Stages {
 		label := fmt.Sprintf("Step %d", i+1)
-		classes := "btn btn-sm"
+		classes := e.ribbonButtonClasses(i, stageIdx, stageErrors)
 		switch {
 		case i == stageIdx:
 			nodes = append(nodes, Button(
 				Type("button"),
-				Class(classes+" btn-primary"),
+				Class(classes),
 				Text(label),
 			))
 		case i < stageIdx:
@@ -315,19 +341,59 @@ func (e MultiStepForm) ribbonButtons(stageIdx int) []Node {
 				Type("submit"),
 				Name("$stage_target"),
 				Value(strconv.Itoa(i)),
-				Class(classes+" btn-outline"),
+				Class(classes),
 				Text(label),
 			))
 		default:
 			nodes = append(nodes, Button(
 				Type("button"),
-				Class(classes+" btn-disabled"),
+				Class(classes),
 				Disabled(),
 				Text(label),
 			))
 		}
 	}
 	return nodes
+}
+
+func (e MultiStepForm) stageErrors(errors map[string]error) map[int]struct{} {
+	if len(errors) == 0 {
+		return map[int]struct{}{}
+	}
+	stageErrors := map[int]struct{}{}
+	for key, err := range errors {
+		if key == "" || err == nil {
+			continue
+		}
+		if key == "_form" {
+			for i := range e.Stages {
+				stageErrors[i] = struct{}{}
+			}
+			continue
+		}
+		for i := range e.Stages {
+			if _, ok := e.stageInputNames(i)[key]; ok {
+				stageErrors[i] = struct{}{}
+			}
+		}
+	}
+	return stageErrors
+}
+
+func (e MultiStepForm) ribbonButtonClasses(stepIdx, stageIdx int, stageErrors map[int]struct{}) string {
+	classes := []string{"btn", "btn-sm"}
+	switch {
+	case stepIdx == stageIdx:
+		classes = append(classes, "btn-primary")
+	case stepIdx < stageIdx:
+		classes = append(classes, "btn-outline")
+	default:
+		classes = append(classes, "btn-disabled")
+	}
+	if _, ok := stageErrors[stepIdx]; ok {
+		classes = append(classes, "border-2", "border-error")
+	}
+	return strings.Join(classes, " ")
 }
 
 func (e MultiStepForm) parseInputsForStage(stageIdx int, requestNames map[string]struct{}) []InputInterface {
@@ -365,6 +431,10 @@ func (e MultiStepForm) stageInputNames(stageIdx int) map[string]struct{} {
 	return names
 }
 
+func (e MultiStepForm) StageInputNames(stageIdx int) map[string]struct{} {
+	return cloneStringSet(e.stageInputNames(stageIdx))
+}
+
 func formInputs(form FormInterface) []InputInterface {
 	parent, ok := form.(ParentInterface)
 	if !ok {
@@ -388,6 +458,53 @@ func requestFieldNames(r *http.Request, isMultipart bool) map[string]struct{} {
 		names[name] = struct{}{}
 	}
 	return names
+}
+
+func ParseMultiStepErrors(r *http.Request) map[string]error {
+	errors := map[string]error{}
+	appendErrors := func(values map[string][]string) {
+		for name, rawValues := range values {
+			key, ok := strings.CutPrefix(name, multiStepFormErrorFieldPrefix)
+			if !ok || key == "" {
+				continue
+			}
+			message := firstFormValue(rawValues)
+			if message == "" {
+				continue
+			}
+			errors[key] = fmt.Errorf("%s", message)
+		}
+	}
+	if r.MultipartForm != nil {
+		appendErrors(r.MultipartForm.Value)
+	}
+	if r.Form != nil {
+		appendErrors(r.Form)
+	}
+	return errors
+}
+
+func hiddenErrorNodes(errors map[string]error) []Node {
+	if len(errors) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(errors))
+	for key, err := range errors {
+		if key == "" || err == nil {
+			continue
+		}
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	nodes := make([]Node, 0, len(keys))
+	for _, key := range keys {
+		nodes = append(nodes, Input(
+			Type("hidden"),
+			Name(multiStepFormErrorFieldPrefix+key),
+			Value(errors[key].Error()),
+		))
+	}
+	return nodes
 }
 
 func hiddenCarryNode(input InputInterface, value any, ctx context.Context) (Node, bool) {
@@ -613,6 +730,17 @@ func cloneAnyMap(in map[string]any) map[string]any {
 		return map[string]any{}
 	}
 	out := make(map[string]any, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func cloneErrorMap(in map[string]error) map[string]error {
+	if in == nil {
+		return map[string]error{}
+	}
+	out := make(map[string]error, len(in))
 	for k, v := range in {
 		out[k] = v
 	}

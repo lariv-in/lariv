@@ -62,6 +62,7 @@ func registerSourceMenus() {
 var SourceListConfigPageMap = map[string]components.PageInterface{
 	"reddit":  redditSourceListTableConfig(),
 	"twitter": twitterSourceListTableConfig(),
+	"website": websiteSourceListTableConfig(),
 }
 
 func registerSourceTable() {
@@ -193,12 +194,14 @@ func sourceBaseFormFields() components.PageInterface {
 func sourceKindFormMatch() components.PageInterface {
 	redditFields := redditSourceFormFields()
 	twitterFields := twitterSourceFormFields()
+	websiteFields := websiteSourceFormFields()
 	return &components.ClientMatchIf{
 		Key:   getters.Static("kind"),
-		Match: getters.Static(map[string]components.PageInterface{"reddit": redditFields, "twitter": twitterFields}),
+		Match: getters.Static(map[string]components.PageInterface{"reddit": redditFields, "twitter": twitterFields, "website": websiteFields}),
 		Children: []components.PageInterface{
 			redditFields,
 			twitterFields,
+			websiteFields,
 		},
 	}
 }
@@ -389,6 +392,7 @@ func sourceDetailConfigPageGetter() getters.Getter[components.PageInterface] {
 		pageMap := map[string]components.PageInterface{
 			"reddit":  redditSourceDetailFields(),
 			"twitter": twitterSourceDetailFields(),
+			"website": websiteSourceDetailFields(),
 		}
 		page, ok := pageMap[current]
 		if !ok {

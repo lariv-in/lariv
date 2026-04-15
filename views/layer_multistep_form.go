@@ -37,33 +37,56 @@ func (m MultiStepFormLayer) Next(view View, next http.Handler) http.Handler {
 			targetStage = stage + 1
 		}
 		ctx := context.WithValue(r.Context(), "$stage", stage)
+		carriedErrors := components.ParseMultiStepErrors(r)
+		mergedErrors := mergeMultiStepFormErrors(carriedErrors, form.StageInputNames(stage), fieldErrors)
 		if len(fieldErrors) != 0 {
 			for field, ferr := range fieldErrors {
 				slog.Error("views: multi-step: field error", "field", field, "error", ferr)
 			}
-			ctx = ContextWithErrorsAndValues(ctx, values, fieldErrors)
+			ctx = ContextWithErrorsAndValues(ctx, values, mergedErrors)
 			next.ServeHTTP(w, multiStepRenderRequest(r.WithContext(ctx)))
 			return
 		}
 
 		lastStage := form.StageCount() - 1
 		if targetStage < stage {
-			ctx = ContextWithErrorsAndValues(ctx, values, nil)
+			ctx = ContextWithErrorsAndValues(ctx, values, mergedErrors)
 			ctx = context.WithValue(ctx, "$stage", targetStage)
 			next.ServeHTTP(&multiStepSwapResponseWriter{ResponseWriter: w}, multiStepRenderRequest(r.WithContext(ctx)))
 			return
 		}
 
 		if stage < lastStage {
-			ctx = ContextWithErrorsAndValues(ctx, values, nil)
+			ctx = ContextWithErrorsAndValues(ctx, values, mergedErrors)
 			ctx = context.WithValue(ctx, "$stage", min(targetStage, stage+1))
 			next.ServeHTTP(&multiStepSwapResponseWriter{ResponseWriter: w}, multiStepRenderRequest(r.WithContext(ctx)))
 			return
 		}
 
-		ctx = ContextWithErrorsAndValues(ctx, values, nil)
+		ctx = ContextWithErrorsAndValues(ctx, values, mergedErrors)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func mergeMultiStepFormErrors(carriedErrors map[string]error, stageFields map[string]struct{}, freshErrors map[string]error) map[string]error {
+	merged := map[string]error{}
+	for key, err := range carriedErrors {
+		if err == nil {
+			continue
+		}
+		if _, ok := stageFields[key]; ok {
+			continue
+		}
+		merged[key] = err
+	}
+	for key, err := range freshErrors {
+		if err == nil {
+			delete(merged, key)
+			continue
+		}
+		merged[key] = err
+	}
+	return merged
 }
 
 func multiStepRenderRequest(r *http.Request) *http.Request {

@@ -10,6 +10,7 @@ type SourcePageData struct {
 	Source  Source
 	Reddit  *RedditSource
 	Twitter *TwitterSource
+	Website *WebsiteSource
 }
 
 func loadSourcePageData(ctx context.Context, db *gorm.DB, sourceID uint) (SourcePageData, error) {
@@ -32,6 +33,13 @@ func loadSourcePageData(ctx context.Context, db *gorm.DB, sourceID uint) (Source
 		}
 		row.Source = data.Source
 		data.Twitter = &row
+	case "website":
+		var row WebsiteSource
+		if err := db.WithContext(ctx).Where("source_id = ?", sourceID).First(&row).Error; err != nil {
+			return data, err
+		}
+		row.Source = data.Source
+		data.Website = &row
 	case "":
 		return data, fmt.Errorf("source %d has empty kind", sourceID)
 	default:
@@ -67,6 +75,15 @@ func loadSourcePageDataList(ctx context.Context, db *gorm.DB, sources []Source) 
 		twitterBySourceID[row.SourceID] = row
 	}
 
+	var websiteRows []WebsiteSource
+	if err := db.WithContext(ctx).Where("source_id IN ?", sourceIDs).Find(&websiteRows).Error; err != nil {
+		return nil, err
+	}
+	websiteBySourceID := make(map[uint]WebsiteSource, len(websiteRows))
+	for _, row := range websiteRows {
+		websiteBySourceID[row.SourceID] = row
+	}
+
 	items := make([]SourcePageData, 0, len(sources))
 	for _, source := range sources {
 		item := SourcePageData{Source: source}
@@ -77,6 +94,10 @@ func loadSourcePageDataList(ctx context.Context, db *gorm.DB, sources []Source) 
 		if row, ok := twitterBySourceID[source.ID]; ok {
 			row.Source = source
 			item.Twitter = &row
+		}
+		if row, ok := websiteBySourceID[source.ID]; ok {
+			row.Source = source
+			item.Website = &row
 		}
 		items = append(items, item)
 	}

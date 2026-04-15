@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,6 +15,10 @@ import (
 
 func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {
 	when := time.Date(2026, time.April, 15, 14, 30, 0, 0, time.UTC)
+	ctx := context.WithValue(context.Background(), getters.ContextKeyError, map[string]error{
+		"First": fmt.Errorf("bad first"),
+		"_form": fmt.Errorf("bad form"),
+	})
 	form := MultiStepForm{
 		Stage:         getters.Static(1),
 		Values:        getters.Static(map[string]any{"First": "alpha", "When": when}),
@@ -44,7 +49,7 @@ func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {
 		},
 	}
 
-	html := renderNode(t, form.Build(context.Background()))
+	html := renderNode(t, form.Build(ctx))
 	if !strings.Contains(html, `action="/wizard"`) {
 		t.Fatalf("expected multistage action on rendered form, got %s", html)
 	}
@@ -68,6 +73,56 @@ func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {
 	}
 	if !strings.Contains(html, `name="When"`) || !strings.Contains(html, `value="2026-04-15"`) {
 		t.Fatalf("expected typed hidden carry field for date input, got %s", html)
+	}
+	if !strings.Contains(html, `name="$error.First"`) || !strings.Contains(html, `value="bad first"`) {
+		t.Fatalf("expected hidden carry field for field error, got %s", html)
+	}
+	if !strings.Contains(html, `name="$error._form"`) || !strings.Contains(html, `value="bad form"`) {
+		t.Fatalf("expected hidden carry field for form error, got %s", html)
+	}
+	if got := strings.Count(html, `border-error`); got != 3 {
+		t.Fatalf("expected all stages highlighted for global form error, got %d body=%s", got, html)
+	}
+}
+
+func TestMultiStepFormBuildHighlightsOnlyStagesWithFieldErrors(t *testing.T) {
+	ctx := context.WithValue(context.Background(), getters.ContextKeyError, map[string]error{
+		"First": fmt.Errorf("bad first"),
+		"Third": fmt.Errorf("bad third"),
+	})
+	form := MultiStepForm{
+		Stage: getters.Static(1),
+		Stages: []FormInterface{
+			FormComponent[struct{}]{
+				ChildrenInput: []PageInterface{
+					InputText{Name: "First", Label: "First"},
+				},
+			},
+			FormComponent[struct{}]{
+				ChildrenInput: []PageInterface{
+					InputText{Name: "Second", Label: "Second"},
+				},
+			},
+			FormComponent[struct{}]{
+				ChildrenInput: []PageInterface{
+					InputText{Name: "Third", Label: "Third"},
+				},
+			},
+		},
+	}
+
+	html := renderNode(t, form.Build(ctx))
+	if got := strings.Count(html, `border-error`); got != 2 {
+		t.Fatalf("expected only error stages highlighted, got %d body=%s", got, html)
+	}
+	if !strings.Contains(html, `class="btn btn-sm btn-outline border-2 border-error"`) {
+		t.Fatalf("expected previous error stage highlighted, got %s", html)
+	}
+	if !strings.Contains(html, `class="btn btn-sm btn-disabled border-2 border-error"`) {
+		t.Fatalf("expected future error stage highlighted, got %s", html)
+	}
+	if !strings.Contains(html, `class="btn btn-sm btn-primary">Step 2</button>`) {
+		t.Fatalf("expected current non-error stage to keep normal styling, got %s", html)
 	}
 }
 
@@ -133,5 +188,30 @@ func TestMultiStepFormParseTargetStageDefaultsToNextStage(t *testing.T) {
 
 	if got := form.ParseTargetStage(req, 0); got != 1 {
 		t.Fatalf("expected default next stage, got %d", got)
+	}
+}
+
+func TestParseMultiStepErrorsIncludesCarriedErrors(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(url.Values{
+		"$stage":        {"1"},
+		"$error.First":  {"bad first"},
+		"$error._form":  {"bad form"},
+		"$error.Empty":  {""},
+		"$error_target": {"ignore"},
+	}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if err := req.ParseForm(); err != nil {
+		t.Fatalf("ParseForm failed: %v", err)
+	}
+
+	errors := ParseMultiStepErrors(req)
+	if got := errors["First"]; got == nil || got.Error() != "bad first" {
+		t.Fatalf("expected carried First error, got %#v", got)
+	}
+	if got := errors["_form"]; got == nil || got.Error() != "bad form" {
+		t.Fatalf("expected carried _form error, got %#v", got)
+	}
+	if _, ok := errors["Empty"]; ok {
+		t.Fatalf("expected blank carried errors to be ignored, got %#v", errors)
 	}
 }
