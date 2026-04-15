@@ -8,27 +8,28 @@ import (
 
 func init() {
 	registerMenuPages()
+	registerStudentsMenuAssignmentSubmissionsEntry()
 	registerFilterPages()
 	registerFormPages()
 	registerTablePages()
 	registerDetailPages()
 }
 
-func registerMenuPages() {
-	lago.RegistryPage.Register("assignmentsubmissions.ListMenu", &components.SidebarMenu{
-		Title: getters.Static("Assignment Submissions"),
-		Back: &components.SidebarMenuItem{
-			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
-		},
-		Children: []components.PageInterface{
-			&components.SidebarMenuItem{
-				Title: getters.Static("All submissions"),
-				Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
-			},
-		},
+func registerStudentsMenuAssignmentSubmissionsEntry() {
+	lago.RegistryPage.Patch("students.StudentMenu", func(page components.PageInterface) components.PageInterface {
+		menu, ok := page.(*components.SidebarMenu)
+		if !ok {
+			return page
+		}
+		menu.Children = append(menu.Children, &components.SidebarMenuItem{
+			Title: getters.Static("Assignment submissions"),
+			Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
+		})
+		return menu
 	})
+}
 
+func registerMenuPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.DetailMenu", &components.SidebarMenu{
 		Title: getters.Format("Submission: %s", getters.Any(getters.Key[string]("assignmentsubmission.AssignmentTitle"))),
 		Back: &components.SidebarMenuItem{
