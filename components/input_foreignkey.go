@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -24,6 +25,7 @@ type InputForeignKey[T any] struct {
 	Url         getters.Getter[string]
 	Required    bool
 	Classes     string
+	Attr        getters.Getter[Node]
 	// Hidden renders only a hidden input (no label or picker). Use for carried IDs.
 	Hidden bool
 }
@@ -68,7 +70,17 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
 		wrapClass += " hidden"
 		return Div(Class(wrapClass),
-			Input(Type("hidden"), Name(e.Name), Value(valuePk)),
+			Input(Type("hidden"), Name(e.Name), Value(valuePk),
+				Iff(e.Attr != nil, func() (out Node) {
+					out = Raw("")
+					n, err := e.Attr(ctx)
+					if err != nil {
+						slog.Error("InputForeignKey attr getter failed", "error", err, "key", e.Key)
+						return out
+					}
+					return n
+				}),
+			),
 		)
 	}
 
@@ -106,7 +118,29 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
 			Text(e.Label),
 			Input(Type("hidden"), Name(e.Name), Attr(":value", "value"),
-				If(e.Required, Required())),
+				If(e.Required, Required()),
+				Iff(e.Attr != nil, func() (out Node) {
+					out = Raw("")
+					defer func() {
+						if r := recover(); r != nil {
+							slog.Error("InputForeignKey attr getter panicked", "panic", r, "key", e.Key)
+						}
+					}()
+					n, err := e.Attr(ctx)
+					if err != nil {
+						slog.Error("InputForeignKey attr getter failed", "error", err, "key", e.Key)
+						return out
+					}
+					if n == nil {
+						return out
+					}
+					v := reflect.ValueOf(n)
+					if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Map || v.Kind() == reflect.Slice || v.Kind() == reflect.Interface || v.Kind() == reflect.Func) && v.IsNil() {
+						return out
+					}
+					return n
+				}),
+			),
 			Div(Class("flex w-full items-stretch gap-1"),
 				Div(Class("input input-bordered flex-1 flex items-center cursor-pointer"),
 					Attr(":class", "display ? '' : 'opacity-50'"),
