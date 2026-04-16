@@ -21,16 +21,13 @@ func tableColumns() []components.TableColumn {
 				getters.Key[string]("$row.Program.University"),
 			)},
 		}},
-		{Label: "Session", Name: "Session.Name", Children: []components.PageInterface{
-			&components.FieldText{Getter: getters.Key[string]("$row.Session.Name")},
-		}},
-		{Label: "Status", Name: "Status", Children: []components.PageInterface{
-			&components.FieldText{Getter: getters.Key[string]("$row.Status")},
-		}},
 		{Label: "Term", Name: "Term", Children: []components.PageInterface{
 			&components.FieldText{
 				Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.ProgramStructureUnit.TermNumber"))),
 			},
+		}},
+		{Label: "Session", Name: "Session.Name", Children: []components.PageInterface{
+			&components.FieldText{Getter: getters.Key[string]("$row.Session.Name")},
 		}},
 	}
 }

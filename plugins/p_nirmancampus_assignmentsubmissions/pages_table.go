@@ -60,15 +60,6 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[AssignmentSubmission]]("assignmentsubmissions"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "assignmentsubmissions.Filter"}},
-					&components.ButtonModalForm{
-						Page:        components.Page{Roles: []string{"admin", "superuser"}},
-						Name:        getters.Static("assignmentsubmissions.CreateForm"),
-						Url:         lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
-						FormPostURL: lago.RoutePath("assignmentsubmissions.CreateRoute", nil),
-						ModalUID:    "assignmentsubmissions-create-modal",
-						Icon:        "plus",
-						Classes:     "btn-square btn-outline btn-sm",
-					},
 				},
 				RowAttr: getters.RowAttrNavigate(lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{

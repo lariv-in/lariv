@@ -44,24 +44,6 @@ func init() {
 			}),
 	)
 
-	lago.RegistryView.Register("assignmentsubmissions.CreateView",
-		lago.GetPageView("assignmentsubmissions.CreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleLayer).
-			WithLayer("assignmentsubmissions.create_query_defaults", assignmentSubmissionCreateQueryDefaultsLayer{}).
-			WithLayer("assignmentsubmissions.create", views.LayerCreate[AssignmentSubmission]{
-				SuccessURL: lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-				FormPatchers: views.FormPatchers{
-					registry.Pair[string, views.FormPatcher]{
-						Key:   "assignmentsubmissions.create_defaults",
-						Value: assignmentSubmissionCreateFormPatcher{},
-					},
-				},
-			}),
-	)
-
 	lago.RegistryView.Register("assignmentsubmissions.BulkCreateFromAcademicRecordView",
 		lago.GetPageView("assignmentsubmissions.BulkCreateFromAcademicRecordForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).

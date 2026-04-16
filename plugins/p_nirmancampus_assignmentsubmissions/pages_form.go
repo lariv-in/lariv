@@ -90,17 +90,6 @@ func assignmentSubmissionFormCourseAndAcademicRecordRow() *components.ContainerR
 	}
 }
 
-// assignmentSubmissionCreateFormFields is the minimal create modal: course, academic record.
-// Title, status, marks, and assets are set by form patchers or edited after create.
-func assignmentSubmissionCreateFormFields() *components.ContainerColumn {
-	return &components.ContainerColumn{
-		Page: components.Page{Key: "assignmentsubmissions.CreateFormFieldsBody"},
-		Children: []components.PageInterface{
-			assignmentSubmissionFormCourseAndAcademicRecordRow(),
-		},
-	}
-}
-
 func assignmentSubmissionUpdateFormFields() *components.ContainerColumn {
 	return &components.ContainerColumn{
 		Page: components.Page{Key: "assignmentsubmissions.FormFieldsBody"},
@@ -185,34 +174,6 @@ func assignmentSubmissionUpdateFormFields() *components.ContainerColumn {
 
 func registerFormPages() {
 	lago.RegistryPage.Register("assignmentsubmissions.FormFields", assignmentSubmissionUpdateFormFields())
-
-	lago.RegistryPage.Register("assignmentsubmissions.CreateForm", &components.Modal{
-		Page: components.Page{
-			Key:   "assignmentsubmissions.CreateModal",
-			Roles: []string{"admin", "superuser"},
-		},
-		UID: "assignmentsubmissions-create-modal",
-		Children: []components.PageInterface{
-			&components.FormComponent[AssignmentSubmission]{
-				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
-
-				Title:    "Create submission",
-				Subtitle: "Course and academic record only — edit submission for title, marks, status, and files.",
-				Classes:  "@container",
-				ChildrenInput: []components.PageInterface{
-					assignmentSubmissionCreateFormFields(),
-				},
-				ChildrenAction: []components.PageInterface{
-					&components.ContainerRow{
-						Classes: "flex justify-end gap-2 mt-2",
-						Children: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Save submission", Classes: "btn-primary"},
-						},
-					},
-				},
-			},
-		},
-	})
 
 	lago.RegistryPage.Register("assignmentsubmissions.BulkCreateFromAcademicRecordForm", &components.Modal{
 		Page: components.Page{
