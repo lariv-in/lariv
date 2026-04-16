@@ -7,6 +7,12 @@ import (
 )
 
 func init() {
+	// Empty shell for root redirect view (layers redirect; page never renders).
+	lago.RegistryPage.Register("dashboard.HomeRedirectStub", &components.ContainerColumn{
+		Page:     components.Page{Key: "dashboard.HomeRedirectStub"},
+		Children: []components.PageInterface{},
+	})
+
 	components.RegistryTopbar.Register("dashboard.appsPageButton", components.ButtonLink{
 		Icon:    "squares-2x2",
 		Link:    lago.RoutePath("dashboard.AppsPage", nil),
