@@ -48,7 +48,9 @@ func isSkippableDirectMediaURL(u *url.URL) bool {
 	ext := strings.ToLower(path.Ext(u.Path))
 	switch ext {
 	case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg",
-		".mp4", ".webm", ".mov", ".mp3", ".wav", ".ogg", ".pdf", ".zip":
+		".tif", ".tiff", ".mp4", ".webm", ".mov", ".m4v", ".avi", ".mkv",
+		".mp3", ".wav", ".ogg", ".pdf", ".zip", ".tar", ".gz", ".tgz",
+		".rar", ".7z", ".xz", ".bz2":
 		return true
 	default:
 		return false
@@ -265,7 +267,7 @@ func fetchPostURLAsMarkdown(ctx context.Context, raw string) string {
 	}
 	fetchCtx, cancel := context.WithTimeout(ctx, linkedArticleTimeout)
 	defer cancel()
-	intels, err := NewWebsiteFetchers(fetchCtx).FetchWebsite(parsed.String(), 1)
+	intels, err := NewWebsiteFetchers(fetchCtx, nil).FetchWebsite(parsed.String(), 1)
 	if err != nil {
 		slog.Warn("lacerate: linked article fetch via website fetcher", "error", err, "url", parsed.Redacted())
 		return ""

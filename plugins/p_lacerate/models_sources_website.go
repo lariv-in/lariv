@@ -18,7 +18,7 @@ type WebsiteSource struct {
 }
 
 func (w WebsiteSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}) ([]Intel, error) {
-	intels, err := NewWebsiteFetchers(ctx).FetchWebsite(w.URL, websiteSourceDefaultDepth)
+	intels, err := NewWebsiteFetchers(ctx, db).FetchWebsite(w.URL, websiteSourceDefaultDepth)
 	if err != nil {
 		slog.Error("lacerate: website source fetch", "error", err, "source_id", w.SourceID, "url", w.URL)
 		return nil, err

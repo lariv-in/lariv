@@ -275,8 +275,12 @@ func websiteLinksFromSelection(ctx context.Context, sel *goquery.Selection, page
 		if err != nil {
 			return true
 		}
-		if _, _, err := websiteFetchableURL(ctx, resolved); err != nil {
-			slog.Warn("lacerate: skip child website url", "error", err, "url", resolved)
+		parsed, err := url.Parse(resolved)
+		if err != nil {
+			return true
+		}
+		if linkedURLFailsSSRF(ctx, parsed) {
+			slog.Warn("lacerate: skip child website url", "error", fmt.Errorf("url blocked by ssrf guard: %s", resolved), "url", resolved)
 			return true
 		}
 		if _, ok := seen[resolved]; ok {

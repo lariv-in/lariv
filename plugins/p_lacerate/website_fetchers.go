@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type WebsiteFetcher interface {
@@ -21,6 +23,7 @@ type WebsiteFetchers []WebsiteFetcher
 
 type websiteFetchState struct {
 	ctx      context.Context
+	db       *gorm.DB
 	now      time.Time
 	seen     map[string]struct{}
 	fetchers WebsiteFetchers
@@ -39,12 +42,13 @@ var WebsiteFetcherImplementors = WebsiteFetchers{
 	&GeneralWebsiteFetcher{},
 }
 
-func NewWebsiteFetchers(ctx context.Context) WebsiteFetchers {
+func NewWebsiteFetchers(ctx context.Context, db *gorm.DB) WebsiteFetchers {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	state := &websiteFetchState{
 		ctx:  ctx,
+		db:   db,
 		now:  time.Now().UTC(),
 		seen: map[string]struct{}{},
 	}
@@ -113,9 +117,33 @@ func (s *websiteFetchState) appendChildIntels(out []Intel, childURLs []string, d
 		return dedupWebsiteIntels(out)
 	}
 	for _, childURL := range childURLs {
-		more, err := s.fetchers.FetchWebsite(childURL, depth-1)
+		normalizedURL, err := normalizeWebsiteSeedURL(childURL)
 		if err != nil {
-			slog.Error("lacerate: child website fetch", "error", err, "url", childURL, "depth", depth-1)
+			slog.Error("lacerate: child website normalize", "error", err, "url", childURL)
+			continue
+		}
+		parsed, err := url.Parse(normalizedURL)
+		if err != nil {
+			slog.Error("lacerate: child website parse", "error", err, "url", childURL)
+			continue
+		}
+		if isSkippableDirectMediaURL(parsed) {
+			asset, err := directMediaFetchRoot(s.ctx, normalizedURL)
+			if err != nil {
+				slog.Error("lacerate: child media fetch", "error", err, "url", normalizedURL)
+				continue
+			}
+			more, err := directMediaExtractAsset(s.ctx, s.db, 0, map[string]struct{}{}, &directMediaArchiveState{}, asset, Config.DirectMedia.MaxArchiveDepth)
+			if err != nil {
+				slog.Error("lacerate: child media extract", "error", err, "url", normalizedURL)
+				continue
+			}
+			out = append(out, more...)
+			continue
+		}
+		more, err := s.fetchers.FetchWebsite(normalizedURL, depth-1)
+		if err != nil {
+			slog.Error("lacerate: child website fetch", "error", err, "url", normalizedURL, "depth", depth-1)
 			continue
 		}
 		out = append(out, more...)

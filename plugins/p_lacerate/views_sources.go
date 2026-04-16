@@ -456,6 +456,7 @@ type parsedSourceFormData struct {
 	MaxFreshPosts uint
 	Handles       datatypes.JSON
 	URL           string
+	Query         string
 }
 
 func parseSourceMaxFreshPostsInto(values map[string]any, fieldErrors map[string]error, out *uint) {
@@ -517,6 +518,28 @@ func sourceFormDataFromValues(values map[string]any, fieldErrors map[string]erro
 			return out
 		}
 		out.URL = normalizedURL
+	case sourceKindGoogleSearch:
+		out.Query = strings.TrimSpace(fmt.Sprint(values["Query"]))
+		if out.Query == "" {
+			fieldErrors["Query"] = fmt.Errorf("query is required")
+		}
+	case sourceKindWebsearch:
+		out.Query = strings.TrimSpace(fmt.Sprint(values["Query"]))
+		if out.Query == "" {
+			fieldErrors["Query"] = fmt.Errorf("query is required")
+		}
+	case sourceKindDirectMedia:
+		rawURL := strings.TrimSpace(fmt.Sprint(values["URL"]))
+		if rawURL == "" {
+			fieldErrors["URL"] = fmt.Errorf("url is required")
+			return out
+		}
+		normalizedURL, err := normalizeWebsiteSeedURL(rawURL)
+		if err != nil {
+			fieldErrors["URL"] = err
+			return out
+		}
+		out.URL = normalizedURL
 	}
 	return out
 }
@@ -538,6 +561,21 @@ func createSourceKindRow(tx *gorm.DB, sourceID uint, formData parsedSourceFormDa
 		}).Error
 	case "website":
 		return tx.Create(&WebsiteSource{
+			SourceID: sourceID,
+			URL:      formData.URL,
+		}).Error
+	case sourceKindGoogleSearch:
+		return tx.Create(&GoogleSearchSource{
+			SourceID: sourceID,
+			Query:    formData.Query,
+		}).Error
+	case sourceKindWebsearch:
+		return tx.Create(&WebsearchSource{
+			SourceID: sourceID,
+			Query:    formData.Query,
+		}).Error
+	case sourceKindDirectMedia:
+		return tx.Create(&DirectMediaSource{
 			SourceID: sourceID,
 			URL:      formData.URL,
 		}).Error

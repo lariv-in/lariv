@@ -7,10 +7,13 @@ import (
 )
 
 type SourcePageData struct {
-	Source  Source
-	Reddit  *RedditSource
-	Twitter *TwitterSource
-	Website *WebsiteSource
+	Source       Source
+	Reddit       *RedditSource
+	Twitter      *TwitterSource
+	Website      *WebsiteSource
+	GoogleSearch *GoogleSearchSource
+	Websearch    *WebsearchSource
+	DirectMedia  *DirectMediaSource
 }
 
 func loadSourcePageData(ctx context.Context, db *gorm.DB, sourceID uint) (SourcePageData, error) {
@@ -40,6 +43,27 @@ func loadSourcePageData(ctx context.Context, db *gorm.DB, sourceID uint) (Source
 		}
 		row.Source = data.Source
 		data.Website = &row
+	case sourceKindGoogleSearch:
+		var row GoogleSearchSource
+		if err := db.WithContext(ctx).Where("source_id = ?", sourceID).First(&row).Error; err != nil {
+			return data, err
+		}
+		row.Source = data.Source
+		data.GoogleSearch = &row
+	case sourceKindWebsearch:
+		var row WebsearchSource
+		if err := db.WithContext(ctx).Where("source_id = ?", sourceID).First(&row).Error; err != nil {
+			return data, err
+		}
+		row.Source = data.Source
+		data.Websearch = &row
+	case sourceKindDirectMedia:
+		var row DirectMediaSource
+		if err := db.WithContext(ctx).Where("source_id = ?", sourceID).First(&row).Error; err != nil {
+			return data, err
+		}
+		row.Source = data.Source
+		data.DirectMedia = &row
 	case "":
 		return data, fmt.Errorf("source %d has empty kind", sourceID)
 	default:
@@ -84,6 +108,32 @@ func loadSourcePageDataList(ctx context.Context, db *gorm.DB, sources []Source) 
 		websiteBySourceID[row.SourceID] = row
 	}
 
+	var googleSearchRows []GoogleSearchSource
+	if err := db.WithContext(ctx).Where("source_id IN ?", sourceIDs).Find(&googleSearchRows).Error; err != nil {
+		return nil, err
+	}
+	googleSearchBySourceID := make(map[uint]GoogleSearchSource, len(googleSearchRows))
+	for _, row := range googleSearchRows {
+		googleSearchBySourceID[row.SourceID] = row
+	}
+	var websearchRows []WebsearchSource
+	if err := db.WithContext(ctx).Where("source_id IN ?", sourceIDs).Find(&websearchRows).Error; err != nil {
+		return nil, err
+	}
+	websearchBySourceID := make(map[uint]WebsearchSource, len(websearchRows))
+	for _, row := range websearchRows {
+		websearchBySourceID[row.SourceID] = row
+	}
+
+	var directMediaRows []DirectMediaSource
+	if err := db.WithContext(ctx).Where("source_id IN ?", sourceIDs).Find(&directMediaRows).Error; err != nil {
+		return nil, err
+	}
+	directMediaBySourceID := make(map[uint]DirectMediaSource, len(directMediaRows))
+	for _, row := range directMediaRows {
+		directMediaBySourceID[row.SourceID] = row
+	}
+
 	items := make([]SourcePageData, 0, len(sources))
 	for _, source := range sources {
 		item := SourcePageData{Source: source}
@@ -98,6 +148,18 @@ func loadSourcePageDataList(ctx context.Context, db *gorm.DB, sources []Source) 
 		if row, ok := websiteBySourceID[source.ID]; ok {
 			row.Source = source
 			item.Website = &row
+		}
+		if row, ok := googleSearchBySourceID[source.ID]; ok {
+			row.Source = source
+			item.GoogleSearch = &row
+		}
+		if row, ok := websearchBySourceID[source.ID]; ok {
+			row.Source = source
+			item.Websearch = &row
+		}
+		if row, ok := directMediaBySourceID[source.ID]; ok {
+			row.Source = source
+			item.DirectMedia = &row
 		}
 		items = append(items, item)
 	}

@@ -26,6 +26,9 @@ var SourceKindChoices = []registry.Pair[string, string]{
 	{Key: "reddit", Value: "Reddit"},
 	{Key: "twitter", Value: "Twitter / X"},
 	{Key: "website", Value: "Website"},
+	{Key: sourceKindGoogleSearch, Value: "GoogleSearch"},
+	{Key: sourceKindWebsearch, Value: "Websearch"},
+	{Key: sourceKindDirectMedia, Value: "DirectMedia"},
 }
 
 // RegistrySourceKind holds a constructor per [Source.Kind] that returns a new row value (e.g. &RedditSource{})
@@ -60,6 +63,15 @@ func deleteSourceKindExtensionRows(tx *gorm.DB, sourceID uint) error {
 		return err
 	}
 	if err := tx.Where("source_id = ?", sourceID).Delete(&WebsiteSource{}).Error; err != nil {
+		return err
+	}
+	if err := tx.Where("source_id = ?", sourceID).Delete(&GoogleSearchSource{}).Error; err != nil {
+		return err
+	}
+	if err := tx.Where("source_id = ?", sourceID).Delete(&WebsearchSource{}).Error; err != nil {
+		return err
+	}
+	if err := tx.Where("source_id = ?", sourceID).Delete(&DirectMediaSource{}).Error; err != nil {
 		return err
 	}
 	return nil

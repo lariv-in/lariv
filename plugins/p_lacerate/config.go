@@ -45,10 +45,32 @@ type GoogleGeocodingConfig struct {
 	APIKey string `toml:"apiKey"`
 }
 
+// GoogleSearchConfig holds Google Custom Search Engine credentials for [GoogleSearchSource].
+type GoogleSearchConfig struct {
+	APIKey string `toml:"apiKey"`
+	CX     string `toml:"cx"`
+}
+
+// DirectMediaConfig controls direct-media source fetch size, archive safety caps, and optional AI analysis model.
+type DirectMediaConfig struct {
+	MaxDownloadBytes        int64  `toml:"maxDownloadBytes"`
+	MaxArchiveDepth         int    `toml:"maxArchiveDepth"`
+	MaxArchiveEntries       int    `toml:"maxArchiveEntries"`
+	MaxArchiveEntryBytes    int64  `toml:"maxArchiveEntryBytes"`
+	MaxArchiveExpandedBytes int64  `toml:"maxArchiveExpandedBytes"`
+	AIModel                 string `toml:"aiModel"`
+}
+
 const (
 	defaultIntelPreviewDirectory = "lacerate/intel_previews"
 	// defaultIntelPreviewUserAgent is a normal browser UA so CDNs (e.g. external-preview.redd.it) accept preview fetches.
-	defaultIntelPreviewUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+	defaultIntelPreviewUserAgent              = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+	defaultDirectMediaMaxDownloadBytes        = 64 << 20
+	defaultDirectMediaMaxArchiveDepth         = 4
+	defaultDirectMediaMaxArchiveEntries       = 256
+	defaultDirectMediaMaxArchiveEntryBytes    = 32 << 20
+	defaultDirectMediaMaxArchiveExpandedBytes = 128 << 20
+	defaultDirectMediaAIModel                 = "gemini-2.5-flash"
 )
 
 // IntelPreviewConfig holds the VFS path for stored preview images and the User-Agent for outbound preview HTTP requests.
@@ -63,6 +85,8 @@ type lacerateConfig struct {
 	GeminiEmbedding GeminiEmbeddingConfig `toml:"geminiEmbedding"`
 	GeminiAgent     GeminiAgentConfig     `toml:"geminiAgent"`
 	GoogleGeocoding GoogleGeocodingConfig `toml:"googleGeocoding"`
+	GoogleSearch    GoogleSearchConfig    `toml:"googleSearch"`
+	DirectMedia     DirectMediaConfig     `toml:"directMedia"`
 	IntelPreview    IntelPreviewConfig    `toml:"intelPreview"`
 }
 
@@ -84,6 +108,28 @@ func (c *lacerateConfig) PostConfig() {
 	}
 
 	c.Twitter.NitterBaseURL = normalizeNitterBaseURL(c.Twitter.NitterBaseURL)
+	c.GoogleGeocoding.APIKey = strings.TrimSpace(c.GoogleGeocoding.APIKey)
+	c.GoogleSearch.APIKey = strings.TrimSpace(c.GoogleSearch.APIKey)
+	c.GoogleSearch.CX = strings.TrimSpace(c.GoogleSearch.CX)
+	c.DirectMedia.AIModel = strings.TrimSpace(c.DirectMedia.AIModel)
+	if c.DirectMedia.MaxDownloadBytes <= 0 {
+		c.DirectMedia.MaxDownloadBytes = defaultDirectMediaMaxDownloadBytes
+	}
+	if c.DirectMedia.MaxArchiveDepth <= 0 {
+		c.DirectMedia.MaxArchiveDepth = defaultDirectMediaMaxArchiveDepth
+	}
+	if c.DirectMedia.MaxArchiveEntries <= 0 {
+		c.DirectMedia.MaxArchiveEntries = defaultDirectMediaMaxArchiveEntries
+	}
+	if c.DirectMedia.MaxArchiveEntryBytes <= 0 {
+		c.DirectMedia.MaxArchiveEntryBytes = defaultDirectMediaMaxArchiveEntryBytes
+	}
+	if c.DirectMedia.MaxArchiveExpandedBytes <= 0 {
+		c.DirectMedia.MaxArchiveExpandedBytes = defaultDirectMediaMaxArchiveExpandedBytes
+	}
+	if c.DirectMedia.AIModel == "" {
+		c.DirectMedia.AIModel = defaultDirectMediaAIModel
+	}
 
 	mode := strings.ToLower(strings.TrimSpace(string(c.Twitter.FetchMode)))
 	switch TwitterFetchMode(mode) {

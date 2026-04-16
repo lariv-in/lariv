@@ -1,6 +1,7 @@
 package p_lacerate
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"html"
@@ -198,6 +199,61 @@ func persistIntelPreviewImage(ctx context.Context, db *gorm.DB, fileNamePrefix, 
 
 	if err := db.Create(node).Error; err != nil {
 		slog.Error("lacerate: intel preview vnode create", "error", err, "url", imageURL)
+		if delErr := p_filesystem.Store.Delete(storedPath); delErr != nil {
+			slog.Error("lacerate: cleanup store after vnode error", "error", delErr, "path", storedPath)
+		}
+		return nil
+	}
+	return &node.ID
+}
+
+// persistIntelPreviewBytes stores already-fetched image bytes into filesystem storage for ingest previews.
+func persistIntelPreviewBytes(ctx context.Context, db *gorm.DB, fileNamePrefix string, data []byte, contentType string) *uint {
+	if len(data) == 0 {
+		return nil
+	}
+	if db == nil {
+		slog.Warn("lacerate: db is nil; skipping intel preview save")
+		return nil
+	}
+	if p_filesystem.Store == nil {
+		slog.Warn("lacerate: filesystem store not configured; skipping intel preview save")
+		return nil
+	}
+
+	dir := Config.IntelPreview.Directory
+	parent, err := p_filesystem.EnsureDirectoryPath(db, dir)
+	if err != nil {
+		slog.Error("lacerate: ensure intel preview directory", "error", err, "path", dir)
+		return nil
+	}
+
+	ext := extFromContentType(contentType)
+	baseID := strings.TrimSpace(fileNamePrefix)
+	if baseID == "" {
+		baseID = "preview"
+	}
+	name := fmt.Sprintf("preview_%s_%d%s", baseID, time.Now().UnixNano(), ext)
+	name = sanitizePreviewFileName(name)
+
+	storedPath, err := p_filesystem.Store.SaveFromReader(bytes.NewReader(data), ext)
+	if err != nil {
+		slog.Error("lacerate: intel preview save to store", "error", err, "content_type", contentType)
+		return nil
+	}
+
+	node := &p_filesystem.VNode{
+		Name:        name,
+		IsDirectory: false,
+		FilePath:    storedPath,
+	}
+	if parent != nil {
+		pid := parent.ID
+		node.ParentID = &pid
+	}
+
+	if err := db.Create(node).Error; err != nil {
+		slog.Error("lacerate: intel preview vnode create", "error", err, "content_type", contentType)
 		if delErr := p_filesystem.Store.Delete(storedPath); delErr != nil {
 			slog.Error("lacerate: cleanup store after vnode error", "error", delErr, "path", storedPath)
 		}

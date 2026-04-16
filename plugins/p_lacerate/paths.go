@@ -45,11 +45,44 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("lacerate.SourceStopWorkerView"),
 	})
 
+	registerWebsearchRoutes()
 	registerIntelRoutes()
 	registerReportRoutes()
 	registerTargetOfInterestRoutes()
 	registerMapRoutes()
 	registerLookupRoutes()
+}
+
+func registerWebsearchRoutes() {
+	_ = lago.RegistryRoute.Register("lacerate.WebsearchListRoute", lago.Route{
+		Path:    AppUrl + "websearch/",
+		Handler: lago.NewDynamicView("lacerate.WebsearchListView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.WebsearchCreateRoute", lago.Route{
+		Path:    AppUrl + "websearch/create/",
+		Handler: lago.NewDynamicView("lacerate.WebsearchCreateView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.WebsearchDetailRoute", lago.Route{
+		Path:    AppUrl + "websearch/{id}/",
+		Handler: lago.NewDynamicView("lacerate.WebsearchDetailView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.WebsearchUpdateRoute", lago.Route{
+		Path:    AppUrl + "websearch/{id}/edit/",
+		Handler: lago.NewDynamicView("lacerate.WebsearchUpdateView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.WebsearchDeleteRoute", lago.Route{
+		Path:    AppUrl + "websearch/{id}/delete/",
+		Handler: lago.NewDynamicView("lacerate.WebsearchDeleteView"),
+	})
+
+	_ = lago.RegistryRoute.Register("lacerate.WebsearchDeleteIntelRoute", lago.Route{
+		Path:    AppUrl + "websearch/{id}/delete-intel/",
+		Handler: lago.NewDynamicView("lacerate.WebsearchDeleteIntelView"),
+	})
 }
 
 func registerTargetOfInterestRoutes() {

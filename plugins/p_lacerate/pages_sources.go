@@ -60,9 +60,12 @@ func registerSourceMenus() {
 }
 
 var SourceListConfigPageMap = map[string]components.PageInterface{
-	"reddit":  redditSourceListTableConfig(),
-	"twitter": twitterSourceListTableConfig(),
-	"website": websiteSourceListTableConfig(),
+	"reddit":               redditSourceListTableConfig(),
+	"twitter":              twitterSourceListTableConfig(),
+	"website":              websiteSourceListTableConfig(),
+	sourceKindGoogleSearch: googleSearchSourceListTableConfig(),
+	sourceKindWebsearch:    websearchSourceListTableConfig(),
+	sourceKindDirectMedia:  directMediaSourceListTableConfig(),
 }
 
 func registerSourceTable() {
@@ -195,13 +198,19 @@ func sourceKindFormMatch() components.PageInterface {
 	redditFields := redditSourceFormFields()
 	twitterFields := twitterSourceFormFields()
 	websiteFields := websiteSourceFormFields()
+	googleSearchFields := googleSearchSourceFormFields()
+	websearchFields := websearchSourceFormFields()
+	directMediaFields := directMediaSourceFormFields()
 	return &components.ClientMatchIf{
 		Key:   getters.Static("kind"),
-		Match: getters.Static(map[string]components.PageInterface{"reddit": redditFields, "twitter": twitterFields, "website": websiteFields}),
+		Match: getters.Static(map[string]components.PageInterface{"reddit": redditFields, "twitter": twitterFields, "website": websiteFields, sourceKindGoogleSearch: googleSearchFields, sourceKindWebsearch: websearchFields, sourceKindDirectMedia: directMediaFields}),
 		Children: []components.PageInterface{
 			redditFields,
 			twitterFields,
 			websiteFields,
+			googleSearchFields,
+			websearchFields,
+			directMediaFields,
 		},
 	}
 }
@@ -390,9 +399,12 @@ func sourceDetailConfigPageGetter() getters.Getter[components.PageInterface] {
 			return nil, err
 		}
 		pageMap := map[string]components.PageInterface{
-			"reddit":  redditSourceDetailFields(),
-			"twitter": twitterSourceDetailFields(),
-			"website": websiteSourceDetailFields(),
+			"reddit":               redditSourceDetailFields(),
+			"twitter":              twitterSourceDetailFields(),
+			"website":              websiteSourceDetailFields(),
+			sourceKindGoogleSearch: googleSearchSourceDetailFields(),
+			sourceKindWebsearch:    websearchSourceDetailFields(),
+			sourceKindDirectMedia:  directMediaSourceDetailFields(),
 		}
 		page, ok := pageMap[current]
 		if !ok {
@@ -400,6 +412,64 @@ func sourceDetailConfigPageGetter() getters.Getter[components.PageInterface] {
 		}
 		return page, nil
 	}
+}
+
+func sourceDetailContent() components.PageInterface {
+	return &components.ContainerColumn{
+		Page: components.Page{Key: "lacerate.SourceDetailContent"},
+		Children: []components.PageInterface{
+			&components.FieldTitle{Getter: getters.Key[string]("$in.Source.Name")},
+			&components.FieldSubtitle{Getter: getters.Map(getters.Key[string]("$in.Source.Kind"), func(_ context.Context, s string) (string, error) {
+				if p, ok := registry.PairFromPairs(s, SourceKindChoices); ok {
+					return p.Value, nil
+				}
+				return s, nil
+			})},
+			&components.GetterPage{Getter: sourceDetailWorkerStatusGetter()},
+			&components.GetterPage{Getter: sourceDetailWorkerActionsGetter()},
+			&components.LabelInline{
+				Title: "Duration",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: getters.IfOrElse(
+						getters.Map(getters.Key[time.Duration]("$in.Source.Duration"), func(_ context.Context, d time.Duration) (string, error) {
+							if d == 0 {
+								return "", nil
+							}
+							return d.String(), nil
+						}),
+						getters.Static("(not set)"),
+					)},
+				},
+			},
+			&components.GetterPage{Getter: sourceDetailConfigPageGetter()},
+		},
+	}
+}
+
+func sourceDetailBody() components.PageInterface {
+	return &components.GetterPage{Getter: func(ctx context.Context) (components.PageInterface, error) {
+		id, err := getters.Key[uint]("$in.Source.ID")(ctx)
+		if err != nil {
+			return nil, err
+		}
+		content := sourceDetailContent()
+		if !SourceWorkerIsRunning(id) {
+			return content, nil
+		}
+		url, err := lago.RoutePath("lacerate.SourceDetailRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Key[uint]("$in.Source.ID")),
+		})(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &components.HTMXPolling{
+			Page: components.Page{Key: "lacerate.SourceDetailPolling"},
+			URL:  getters.Static(url),
+			Children: []components.PageInterface{
+				content,
+			},
+		}, nil
+	}}
 }
 
 func registerSourceDetail() {
@@ -411,35 +481,7 @@ func registerSourceDetail() {
 			&components.Detail[SourcePageData]{
 				Getter: getters.Key[SourcePageData]("sourcePageData"),
 				Children: []components.PageInterface{
-					&components.ContainerColumn{
-						Page: components.Page{Key: "lacerate.SourceDetailContent"},
-						Children: []components.PageInterface{
-							&components.FieldTitle{Getter: getters.Key[string]("$in.Source.Name")},
-							&components.FieldSubtitle{Getter: getters.Map(getters.Key[string]("$in.Source.Kind"), func(_ context.Context, s string) (string, error) {
-								if p, ok := registry.PairFromPairs(s, SourceKindChoices); ok {
-									return p.Value, nil
-								}
-								return s, nil
-							})},
-							&components.GetterPage{Getter: sourceDetailWorkerStatusGetter()},
-							&components.GetterPage{Getter: sourceDetailWorkerActionsGetter()},
-							&components.LabelInline{
-								Title: "Duration",
-								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.IfOrElse(
-										getters.Map(getters.Key[time.Duration]("$in.Source.Duration"), func(_ context.Context, d time.Duration) (string, error) {
-											if d == 0 {
-												return "", nil
-											}
-											return d.String(), nil
-										}),
-										getters.Static("(not set)"),
-									)},
-								},
-							},
-							&components.GetterPage{Getter: sourceDetailConfigPageGetter()},
-						},
-					},
+					sourceDetailBody(),
 				},
 			},
 		},

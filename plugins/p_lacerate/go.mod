@@ -20,6 +20,7 @@ require (
 	gorm.io/datatypes v1.2.7
 	gorm.io/gorm v1.31.1
 	maragu.dev/gomponents v1.2.0
+	rsc.io/pdf v0.1.1
 )
 
 require (

@@ -316,6 +316,70 @@ func lookupDetailWorkerActionsGetter() getters.Getter[components.PageInterface] 
 	}
 }
 
+func lookupDetailContent() components.PageInterface {
+	return components.ContainerColumn{
+		Page: components.Page{Key: "lacerate.LookupDetailContent"},
+		Children: []components.PageInterface{
+			&components.FieldTitle{
+				Getter: getters.Format("Lookup #%d", getters.Any(getters.Key[uint]("$in.ID"))),
+			},
+			&components.GetterPage{Getter: lookupDetailWorkerStatusGetter()},
+			&components.GetterPage{Getter: lookupDetailWorkerActionsGetter()},
+			&components.LabelInline{
+				Title: "Update interval",
+				Children: []components.PageInterface{
+					&components.FieldText{Getter: getters.IfOrElse(
+						getters.Map(getters.Deref(getters.Key[*time.Duration]("$in.UpdateInterval")), func(_ context.Context, d time.Duration) (string, error) {
+							if d == 0 {
+								return "", nil
+							}
+							return d.String(), nil
+						}),
+						getters.Static("(not set)"),
+					)},
+				},
+			},
+			&components.LabelInline{
+				Title: "Content",
+				Children: []components.PageInterface{
+					&components.FieldMarkdown{
+						Getter:  getters.Key[string]("$in.Content"),
+						Classes: "prose prose-sm max-w-none",
+					},
+				},
+			},
+			lookupDetailTouchedReportsSection(),
+			lookupDetailLogSection(),
+		},
+	}
+}
+
+func lookupDetailBody() components.PageInterface {
+	return &components.GetterPage{Getter: func(ctx context.Context) (components.PageInterface, error) {
+		id, err := getters.Key[uint]("$in.ID")(ctx)
+		if err != nil {
+			return nil, err
+		}
+		content := lookupDetailContent()
+		if !LookupWorkerIsRunning(id) {
+			return content, nil
+		}
+		url, err := lago.RoutePath("lacerate.LookupDetailRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Key[uint]("$in.ID")),
+		})(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return &components.HTMXPolling{
+			Page: components.Page{Key: "lacerate.LookupDetailPolling"},
+			URL:  getters.Static(url),
+			Children: []components.PageInterface{
+				content,
+			},
+		}, nil
+	}}
+}
+
 func registerLookupDetail() {
 	lago.RegistryPage.Register("lacerate.LookupDetail", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -325,41 +389,7 @@ func registerLookupDetail() {
 			&components.Detail[Lookup]{
 				Getter: getters.Key[Lookup]("lookup"),
 				Children: []components.PageInterface{
-					components.ContainerColumn{
-						Page: components.Page{Key: "lacerate.LookupDetailContent"},
-						Children: []components.PageInterface{
-							&components.FieldTitle{
-								Getter: getters.Format("Lookup #%d", getters.Any(getters.Key[uint]("$in.ID"))),
-							},
-							&components.GetterPage{Getter: lookupDetailWorkerStatusGetter()},
-							&components.GetterPage{Getter: lookupDetailWorkerActionsGetter()},
-							&components.LabelInline{
-								Title: "Update interval",
-								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.IfOrElse(
-										getters.Map(getters.Deref(getters.Key[*time.Duration]("$in.UpdateInterval")), func(_ context.Context, d time.Duration) (string, error) {
-											if d == 0 {
-												return "", nil
-											}
-											return d.String(), nil
-										}),
-										getters.Static("(not set)"),
-									)},
-								},
-							},
-							&components.LabelInline{
-								Title: "Content",
-								Children: []components.PageInterface{
-									&components.FieldMarkdown{
-										Getter:  getters.Key[string]("$in.Content"),
-										Classes: "prose prose-sm max-w-none",
-									},
-								},
-							},
-							lookupDetailTouchedReportsSection(),
-							lookupDetailLogSection(),
-						},
-					},
+					lookupDetailBody(),
 				},
 			},
 		},
