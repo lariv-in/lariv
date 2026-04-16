@@ -199,6 +199,7 @@ func assetLinksHandler(_ *views.View) http.Handler {
 		assetLinks = append(assetLinks, map[string]any{
 			"relation": []string{
 				"delegate_permission/common.handle_all_urls",
+				"delegate_permission/common.get_login_creds",
 			},
 			"target": map[string]any{
 				"namespace":    "android_app",
