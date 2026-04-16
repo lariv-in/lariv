@@ -3,6 +3,7 @@ package p_nirmancampus_assignmentsubmissions
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/lariv-in/lago/components"
@@ -14,6 +15,16 @@ import (
 	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
+
+func bulkAcademicRecordStudentLineGetter() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		rec, ok := bulkAcademicRecordFromContext(ctx)
+		if !ok || rec.ID == 0 {
+			return "", nil
+		}
+		return fmt.Sprintf("%s — %s", rec.Student.Name, rec.Student.StudentNo), nil
+	}
+}
 
 // assignmentSubmissionFormAcademicRecordGetter loads the academic record for the FK input with
 // preloads so Display (Student.StudentNo) works; plain getters.Association does not preload Student.
@@ -196,6 +207,67 @@ func registerFormPages() {
 						Classes: "flex justify-end gap-2 mt-2",
 						Children: []components.PageInterface{
 							&components.ButtonSubmit{Label: "Save submission", Classes: "btn-primary"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("assignmentsubmissions.BulkCreateFromAcademicRecordForm", &components.Modal{
+		Page: components.Page{
+			Key:   "assignmentsubmissions.BulkCreateFromAcademicRecordModal",
+			Roles: []string{"admin", "superuser"},
+		},
+		UID: "assignmentsubmissions-bulk-create-academic-record-modal",
+		Children: []components.PageInterface{
+			&components.FormComponent[academicRecordBulkSubmissionsForm]{
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
+
+				Title:    "Create submissions for student",
+				Subtitle: "Select compulsory and/or optional courses. Title defaults to course name; marks stay zero until you edit each submission.",
+				Classes:  "@container",
+				ChildrenInput: []components.PageInterface{
+					&components.ContainerColumn{
+						Page: components.Page{Key: "assignmentsubmissions.BulkCreateFromAcademicRecordFormBody"},
+						Children: []components.PageInterface{
+							&components.LabelInline{
+								Title: "Student",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: bulkAcademicRecordStudentLineGetter()},
+								},
+							},
+							&components.ContainerError{
+								Error: getters.Key[error]("$error.AcademicRecordID"),
+								Children: []components.PageInterface{
+									&components.InputForeignKey[p_nirmancampus_academicrecords.AcademicRecord]{
+										Hidden:   true,
+										Name:     "AcademicRecordID",
+										Required: true,
+										Url:      lago.RoutePath("academicrecords.SelectRoute", nil),
+										Display:  getters.Key[string]("$in.Student.StudentNo"),
+										Getter:   assignmentSubmissionFormAcademicRecordGetter(),
+									},
+								},
+							},
+							&components.ContainerError{
+								Error: getters.Key[error]("$error.BulkSelectedCourseIDs"),
+								Children: []components.PageInterface{
+									&InputBulkAcademicRecordCourses{
+										Page:  components.Page{Key: "assignmentsubmissions.BulkCreateCourseSelection"},
+										Label: "Courses on this academic record",
+										Name:  bulkSelectedCourseIDsFieldName,
+									},
+								},
+							},
+						},
+					},
+				},
+				ChildrenAction: []components.PageInterface{
+					&components.ContainerRow{
+						Classes: "flex justify-end gap-2 mt-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Create submissions", Classes: "btn-primary"},
 						},
 					},
 				},

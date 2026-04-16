@@ -63,62 +63,76 @@ func (academicRecordSubmissionsContextLayer) Next(_ views.View, next http.Handle
 	})
 }
 
-func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface {
-	return &components.DataTable[AssignmentSubmission]{
-		Page:        components.Page{Key: "assignmentsubmissions.AcademicRecordDetailTable"},
-		UID:         "academic-record-assignment-submissions-table",
-		Title:       "Assignment submissions",
-		Classes:     "w-full mt-4",
-		Data:        getters.Key[components.ObjectList[AssignmentSubmission]](academicRecordDetailSubmissionsContextKey),
-		DefaultView: "Grid",
-		Actions: []components.PageInterface{
-			&components.ButtonModalForm{
-				Page: components.Page{Roles: []string{"admin", "superuser"}},
-				Name: getters.Static("assignmentsubmissions.CreateForm"),
-				Url: getters.Format(
-					"%s?AcademicRecordID=%d",
-					getters.Any(lago.RoutePath("assignmentsubmissions.CreateRoute", nil)),
-					getters.Any(getters.Key[uint]("academicrecord.ID")),
-				),
-				FormPostURL: getters.Format(
-					"%s?AcademicRecordID=%d",
-					getters.Any(lago.RoutePath("assignmentsubmissions.CreateRoute", nil)),
-					getters.Any(getters.Key[uint]("academicrecord.ID")),
-				),
-				ModalUID: "assignmentsubmissions-create-modal",
-				Icon:     "plus",
-				Classes:  "btn-square btn-outline btn-sm",
-			},
-		},
-		RowAttr: getters.RowAttrNavigate(
-			lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
-				"id": getters.Any(getters.Key[uint]("$row.ID")),
-			}),
+func academicRecordDetailBulkCreateSubmissionsButton() *components.ButtonModalForm {
+	return &components.ButtonModalForm{
+		Page:  components.Page{Roles: []string{"admin", "superuser"}},
+		Label: "Create Submissions for Student",
+		Name:  getters.Static("assignmentsubmissions.BulkCreateFromAcademicRecordForm"),
+		Url: getters.Format(
+			"%s?AcademicRecordID=%d",
+			getters.Any(lago.RoutePath("assignmentsubmissions.BulkCreateFromAcademicRecordRoute", nil)),
+			getters.Any(getters.Key[uint]("academicrecord.ID")),
 		),
-		Columns: []components.TableColumn{
-			{
-				Label: "Assignment",
-				Name:  "AssignmentTitle",
+		FormPostURL: getters.Format(
+			"%s?AcademicRecordID=%d",
+			getters.Any(lago.RoutePath("assignmentsubmissions.BulkCreateFromAcademicRecordRoute", nil)),
+			getters.Any(getters.Key[uint]("academicrecord.ID")),
+		),
+		ModalUID: "assignmentsubmissions-bulk-create-academic-record-modal",
+		Classes:  "btn-outline btn-sm",
+		Attr:     getters.ModalRefreshList(getters.Static(""), getters.Static("#academic-record-assignment-submissions-table")),
+	}
+}
+
+func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface {
+	return &components.ContainerColumn{
+		Page:    components.Page{Key: "assignmentsubmissions.AcademicRecordDetailSubmissionsSection"},
+		Classes: "w-full mt-4 flex flex-col gap-2",
+		Children: []components.PageInterface{
+			&components.ContainerRow{
+				Classes: "flex justify-end w-full",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.Key[string]("$row.AssignmentTitle")},
+					academicRecordDetailBulkCreateSubmissionsButton(),
 				},
 			},
-			{
-				Label: "Course",
-				Name:  "Course.Name",
-				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.Key[string]("$row.Course.Name")},
-				},
-			},
-			{
-				Label: "Status",
-				Name:  "SubmissionStatus",
-				Children: []components.PageInterface{
-					&components.FieldText{
-						Getter: registry.PairValueFromKey(
-							getters.Key[string]("$row.SubmissionStatus"),
-							AssignmentSubmissionStatusChoices,
-						),
+			&components.DataTable[AssignmentSubmission]{
+				Page:        components.Page{Key: "assignmentsubmissions.AcademicRecordDetailTable"},
+				UID:         "academic-record-assignment-submissions-table",
+				Title:       "Assignment submissions",
+				Classes:     "w-full",
+				Data:        getters.Key[components.ObjectList[AssignmentSubmission]](academicRecordDetailSubmissionsContextKey),
+				DefaultView: "Grid",
+				RowAttr: getters.RowAttrNavigate(
+					lago.RoutePath("assignmentsubmissions.DetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("$row.ID")),
+					}),
+				),
+				Columns: []components.TableColumn{
+					{
+						Label: "Assignment",
+						Name:  "AssignmentTitle",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.AssignmentTitle")},
+						},
+					},
+					{
+						Label: "Course",
+						Name:  "Course.Name",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Key[string]("$row.Course.Name")},
+						},
+					},
+					{
+						Label: "Status",
+						Name:  "SubmissionStatus",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: registry.PairValueFromKey(
+									getters.Key[string]("$row.SubmissionStatus"),
+									AssignmentSubmissionStatusChoices,
+								),
+							},
+						},
 					},
 				},
 			},

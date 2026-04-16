@@ -1,6 +1,8 @@
 package p_nirmancampus_assignmentsubmissions
 
 import (
+	"net/http"
+
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -57,6 +59,17 @@ func init() {
 						Value: assignmentSubmissionCreateFormPatcher{},
 					},
 				},
+			}),
+	)
+
+	lago.RegistryView.Register("assignmentsubmissions.BulkCreateFromAcademicRecordView",
+		lago.GetPageView("assignmentsubmissions.BulkCreateFromAcademicRecordForm").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleLayer).
+			WithLayer("assignmentsubmissions.bulk_academic_record_load", academicRecordBulkCreateLoadLayer{}).
+			WithLayer("assignmentsubmissions.bulk_academic_record_post", views.MethodLayer{
+				Method:  http.MethodPost,
+				Handler: bulkCreateFromAcademicRecordPostHandler,
 			}),
 	)
 
