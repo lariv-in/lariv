@@ -32,10 +32,7 @@ func (m MultiStepFormLayer) Next(view View, next http.Handler) http.Handler {
 		}
 
 		stage := form.ParseStage(r)
-		targetStage := form.ParseTargetStage(r, stage)
-		if targetStage > stage+1 {
-			targetStage = stage + 1
-		}
+		targetStage := min(form.ParseTargetStage(r, stage), stage+1)
 		ctx := context.WithValue(r.Context(), "$stage", stage)
 		carriedErrors := components.ParseMultiStepErrors(r)
 		mergedErrors := mergeMultiStepFormErrors(carriedErrors, form.StageInputNames(stage), fieldErrors)

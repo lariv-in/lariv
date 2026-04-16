@@ -1,12 +1,25 @@
 package p_contacts
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
 )
+
+type CustomLayer struct {}
+
+func (m CustomLayer) Next(view views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, "custom", "custom")
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func init() {
 	lago.RegistryView.Register("contacts.ListView",
