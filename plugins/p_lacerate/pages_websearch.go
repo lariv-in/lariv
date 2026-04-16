@@ -255,24 +255,6 @@ func websearchRelatedIntelSection() components.PageInterface {
 	return &components.ContainerColumn{
 		Page: components.Page{Key: "lacerate.WebsearchDetailRelatedIntel"},
 		Children: []components.PageInterface{
-			&components.ContainerRow{
-				Classes: "flex justify-end mb-2",
-				Children: []components.PageInterface{
-					&components.ButtonModalForm{
-						Label: "Delete related intel",
-						Icon:  "trash",
-						Name:  getters.Static("lacerate.WebsearchDeleteIntelForm"),
-						Url: lago.RoutePath("lacerate.WebsearchDeleteIntelRoute", map[string]getters.Getter[any]{
-							"id": getters.Any(getters.Key[uint]("websearch.ID")),
-						}),
-						FormPostURL: lago.RoutePath("lacerate.WebsearchDeleteIntelRoute", map[string]getters.Getter[any]{
-							"id": getters.Any(getters.Key[uint]("websearch.ID")),
-						}),
-						ModalUID: "lacerate-websearch-delete-intel-modal",
-						Classes:  "btn-error btn-sm",
-					},
-				},
-			},
 			&components.DataTable[Intel]{
 				Page:     components.Page{Key: "lacerate.WebsearchDetailRelatedIntelTable"},
 				UID:      "lacerate-websearch-related-intel-table",
@@ -309,6 +291,27 @@ func websearchRelatedIntelSection() components.PageInterface {
 						Label: "Content",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: intelContentPreviewCell()},
+						},
+					},
+					{
+						Label: "Actions",
+						Children: []components.PageInterface{
+							&components.ButtonModalForm{
+								Label: "Delete",
+								Icon:  "trash",
+								Name:  getters.Static("lacerate.WebsearchDeleteIntelForm"),
+								Attr:  getters.Static(gomponents.Attr("@click.stop.prevent", "")),
+								Url: lago.RoutePath("lacerate.WebsearchDeleteIntelRoute", map[string]getters.Getter[any]{
+									"id":       getters.Any(getters.Key[uint]("websearch.ID")),
+									"intel_id": getters.Any(getters.Key[uint]("$row.ID")),
+								}),
+								FormPostURL: lago.RoutePath("lacerate.WebsearchDeleteIntelRoute", map[string]getters.Getter[any]{
+									"id":       getters.Any(getters.Key[uint]("websearch.ID")),
+									"intel_id": getters.Any(getters.Key[uint]("$row.ID")),
+								}),
+								ModalUID: "lacerate-websearch-delete-intel-modal",
+								Classes:  "btn-error btn-sm",
+							},
 						},
 					},
 				},
@@ -423,7 +426,7 @@ func registerWebsearchDetail() {
 		Children: []components.PageInterface{
 			&components.DeleteConfirmation{
 				Title:   "Delete related intel",
-				Message: "Delete all intel linked to this websearch query? This cannot be undone.",
+				Message: "Delete this related intel? This cannot be undone.",
 				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
 			},
 		},

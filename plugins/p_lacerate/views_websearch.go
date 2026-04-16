@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -194,22 +195,26 @@ func (websearchDeleteIntelLayer) Next(view views.View, next http.Handler) http.H
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
+		intelIDStr := strings.TrimSpace(r.PathValue("intel_id"))
+		intelID64, err := strconv.ParseUint(intelIDStr, 10, 32)
+		if err != nil || intelID64 == 0 {
+			err = fmt.Errorf("invalid intel id %q", intelIDStr)
+			slog.Error("lacerate: websearch delete intel parse path", "error", err, "websearch_id", row.ID, "intel_id", intelIDStr)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": err})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		intelID := uint(intelID64)
 
-		err := db.Transaction(func(tx *gorm.DB) error {
-			var intelIDs []uint
-			if err := tx.Model(&WebsearchIntel{}).
-				Where("websearch_id = ?", row.ID).
-				Distinct().
-				Pluck("intel_id", &intelIDs).Error; err != nil {
+		err = db.Transaction(func(tx *gorm.DB) error {
+			var link WebsearchIntel
+			if err := tx.Where("websearch_id = ? AND intel_id = ?", row.ID, intelID).First(&link).Error; err != nil {
 				return err
 			}
-			if len(intelIDs) == 0 {
-				return nil
-			}
-			return tx.Where("id IN ?", intelIDs).Delete(&Intel{}).Error
+			return tx.Where("id = ?", intelID).Delete(&Intel{}).Error
 		})
 		if err != nil {
-			slog.Error("lacerate: websearch delete intel", "error", err, "websearch_id", row.ID)
+			slog.Error("lacerate: websearch delete intel", "error", err, "websearch_id", row.ID, "intel_id", intelID)
 			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": err})
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return

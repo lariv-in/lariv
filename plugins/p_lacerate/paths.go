@@ -80,7 +80,7 @@ func registerWebsearchRoutes() {
 	})
 
 	_ = lago.RegistryRoute.Register("lacerate.WebsearchDeleteIntelRoute", lago.Route{
-		Path:    AppUrl + "websearch/{id}/delete-intel/",
+		Path:    AppUrl + "websearch/{id}/delete-intel/{intel_id}/",
 		Handler: lago.NewDynamicView("lacerate.WebsearchDeleteIntelView"),
 	})
 }
