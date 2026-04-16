@@ -29,6 +29,9 @@ func tableColumns() []components.TableColumn {
 		{Label: "Session", Name: "Session.Name", Children: []components.PageInterface{
 			&components.FieldText{Getter: getters.Key[string]("$row.Session.Name")},
 		}},
+		{Label: "Status", Name: "Status", Children: []components.PageInterface{
+			&components.FieldText{Getter: getters.Key[string]("$row.Status")},
+		}},
 	}
 }
 
