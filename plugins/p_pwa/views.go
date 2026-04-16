@@ -193,7 +193,7 @@ func staticPwaHandler(_ *views.View) http.Handler {
 
 func assetLinksHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/manifest+json; charset=utf-8")
+		w.Header().Set("Content-Type", "application/json")
 
 		assetLinks := []map[string]any{}
 		assetLinks = append(assetLinks, map[string]any{
