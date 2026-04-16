@@ -22,6 +22,7 @@ const (
 	offlineViewKey       = "pwa.OfflineView"
 	staticPwaViewKey     = "pwa.StaticPwaView"
 	pwaAssetPageName     = "pwa.AssetPlaceholder"
+	assetLinksViewKey    = "pwa.assetLinksView"
 )
 
 type pwaAssetPage struct {
@@ -190,6 +191,30 @@ func staticPwaHandler(_ *views.View) http.Handler {
 	})
 }
 
+func assetLinksHandler(_ *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/manifest+json; charset=utf-8")
+
+		assetLinks := []map[string]any{}
+		assetLinks = append(assetLinks, map[string]any{
+			"relation": []string{
+				"delegate_permission/common.handle_all_urls",
+			},
+			"target": map[string]any{
+				"namespace":    "android_app",
+				"package_name": Config.AppPackageName,
+				"sha256_cert_fingerprints": []string{
+					Config.AppSHA256CertFingerprints,
+				},
+			},
+		})
+
+		enc := json.NewEncoder(w)
+		enc.SetEscapeHTML(false)
+		_ = enc.Encode(assetLinks)
+	})
+}
+
 func init() {
 	_ = components.RegistryShellHeadNodes.Register("pwa.manifestLink", Link(Rel("manifest"), Href("/app.webmanifest")))
 
@@ -197,4 +222,5 @@ func init() {
 	lago.RegistryView.Register(serviceWorkerViewKey, pwaAssetView(http.MethodGet, serviceWorkerHandler))
 	lago.RegistryView.Register(offlineViewKey, pwaAssetView(http.MethodGet, offlineHandler))
 	lago.RegistryView.Register(staticPwaViewKey, pwaAssetView(http.MethodGet, staticPwaHandler))
+	lago.RegistryView.Register(assetLinksViewKey, pwaAssetView(http.MethodGet, assetLinksHandler))
 }

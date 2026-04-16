@@ -18,6 +18,11 @@ func init() {
 		Handler: lago.NewDynamicView(offlineViewKey),
 	})
 
+
+	_ = lago.RegistryRoute.Register("pwa.assetLinks", lago.Route{
+		Path:    "/.well-known/assetlinks.json",
+		Handler: lago.NewDynamicView(assetLinksViewKey),
+	})
 	// Serve a filesystem directory under /static/pwa/.
 	// Note: lago's router treats paths ending in "/" as exact matches, so we use
 	// a wildcard pattern for nested file paths.

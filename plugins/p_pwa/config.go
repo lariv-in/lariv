@@ -57,14 +57,16 @@ type PwaConfig struct {
 	StaticDir string `toml:"staticDir"`
 
 	// Manifest keys
-	AppName            string `toml:"PWA_APP_NAME"`
-	AppDescription     string `toml:"PWA_APP_DESCRIPTION"`
-	AppThemeColor      string `toml:"PWA_APP_THEME_COLOR"`
-	AppBackgroundColor string `toml:"PWA_APP_BACKGROUND_COLOR"`
-	AppDisplay         string `toml:"PWA_APP_DISPLAY"`
-	AppScope           string `toml:"PWA_APP_SCOPE"`
-	AppOrientation     string `toml:"PWA_APP_ORIENTATION"`
-	AppStartURL        string `toml:"PWA_APP_START_URL"`
+	AppName                   string `toml:"PWA_APP_NAME"`
+	AppDescription            string `toml:"PWA_APP_DESCRIPTION"`
+	AppThemeColor             string `toml:"PWA_APP_THEME_COLOR"`
+	AppBackgroundColor        string `toml:"PWA_APP_BACKGROUND_COLOR"`
+	AppDisplay                string `toml:"PWA_APP_DISPLAY"`
+	AppScope                  string `toml:"PWA_APP_SCOPE"`
+	AppOrientation            string `toml:"PWA_APP_ORIENTATION"`
+	AppStartURL               string `toml:"PWA_APP_START_URL"`
+	AppPackageName            string `toml:"PWA_APP_PACKAGE_NAME"`
+	AppSHA256CertFingerprints string `toml:"PWA_APP_SHA256_CERT_FINGERPRINTS"`
 
 	AppStatusBarColor string `toml:"PWA_APP_STATUS_BAR_COLOR"`
 
