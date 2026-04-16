@@ -28,6 +28,18 @@ func registerDetailPages() {
 								Getter: getters.Key[string]("$in.StudentNo"),
 							},
 							&components.LabelInline{
+								Title: "Aadhar Card",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string]("$in.AadharCard")},
+								},
+							},
+							&components.LabelInline{
+								Title: "ABC ID",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Key[string]("$in.ABCId")},
+								},
+							},
+							&components.LabelInline{
 								Title: "Email",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.Email")},

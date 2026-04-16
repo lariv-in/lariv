@@ -174,7 +174,9 @@ Use `log/slog` for recoverable errors and `log.Panicf()` for non-recoverable err
 
 # Component Patching
 
-Use `components.InsertChildBefore`, `components.InsertChildAfter`, and `components.ReplaceChild`.
+Use the tree helpers in `components/parent.go`: `components.InsertChildBefore`, `components.InsertChildAfter`, `components.ReplaceChild`, and `components.RemoveChild`. They recurse through `MutableParentInterface` children and match by **concrete component type + `Page.Key`**.
+
+- To **remove** a node from another plugin’s page tree, call `RemoveChild` with that node’s type and key (for example `components.RemoveChild[*components.ButtonLink](scaffold, "users.AuthSignupLink")`). Do **not** reimplement removal by walking the tree, comparing URLs/labels, or rebuilding child slices unless no stable key exists yet.
 
 - If a page or form is intended to be extended by another plugin, add stable `Page.Key` values in the base plugin first, then patch against those keys. Do not rely on brittle structural matching when a reusable extension point can be made explicit.
 

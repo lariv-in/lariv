@@ -37,10 +37,9 @@ func studentFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.Name"),
 						Children: []components.PageInterface{
 							&components.InputText{
-								Label:    "Name",
-								Name:     "Name",
-								Required: true,
-								Getter:   getters.Key[string]("$in.Name"),
+								Label:  "Name",
+								Name:   "Name",
+								Getter: getters.Key[string]("$in.Name"),
 							},
 						},
 					},
@@ -52,6 +51,31 @@ func studentFormFields() components.ContainerColumn {
 								Name:     "StudentNo",
 								Required: true,
 								Getter:   getters.Key[string]("$in.StudentNo"),
+							},
+						},
+					},
+				},
+			},
+			components.ContainerRow{
+				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.AadharCard"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "Aadhar Card",
+								Name:   "AadharCard",
+								Getter: getters.Key[string]("$in.AadharCard"),
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.ABCId"),
+						Children: []components.PageInterface{
+							&components.InputText{
+								Label:  "ABC ID",
+								Name:   "ABCId",
+								Getter: getters.Key[string]("$in.ABCId"),
 							},
 						},
 					},

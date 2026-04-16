@@ -17,6 +17,16 @@ func registerFilterPages() {
 				Getter: getters.Key[string]("$get.StudentNo"),
 			},
 			&components.InputText{
+				Label:  "Aadhar Card",
+				Name:   "AadharCard",
+				Getter: getters.Key[string]("$get.AadharCard"),
+			},
+			&components.InputText{
+				Label:  "ABC ID",
+				Name:   "ABCId",
+				Getter: getters.Key[string]("$get.ABCId"),
+			},
+			&components.InputText{
 				Label:  "Name",
 				Name:   "Name",
 				Getter: getters.Key[string]("$get.Name"),
@@ -128,6 +138,24 @@ func registerTablePages() {
 						Children: []components.PageInterface{
 							&components.FieldText{
 								Getter: getters.Key[string]("$row.StudentNo"),
+							},
+						},
+					},
+					{
+						Label: "Aadhar Card",
+						Name:  "AadharCard",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.Key[string]("$row.AadharCard"),
+							},
+						},
+					},
+					{
+						Label: "ABC ID",
+						Name:  "ABCId",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.Key[string]("$row.ABCId"),
 							},
 						},
 					},

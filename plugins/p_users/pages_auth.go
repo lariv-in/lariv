@@ -50,6 +50,7 @@ func registerAuthPages() {
 									Classes: "w-full",
 								},
 								&components.ButtonLink{
+									Page:    components.Page{Key: "users.AuthSignupLink"},
 									Label:   "Don't have an account? Sign up",
 									Link:    lago.RoutePath("users.SignupRoute", nil),
 									Classes: "w-full",
@@ -129,7 +130,12 @@ func registerAuthPages() {
 				&components.FieldSubtitle{Getter: getters.Static("Please log in or create an account to continue.")},
 				&components.ContainerColumn{Classes: "w-full mt-4 gap-2", Children: []components.PageInterface{
 					&components.ButtonLink{Label: "Login", Classes: "btn btn-primary text-white w-full", Link: lago.RoutePath("users.LoginRoute", nil)},
-					&components.ButtonLink{Label: "Sign Up", Classes: "btn btn-outline w-full", Link: lago.RoutePath("users.SignupRoute", nil)},
+					&components.ButtonLink{
+						Page:    components.Page{Key: "users.AuthSignupLink"},
+						Label:   "Sign Up",
+						Classes: "btn btn-outline w-full",
+						Link:    lago.RoutePath("users.SignupRoute", nil),
+					},
 				}},
 			}},
 		},

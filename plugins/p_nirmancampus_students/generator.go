@@ -19,6 +19,16 @@ func generateStudentNo(index int) string {
 	return fmt.Sprintf("STU%05d", index+1)
 }
 
+func randomAadharABC(r *rand.Rand) (aadhar, abc string) {
+	if r.Intn(100) < 40 {
+		aadhar = fmt.Sprintf("%04d%04d%04d", r.Intn(10000), r.Intn(10000), r.Intn(10000))
+	}
+	if r.Intn(100) < 40 {
+		abc = fmt.Sprintf("ABC-%06x-%d", r.Intn(0xffffff), r.Intn(9999)+1)
+	}
+	return aadhar, abc
+}
+
 func randomDOB() *time.Time {
 	if rand.Intn(100) < 25 {
 		return nil
@@ -184,6 +194,8 @@ func CreateSampleStudent(db *gorm.DB) (*Student, error) {
 		Email:      sampleEmail,
 		Phone:      p_users.GenerateRandomPhone(),
 		StudentNo:  "STU00000",
+		AadharCard: "000011112222",
+		ABCId:      "ABC-SAMPLE-1",
 		DOB:        &dob,
 		MotherName: "",
 		FatherName: "",
@@ -234,12 +246,15 @@ func init() {
 				studentNo := generateStudentNo(i)
 				dob := randomDOB()
 				mn, fn, cat, addr := randomNirmancampusFields(r)
+				aadhar, abc := randomAadharABC(r)
 
 				student := Student{
 					Name:        name,
 					Email:       email,
 					Phone:       phone,
 					StudentNo:   studentNo,
+					AadharCard:  aadhar,
+					ABCId:       abc,
 					DOB:         dob,
 					MotherName:  mn,
 					FatherName:  fn,

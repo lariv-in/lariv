@@ -22,11 +22,13 @@ var StudentCategoryChoices = []registry.Pair[string, string]{
 type Student struct {
 	gorm.Model
 
-	Name      string     `gorm:"type:varchar(255);notnull;default:''"`
-	Email     string     `gorm:"type:varchar(255);default:'';index"`
-	Phone     string     `gorm:"type:varchar(64);default:''"`
-	StudentNo string     `gorm:"uniqueIndex;notnull"`
-	DOB       *time.Time `gorm:"type:date"`
+	Name        string     `gorm:"type:varchar(255);default:''"`
+	Email       string     `gorm:"type:varchar(255);default:'';index"`
+	Phone       string     `gorm:"type:varchar(64);default:''"`
+	StudentNo   string     `gorm:"uniqueIndex;notnull"`
+	AadharCard  string     `gorm:"type:varchar(32);default:''"`
+	ABCId       string     `gorm:"type:varchar(64);default:''"`
+	DOB         *time.Time `gorm:"type:date"`
 
 	MotherName string `gorm:"type:varchar(255);default:''"`
 	FatherName string `gorm:"column:fathers_name;type:varchar(255);default:''"`
@@ -73,6 +75,8 @@ func init() {
 		ListFields: []string{
 			"StudentNo",
 			"Name",
+			"AadharCard",
+			"ABCId",
 			"Email",
 			"Phone",
 			"DOB",
