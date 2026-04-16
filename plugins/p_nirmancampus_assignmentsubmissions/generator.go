@@ -19,10 +19,10 @@ var sampleSubmissionRows = []struct {
 	max    int
 	marks  int
 }{
-	{title: "Unit Test 1", status: "submitted", max: 20, marks: 16},
-	{title: "Midterm Assignment", status: "submitted", max: 40, marks: 31},
-	{title: "Project Report", status: "pending", max: 30, marks: 0},
-	{title: "Lab Practical", status: "graded", max: 10, marks: 8},
+	{title: "Unit Test 1", status: AssignmentSubmissionStatusCreatedKey, max: 20, marks: 16},
+	{title: "Midterm Assignment", status: "marked", max: 40, marks: 31},
+	{title: "Project Report", status: "uploaded", max: 30, marks: 0},
+	{title: "Lab Practical", status: "marked", max: 10, marks: 8},
 }
 
 func init() {

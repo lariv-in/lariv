@@ -11,6 +11,7 @@ import (
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -110,11 +111,24 @@ func assignmentSubmissionUpdateFormFields() *components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.SubmissionStatus"),
 						Children: []components.PageInterface{
-							&components.InputText{
+							&components.InputSelect[string]{
 								Label:    "Submission status",
 								Name:     "SubmissionStatus",
 								Required: true,
-								Getter:   getters.Key[string]("$in.SubmissionStatus"),
+								Choices:  getters.Static(AssignmentSubmissionStatusChoices),
+								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
+									s, err := getters.Key[string]("$in.SubmissionStatus")(ctx)
+									if err != nil || s == "" {
+										if p, ok := registry.PairFromPairs(AssignmentSubmissionStatusCreatedKey, AssignmentSubmissionStatusChoices); ok {
+											return p, nil
+										}
+										return registry.Pair[string, string]{Key: AssignmentSubmissionStatusCreatedKey, Value: "Created"}, nil
+									}
+									if p, ok := registry.PairFromPairs(s, AssignmentSubmissionStatusChoices); ok {
+										return p, nil
+									}
+									return registry.Pair[string, string]{Key: s, Value: s}, nil
+								},
 							},
 						},
 					},

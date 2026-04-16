@@ -3,10 +3,21 @@ package p_nirmancampus_assignmentsubmissions
 import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"gorm.io/gorm"
 )
+
+// AssignmentSubmissionStatusCreatedKey is the default for new rows (create form patcher, empty form state).
+const AssignmentSubmissionStatusCreatedKey = "created"
+
+// AssignmentSubmissionStatusChoices defines stored keys and UI labels for SubmissionStatus.
+var AssignmentSubmissionStatusChoices = []registry.Pair[string, string]{
+	{Key: AssignmentSubmissionStatusCreatedKey, Value: "Created"},
+	{Key: "marked", Value: "Marked"},
+	{Key: "uploaded", Value: "Uploaded"},
+}
 
 type AssignmentSubmission struct {
 	gorm.Model

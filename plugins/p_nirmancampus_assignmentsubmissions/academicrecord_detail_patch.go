@@ -10,6 +10,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
+	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
 )
 
@@ -113,7 +114,12 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 				Label: "Status",
 				Name:  "SubmissionStatus",
 				Children: []components.PageInterface{
-					&components.FieldText{Getter: getters.Key[string]("$row.SubmissionStatus")},
+					&components.FieldText{
+						Getter: registry.PairValueFromKey(
+							getters.Key[string]("$row.SubmissionStatus"),
+							AssignmentSubmissionStatusChoices,
+						),
+					},
 				},
 			},
 		},

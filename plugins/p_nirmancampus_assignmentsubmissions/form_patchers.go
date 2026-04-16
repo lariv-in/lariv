@@ -11,9 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// assignmentSubmissionDefaultCreateStatus is used when the create form omits status (staff sets it on edit).
-const assignmentSubmissionDefaultCreateStatus = "pending"
-
 type assignmentSubmissionCreateFormPatcher struct{}
 
 func courseIDFromFormData(formData map[string]any) (uint, error) {
@@ -49,7 +46,7 @@ func (assignmentSubmissionCreateFormPatcher) Patch(_ views.View, r *http.Request
 	}
 	return map[string]any{
 		"AssignmentTitle":    course.Name,
-		"SubmissionStatus": assignmentSubmissionDefaultCreateStatus,
+		"SubmissionStatus": AssignmentSubmissionStatusCreatedKey,
 		"MaxMarks":           0,
 		"Marks":              0,
 	}, nil

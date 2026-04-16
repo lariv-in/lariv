@@ -5,6 +5,7 @@ import (
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lago/registry"
 )
 
 func registerDetailPages() {
@@ -24,7 +25,12 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Submission status",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.SubmissionStatus")},
+									&components.FieldText{
+										Getter: registry.PairValueFromKey(
+											getters.Key[string]("$in.SubmissionStatus"),
+											AssignmentSubmissionStatusChoices,
+										),
+									},
 								},
 							},
 							&components.LabelInline{
