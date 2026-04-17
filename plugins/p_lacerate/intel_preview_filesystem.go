@@ -45,6 +45,8 @@ func extFromContentType(ct string) string {
 		return ".gif"
 	case "application/pdf":
 		return ".pdf"
+	case "application/epub+zip":
+		return ".epub"
 	case "application/zip", "application/x-zip-compressed":
 		return ".zip"
 	case "application/gzip", "application/x-gzip":

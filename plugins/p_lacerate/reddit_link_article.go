@@ -49,7 +49,7 @@ func isSkippableDirectMediaURL(u *url.URL) bool {
 	switch ext {
 	case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg",
 		".tif", ".tiff", ".mp4", ".webm", ".mov", ".m4v", ".avi", ".mkv",
-		".mp3", ".wav", ".ogg", ".pdf", ".zip", ".tar", ".gz", ".tgz",
+		".mp3", ".wav", ".ogg", ".pdf", ".epub", ".zip", ".tar", ".gz", ".tgz",
 		".rar", ".7z", ".xz", ".bz2":
 		return true
 	default:

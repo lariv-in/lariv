@@ -14,6 +14,7 @@ require (
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/registry v0.5.9
 	github.com/lariv-in/lago/views v0.5.10
+	github.com/mathieu-keller/epub-parser/v2 v2.0.14
 	github.com/pgvector/pgvector-go v0.3.0
 	github.com/twpayne/go-geom v1.6.1
 	google.golang.org/genai v1.53.0

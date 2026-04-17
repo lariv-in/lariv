@@ -35,6 +35,7 @@ const (
 	directMediaKindVideo   directMediaKind = "video"
 	directMediaKindArchive directMediaKind = "archive"
 	directMediaKindText    directMediaKind = "text"
+	directMediaKindEPUB    directMediaKind = "epub"
 )
 
 type directMediaArchiveFormat string
@@ -117,6 +118,8 @@ func directMediaKindLabel(kind directMediaKind) string {
 		return "Archive"
 	case directMediaKindText:
 		return "Text"
+	case directMediaKindEPUB:
+		return "EPUB"
 	default:
 		return "File"
 	}
@@ -136,6 +139,8 @@ func directMediaKindFromNameAndMIME(name, mimeType string) directMediaKind {
 		return directMediaKindText
 	case mimeType == "application/pdf" || strings.HasSuffix(name, ".pdf"):
 		return directMediaKindPDF
+	case mimeType == "application/epub+zip" || strings.HasSuffix(name, ".epub"):
+		return directMediaKindEPUB
 	case strings.HasPrefix(mimeType, "image/"),
 		strings.HasSuffix(name, ".jpg"),
 		strings.HasSuffix(name, ".jpeg"),
@@ -687,6 +692,12 @@ func directMediaExtractAsset(ctx context.Context, db *gorm.DB, sourceID uint, ex
 	case directMediaKindText:
 		section := directMediaTextIntelSections(asset.Bytes)
 		intel, ok := directMediaIntel(sourceID, asset, directMediaMarkdown(asset, kind, section), nil)
+		var out []Intel
+		directMediaMaybeAppendIntel(&out, existingDedup, intel, ok)
+		return out, nil
+	case directMediaKindEPUB:
+		sections := directMediaEpubSections(asset)
+		intel, ok := directMediaIntel(sourceID, asset, directMediaMarkdown(asset, kind, sections...), nil)
 		var out []Intel
 		directMediaMaybeAppendIntel(&out, existingDedup, intel, ok)
 		return out, nil
