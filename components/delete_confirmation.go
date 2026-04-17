@@ -28,6 +28,7 @@ type DeleteConfirmation struct {
 	Message string
 	Classes string
 	// Attr is merged onto the form; use [getters.FormBubbling] and wire [ButtonModalForm] (opening this modal) with FormPostURL set to the resource DeleteRoute.
+	// For row-scoped deletes with a shared modal id, use [getters.FormBubblingWithDataPostURL] here instead of [getters.FormBubbling] alone.
 	// Modal HTML is a fragment (no [ShellBase]), so Build also shows "$error._global" for [views.LayerDelete] failures.
 	Attr getters.Getter[Node]
 }

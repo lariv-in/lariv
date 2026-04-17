@@ -104,7 +104,8 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
   evt.stopPropagation();
   if (f.dataset.lagoPostPending) return;
   f.dataset.lagoPostPending = '1';
-  var u = %s;
+  var u = (f.getAttribute('data-lago-post-url')||'').trim();
+  if (!u) { u = %s; }
   var body = document.body;
   function closeModal(x) {
     document.dispatchEvent(new CustomEvent('lago:modal-closed', { bubbles: true, detail: Object.assign({ dialog: m }, x) }));

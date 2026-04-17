@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	neturl "net/url"
+	"strings"
 
 	"maragu.dev/gomponents"
 	ghtml "maragu.dev/gomponents/html"
@@ -34,6 +36,38 @@ func FormBubbling(name Getter[string]) Getter[gomponents.Node] {
 				nLit,
 			)),
 		}, nil
+	}
+}
+
+// FormBubblingWithDataPostURL is [FormBubbling] plus data-lago-post-url on the form (merges ?name= into postURLBase) so row-scoped POST targets work when many modal openers share one dialog id.
+func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]) Getter[gomponents.Node] {
+	return func(ctx context.Context) (gomponents.Node, error) {
+		bub, err := FormBubbling(name)(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if postURLBase == nil {
+			return bub, nil
+		}
+		u, err := postURLBase(ctx)
+		if err != nil {
+			return nil, err
+		}
+		u = strings.TrimSpace(u)
+		if u == "" {
+			return bub, nil
+		}
+		resolvedName, err := name(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if parsed, err := neturl.Parse(u); err == nil {
+			q := parsed.Query()
+			q.Set("name", resolvedName)
+			parsed.RawQuery = q.Encode()
+			u = parsed.String()
+		}
+		return gomponents.Group{bub, gomponents.Attr("data-lago-post-url", u)}, nil
 	}
 }
 

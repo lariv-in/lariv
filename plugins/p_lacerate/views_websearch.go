@@ -443,6 +443,7 @@ func init() {
 	lago.RegistryView.Register("lacerate.WebsearchDeleteIntelView",
 		lago.GetPageView("lacerate.WebsearchDeleteIntelForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("lacerate.websearch.delete_intel_path", views.PathLayer{Names: []string{"intel_id"}}).
 			WithLayer("lacerate.websearch.delete_intel_detail", views.LayerDetail[Websearch]{
 				Key:          getters.Static("websearch"),
 				PathParamKey: getters.Static("id"),

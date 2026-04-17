@@ -427,7 +427,13 @@ func registerWebsearchDetail() {
 			&components.DeleteConfirmation{
 				Title:   "Delete related intel",
 				Message: "Delete this related intel? This cannot be undone.",
-				Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
+				Attr: getters.FormBubblingWithDataPostURL(
+					getters.Key[string]("$get.name"),
+					lago.RoutePath("lacerate.WebsearchDeleteIntelRoute", map[string]getters.Getter[any]{
+						"id":       getters.Any(getters.Key[uint]("websearch.ID")),
+						"intel_id": getters.Any(getters.Key[uint]("$path.intel_id")),
+					}),
+				),
 			},
 		},
 	})
