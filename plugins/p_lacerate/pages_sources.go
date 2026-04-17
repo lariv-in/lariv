@@ -325,20 +325,27 @@ func sourceDetailWorkerStatusGetter() getters.Getter[components.PageInterface] {
 		if err != nil {
 			return nil, err
 		}
-		if dur <= 0 {
-			return nil, nil
-		}
 		id, err := getters.Key[uint]("$in.Source.ID")(ctx)
 		if err != nil {
 			return nil, err
 		}
 		active := SourceWorkerIsRunning(id)
-		text := "Stopped (not polling)"
-		if active {
-			if running, _ := SourceWorkerRunning(id); running {
-				text = "Running (fetching)"
-			} else {
-				text = "Waiting (between polls)"
+		running, _ := SourceWorkerRunning(id)
+
+		var text string
+		if dur <= 0 {
+			text = "Polling off (duration zero); Restart runs one fetch"
+			if active && running {
+				text = "Running (one fetch)"
+			}
+		} else {
+			text = "Stopped (not polling)"
+			if active {
+				if running {
+					text = "Running (fetching)"
+				} else {
+					text = "Waiting (between polls)"
+				}
 			}
 		}
 		return &components.LabelInline{

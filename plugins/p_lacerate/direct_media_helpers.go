@@ -15,18 +15,15 @@ import (
 	_ "image/png"
 	"io"
 	"log/slog"
-	"math"
 	"mime"
 	"net/http"
 	"net/url"
 	"path"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
 	"gorm.io/gorm"
-	"rsc.io/pdf"
 )
 
 type directMediaKind string
@@ -37,6 +34,7 @@ const (
 	directMediaKindImage   directMediaKind = "image"
 	directMediaKindVideo   directMediaKind = "video"
 	directMediaKindArchive directMediaKind = "archive"
+	directMediaKindText    directMediaKind = "text"
 )
 
 type directMediaArchiveFormat string
@@ -48,6 +46,22 @@ const (
 	directMediaArchiveFormatTARGZ   directMediaArchiveFormat = "tar.gz"
 	directMediaArchiveFormatGZIP    directMediaArchiveFormat = "gz"
 )
+
+// directMediaPDFMarkdownPrompt asks Gemini for clean markdown only (no low-level PDF text dump).
+const directMediaPDFMarkdownPrompt = `Convert this PDF into archival markdown for OSINT records.
+
+Rules:
+- Output only readable UTF-8 markdown: headings (# / ##), bullet lists, short paragraphs. No binary data, hex dumps, or meaningless control characters.
+- Do not transcribe garbled glyph runs or layout noise; summarize legible content instead.
+- If the document is scanned, image-only, or mostly unreadable, say so briefly, then extract whatever useful text exists.
+
+Use these section headings (## exactly as written):
+## Summary
+## Key entities
+## Dates and places
+## Contact info
+## Notes
+`
 
 type directMediaAsset struct {
 	SourceURL   string
@@ -101,6 +115,8 @@ func directMediaKindLabel(kind directMediaKind) string {
 		return "Video"
 	case directMediaKindArchive:
 		return "Archive"
+	case directMediaKindText:
+		return "Text"
 	default:
 		return "File"
 	}
@@ -110,6 +126,14 @@ func directMediaKindFromNameAndMIME(name, mimeType string) directMediaKind {
 	name = strings.ToLower(strings.TrimSpace(name))
 	mimeType = strings.ToLower(strings.TrimSpace(strings.Split(mimeType, ";")[0]))
 	switch {
+	case mimeType == "text/html" || strings.HasSuffix(name, ".html") || strings.HasSuffix(name, ".htm"):
+		return directMediaKindOther
+	case (strings.HasPrefix(mimeType, "text/") && mimeType != "text/html" && mimeType != "text/javascript" && mimeType != "text/css") ||
+		mimeType == "application/json" ||
+		mimeType == "text/yaml" || mimeType == "application/x-yaml" ||
+		mimeType == "application/xml" || mimeType == "text/xml" ||
+		directMediaFilenameLooksLikePlainText(name):
+		return directMediaKindText
 	case mimeType == "application/pdf" || strings.HasSuffix(name, ".pdf"):
 		return directMediaKindPDF
 	case strings.HasPrefix(mimeType, "image/"),
@@ -139,6 +163,17 @@ func directMediaKindFromNameAndMIME(name, mimeType string) directMediaKind {
 		return directMediaKindArchive
 	default:
 		return directMediaKindOther
+	}
+}
+
+func directMediaFilenameLooksLikePlainText(name string) bool {
+	switch strings.ToLower(strings.TrimSpace(filepath.Ext(name))) {
+	case ".txt", ".md", ".markdown", ".log", ".csv", ".tsv", ".env", ".gitignore",
+		".yml", ".yaml", ".json", ".xml", ".adoc", ".rst", ".sql",
+		".sh", ".bash", ".zsh", ".ps1", ".bat", ".cmd", ".ini", ".cfg", ".toml", ".properties":
+		return true
+	default:
+		return false
 	}
 }
 
@@ -191,7 +226,14 @@ func directMediaInferMIMEType(name, declared string, data []byte) string {
 	return declared
 }
 
-func directMediaFetchRoot(ctx context.Context, raw string) (directMediaAsset, error) {
+func directMediaFetchRoot(ctx context.Context, db *gorm.DB, raw string) (directMediaAsset, error) {
+	raw = strings.TrimSpace(raw)
+	if strings.HasPrefix(raw, directMediaFSURLPrefix) {
+		if db == nil {
+			return directMediaAsset{}, fmt.Errorf("direct media filesystem url requires database access")
+		}
+		return directMediaFetchUploadedVNode(ctx, db, raw)
+	}
 	parsed, normalized, err := directMediaIsFetchableURL(ctx, raw)
 	if err != nil {
 		return directMediaAsset{}, err
@@ -435,59 +477,6 @@ func directMediaImageMetadata(data []byte) string {
 	return fmt.Sprintf("- **Image format:** %s\n- **Dimensions:** %dx%d", format, cfg.Width, cfg.Height)
 }
 
-func directMediaExtractPDFText(data []byte) (string, error) {
-	if len(data) == 0 {
-		return "", fmt.Errorf("pdf bytes are empty")
-	}
-	r, err := pdf.NewReader(bytes.NewReader(data), int64(len(data)))
-	if err != nil {
-		return "", err
-	}
-	var b strings.Builder
-	for pageNum := 1; pageNum <= r.NumPage(); pageNum++ {
-		pageObj := r.Page(pageNum)
-		if pageObj.V.IsNull() {
-			continue
-		}
-		content := pageObj.Content()
-		if len(content.Text) == 0 {
-			continue
-		}
-		items := append([]pdf.Text(nil), content.Text...)
-		sort.Slice(items, func(i, j int) bool {
-			if math.Abs(items[i].Y-items[j].Y) > 2.5 {
-				return items[i].Y > items[j].Y
-			}
-			return items[i].X < items[j].X
-		})
-		fmt.Fprintf(&b, "## Page %d\n\n", pageNum)
-		lineY := 0.0
-		haveLine := false
-		for _, item := range items {
-			s := strings.TrimSpace(item.S)
-			if s == "" {
-				continue
-			}
-			if !haveLine {
-				b.WriteString(s)
-				lineY = item.Y
-				haveLine = true
-				continue
-			}
-			if math.Abs(item.Y-lineY) > 2.5 {
-				b.WriteString("\n")
-				b.WriteString(s)
-				lineY = item.Y
-				continue
-			}
-			b.WriteString(" ")
-			b.WriteString(s)
-		}
-		b.WriteString("\n\n")
-	}
-	return strings.TrimSpace(b.String()), nil
-}
-
 func directMediaTrimMarkdown(s string) string {
 	s = strings.TrimSpace(s)
 	if markdownRuneLen(s) <= maxLinkedMarkdownRunes {
@@ -495,6 +484,41 @@ func directMediaTrimMarkdown(s string) string {
 	}
 	runes := []rune(s)
 	return strings.TrimSpace(string(runes[:maxLinkedMarkdownRunes])) + "\n\n...(truncated)"
+}
+
+// directMediaTextBodyMaxRunes leaves room for metadata headers in the final intel markdown.
+const directMediaTextBodyMaxRunes = maxLinkedMarkdownRunes - 8192
+
+func directMediaTruncateTextBodyForIntel(s string) string {
+	s = strings.TrimSpace(s)
+	rs := []rune(s)
+	if len(rs) <= directMediaTextBodyMaxRunes {
+		return s
+	}
+	return strings.TrimSpace(string(rs[:directMediaTextBodyMaxRunes])) + "\n\n...(truncated)"
+}
+
+func directMediaIndentEachLineAsMarkdownCode(s string) string {
+	if s == "" {
+		return ""
+	}
+	var b strings.Builder
+	for _, line := range strings.Split(s, "\n") {
+		b.WriteString("    ")
+		b.WriteString(line)
+		b.WriteByte('\n')
+	}
+	return b.String()
+}
+
+func directMediaTextIntelSections(data []byte) string {
+	body := intelSanitizePostgresText(string(data))
+	body = strings.TrimSpace(body)
+	if body == "" {
+		return "## Contents\n\n*(empty file)*"
+	}
+	body = directMediaTruncateTextBodyForIntel(body)
+	return "## Contents\n\n" + directMediaIndentEachLineAsMarkdownCode(body)
 }
 
 func directMediaMarkdown(asset directMediaAsset, kind directMediaKind, sections ...string) string {
@@ -586,23 +610,16 @@ func directMediaExtractAsset(ctx context.Context, db *gorm.DB, sourceID uint, ex
 	}
 	switch kind {
 	case directMediaKindPDF:
-		var sections []string
-		localText, err := directMediaExtractPDFText(asset.Bytes)
-		if err != nil {
-			slog.Warn("lacerate: direct media pdf local extract", "error", err, "label", asset.label())
-			if strings.TrimSpace(asset.Note) == "" {
-				asset.Note = err.Error()
-			}
-		}
-		if localText != "" {
-			sections = append(sections, "## Extracted text\n\n"+localText)
-		}
-		aiText, err := directMediaAnalyzeUploadedFile(ctx, asset.Bytes, asset.MIMEType, asset.label(), "Analyze this PDF for OSINT ingest. Return concise markdown with sections: Summary, Key entities, Dates and places, Contact info, Notes.")
+		// PDF body comes from Gemini file analysis only; local rsc.io/pdf text was dropped (NULs / garbage in Postgres, low signal).
+		aiText, err := directMediaAnalyzeUploadedFile(ctx, asset.Bytes, asset.MIMEType, asset.label(), directMediaPDFMarkdownPrompt)
 		if err != nil {
 			slog.Warn("lacerate: direct media pdf ai analysis", "error", err, "label", asset.label())
 		}
-		if aiText != "" {
-			sections = append(sections, "## AI analysis\n\n"+aiText)
+		var sections []string
+		if strings.TrimSpace(aiText) != "" {
+			sections = append(sections, strings.TrimSpace(aiText))
+		} else {
+			sections = append(sections, "## PDF ingest\n\nGemini returned no markdown (check API key and `directMedia` model). Raw PDF text extraction is not stored to avoid unusable payloads.")
 		}
 		intel, ok := directMediaIntel(sourceID, asset, directMediaMarkdown(asset, kind, sections...), nil)
 		var out []Intel
@@ -666,6 +683,12 @@ func directMediaExtractAsset(ctx context.Context, db *gorm.DB, sourceID uint, ex
 			}
 			out = append(out, childIntels...)
 		}
+		return out, nil
+	case directMediaKindText:
+		section := directMediaTextIntelSections(asset.Bytes)
+		intel, ok := directMediaIntel(sourceID, asset, directMediaMarkdown(asset, kind, section), nil)
+		var out []Intel
+		directMediaMaybeAppendIntel(&out, existingDedup, intel, ok)
 		return out, nil
 	default:
 		intel, ok := directMediaIntel(sourceID, asset, directMediaMarkdown(asset, kind), nil)

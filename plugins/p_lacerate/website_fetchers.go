@@ -128,7 +128,7 @@ func (s *websiteFetchState) appendChildIntels(out []Intel, childURLs []string, d
 			continue
 		}
 		if isSkippableDirectMediaURL(parsed) {
-			asset, err := directMediaFetchRoot(s.ctx, normalizedURL)
+			asset, err := directMediaFetchRoot(s.ctx, s.db, normalizedURL)
 			if err != nil {
 				slog.Error("lacerate: child media fetch", "error", err, "url", normalizedURL)
 				continue

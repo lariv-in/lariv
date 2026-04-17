@@ -19,7 +19,7 @@ type DirectMediaSource struct {
 }
 
 func (d DirectMediaSource) Fetch(ctx context.Context, db *gorm.DB, existingDedup map[string]struct{}) ([]Intel, error) {
-	asset, err := directMediaFetchRoot(ctx, d.URL)
+	asset, err := directMediaFetchRoot(ctx, db, d.URL)
 	if err != nil {
 		slog.Error("lacerate: direct media source fetch", "error", err, "source_id", d.SourceID, "url", d.URL)
 		return nil, err

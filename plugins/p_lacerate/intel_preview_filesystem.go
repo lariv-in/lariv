@@ -43,8 +43,26 @@ func extFromContentType(ct string) string {
 		return ".webp"
 	case "image/gif":
 		return ".gif"
+	case "application/pdf":
+		return ".pdf"
+	case "application/zip", "application/x-zip-compressed":
+		return ".zip"
+	case "application/gzip", "application/x-gzip":
+		return ".gz"
+	case "application/x-tar":
+		return ".tar"
+	case "video/mp4":
+		return ".mp4"
+	case "video/webm":
+		return ".webm"
+	case "audio/mpeg":
+		return ".mp3"
+	case "audio/wav":
+		return ".wav"
+	case "text/plain":
+		return ".txt"
 	default:
-		return ".jpg"
+		return ""
 	}
 }
 
@@ -229,6 +247,9 @@ func persistIntelPreviewBytes(ctx context.Context, db *gorm.DB, fileNamePrefix s
 	}
 
 	ext := extFromContentType(contentType)
+	if ext == "" {
+		ext = extFromContentType(http.DetectContentType(data))
+	}
 	baseID := strings.TrimSpace(fileNamePrefix)
 	if baseID == "" {
 		baseID = "preview"

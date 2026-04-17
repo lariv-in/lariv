@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,27 +37,55 @@ func (sourceWorkerPOSTOnlyLayer) Next(view views.View, next http.Handler) http.H
 func sourceRestartWorkerHandler(v *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			slog.Error("lacerate: source restart worker wrong method",
+				"method", r.Method,
+				"request_uri", r.URL.RequestURI(),
+				"path", r.URL.Path,
+			)
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		idStr := r.PathValue("id")
 		id64, err := strconv.ParseUint(idStr, 10, 32)
 		if err != nil {
+			slog.Error("lacerate: source restart worker invalid id path param",
+				"id_param", idStr,
+				"error", err,
+				"request_uri", r.URL.RequestURI(),
+			)
 			http.NotFound(w, r)
 			return
 		}
+		sourceID := uint(id64)
 		db, dberr := getters.DBFromContext(r.Context())
 		if dberr != nil {
-			slog.Error("lacerate: source restart worker missing db", "source_id", idStr, "error", dberr)
+			slog.Error("lacerate: source restart worker missing db in context",
+				"source_id", sourceID,
+				"error", dberr,
+				"request_uri", r.URL.RequestURI(),
+			)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-		ScheduleRestartSourceWorker(db, uint(id64))
+		slog.Info("lacerate: source restart worker request", "source_id", sourceID, "request_uri", r.URL.RequestURI())
+		ScheduleRestartSourceWorker(db, sourceID)
 		detailURL, err := lago.RoutePath("lacerate.SourceDetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(idStr)),
 		})(r.Context())
-		if err != nil || detailURL == "" {
-			slog.Error("lacerate: source restart worker detail URL", "error", err, "source_id", idStr)
+		if err != nil {
+			slog.Error("lacerate: source restart worker detail route resolution failed",
+				"source_id", sourceID,
+				"error", err,
+				"route", "lacerate.SourceDetailRoute",
+			)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		if detailURL == "" {
+			slog.Error("lacerate: source restart worker detail url empty",
+				"source_id", sourceID,
+				"route", "lacerate.SourceDetailRoute",
+			)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -245,6 +274,20 @@ type sourceCreateLayer struct {
 	SuccessURL getters.Getter[string]
 }
 
+// parseLacerateSourceMultipartEarly parses multipart bodies with a limit large enough for
+// direct media uploads before [components.FormComponent.ParseForm] runs (that path uses a
+// small default and returns early if the body is already parsed).
+func parseLacerateSourceMultipartEarly(r *http.Request) error {
+	if r.Method != http.MethodPost || !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		return nil
+	}
+	limit := Config.DirectMedia.MaxDownloadBytes + (1024 * 1024)
+	if limit < 5*1024*1024 {
+		limit = 5 * 1024 * 1024
+	}
+	return r.ParseMultipartForm(limit)
+}
+
 func (m sourceCreateLayer) Next(view views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -252,6 +295,12 @@ func (m sourceCreateLayer) Next(view views.View, next http.Handler) http.Handler
 			return
 		}
 		ctx := r.Context()
+		if err := parseLacerateSourceMultipartEarly(r); err != nil {
+			slog.Error("lacerate: source create multipart", "error", err)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_form": err})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		values, fieldErrors, err := view.ParseForm(w, r)
 		if err != nil {
 			slog.Error("lacerate: source create parse form", "error", err)
@@ -281,6 +330,9 @@ func (m sourceCreateLayer) Next(view views.View, next http.Handler) http.Handler
 				return err
 			}
 			sourceID = src.ID
+			if err := resolveDirectMediaFileForSave(ctx, tx, &formData); err != nil {
+				return err
+			}
 			return createSourceKindRow(tx, sourceID, formData)
 		})
 		if err != nil {
@@ -316,6 +368,12 @@ func (m sourceUpdateLayer) Next(view views.View, next http.Handler) http.Handler
 			return
 		}
 		ctx := r.Context()
+		if err := parseLacerateSourceMultipartEarly(r); err != nil {
+			slog.Error("lacerate: source update multipart", "error", err)
+			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_form": err})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 		values, fieldErrors, err := view.ParseForm(w, r)
 		if err != nil {
 			slog.Error("lacerate: source update parse form", "error", err)
@@ -363,6 +421,9 @@ func (m sourceUpdateLayer) Next(view views.View, next http.Handler) http.Handler
 				return err
 			}
 			if err := deleteSourceKindExtensionRows(tx, sourceID); err != nil {
+				return err
+			}
+			if err := resolveDirectMediaFileForSave(ctx, tx, &formData); err != nil {
 				return err
 			}
 			return createSourceKindRow(tx, sourceID, formData)
@@ -448,15 +509,29 @@ func (m sourceDeleteLayer) Next(view views.View, next http.Handler) http.Handler
 }
 
 type parsedSourceFormData struct {
-	Name          string
-	Kind          string
-	Duration      time.Duration
-	Subreddits    datatypes.JSON
-	SearchQuery   string
-	MaxFreshPosts uint
-	Handles       datatypes.JSON
-	URL           string
-	Query         string
+	Name              string
+	Kind              string
+	Duration          time.Duration
+	Subreddits        datatypes.JSON
+	SearchQuery       string
+	MaxFreshPosts     uint
+	Handles           datatypes.JSON
+	URL               string
+	Query             string
+	DirectMediaFile   *multipart.FileHeader
+}
+
+func resolveDirectMediaFileForSave(ctx context.Context, tx *gorm.DB, fd *parsedSourceFormData) error {
+	if fd.Kind != sourceKindDirectMedia || fd.DirectMediaFile == nil {
+		return nil
+	}
+	u, err := directMediaPersistUploadedFile(ctx, tx, fd.DirectMediaFile)
+	if err != nil {
+		return err
+	}
+	fd.URL = u
+	fd.DirectMediaFile = nil
+	return nil
 }
 
 func parseSourceMaxFreshPostsInto(values map[string]any, fieldErrors map[string]error, out *uint) {
@@ -529,9 +604,29 @@ func sourceFormDataFromValues(values map[string]any, fieldErrors map[string]erro
 			fieldErrors["Query"] = fmt.Errorf("query is required")
 		}
 	case sourceKindDirectMedia:
+		var upload *multipart.FileHeader
+		if v, ok := values["DirectMediaUpload"].(*multipart.FileHeader); ok && v != nil && strings.TrimSpace(v.Filename) != "" {
+			upload = v
+		}
 		rawURL := strings.TrimSpace(fmt.Sprint(values["URL"]))
+		limit := Config.DirectMedia.MaxDownloadBytes
+		if limit <= 0 {
+			limit = defaultDirectMediaMaxDownloadBytes
+		}
+		if upload != nil && upload.Size > 0 && upload.Size > limit {
+			fieldErrors["DirectMediaUpload"] = fmt.Errorf("file exceeds maxDownloadBytes (%d)", limit)
+			return out
+		}
+		if upload != nil {
+			out.DirectMediaFile = upload
+			return out
+		}
 		if rawURL == "" {
-			fieldErrors["URL"] = fmt.Errorf("url is required")
+			fieldErrors["URL"] = fmt.Errorf("url or file upload is required")
+			return out
+		}
+		if strings.HasPrefix(rawURL, directMediaFSURLPrefix) {
+			out.URL = rawURL
 			return out
 		}
 		normalizedURL, err := normalizeWebsiteSeedURL(rawURL)

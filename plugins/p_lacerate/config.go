@@ -59,6 +59,8 @@ type DirectMediaConfig struct {
 	MaxArchiveEntryBytes    int64  `toml:"maxArchiveEntryBytes"`
 	MaxArchiveExpandedBytes int64  `toml:"maxArchiveExpandedBytes"`
 	AIModel                 string `toml:"aiModel"`
+	// UploadDirectory is the [p_filesystem] path (under the app VFS) where form uploads for direct media sources are stored.
+	UploadDirectory string `toml:"uploadDirectory"`
 }
 
 const (
@@ -71,6 +73,7 @@ const (
 	defaultDirectMediaMaxArchiveEntryBytes    = 32 << 20
 	defaultDirectMediaMaxArchiveExpandedBytes = 128 << 20
 	defaultDirectMediaAIModel                 = "gemini-2.5-flash"
+	defaultDirectMediaUploadDirectory         = "lacerate/direct_media_uploads"
 )
 
 // IntelPreviewConfig holds the VFS path for stored preview images and the User-Agent for outbound preview HTTP requests.
@@ -129,6 +132,9 @@ func (c *lacerateConfig) PostConfig() {
 	}
 	if c.DirectMedia.AIModel == "" {
 		c.DirectMedia.AIModel = defaultDirectMediaAIModel
+	}
+	if strings.TrimSpace(c.DirectMedia.UploadDirectory) == "" {
+		c.DirectMedia.UploadDirectory = defaultDirectMediaUploadDirectory
 	}
 
 	mode := strings.ToLower(strings.TrimSpace(string(c.Twitter.FetchMode)))

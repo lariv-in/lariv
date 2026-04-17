@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +18,12 @@ import (
 
 // intelCreateBatchSize is chunk size for [runSourceFetch] batch insert after embeddings.
 const intelCreateBatchSize = 100
+
+// intelSanitizePostgresText strips NULs and invalid UTF-8 so [Intel.Content] is safe for PostgreSQL UTF8 text.
+func intelSanitizePostgresText(s string) string {
+	s = strings.ReplaceAll(s, "\x00", "")
+	return strings.ToValidUTF8(s, "\uFFFD")
+}
 
 type sourceWorkerPhase uint32
 
@@ -55,11 +63,25 @@ func init() {
 // db must be a pooled *gorm.DB (e.g. request DB from context), not a transactional *gorm.DB from inside db.Transaction;
 // call after the transaction returns so the worker does not share the transaction connection (avoids "conn busy").
 func ScheduleRestartSourceWorker(db *gorm.DB, sourceID uint) {
-	if sourceID == 0 || db == nil {
+	if sourceID == 0 {
+		slog.Error("lacerate: ScheduleRestartSourceWorker skipped", "reason", "source_id is zero")
+		return
+	}
+	if db == nil {
+		slog.Error("lacerate: ScheduleRestartSourceWorker skipped", "source_id", sourceID, "reason", "db is nil")
 		return
 	}
 	id := sourceID
 	go func() {
+		defer func() {
+			if rec := recover(); rec != nil {
+				slog.Error("lacerate: RestartSourceWorker goroutine panic",
+					"source_id", id,
+					"panic", rec,
+					"stack", string(debug.Stack()),
+				)
+			}
+		}()
 		RestartSourceWorker(db, id)
 	}()
 }
@@ -85,7 +107,7 @@ func sourceWorkerSetPhase(sourceID uint, p sourceWorkerPhase) {
 }
 
 // SourceWorkerIsRunning reports whether a background fetch goroutine is registered for this source
-// (including idle time between polls). False when [Source.Duration] is zero or worker has exited.
+// (including idle time between polls, or a one-shot run when [Source.Duration] is zero). False after the worker exits.
 func SourceWorkerIsRunning(sourceID uint) bool {
 	if sourceID == 0 {
 		return false
@@ -112,7 +134,8 @@ func SourceWorkerRunning(sourceID uint) (running bool, ok bool) {
 }
 
 // RestartSourceWorker stops an existing worker (if any), then starts a new one using the
-// current row from the DB. No worker is started if the source is missing or [Source.Duration] <= 0.
+// current row from the DB. No worker is started if the source is missing.
+// When [Source.Duration] <= 0, the worker performs a single fetch then exits (no polling interval).
 func RestartSourceWorker(db *gorm.DB, sourceID uint) {
 	if db == nil {
 		slog.Error("lacerate: RestartSourceWorker called with nil db", "source_id", sourceID)
@@ -123,12 +146,17 @@ func RestartSourceWorker(db *gorm.DB, sourceID uint) {
 
 	var src Source
 	if err := db.First(&src, sourceID).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			slog.Error("lacerate: load source for worker", "error", err, "source_id", sourceID)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			slog.Warn("lacerate: RestartSourceWorker source row missing",
+				"source_id", sourceID,
+				"error", err,
+			)
+			return
 		}
-		return
-	}
-	if src.Duration <= 0 {
+		slog.Error("lacerate: RestartSourceWorker load source failed",
+			"source_id", sourceID,
+			"error", err,
+		)
 		return
 	}
 
@@ -156,18 +184,22 @@ func runSourceWorker(db *gorm.DB, sourceID uint, ctx context.Context) {
 
 		var src Source
 		if err := db.WithContext(ctx).First(&src, sourceID).Error; err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				slog.Warn("lacerate: source worker source row missing", "source_id", sourceID, "error", err)
+			} else {
 				slog.Error("lacerate: source worker reload source", "error", err, "source_id", sourceID)
 			}
-			return
-		}
-		if src.Duration <= 0 {
 			StopSourceWorker(sourceID)
 			return
 		}
 
 		if err := runSourceFetch(ctx, db, &src); err != nil {
 			slog.Error("lacerate: source worker fetch", "error", err, "source_id", sourceID, "kind", src.Kind)
+		}
+
+		if src.Duration <= 0 {
+			StopSourceWorker(sourceID)
+			return
 		}
 
 		sourceWorkerSetPhase(sourceID, sourceWorkerPhaseWaiting)
@@ -224,6 +256,7 @@ func runSourceFetch(ctx context.Context, db *gorm.DB, src *Source) error {
 	}
 
 	for i := range toSave {
+		toSave[i].Content = intelSanitizePostgresText(toSave[i].Content)
 		if err := prepareIntelEmbeddingForSave(ctx, dbw, &toSave[i]); err != nil {
 			return err
 		}
