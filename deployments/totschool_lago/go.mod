@@ -5,9 +5,11 @@ go 1.26.1
 require (
 	github.com/lariv-in/lago/lago v0.5.10
 	github.com/lariv-in/lago/plugins/p_dashboard v0.5.10
+	github.com/lariv-in/lago/plugins/p_export v0.0.0-20260416161456-40f8379a99b9
 	github.com/lariv-in/lago/plugins/p_otp v0.5.10
 	github.com/lariv-in/lago/plugins/p_pwa v0.5.10
 	github.com/lariv-in/lago/plugins/p_totschool_appointments v0.5.10
+	github.com/lariv-in/lago/plugins/p_totschool_export v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_totschool_proposals v0.5.10
 	github.com/lariv-in/lago/plugins/p_totschool_tally v0.5.10
 	github.com/lariv-in/lago/plugins/p_totschool_users v0.5.10
@@ -75,10 +77,16 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/nyaruka/phonenumbers v1.7.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/richardlehane/mscfb v1.0.6 // indirect
+	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
+	github.com/xuri/efp v0.0.1 // indirect
+	github.com/xuri/excelize/v2 v2.10.1 // indirect
+	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/ysmood/fetchup v0.2.3 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/got v0.42.3 // indirect
@@ -108,3 +116,5 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
+
+replace github.com/lariv-in/lago/plugins/p_totschool_export => ../../plugins/p_totschool_export

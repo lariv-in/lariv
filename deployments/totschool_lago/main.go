@@ -9,6 +9,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_otp"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
 	_ "github.com/lariv-in/lago/plugins/p_totschool_appointments"
+	_ "github.com/lariv-in/lago/plugins/p_totschool_export"
 	_ "github.com/lariv-in/lago/plugins/p_totschool_proposals"
 	_ "github.com/lariv-in/lago/plugins/p_totschool_tally"
 	_ "github.com/lariv-in/lago/plugins/p_totschool_users"

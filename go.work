@@ -32,6 +32,7 @@ use (
 	./plugins/p_totschool_appointments
 	./plugins/p_totschool_proposals
 	./plugins/p_totschool_tally
+	./plugins/p_totschool_export
 	./plugins/p_totschool_users
 	./plugins/p_users
 	./registry
