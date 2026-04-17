@@ -66,9 +66,9 @@ func init() {
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("academicrecords.admin_role", academicRecordsAdminRoleLayer).
 			WithLayer("academicrecords.create_query_defaults", academicRecordCreateQueryDefaultsLayer{}).
+			WithLayer("academicrecords.program_structure_unit", academicRecordProgramStructureUnitContextLayer{}).
 			WithLayer("academicrecords.program_structure_units", academicRecordProgramStructureUnitsContextLayer{}).
 			WithLayer("academicrecords.multistep", views.MultiStepFormLayer{}).
-			WithLayer("academicrecords.program_structure_unit", academicRecordProgramStructureUnitContextLayer{}).
 			WithLayer("academicrecords.create", views.LayerCreate[AcademicRecord]{
 				SuccessURL: lago.RoutePath("academicrecords.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),

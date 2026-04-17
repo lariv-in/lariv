@@ -2,6 +2,7 @@ package getters
 
 import (
 	"context"
+	"reflect"
 
 	"gorm.io/gorm"
 )
@@ -13,6 +14,10 @@ func Association[T, V any](foreignKeyGetter Getter[V]) Getter[T] {
 		fkValue, err := foreignKeyGetter(ctx)
 		if err != nil {
 			return zero, err
+		}
+
+		if reflect.ValueOf(fkValue).IsZero() {
+			return zero, nil
 		}
 
 		db, err := DBFromContext(ctx)

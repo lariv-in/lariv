@@ -49,12 +49,19 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		} else {
 			valueMap := getters.MapFromStruct(value)
 			if len(valueMap) > 0 {
+				haveSelectedID := false
 				if idVal, exists := valueMap["ID"]; exists {
-					valuePk = fmt.Sprintf("%v", idVal)
+					if rv := reflect.ValueOf(idVal); rv.IsValid() && !rv.IsZero() {
+						valuePk = fmt.Sprintf("%v", idVal)
+						haveSelectedID = true
+					}
 				} else if idVal, exists := valueMap["id"]; exists {
-					valuePk = fmt.Sprintf("%v", idVal)
+					if rv := reflect.ValueOf(idVal); rv.IsValid() && !rv.IsZero() {
+						valuePk = fmt.Sprintf("%v", idVal)
+						haveSelectedID = true
+					}
 				}
-				if e.Display != nil {
+				if e.Display != nil && haveSelectedID {
 					displayStr, err := e.Display(context.WithValue(ctx, "$in", valueMap))
 					if err != nil {
 						slog.Error("InputForeignKey display getter failed", "error", err, "key", e.Key)
