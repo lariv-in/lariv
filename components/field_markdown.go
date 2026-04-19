@@ -14,12 +14,21 @@ import (
 	ghtml "maragu.dev/gomponents/html"
 )
 
-var mdExtensions = parser.CommonExtensions | parser.AutoHeadingIDs
+// MarkdownParserExtensions matches [FieldMarkdown] / [RenderMarkdown] parsing.
+const MarkdownParserExtensions = parser.CommonExtensions | parser.AutoHeadingIDs
+
+// ParseMarkdownAST parses markdown with the same extensions as [RenderMarkdown].
+func ParseMarkdownAST(md string) ast.Node {
+	return parser.NewWithExtensions(MarkdownParserExtensions).Parse([]byte(md))
+}
 
 type FieldMarkdown struct {
 	Page
-	Getter  getters.Getter[string]
+	Getter getters.Getter[string]
 	Classes string
+	// RenderHooks is optional. When non-nil, called with request context and the markdown
+	// string from Getter; returned hooks run outermost-first (before built-in styling hooks).
+	RenderHooks func(context.Context, string) ([]html.RenderNodeFunc, error)
 }
 
 func appendOrAssign(attr *ast.Attribute, values ...string) *ast.Attribute {
@@ -67,10 +76,20 @@ func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus
 	return ast.GoToNext, false
 }
 
-func RenderMarkdown(md string) string {
-	doc := parser.NewWithExtensions(mdExtensions).Parse([]byte(md))
+func RenderMarkdown(md string, hooks ...html.RenderNodeFunc) string {
+	doc := ParseMarkdownAST(md)
 	opts := html.RendererOptions{Flags: html.CommonFlags}
 	opts.RenderNodeHook = customRenderHook
+	for _, renderNodeFunc := range hooks {
+		currentFunc := opts.RenderNodeHook
+		opts.RenderNodeHook = func(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+			status, processed := renderNodeFunc(w, node, entering)
+			if !processed {
+				return currentFunc(w, node, entering)
+			}
+			return status, processed
+		}
+	}
 	renderer := html.NewRenderer(opts)
 
 	return string(markdown.Render(doc, renderer))
@@ -96,5 +115,17 @@ func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 	if s == "" {
 		return ghtml.Div()
 	}
-	return ghtml.Div(ghtml.Class("whitespace-pre-wrap border border-base-300 p-2 rounded-md "+e.Classes), gomponents.Raw(RenderMarkdown(s)))
+	var hooks []html.RenderNodeFunc
+	if e.RenderHooks != nil {
+		var err error
+		hooks, err = e.RenderHooks(ctx, s)
+		if err != nil {
+			slog.Error("FieldMarkdown RenderHooks failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		}
+	}
+	return ghtml.Div(
+		ghtml.Class("whitespace-pre-wrap border border-base-300 p-2 rounded-md "+e.Classes),
+		gomponents.Raw(RenderMarkdown(s, hooks...)),
+	)
 }

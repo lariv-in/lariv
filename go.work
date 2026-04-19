@@ -15,7 +15,6 @@ use (
 	./plugins/p_export
 	./plugins/p_filesystem
 	./plugins/p_forms
-	./plugins/p_lacerate
 	./plugins/p_nirmancampus_academicrecords
 	./plugins/p_nirmancampus_announcements
 	./plugins/p_nirmancampus_assignmentsubmissions
@@ -31,6 +30,7 @@ use (
 	./plugins/p_otp
 	./plugins/p_pwa
 	./plugins/p_seer_intel
+	./plugins/p_seer_deepsearch
 	./plugins/p_seer_reddit
 	./plugins/p_seer_runners
 	./plugins/p_seer_websites

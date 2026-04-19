@@ -8,6 +8,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_dashboard"
 	_ "github.com/lariv-in/lago/plugins/p_filesystem"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
+	_ "github.com/lariv-in/lago/plugins/p_seer_deepsearch"
 	_ "github.com/lariv-in/lago/plugins/p_seer_intel"
 	_ "github.com/lariv-in/lago/plugins/p_seer_reddit"
 	_ "github.com/lariv-in/lago/plugins/p_seer_runners"

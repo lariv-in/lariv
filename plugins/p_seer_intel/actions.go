@@ -94,7 +94,9 @@ func NewFromIntelKind(ctx context.Context, k IntelKind) (Intel, error) {
 		SystemInstruction: genai.NewContentFromText(intelTitleSystemPrompt, genai.RoleUser),
 		MaxOutputTokens:   128,
 	}
-	titleResp, err := client.Models.GenerateContent(ctx, llmModel, genai.Text(content), titleCfg)
+	titleResp, err := WithGenAIRetry(ctx, "intel.title", func(ctx context.Context) (*genai.GenerateContentResponse, error) {
+		return client.Models.GenerateContent(ctx, llmModel, genai.Text(content), titleCfg)
+	})
 	if err != nil {
 		slog.Error("p_seer_intel: title generate", "error", err, "model", llmModel)
 		return Intel{}, fmt.Errorf("p_seer_intel: title generate: %w", err)
@@ -108,7 +110,9 @@ func NewFromIntelKind(ctx context.Context, k IntelKind) (Intel, error) {
 		Temperature:       genai.Ptr[float32](0.3),
 		SystemInstruction: genai.NewContentFromText(intelSummarySystemPrompt, genai.RoleUser),
 	}
-	sumResp, err := client.Models.GenerateContent(ctx, llmModel, genai.Text(content), sumCfg)
+	sumResp, err := WithGenAIRetry(ctx, "intel.summary", func(ctx context.Context) (*genai.GenerateContentResponse, error) {
+		return client.Models.GenerateContent(ctx, llmModel, genai.Text(content), sumCfg)
+	})
 	if err != nil {
 		slog.Error("p_seer_intel: summary generate", "error", err, "model", llmModel)
 		return Intel{}, fmt.Errorf("p_seer_intel: summary generate: %w", err)
@@ -121,7 +125,9 @@ func NewFromIntelKind(ctx context.Context, k IntelKind) (Intel, error) {
 	dim := int32(SeerIntelEmbeddingDim)
 	embedCfg := &genai.EmbedContentConfig{OutputDimensionality: &dim}
 	embedContents := []*genai.Content{genai.NewContentFromText(content, genai.RoleUser)}
-	embedRes, err := client.Models.EmbedContent(ctx, embedModel, embedContents, embedCfg)
+	embedRes, err := WithGenAIRetry(ctx, "intel.embed_content", func(ctx context.Context) (*genai.EmbedContentResponse, error) {
+		return client.Models.EmbedContent(ctx, embedModel, embedContents, embedCfg)
+	})
 	if err != nil {
 		slog.Error("p_seer_intel: embed content", "error", err, "model", embedModel)
 		return Intel{}, fmt.Errorf("p_seer_intel: embed content: %w", err)
