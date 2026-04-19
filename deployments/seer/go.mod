@@ -10,6 +10,7 @@ require (
 	github.com/lariv-in/lago/plugins/p_seer_intel v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_reddit v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_runners v0.0.0-00010101000000-000000000000
+	github.com/lariv-in/lago/plugins/p_seer_websites v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 )
 
@@ -18,6 +19,8 @@ replace github.com/lariv-in/lago/plugins/p_seer_intel => ../../plugins/p_seer_in
 replace github.com/lariv-in/lago/plugins/p_seer_reddit => ../../plugins/p_seer_reddit
 
 replace github.com/lariv-in/lago/plugins/p_seer_runners => ../../plugins/p_seer_runners
+
+replace github.com/lariv-in/lago/plugins/p_seer_websites => ../../plugins/p_seer_websites
 
 require (
 	charm.land/bubbles/v2 v2.1.0 // indirect

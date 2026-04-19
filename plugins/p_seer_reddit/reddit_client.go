@@ -1,6 +1,7 @@
 package p_seer_reddit
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -68,7 +69,7 @@ func (RedditPostData) Kind() string {
 
 const redditListingMaxPages = 25
 
-func fetchSubredditPosts(subreddit string, after *string) (*redditObject[redditListing[RedditPostData]], error) {
+func fetchSubredditPosts(ctx context.Context, subreddit string, after *string) (*redditObject[redditListing[RedditPostData]], error) {
 	base := fmt.Sprintf("https://www.reddit.com/r/%s/.json", url.PathEscape(subreddit))
 	v := url.Values{}
 	if after != nil && strings.TrimSpace(*after) != "" {
@@ -78,7 +79,7 @@ func fetchSubredditPosts(subreddit string, after *string) (*redditObject[redditL
 	if len(v) > 0 {
 		u = base + "?" + v.Encode()
 	}
-	req, err := http.NewRequest(http.MethodGet, u, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
 		slog.Error("p_seer_reddit: new request", "error", err, "subreddit", subreddit)
 		return nil, err
@@ -108,7 +109,7 @@ func fetchSubredditPosts(subreddit string, after *string) (*redditObject[redditL
 	return &out, nil
 }
 
-func fetchSubredditPostsSearch(subreddit, query string, after *string) (*redditObject[redditListing[RedditPostData]], error) {
+func fetchSubredditPostsSearch(ctx context.Context, subreddit, query string, after *string) (*redditObject[redditListing[RedditPostData]], error) {
 	base := fmt.Sprintf("https://www.reddit.com/r/%s/search.json", url.PathEscape(subreddit))
 	q := url.Values{}
 	q.Set("q", query)
@@ -118,7 +119,7 @@ func fetchSubredditPostsSearch(subreddit, query string, after *string) (*redditO
 	}
 	u := base + "?" + q.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, u, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
 		slog.Error("p_seer_reddit: new request (search)", "error", err, "subreddit", subreddit)
 		return nil, err

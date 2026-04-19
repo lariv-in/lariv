@@ -2,25 +2,12 @@ package p_seer_intel
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/pgvector/pgvector-go"
 )
-
-func formatIntelEmbeddingLabel(v *pgvector.Vector) string {
-	if v == nil {
-		return "—"
-	}
-	vec := v.Slice()
-	if len(vec) == 0 {
-		return "—"
-	}
-	return fmt.Sprintf("%d dimensions", len(vec))
-}
 
 func registerDetailPages() {
 	lago.RegistryPage.Register("seer_intel.IntelDetail", &components.ShellScaffold{
@@ -57,12 +44,13 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
-								Title: "Embedding",
+								Title: "Source",
 								Children: []components.PageInterface{
-									&components.FieldText{
-										Getter: getters.Map(getters.Key[Intel]("intel"), func(_ context.Context, in Intel) (string, error) {
-											return formatIntelEmbeddingLabel(in.Embedding), nil
-										}),
+									&components.FieldLink{
+										Page:    components.Page{Key: "seer_intel.IntelDetailSourceLink"},
+										Href:    intelDetailHrefFromIntelKindIntelDetail(),
+										Label:   getters.Static("Open source"),
+										Classes: "link link-primary",
 									},
 								},
 							},
@@ -72,4 +60,26 @@ func registerDetailPages() {
 			},
 		},
 	})
+}
+
+// intelDetailHrefFromIntelKindIntelDetail resolves [LoadIntelKind] for the row in context and returns [IntelKind.IntelDetail].
+func intelDetailHrefFromIntelKindIntelDetail() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		in, err := getters.Key[Intel]("intel")(ctx)
+		if err != nil {
+			return "", err
+		}
+		if in.Kind == "" || in.KindID == 0 {
+			return "", nil
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			return "", err
+		}
+		k, err := LoadIntelKind(ctx, db, in.Kind, in.KindID)
+		if err != nil {
+			return "", nil
+		}
+		return k.IntelDetail(ctx)
+	}
 }

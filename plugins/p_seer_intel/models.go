@@ -21,9 +21,12 @@ type Intel struct {
 	// Datetime is the canonical time for this intel item (ingest or event time).
 	Datetime time.Time `gorm:"not null"`
 	// Embedding is optional until the generation pipeline fills it from [IntelKind.Content].
+	// Kind is the source-family discriminator; [NewFromIntelKind] sets it from [IntelKind.Kind].
 	Embedding *pgvector.Vector `gorm:"type:vector(1024)"`
 	// Kind discriminates the source family (e.g. future "reddit", "website"); free-form string for now.
 	Kind string `gorm:"not null;default:'';index"`
+	// KindID is the source row id for that family (e.g. [github.com/lariv-in/lago/plugins/p_seer_reddit.RedditPost] ID when Kind is "reddit"); set from [IntelKind.IntelID].
+	KindID uint `gorm:"not null;default:0;index"`
 }
 
 func init() {

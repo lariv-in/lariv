@@ -1,43 +1,62 @@
 package p_seer_reddit
 
 import (
+	"time"
+
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_seer_intel"
-	"github.com/lariv-in/lago/plugins/p_seer_runners"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
-// RedditSource configures which subreddits to fetch and how. Optional [p_seer_runners.RunnerID] is for
-// scheduling metadata only—this package does not couple ingestion to runners or Intel generation.
+// Join table for [RedditSource] ↔ [RedditPost] (many-to-many). GORM migrates this from the association tags.
+const (
+	RedditSourcePostsJoinTable = "seer_reddit_source_posts"
+	RedditPostsTable           = "seer_reddit_posts"
+	RedditRunnersTable         = "seer_reddit_runners"
+)
+
+// RedditRunner is a cadence or scheduling bucket; [RedditPost.RedditRunnerID] is optional.
+type RedditRunner struct {
+	gorm.Model
+
+	Name     string        `gorm:"size:64;not null;uniqueIndex"`
+	Duration time.Duration `gorm:"not null"`
+}
+
+func (RedditRunner) TableName() string {
+	return RedditRunnersTable
+}
+
+// RedditSource configures which subreddits to fetch and how.
 type RedditSource struct {
 	gorm.Model
+
+	RedditRunnerID uint          `gorm:"not null;index;default:1"`
+	RedditRunner   *RedditRunner `gorm:"foreignKey:RedditRunnerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
 	Subreddits    datatypes.JSON `gorm:"type:json"`
 	SearchQuery   string
 	MaxFreshPosts uint `gorm:"not null;default:25"`
+	// LoadWebsites when true: discovered http(s) URLs from fetched posts are sent to [p_seer_websites.WebsiteScrapeURLQueue].
+	LoadWebsites bool `gorm:"not null;default:false"`
 
-	RunnerID *uint
-	Runner   *p_seer_runners.Runner `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	RedditPosts []RedditPost `gorm:"many2many:seer_reddit_source_posts;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (RedditSource) TableName() string {
 	return "seer_reddit_sources"
 }
 
-// RedditPost stores raw Reddit listing data. [IntelID] is set later by the Intel generation pipeline
-// (not by Reddit fetch); [Content] supports [p_seer_intel.IntelKind] for that step.
+// RedditPost stores raw Reddit listing data from Reddit JSON.
+//
+// [PostID] is Reddit’s t3 id and is unique in this table; sources link through join table [RedditSourcePostsJoinTable] (see [RedditSource.RedditPosts]).
 type RedditPost struct {
 	gorm.Model
 
-	RedditSourceID uint         `gorm:"not null;uniqueIndex:reddit_post_per_source"`
-	RedditSource   RedditSource `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	RedditRunnerID *uint         `gorm:"index"`
+	RedditRunner   *RedditRunner `gorm:"foreignKey:RedditRunnerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 
-	IntelID *uint                  `gorm:"uniqueIndex"`
-	Intel   *p_seer_intel.Intel `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
-
-	// PostID is Reddit's short id (t3 `id` field). Unique per source.
-	PostID string `gorm:"size:32;not null;uniqueIndex:reddit_post_per_source"`
+	PostID string `gorm:"size:32;not null;uniqueIndex"`
 	Title  string `gorm:"not null;default:''"`
 	// Selftext is the post body for text posts.
 	Selftext string `gorm:"type:text;not null;default:''"`
@@ -48,9 +67,9 @@ type RedditPost struct {
 	URL       string `gorm:"not null;default:''"`
 	// CreatedUTCUnix is the post's created_utc from Reddit JSON.
 	CreatedUTCUnix float64 `gorm:"not null"`
-	Score          int       `gorm:"not null;default:0"`
-	NumComments    int       `gorm:"not null;default:0"`
-	IsSelf         bool      `gorm:"not null;default:false"`
+	Score          int     `gorm:"not null;default:0"`
+	NumComments    int     `gorm:"not null;default:0"`
+	IsSelf         bool    `gorm:"not null;default:false"`
 }
 
 func (RedditPost) TableName() string {
@@ -59,6 +78,7 @@ func (RedditPost) TableName() string {
 
 func init() {
 	lago.OnDBInit("p_seer_reddit.models", func(db *gorm.DB) *gorm.DB {
+		lago.RegisterModel[RedditRunner](db)
 		lago.RegisterModel[RedditSource](db)
 		lago.RegisterModel[RedditPost](db)
 		return db

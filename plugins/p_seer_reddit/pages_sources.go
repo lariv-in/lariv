@@ -3,44 +3,109 @@ package p_seer_reddit
 import (
 	"context"
 	"encoding/json"
-	"strconv"
+	"strings"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"gorm.io/datatypes"
 )
+
+// formatSubredditsJSON turns stored JSON array of names into comma-separated text.
+// If maxNames > 0, only the first maxNames entries are shown and ", …" is appended when the list is longer.
+func formatSubredditsJSON(raw []byte, maxNames int) string {
+	if len(raw) == 0 {
+		return "—"
+	}
+	var subs []string
+	if err := json.Unmarshal(raw, &subs); err != nil {
+		return string(raw)
+	}
+	if len(subs) == 0 {
+		return "—"
+	}
+	out := subs
+	truncated := false
+	if maxNames > 0 && len(out) > maxNames {
+		out = out[:maxNames]
+		truncated = true
+	}
+	var s strings.Builder
+	for i, x := range out {
+		if i > 0 {
+			s.WriteString(", ")
+		}
+		s.WriteString(x)
+	}
+	if truncated {
+		s.WriteString(", …")
+	}
+	return s.String()
+}
 
 func subredditsPreview(ctx context.Context) (string, error) {
 	rs, err := getters.Key[RedditSource]("redditSource")(ctx)
 	if err != nil {
 		return "", err
 	}
-	raw := []byte(rs.Subreddits)
-	if len(raw) == 0 {
+	return formatSubredditsJSON([]byte(rs.Subreddits), 5), nil
+}
+
+func subredditsBytesFromRowValue(v any) []byte {
+	if v == nil {
+		return nil
+	}
+	switch x := v.(type) {
+	case []byte:
+		return x
+	case string:
+		return []byte(x)
+	case datatypes.JSON:
+		return []byte(x)
+	default:
+		return nil
+	}
+}
+
+func subredditsFromTableRow(ctx context.Context) (string, error) {
+	rowAny := ctx.Value("$row")
+	m, ok := rowAny.(map[string]any)
+	if !ok {
 		return "—", nil
 	}
-	var subs []string
-	if err := json.Unmarshal(raw, &subs); err != nil {
-		return string(raw), nil
-	}
-	if len(subs) == 0 {
+	return formatSubredditsJSON(subredditsBytesFromRowValue(m["Subreddits"]), 0), nil
+}
+
+func redditSourceLoadWebsitesYesNoFromRow(ctx context.Context) (string, error) {
+	rowAny := ctx.Value("$row")
+	m, ok := rowAny.(map[string]any)
+	if !ok {
 		return "—", nil
 	}
-	out := subs
-	if len(out) > 5 {
-		out = out[:5]
+	v, ok := m["LoadWebsites"]
+	if !ok {
+		return "No", nil
 	}
-	s := ""
-	for i, x := range out {
-		if i > 0 {
-			s += ", "
+	switch b := v.(type) {
+	case bool:
+		if b {
+			return "Yes", nil
 		}
-		s += x
+		return "No", nil
+	default:
+		return "—", nil
 	}
-	if len(subs) > 5 {
-		s += ", …"
+}
+
+func redditSourceLoadWebsitesYesNoFromDetail(ctx context.Context) (string, error) {
+	b, err := getters.Key[bool]("$in.LoadWebsites")(ctx)
+	if err != nil {
+		return "", err
 	}
-	return s, nil
+	if b {
+		return "Yes", nil
+	}
+	return "No", nil
 }
 
 func registerRedditSourcePages() {
@@ -54,6 +119,9 @@ func registerRedditSourcePages() {
 				UID:     "seer-reddit-sources-table",
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[RedditSource]]("redditSources"),
+				Actions: []components.PageInterface{
+					&components.TableButtonCreate{Link: lago.RoutePath("seer_reddit.RedditSourceCreateRoute", nil)},
+				},
 				RowAttr: getters.RowAttrNavigate(
 					lago.RoutePath("seer_reddit.RedditSourceDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
@@ -61,9 +129,9 @@ func registerRedditSourcePages() {
 				),
 				Columns: []components.TableColumn{
 					{
-						Label: "ID",
+						Label: "Subreddits",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.ID")))},
+							&components.FieldText{Getter: subredditsFromTableRow},
 						},
 					},
 					{
@@ -79,16 +147,9 @@ func registerRedditSourcePages() {
 						},
 					},
 					{
-						Label: "Runner ID",
+						Label: "Websites",
 						Children: []components.PageInterface{
-							&components.FieldText{
-								Getter: getters.Map(getters.Key[*uint]("$row.RunnerID"), func(_ context.Context, id *uint) (string, error) {
-									if id == nil || *id == 0 {
-										return "—", nil
-									}
-									return strconv.FormatUint(uint64(*id), 10), nil
-								}),
-							},
+							&components.FieldText{Getter: redditSourceLoadWebsitesYesNoFromRow},
 						},
 					},
 				},
@@ -111,6 +172,14 @@ func registerRedditSourcePages() {
 								Getter: getters.Format("Source #%d", getters.Any(getters.Key[uint]("$in.ID"))),
 							},
 							&components.LabelInline{
+								Title: "Worker",
+								Children: []components.PageInterface{
+									&components.FieldText{
+										Getter: getters.ForeignKey[RedditRunner, uint, string](getters.Key[uint]("$in.RedditRunnerID"), "Name"),
+									},
+								},
+							},
+							&components.LabelInline{
 								Title: "Subreddits",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: subredditsPreview},
@@ -129,16 +198,9 @@ func registerRedditSourcePages() {
 								},
 							},
 							&components.LabelInline{
-								Title: "Runner ID",
+								Title: "Load websites",
 								Children: []components.PageInterface{
-									&components.FieldText{
-										Getter: getters.Map(getters.Key[RedditSource]("redditSource"), func(_ context.Context, rs RedditSource) (string, error) {
-											if rs.RunnerID == nil || *rs.RunnerID == 0 {
-												return "—", nil
-											}
-											return strconv.FormatUint(uint64(*rs.RunnerID), 10), nil
-										}),
-									},
+									&components.FieldText{Getter: redditSourceLoadWebsitesYesNoFromDetail},
 								},
 							},
 						},
