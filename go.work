@@ -29,8 +29,10 @@ use (
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp
 	./plugins/p_pwa
-	./plugins/p_seer_intel
 	./plugins/p_seer_deepsearch
+	./plugins/p_seer_gdelt
+	./plugins/p_seer_intel
+	./plugins/p_seer_opensky
 	./plugins/p_seer_reddit
 	./plugins/p_seer_runners
 	./plugins/p_seer_websites

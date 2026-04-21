@@ -67,5 +67,5 @@ require (
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.2.0 // indirect
+	maragu.dev/gomponents v1.3.0 // indirect
 )

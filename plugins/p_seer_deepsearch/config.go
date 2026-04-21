@@ -25,8 +25,8 @@ type DeepSearchConfig struct {
 var DeepSearchAppConfig = &DeepSearchConfig{}
 
 const (
-	defaultDeepSearchReportMaxOutputTokens  = 8192
-	maxDeepSearchReportMaxOutputTokens      = 65536
+	defaultDeepSearchReportMaxOutputTokens = 8192
+	maxDeepSearchReportMaxOutputTokens     = 65536
 	defaultDeepSearchExpandMaxOutputTokens = 1024
 	maxDeepSearchExpandMaxOutputTokens     = 8192
 )

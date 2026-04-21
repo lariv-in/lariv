@@ -84,6 +84,13 @@ func resolveAuth(r *http.Request) context.Context {
 type AuthenticationLayer struct{}
 
 func (AuthenticationLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return RequireAuth(next)
+}
+
+// RequireAuth wraps a handler so it only runs for authenticated requests (same
+// cookie rules as [AuthenticationLayer]). Unauthenticated requests are redirected
+// to the unauthenticated route.
+func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := resolveAuth(r)
 		if ctx == nil {

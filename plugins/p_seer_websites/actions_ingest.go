@@ -27,7 +27,7 @@ func createIntelForWebsiteIfMissing(ctx context.Context, db *gorm.DB, site Websi
 	if err != nil {
 		return fmt.Errorf("generate: %w", err)
 	}
-	if err := db.WithContext(ctx).Create(&intel).Error; err != nil {
+	if err := p_seer_intel.CreateIntelAndEvent(ctx, db, &intel); err != nil {
 		return fmt.Errorf("persist: %w", err)
 	}
 	return nil
@@ -39,5 +39,14 @@ func RunWebsiteSingleIntelIngest(ctx context.Context, db *gorm.DB, site Website)
 	defer cancel()
 	if err := createIntelForWebsiteIfMissing(ctx, db, site); err != nil {
 		slog.Warn("p_seer_websites: single add intel", "website_id", site.ID, "error", err)
+	}
+}
+
+// RunWebsitesBulkIntelIngest runs [createIntelForWebsiteIfMissing] for each site (skips rows that already have Intel).
+func RunWebsitesBulkIntelIngest(ctx context.Context, db *gorm.DB, sites []Website) {
+	for _, site := range sites {
+		if err := createIntelForWebsiteIfMissing(ctx, db, site); err != nil {
+			slog.Warn("p_seer_websites: bulk add intel", "website_id", site.ID, "error", err)
+		}
 	}
 }

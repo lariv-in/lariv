@@ -40,6 +40,13 @@ func registerWebsiteTablePages() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[Website]]("websites"),
 				Actions: []components.PageInterface{
+					&components.ButtonPost{
+						Page:    components.Page{Key: "seer_websites.WebsiteTableAddAllIntelBtn"},
+						Label:   "Add all to Intel",
+						URL:     lago.RoutePath("seer_websites.WebsiteAddAllIntelRoute", nil),
+						Icon:    "document-plus",
+						Classes: "btn-outline btn-primary btn-sm shrink-0",
+					},
 					&components.TableButtonCreate{Link: lago.RoutePath("seer_websites.WebsiteAddRoute", nil)},
 				},
 				RowAttr: getters.RowAttrNavigate(

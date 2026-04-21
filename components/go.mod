@@ -9,7 +9,7 @@ require (
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
-	maragu.dev/gomponents v1.2.0
+	maragu.dev/gomponents v1.3.0
 )
 
 require (

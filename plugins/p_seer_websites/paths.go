@@ -29,6 +29,11 @@ func registerRoutes() {
 		Path:    AppUrl + "{id}/add-intel/",
 		Handler: lago.NewDynamicView("seer_websites.WebsiteAddIntelView"),
 	})
+
+	_ = lago.RegistryRoute.Register("seer_websites.WebsiteAddAllIntelRoute", lago.Route{
+		Path:    AppUrl + "add-all-intel/",
+		Handler: lago.NewDynamicView("seer_websites.WebsiteAddAllIntelView"),
+	})
 }
 
 func init() {

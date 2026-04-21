@@ -7,6 +7,7 @@ require (
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.2
 	github.com/BurntSushi/toml v1.6.0
+	github.com/jackc/pgx/v5 v5.9.1
 	github.com/lariv-in/lago/components v0.5.10
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/registry v0.5.10
@@ -15,7 +16,7 @@ require (
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
-	maragu.dev/gomponents v1.2.0
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -42,7 +43,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.9.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect

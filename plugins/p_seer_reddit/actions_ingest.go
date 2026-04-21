@@ -33,7 +33,7 @@ func createIntelForRedditPostIfMissing(ctx context.Context, db *gorm.DB, post Re
 	if err != nil {
 		return fmt.Errorf("generate: %w", err)
 	}
-	if err := db.WithContext(ctx).Create(&intel).Error; err != nil {
+	if err := p_seer_intel.CreateIntelAndEvent(ctx, db, &intel); err != nil {
 		return fmt.Errorf("persist: %w", err)
 	}
 	return nil

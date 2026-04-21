@@ -19,7 +19,7 @@ import (
 
 const (
 	// DeepSearchWorkerTimeout bounds the background pipeline goroutine.
-	DeepSearchWorkerTimeout = 45 * time.Minute
+	DeepSearchWorkerTimeout   = 45 * time.Minute
 	maxTotalScrapeURLs        = 30
 	maxGeneratedSearchQueries = 8
 	// deepSearchScrapeConcurrency limits parallel headless scrapes (shared browser / IO).
@@ -64,6 +64,11 @@ func deepSearchIntelIngestOne(ctx context.Context, db *gorm.DB, deepSearchID uin
 }
 
 func runDeepSearchPipeline(ctx context.Context, db *gorm.DB, id uint) {
+	// #region agent log
+	p_seer_intel.AgentDebugSessionLog("H3", "actions_deepsearch.go:runDeepSearchPipeline", "pipeline_start", map[string]any{
+		"deep_search_id": id,
+	})
+	// #endregion
 	var row DeepSearch
 	if err := db.WithContext(ctx).First(&row, id).Error; err != nil {
 		slog.Error("p_seer_deepsearch: load row", "id", id, "error", err)

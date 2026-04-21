@@ -11,10 +11,12 @@ import "github.com/lariv-in/lago/lago"
 //	apiKey = "…"
 //	llmModel = "gemini-2.0-flash"
 //	embeddingModel = "gemini-embedding-2-preview"
+//	geocodingApiKey = "…" # Google Geocoding API (maps.googleapis.com/maps/api/geocode/json); optional
 type IntelGenAIConfig struct {
 	APIKey          string `toml:"apiKey"`
 	LLMModel        string `toml:"llmModel"`
 	EmbeddingModel  string `toml:"embeddingModel"`
+	GeocodingAPIKey string `toml:"geocodingApiKey"`
 }
 
 const (

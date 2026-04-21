@@ -7,8 +7,9 @@ require (
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/lago v0.5.10
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
+	github.com/lariv-in/lago/registry v0.5.9
 	github.com/lariv-in/lago/views v0.5.10
-	maragu.dev/gomponents v1.2.0
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -44,7 +45,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/lariv-in/lago/registry v0.5.9 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-runewidth v0.0.22 // indirect
 	github.com/mattn/go-sqlite3 v1.14.40 // indirect

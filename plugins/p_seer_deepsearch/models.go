@@ -7,22 +7,22 @@ import (
 )
 
 const (
-	DeepSearchesTable    = "seer_deep_searches"
-	DeepSearchLogsTable  = "seer_deep_search_logs"
+	DeepSearchesTable   = "seer_deep_searches"
+	DeepSearchLogsTable = "seer_deep_search_logs"
 )
 
 // Status values persisted on [DeepSearch.Status] (Key in [DeepSearchStatusChoices]).
 const (
-	DeepSearchStatusPending           = "pending"
-	DeepSearchStatusRunning           = "running"
-	DeepSearchStatusExpandingQueries  = "expanding_queries"
-	DeepSearchStatusSearching         = "searching"
-	DeepSearchStatusScraping          = "scraping"
-	DeepSearchStatusIngestingIntel    = "ingesting_intel"
-	DeepSearchStatusReporting         = "reporting"
-	DeepSearchStatusDone              = "done"
-	DeepSearchStatusFailed            = "failed"
-	DeepSearchStatusCancelled         = "cancelled"
+	DeepSearchStatusPending          = "pending"
+	DeepSearchStatusRunning          = "running"
+	DeepSearchStatusExpandingQueries = "expanding_queries"
+	DeepSearchStatusSearching        = "searching"
+	DeepSearchStatusScraping         = "scraping"
+	DeepSearchStatusIngestingIntel   = "ingesting_intel"
+	DeepSearchStatusReporting        = "reporting"
+	DeepSearchStatusDone             = "done"
+	DeepSearchStatusFailed           = "failed"
+	DeepSearchStatusCancelled        = "cancelled"
 )
 
 // DeepSearchStatusChoices defines UI labels for [DeepSearch.Status] (Caveats: choice fields).
@@ -69,10 +69,10 @@ var DeepSearchLogKindChoices = []registry.Pair[string, string]{
 type DeepSearchLog struct {
 	gorm.Model
 
-	DeepSearchID uint       `gorm:"not null;index"`
+	DeepSearchID uint        `gorm:"not null;index"`
 	DeepSearch   *DeepSearch `gorm:"foreignKey:DeepSearchID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Kind         string     `gorm:"size:48;not null;default:'';index"`
-	Message      string     `gorm:"type:text;not null;default:''"`
+	Kind         string      `gorm:"size:48;not null;default:'';index"`
+	Message      string      `gorm:"type:text;not null;default:''"`
 }
 
 func (DeepSearchLog) TableName() string {

@@ -13,7 +13,7 @@ require (
 	github.com/lariv-in/lago/registry v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
 	gorm.io/gorm v1.31.1
-	maragu.dev/gomponents v1.2.0
+	maragu.dev/gomponents v1.3.0
 )
 
 require (

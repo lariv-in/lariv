@@ -56,6 +56,11 @@ func init() {
 			}).
 			WithLayer("seer_websites.website.add_intel", websiteAddIntelLayer{}))
 
+	lago.RegistryView.Register("seer_websites.WebsiteAddAllIntelView",
+		lago.GetPageView("seer_websites.WebsiteTable").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("seer_websites.website.add_all_intel", websiteAddAllIntelLayer{}))
+
 	lago.RegistryView.Register("seer_websites.WebsiteSoftDeleteView",
 		lago.GetPageView("seer_websites.WebsiteDeleteForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).

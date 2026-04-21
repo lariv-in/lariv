@@ -5,7 +5,6 @@ go 1.26.1
 require (
 	github.com/lariv-in/lago/lago v0.5.10
 	github.com/lariv-in/lago/plugins/p_dashboard v0.5.10
-	github.com/lariv-in/lago/plugins/p_export v0.0.0-20260415140938-8e6f4abcf42e
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.10
 	github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords v0.0.0-20260327045815-340e0b5d9c48
 	github.com/lariv-in/lago/plugins/p_nirmancampus_announcements v0.0.0-20260326081203-a40ac47e777f
@@ -66,19 +65,12 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/nyaruka/phonenumbers v1.7.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/richardlehane/mscfb v1.0.6 // indirect
-	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	github.com/xuri/efp v0.0.1 // indirect
-	github.com/xuri/excelize/v2 v2.10.1 // indirect
-	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
-	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
@@ -88,7 +80,7 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
 	gorm.io/gorm v1.31.1 // indirect
-	maragu.dev/gomponents v1.2.0 // indirect
+	maragu.dev/gomponents v1.3.0 // indirect
 )
 
 replace github.com/lariv-in/lago/plugins/p_nirmancampus_studentpayments => ../../plugins/p_nirmancampus_studentpayments

@@ -32,6 +32,7 @@ type Intel struct {
 func init() {
 	lago.OnDBInit("p_seer_intel.models", func(db *gorm.DB) *gorm.DB {
 		lago.RegisterModel[Intel](db)
+		lago.RegisterModel[IntelEvent](db)
 		return db
 	})
 }

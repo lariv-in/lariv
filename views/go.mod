@@ -8,6 +8,7 @@ require (
 	github.com/lariv-in/lago/getters v0.5.10
 	github.com/lariv-in/lago/registry v0.5.10
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -29,5 +30,4 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gorm.io/datatypes v1.2.7 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
-	maragu.dev/gomponents v1.2.0 // indirect
 )

@@ -13,10 +13,14 @@ import (
 )
 
 const (
-	genaiRetryMaxAttempts = 8
+	genaiRetryMaxAttempts = 12
 	genaiRetryBase        = 400 * time.Millisecond
 	genaiRetryCap         = 60 * time.Second
 	genaiRetryMaxShift    = 12
+	// 429 / RESOURCE_EXHAUSTED: standard exponential backoff stayed under quota windows (see debug NDJSON: 8×429 in ~60s).
+	genaiRetry429MinWait = 10 * time.Second
+	genaiRetry429Cap     = 2 * time.Minute
+	genaiRetry429Mul     = 4
 )
 
 func genAIRetryable(err error) bool {
@@ -49,6 +53,23 @@ func genAIRetryable(err error) bool {
 	return false
 }
 
+func genAIResourceExhausted(err error) bool {
+	if err == nil {
+		return false
+	}
+	var api genai.APIError
+	if errors.As(err, &api) {
+		if api.Code == http.StatusTooManyRequests {
+			return true
+		}
+		if strings.Contains(strings.ToUpper(api.Status), "RESOURCE_EXHAUSTED") {
+			return true
+		}
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "resource exhausted") || strings.Contains(msg, "error 429")
+}
+
 func genAIBackoffDelay(attempt int) time.Duration {
 	if attempt < 0 {
 		attempt = 0
@@ -73,6 +94,31 @@ func genAIBackoffDelay(attempt int) time.Duration {
 	return d + jitter
 }
 
+// genAIRetryWait picks sleep before the next attempt. Resource-exhausted / 429 errors use much longer waits
+// so per-minute and short quota windows can recover (generic backoff was too aggressive in practice).
+func genAIRetryWait(attempt int, err error) time.Duration {
+	w := genAIBackoffDelay(attempt)
+	if !genAIResourceExhausted(err) {
+		return w
+	}
+	long := w * genaiRetry429Mul
+	if long < genaiRetry429MinWait {
+		long = genaiRetry429MinWait
+	}
+	if long > genaiRetry429Cap {
+		long = genaiRetry429Cap
+	}
+	jcap := long / 8
+	if jcap > 15*time.Second {
+		jcap = 15 * time.Second
+	}
+	var jitter time.Duration
+	if jcap > 0 {
+		jitter = time.Duration(rand.Int63n(int64(jcap) + 1))
+	}
+	return long + jitter
+}
+
 // WithGenAIRetry runs fn until it succeeds, ctx is cancelled, attempts are exhausted, or err is not retryable.
 // Waits truncated exponential backoff with additive jitter between attempts (quota / transient errors).
 func WithGenAIRetry[T any](ctx context.Context, op string, fn func(context.Context) (T, error)) (T, error) {
@@ -83,12 +129,34 @@ func WithGenAIRetry[T any](ctx context.Context, op string, fn func(context.Conte
 	for attempt := 0; attempt < genaiRetryMaxAttempts; attempt++ {
 		v, err := fn(ctx)
 		if err == nil {
+			// #region agent log
+			AgentDebugSessionLog("H2", "genai_retry.go:WithGenAIRetry", "genai_ok", map[string]any{
+				"op": op, "attemptsUsed": attempt + 1,
+			})
+			// #endregion
 			return v, nil
 		}
+		willRetry := attempt < genaiRetryMaxAttempts-1 && genAIRetryable(err)
+		// #region agent log
+		errSnippet := err.Error()
+		if len(errSnippet) > 220 {
+			errSnippet = errSnippet[:220] + "…"
+		}
+		AgentDebugSessionLog("H1", "genai_retry.go:WithGenAIRetry", "genai_attempt_failed", map[string]any{
+			"op": op, "attempt": attempt + 1, "max": genaiRetryMaxAttempts, "willRetry": willRetry,
+			"errSnippet": errSnippet,
+		})
+		// #endregion
 		if attempt >= genaiRetryMaxAttempts-1 || !genAIRetryable(err) {
 			return zero, err
 		}
-		wait := genAIBackoffDelay(attempt)
+		wait := genAIRetryWait(attempt, err)
+		// #region agent log
+		AgentDebugSessionLog("H5", "genai_retry.go:WithGenAIRetry", "genai_backoff_wait", map[string]any{
+			"op": op, "afterAttempt": attempt + 1, "waitMs": wait.Milliseconds(),
+			"resourceExhausted": genAIResourceExhausted(err),
+		})
+		// #endregion
 		slog.Warn("p_seer_intel: genai retry", "op", op, "attempt", attempt+1, "max", genaiRetryMaxAttempts, "wait", wait, "err", err)
 		timer := time.NewTimer(wait)
 		select {

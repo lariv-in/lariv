@@ -63,6 +63,12 @@ func expandDeepSearchQueries(ctx context.Context, userQuery string) ([]string, e
 	if userQuery == "" {
 		return nil, fmt.Errorf("p_seer_deepsearch: empty user query")
 	}
+	// #region agent log
+	p_seer_intel.AgentDebugSessionLog("H4", "actions_deepsearch_llm.go:expandDeepSearchQueries", "expand_start", map[string]any{
+		"queryLen":  utf8.RuneCountInString(userQuery),
+		"maxOutTok": deepSearchExpandMaxOutputTokens(),
+	})
+	// #endregion
 	client, model, err := newGenAIClient(ctx)
 	if err != nil {
 		return nil, err

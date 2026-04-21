@@ -67,3 +67,44 @@ func (websiteAddIntelLayer) Next(_ views.View, _ http.Handler) http.Handler {
 		views.HtmxRedirect(w, r, detailURL, http.StatusSeeOther)
 	})
 }
+
+// websiteAddAllIntelLayer handles POST to enqueue Intel creation for every non-deleted [Website].
+type websiteAddAllIntelLayer struct{}
+
+func (websiteAddAllIntelLayer) Next(_ views.View, _ http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		db, dberr := getters.DBFromContext(r.Context())
+		if dberr != nil {
+			slog.Error("p_seer_websites: add all intel missing db", "error", dberr)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		var sites []Website
+		if err := db.WithContext(r.Context()).Where("deleted_at IS NULL").Order("id DESC").Find(&sites).Error; err != nil {
+			slog.Error("p_seer_websites: add all intel list", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		listURL, err := lago.RoutePath("seer_websites.WebsiteListRoute", nil)(r.Context())
+		if err != nil || listURL == "" {
+			slog.Error("p_seer_websites: add all intel redirect URL", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		if websiteIntelIngestActive.CompareAndSwap(false, true) {
+			sitesCopy := append([]Website(nil), sites...)
+			dbCopy := db
+			go func() {
+				defer websiteIntelIngestActive.Store(false)
+				ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
+				defer cancel()
+				RunWebsitesBulkIntelIngest(ctx, dbCopy, sitesCopy)
+			}()
+		}
+		views.HtmxRedirect(w, r, listURL, http.StatusSeeOther)
+	})
+}
