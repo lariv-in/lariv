@@ -123,6 +123,7 @@ require (
 	github.com/lariv-in/lago/getters v0.5.10 // indirect
 	github.com/lariv-in/lago/plugins/p_seer_gdelt v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_opensky v0.0.0-00010101000000-000000000000
+	github.com/lariv-in/lago/plugins/p_seer_aisstream v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/registry v0.5.10 // indirect
 	github.com/lariv-in/lago/views v0.5.10 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
@@ -151,5 +152,7 @@ require (
 )
 
 replace github.com/lariv-in/lago/plugins/p_seer_opensky => ../../plugins/p_seer_opensky
+
+replace github.com/lariv-in/lago/plugins/p_seer_aisstream => ../../plugins/p_seer_aisstream
 
 replace github.com/lariv-in/lago/plugins/p_seer_gdelt => ../../plugins/p_seer_gdelt
