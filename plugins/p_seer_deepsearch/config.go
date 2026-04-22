@@ -8,16 +8,16 @@ import "github.com/lariv-in/lago/lago"
 //	[Plugins.p_seer_deepsearch]
 //	apiKey = "…"
 //	cx = "your-search-engine-id"
-//	reportMaxOutputTokens = 16384   # optional; Gemini generateContent max output (default 8192, cap 65536)
-//	expandMaxOutputTokens = 2048    # optional; query-expansion LLM (default 1024, cap 8192)
+//	reportMaxOutputTokens = 16384   # optional; final report max output tokens (default 8192, cap 65536)
+//	expandMaxOutputTokens = 2048    # optional; query-expansion max output tokens (default 1024, cap 8192)
 //
-// Gemini API key and models come from [Plugins.p_seer_intel] ([p_seer_intel.IntelGenAI]).
+// LLM settings (Gemini / Vertex) come from [Plugins.p_google_genai].
 type DeepSearchConfig struct {
 	APIKey string `toml:"apiKey"`
 	CX     string `toml:"cx"`
-	// ReportMaxOutputTokens caps the final markdown report LLM (GenerateContent maxOutputTokens). Zero → 8192 in [PostConfig].
+	// ReportMaxOutputTokens caps the final markdown report output. Zero → 8192 in [PostConfig].
 	ReportMaxOutputTokens int `toml:"reportMaxOutputTokens"`
-	// ExpandMaxOutputTokens caps the query-expansion LLM. Zero → 1024 in [PostConfig].
+	// ExpandMaxOutputTokens caps query-expansion output. Zero → 1024 in [PostConfig].
 	ExpandMaxOutputTokens int `toml:"expandMaxOutputTokens"`
 }
 

@@ -3,6 +3,7 @@ package p_seer_reddit
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/lariv-in/lago/components"
@@ -108,6 +109,28 @@ func redditSourceLoadWebsitesYesNoFromDetail(ctx context.Context) (string, error
 	return "No", nil
 }
 
+func redditSourceDetailWorkerLabel(ctx context.Context) (string, error) {
+	rs, err := getters.Key[RedditSource]("redditSource")(ctx)
+	if err != nil {
+		return "", err
+	}
+	if rs.RedditRunnerID == nil || *rs.RedditRunnerID == 0 {
+		return "—", nil
+	}
+	if rs.RedditRunner != nil {
+		return rs.RedditRunner.Name, nil
+	}
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+	var rr RedditRunner
+	if err := db.WithContext(ctx).Where("id = ?", *rs.RedditRunnerID).Take(&rr).Error; err != nil {
+		return fmt.Sprintf("id %d", *rs.RedditRunnerID), nil
+	}
+	return rr.Name, nil
+}
+
 func registerRedditSourcePages() {
 	lago.RegistryPage.Register("seer_reddit.RedditSourceTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
@@ -175,7 +198,7 @@ func registerRedditSourcePages() {
 								Title: "Worker",
 								Children: []components.PageInterface{
 									&components.FieldText{
-										Getter: getters.ForeignKey[RedditRunner, uint, string](getters.Key[uint]("$in.RedditRunnerID"), "Name"),
+										Getter: redditSourceDetailWorkerLabel,
 									},
 								},
 							},

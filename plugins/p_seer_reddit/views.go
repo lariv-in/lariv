@@ -1,7 +1,6 @@
 package p_seer_reddit
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -11,13 +10,15 @@ import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
 func init() {
 	sourcePatchers := views.QueryPatchers[RedditSource]{
 		{Key: "seer_reddit.source.order", Value: views.QueryPatcherOrderBy[RedditSource]{Order: "id DESC"}},
+	}
+	sourceDetailPatchers := views.QueryPatchers[RedditSource]{
+		{Key: "seer_reddit.source.preload_runner", Value: views.QueryPatcherPreload[RedditSource]{Fields: []string{"RedditRunner"}}},
 	}
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceListView",
@@ -32,8 +33,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditSourceDetail").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail", views.LayerDetail[RedditSource]{
-				Key:          getters.Static("redditSource"),
-				PathParamKey: getters.Static("id"),
+				Key:            getters.Static("redditSource"),
+				PathParamKey:   getters.Static("id"),
+				QueryPatchers:  sourceDetailPatchers,
 			}))
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceCreateView",
@@ -52,8 +54,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditSourceUpdateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail", views.LayerDetail[RedditSource]{
-				Key:          getters.Static("redditSource"),
-				PathParamKey: getters.Static("id"),
+				Key:            getters.Static("redditSource"),
+				PathParamKey:   getters.Static("id"),
+				QueryPatchers:  sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_source.update", views.LayerUpdate[RedditSource]{
 				Key: getters.Static("redditSource"),
@@ -69,8 +72,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditSourceDeleteForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.delete_detail", views.LayerDetail[RedditSource]{
-				Key:          getters.Static("redditSource"),
-				PathParamKey: getters.Static("id"),
+				Key:            getters.Static("redditSource"),
+				PathParamKey:   getters.Static("id"),
+				QueryPatchers:  sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_source.delete", views.LayerDelete[RedditSource]{
 				Key:        getters.Static("redditSource"),
@@ -98,8 +102,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
-				Key:          getters.Static("redditSource"),
-				PathParamKey: getters.Static("source_id"),
+				Key:            getters.Static("redditSource"),
+				PathParamKey:   getters.Static("source_id"),
+				QueryPatchers:  sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_post.list_by_source", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
@@ -121,8 +126,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
-				Key:          getters.Static("redditSource"),
-				PathParamKey: getters.Static("source_id"),
+				Key:            getters.Static("redditSource"),
+				PathParamKey:   getters.Static("source_id"),
+				QueryPatchers:  sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_post.list_by_source", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
@@ -255,54 +261,30 @@ func (redditPostActiveOnlyPatcher) Patch(_ views.View, _ *http.Request, q gorm.C
 type redditSourceCreateValidate struct{}
 
 func (redditSourceCreateValidate) Patch(_ views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
-	subRaw, ok := formData["Subreddits"]
-	if !ok {
-		formErrors["Subreddits"] = errors.New("add at least one subreddit")
-		return formData, formErrors
-	}
-	var b []byte
-	switch v := subRaw.(type) {
-	case datatypes.JSON:
-		b = []byte(v)
-	case []byte:
-		b = v
-	case string:
-		b = []byte(v)
-	default:
-		formErrors["Subreddits"] = errors.New("invalid subreddits value")
-		return formData, formErrors
-	}
-	var subs []string
-	if err := json.Unmarshal(b, &subs); err != nil {
+	p, err := RedditSourceCreateParamsFromFormMap(formData)
+	if err != nil {
 		formErrors["Subreddits"] = err
 		return formData, formErrors
 	}
-	n := 0
-	for _, s := range subs {
-		if strings.TrimSpace(s) != "" {
-			n++
-		}
-	}
-	if n == 0 {
-		formErrors["Subreddits"] = errors.New("add at least one subreddit")
-	}
-	rid, ok := redditRunnerIDFromFormMap(formData)
-	if !ok || rid == 0 {
-		formErrors["RedditRunnerID"] = errors.New("choose a worker")
+	for k, v := range ValidateRedditSourceCreate(p) {
+		formErrors[k] = v
 	}
 	return formData, formErrors
 }
 
-func redditRunnerIDFromFormMap(formData map[string]any) (uint, bool) {
+func redditRunnerIDFromFormMap(formData map[string]any) (*uint, bool) {
 	v, ok := formData["RedditRunnerID"]
 	if !ok {
-		return 0, false
+		return nil, false
 	}
 	rid, ok := v.(uint)
 	if !ok {
-		return 0, false
+		return nil, false
 	}
-	return rid, true
+	if rid == 0 {
+		return nil, true
+	}
+	return &rid, true
 }
 
 type redditRunnerValidate struct{}

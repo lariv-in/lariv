@@ -31,8 +31,8 @@ func (RedditRunner) TableName() string {
 type RedditSource struct {
 	gorm.Model
 
-	RedditRunnerID uint          `gorm:"not null;index;default:1"`
-	RedditRunner   *RedditRunner `gorm:"foreignKey:RedditRunnerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	RedditRunnerID *uint         `gorm:"index"`
+	RedditRunner   *RedditRunner `gorm:"foreignKey:RedditRunnerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 
 	Subreddits    datatypes.JSON `gorm:"type:json"`
 	SearchQuery   string

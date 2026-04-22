@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/lariv-in/lago/plugins/p_google_genai"
 	"github.com/pgvector/pgvector-go"
-	"google.golang.org/genai"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -19,38 +19,11 @@ func EmbedQueryText(ctx context.Context, text string) ([]float32, error) {
 	if text == "" {
 		return nil, fmt.Errorf("p_seer_intel: EmbedQueryText: empty text")
 	}
-	key := strings.TrimSpace(IntelGenAI.APIKey)
-	if key == "" {
-		return nil, fmt.Errorf("p_seer_intel: EmbedQueryText: Plugins.p_seer_intel apiKey is empty")
-	}
-
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:  key,
-		Backend: genai.BackendGeminiAPI,
-	})
+	values, err := p_google_genai.EmbedText(ctx, p_google_genai.EmbedTaskSearchQuery, text)
 	if err != nil {
-		return nil, fmt.Errorf("p_seer_intel: genai client: %w", err)
-	}
-
-	embedModel := strings.TrimSpace(IntelGenAI.EmbeddingModel)
-	if embedModel == "" {
-		embedModel = defaultIntelEmbeddingModel
-	}
-
-	dim := int32(SeerIntelEmbeddingDim)
-	embedCfg := &genai.EmbedContentConfig{OutputDimensionality: &dim}
-	embedContents := []*genai.Content{genai.NewContentFromText(text, genai.RoleUser)}
-	embedRes, err := WithGenAIRetry(ctx, "intel.EmbedQueryText", func(ctx context.Context) (*genai.EmbedContentResponse, error) {
-		return client.Models.EmbedContent(ctx, embedModel, embedContents, embedCfg)
-	})
-	if err != nil {
-		slog.Error("p_seer_intel: embed query", "error", err, "model", embedModel)
+		slog.Error("p_seer_intel: embed query", "error", err)
 		return nil, fmt.Errorf("p_seer_intel: embed query: %w", err)
 	}
-	if len(embedRes.Embeddings) == 0 || embedRes.Embeddings[0] == nil {
-		return nil, fmt.Errorf("p_seer_intel: embed query returned no embeddings")
-	}
-	values := embedRes.Embeddings[0].Values
 	if len(values) != SeerIntelEmbeddingDim {
 		return nil, fmt.Errorf("p_seer_intel: embed dimension %d, want %d", len(values), SeerIntelEmbeddingDim)
 	}

@@ -223,8 +223,8 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 	selftext := strings.TrimSpace(post.Selftext)
 
 	var runnerPtr *uint
-	if r.RedditRunnerID != 0 {
-		rid := r.RedditRunnerID
+	if r.RedditRunnerID != nil && *r.RedditRunnerID != 0 {
+		rid := *r.RedditRunnerID
 		runnerPtr = &rid
 	}
 

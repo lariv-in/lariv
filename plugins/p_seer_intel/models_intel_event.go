@@ -30,7 +30,7 @@ func (e *IntelEvent) BeforeCreate(tx *gorm.DB) error {
 	if addr == "" {
 		return nil
 	}
-	key := strings.TrimSpace(IntelGenAI.GeocodingAPIKey)
+	key := strings.TrimSpace(IntelConfigValue.GeocodingAPIKey)
 	if key == "" {
 		return nil
 	}

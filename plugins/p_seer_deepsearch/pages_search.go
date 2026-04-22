@@ -64,7 +64,7 @@ func registerDeepSearchSearchPages() {
 					&components.FormComponent[DeepSearch]{
 						Getter:   getters.Static(DeepSearch{}),
 						Title:    "Deep search",
-						Subtitle: "Enter a research question. The app expands queries, searches the web (Google Programmable Search), scrapes pages, ingests Intel, then writes a markdown report. Requires [Plugins.p_seer_deepsearch] apiKey+cx and Gemini from [Plugins.p_seer_intel].",
+						Subtitle: "Enter a research question. The app expands queries, searches the web (Google Programmable Search), scrapes pages, ingests Intel, then writes a markdown report. Requires [Plugins.p_seer_deepsearch] apiKey+cx and [Plugins.p_google_genai] for LLM calls.",
 						Classes:  "@container max-w-2xl mx-auto",
 						ChildrenInput: []components.PageInterface{
 							&components.InputText{

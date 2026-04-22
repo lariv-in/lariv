@@ -7,18 +7,19 @@ import (
 	"github.com/lariv-in/lago/views"
 )
 
-// exportDashboardRoles limits the Export app tile on the dashboard to these role
-// names ($role). Superuser is handled separately in AppsGrid (always shown).
-var exportDashboardRoles = []string{"admin", "totschool_admin"}
+// exportAppRoles: dashboard tile + HTTP views ([RoleAuthorizationLayer] still
+// allows IsSuperuser). AppsGrid skips role filter when $role is superuser.
+var exportAppRoles = []string{"admin"}
 
-// exportMenuRoles gate SidebarMenu via components.Render ($role match).
-var exportMenuRoles = []string{"superuser", "admin", "totschool_admin"}
+// exportMenuRoles: SidebarMenu uses components.Render ($role string); superuser
+// must appear here or sidebar stays empty while export routes still work.
+var exportMenuRoles = []string{"admin", "superuser"}
 
-var exportRoleLayer = p_users.RoleAuthorizationLayer{Roles: exportDashboardRoles}
+var exportRoleLayer = p_users.RoleAuthorizationLayer{Roles: exportAppRoles}
 
 func init() {
 	lago.RegistryPlugin.Patch("p_export", func(plugin lago.Plugin) lago.Plugin {
-		plugin.Roles = append([]string(nil), exportDashboardRoles...)
+		plugin.Roles = append([]string(nil), exportAppRoles...)
 		return plugin
 	})
 
@@ -29,6 +30,15 @@ func init() {
 		}
 		menu.Roles = append([]string(nil), exportMenuRoles...)
 		return menu
+	})
+
+	lago.RegistryPage.Patch("export.Page", func(page components.PageInterface) components.PageInterface {
+		shell, ok := page.(*components.ShellScaffold)
+		if !ok {
+			return page
+		}
+		shell.Roles = append([]string(nil), exportMenuRoles...)
+		return shell
 	})
 
 	lago.RegistryView.Patch("export.PageView", func(v *views.View) *views.View {

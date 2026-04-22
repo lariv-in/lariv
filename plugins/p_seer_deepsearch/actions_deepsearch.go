@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/lariv-in/lago/plugins/p_seer_intel"
 	"github.com/lariv-in/lago/plugins/p_seer_websites"
@@ -18,13 +17,11 @@ import (
 )
 
 const (
-	// DeepSearchWorkerTimeout bounds the background pipeline goroutine.
-	DeepSearchWorkerTimeout   = 45 * time.Minute
 	maxTotalScrapeURLs        = 30
 	maxGeneratedSearchQueries = 8
 	// deepSearchScrapeConcurrency limits parallel headless scrapes (shared browser / IO).
 	deepSearchScrapeConcurrency = 4
-	// deepSearchIntelConcurrency limits parallel Gemini calls during website→Intel ingest.
+	// deepSearchIntelConcurrency limits parallel local-model work during website→Intel ingest.
 	deepSearchIntelConcurrency = 3
 )
 

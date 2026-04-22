@@ -1,47 +1,25 @@
 package p_seer_intel
 
-import "github.com/lariv-in/lago/lago"
+import (
+	"strings"
 
-// IntelGenAIConfig holds Google Gen AI (Gemini Developer API) settings used by [NewFromIntelKind].
-// Values are loaded from the app config file under [Plugins] key "p_seer_intel" (see [lago.LoadConfigFromFile]).
-//
-// Example TOML fragment:
-//
-//	[Plugins.p_seer_intel]
-//	apiKey = "…"
-//	llmModel = "gemini-2.0-flash"
-//	embeddingModel = "gemini-embedding-2-preview"
-//	geocodingApiKey = "…" # Google Geocoding API (maps.googleapis.com/maps/api/geocode/json); optional
-type IntelGenAIConfig struct {
-	APIKey          string `toml:"apiKey"`
-	LLMModel        string `toml:"llmModel"`
-	EmbeddingModel  string `toml:"embeddingModel"`
+	"github.com/lariv-in/lago/lago"
+)
+
+// IntelConfig holds Intel-specific settings loaded from [Plugins.p_seer_intel].
+type IntelConfig struct {
 	GeocodingAPIKey string `toml:"geocodingApiKey"`
 }
 
-const (
-	defaultIntelLLMModel       = "gemini-2.0-flash"
-	defaultIntelEmbeddingModel = "gemini-embedding-2-preview"
-)
+var IntelConfigValue = &IntelConfig{}
 
-// IntelGenAI is the package-level Gen AI configuration (filled from registry after config load).
-var IntelGenAI = &IntelGenAIConfig{}
-
-func (c *IntelGenAIConfig) PostConfig() {
+func (c *IntelConfig) PostConfig() {
 	if c == nil {
 		return
 	}
-	if c.LLMModel == "" {
-		c.LLMModel = defaultIntelLLMModel
-	}
-	if c.EmbeddingModel == "" {
-		c.EmbeddingModel = defaultIntelEmbeddingModel
-	}
+	c.GeocodingAPIKey = strings.TrimSpace(c.GeocodingAPIKey)
 }
 
 func init() {
-	// Defaults apply even when no [Plugins.p_seer_intel] block exists; TOML decode then overrides.
-	IntelGenAI.LLMModel = defaultIntelLLMModel
-	IntelGenAI.EmbeddingModel = defaultIntelEmbeddingModel
-	lago.RegistryConfig.Register("p_seer_intel", IntelGenAI)
+	lago.RegistryConfig.Register("p_seer_intel", IntelConfigValue)
 }

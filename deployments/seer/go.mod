@@ -6,7 +6,9 @@ require (
 	github.com/lariv-in/lago/lago v0.5.10
 	github.com/lariv-in/lago/plugins/p_dashboard v0.5.10
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.10
+	github.com/lariv-in/lago/plugins/p_google_genai v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_pwa v0.5.10
+	github.com/lariv-in/lago/plugins/p_seer_assistant v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_deepsearch v0.0.0-20260419161526-9d250d818084
 	github.com/lariv-in/lago/plugins/p_seer_intel v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_reddit v0.0.0-00010101000000-000000000000
@@ -29,7 +31,6 @@ require (
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -44,18 +45,16 @@ require (
 	github.com/googleapis/gax-go/v2 v2.21.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/lariv-in/lago/syncmap v0.0.0-20260421131401-4ff0a5e51b63 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/ysmood/fetchup v0.2.3 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/got v0.42.3 // indirect
 	github.com/ysmood/gson v0.7.3 // indirect
 	github.com/ysmood/leakless v0.9.0 // indirect
-	github.com/yuin/goldmark v1.8.2 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/detectors/gcp v1.40.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
@@ -69,12 +68,16 @@ require (
 	golang.org/x/tools v0.43.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.276.0 // indirect
-	google.golang.org/genai v1.53.0 // indirect
+	google.golang.org/genai v1.54.0 // indirect
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/grpc v1.80.0 // indirect
 )
+
+replace github.com/lariv-in/lago/plugins/p_seer_assistant => ../../plugins/p_seer_assistant
+
+replace github.com/lariv-in/lago/plugins/p_google_genai => ../../plugins/p_google_genai
 
 replace github.com/lariv-in/lago/plugins/p_seer_intel => ../../plugins/p_seer_intel
 

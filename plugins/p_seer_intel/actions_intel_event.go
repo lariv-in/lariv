@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"google.golang.org/genai"
+	"github.com/lariv-in/lago/plugins/p_google_genai"
 	"gorm.io/gorm"
 )
 
@@ -33,56 +34,26 @@ type intelEventLLMOut struct {
 	Datetime string `json:"datetime"`
 }
 
-// extractIntelEventFromSummary calls Gemini with the summary and returns address + event time.
+// extractIntelEventFromSummary asks Gemini ([p_google_genai]) for a JSON object containing address + event time.
 func extractIntelEventFromSummary(ctx context.Context, summary string) (address string, eventTime time.Time, err error) {
 	summary = strings.TrimSpace(summary)
 	if summary == "" {
 		return "", time.Time{}, fmt.Errorf("p_seer_intel: extract intel event: empty summary")
 	}
-	key := strings.TrimSpace(IntelGenAI.APIKey)
-	if key == "" {
-		return "", time.Time{}, fmt.Errorf("p_seer_intel: extract intel event: apiKey is empty")
-	}
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:  key,
-		Backend: genai.BackendGeminiAPI,
-	})
-	if err != nil {
-		return "", time.Time{}, fmt.Errorf("p_seer_intel: genai client: %w", err)
-	}
-	llmModel := strings.TrimSpace(IntelGenAI.LLMModel)
-	if llmModel == "" {
-		llmModel = defaultIntelLLMModel
-	}
-
-	schema := map[string]any{
-		"type": "object",
-		"properties": map[string]any{
-			"address":  map[string]any{"type": "string"},
-			"datetime": map[string]any{"type": "string"},
-		},
-		"required": []string{"address", "datetime"},
-	}
-	cfg := &genai.GenerateContentConfig{
-		SystemInstruction:  genai.NewContentFromText(intelEventExtractSystemPrompt, genai.RoleUser),
-		ResponseMIMEType:   "application/json",
-		ResponseJsonSchema: schema,
-		Temperature:        genai.Ptr[float32](0.2),
-		MaxOutputTokens:    256,
-	}
-	resp, err := WithGenAIRetry(ctx, "intel.event_extract", func(ctx context.Context) (*genai.GenerateContentResponse, error) {
-		return client.Models.GenerateContent(ctx, llmModel, genai.Text(summary), cfg)
-	})
+	userPrompt := fmt.Sprintf("Current UTC time: %s\n\nSummary:\n%s", time.Now().UTC().Format(time.RFC3339), summary)
+	var out intelEventLLMOut
+	raw, err := p_google_genai.GenerateJSON(ctx, p_google_genai.GenerateRequest{
+		SystemPrompt:    intelEventExtractSystemPrompt,
+		UserPrompt:      userPrompt,
+		MaxOutputTokens: 256,
+		Thinking:        &p_google_genai.ThinkingConfig{Mode: p_google_genai.ThinkingModeDisabled},
+	}, &out)
 	if err != nil {
 		return "", time.Time{}, fmt.Errorf("p_seer_intel: event extract generate: %w", err)
 	}
-	raw := strings.TrimSpace(resp.Text())
+	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return "", time.Time{}, fmt.Errorf("p_seer_intel: event extract returned empty")
-	}
-	var out intelEventLLMOut
-	if err := json.Unmarshal([]byte(raw), &out); err != nil {
-		return "", time.Time{}, fmt.Errorf("p_seer_intel: event extract json: %w", err)
 	}
 	eventTime, err = time.Parse(time.RFC3339, strings.TrimSpace(out.Datetime))
 	if err != nil {
@@ -120,6 +91,28 @@ func geocodeHTTPStatusRetryable(code int) bool {
 	default:
 		return false
 	}
+}
+
+func geocodeBackoffDelay(attempt int) time.Duration {
+	if attempt < 0 {
+		attempt = 0
+	}
+	shift := attempt
+	if shift > 12 {
+		shift = 12
+	}
+	d := 400 * time.Millisecond * time.Duration(int64(1)<<shift)
+	if d > 60*time.Second || d <= 0 {
+		d = 60 * time.Second
+	}
+	jcap := d / 4
+	if jcap > 2*time.Second {
+		jcap = 2 * time.Second
+	}
+	if jcap <= 0 {
+		return d
+	}
+	return d + time.Duration(rand.Int63n(int64(jcap)+1))
 }
 
 // geocodeGoogleMapsOnce performs one Geocoding HTTP GET. retry is true when the caller should backoff and try again.
@@ -161,8 +154,8 @@ func geocodeGoogleMapsOnce(ctx context.Context, requestURL string) (lat, lng flo
 }
 
 // geocodeGoogleMaps returns latitude and longitude for address using the Geocoding API.
-// Retries transient HTTP failures and Google statuses OVER_QUERY_LIMIT / UNKNOWN_ERROR with the same
-// truncated exponential backoff + jitter as [WithGenAIRetry].
+// Retries transient HTTP failures and Google statuses OVER_QUERY_LIMIT / UNKNOWN_ERROR with
+// truncated exponential backoff + jitter.
 func geocodeGoogleMaps(ctx context.Context, apiKey, address string) (lat, lng float64, err error) {
 	address = strings.TrimSpace(address)
 	apiKey = strings.TrimSpace(apiKey)
@@ -190,7 +183,7 @@ func geocodeGoogleMaps(ctx context.Context, apiKey, address string) (lat, lng fl
 		if !retry || attempt >= geocodeRetryMaxAttempts-1 {
 			return 0, 0, err
 		}
-		wait := genAIBackoffDelay(attempt)
+		wait := geocodeBackoffDelay(attempt)
 		slog.Warn("p_seer_intel: geocode retry", "attempt", attempt+1, "max", geocodeRetryMaxAttempts, "wait", wait, "err", err)
 		timer := time.NewTimer(wait)
 		select {

@@ -6,3 +6,5 @@ bin/
 .gocache
 .gomodcache
 *gomodcache*
+.cache
+*.log

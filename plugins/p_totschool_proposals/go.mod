@@ -10,7 +10,7 @@ require (
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
 	github.com/lariv-in/lago/registry v0.5.10
 	github.com/lariv-in/lago/views v0.5.10
-	google.golang.org/genai v1.53.0
+	google.golang.org/genai v1.54.0
 	gorm.io/datatypes v1.2.7
 	gorm.io/gorm v1.31.1
 )
