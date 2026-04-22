@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const websiteScrapeURLQueueCap = 64
+const websiteScrapeURLQueueCap = 512
 
 // WebsiteScrapeURLQueue carries [*url.URL] jobs for [runWebsiteScrapeURLQueueWorker].
 // Send only non-nil URLs; nil is ignored. The worker starts after DB init ([lago.OnDBInit]).

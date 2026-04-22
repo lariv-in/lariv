@@ -29,6 +29,7 @@ type loggedGeneratePayload struct {
 	MaxOutputTokens   int32           `json:"maxOutputTokens,omitempty"`
 	ThinkingConfig    any             `json:"thinkingConfig,omitempty"`
 	SystemInstruction string          `json:"systemInstruction,omitempty"`
+	CachedContent     string          `json:"cachedContent,omitempty"`
 	Messages          []loggedContent `json:"messages"`
 }
 
@@ -58,6 +59,9 @@ func logGenerateRequest(ctx context.Context, op string, model string, cfg *genai
 		payload.ThinkingConfig = cfg.ThinkingConfig
 		if cfg.SystemInstruction != nil {
 			payload.SystemInstruction = truncateForLog(joinContentText(cfg.SystemInstruction), maxLogBytesGenerate)
+		}
+		if cfg.CachedContent != "" {
+			payload.CachedContent = cfg.CachedContent
 		}
 	}
 	for i := range payload.Messages {

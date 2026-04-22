@@ -7,6 +7,7 @@ import (
 	"html"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/lariv-in/lago/plugins/p_google_genai"
 	"github.com/lariv-in/lago/plugins/p_seer_intel"
@@ -21,6 +22,8 @@ When you need data or to perform an action, reply with a single JSON object and 
 - {"tool":"intel_search","query":"<natural language query>","limit":<1-20>}
 - {"tool":"google_search","query":"<web search query>","limit":<1-20>}
 - {"tool":"reddit_add_source","subreddits":["nameWithoutRPrefix"],"search_query":"","max_fresh_posts":<uint optional>,"load_websites":<bool>,"reddit_runner_id":<optional; omit key entirely to leave worker unset; if present must match an existing runner id>}
+- {"tool":"reddit_edit_source","reddit_source_id":<uint>,"subreddits":["..."],"search_query":"","max_fresh_posts":<uint>,"load_websites":<bool>,"reddit_runner_id":<optional same as add>}
+- {"tool":"reddit_edit_worker","reddit_runner_id":<uint>,"worker_name":"<label>","worker_duration":"<Go duration e.g. 1h, 30m, 90s>"}
 
 Before reddit_add_source: run google_search first when you need to discover or verify subreddit names, topics, or anything else best confirmed on the web (then use findings in the next reddit_add_source call).
 
@@ -37,6 +40,9 @@ type assistantToolEnvelope struct {
 	SearchQuery    string   `json:"search_query,omitempty"`
 	MaxFreshPosts  uint     `json:"max_fresh_posts,omitempty"`
 	LoadWebsites   bool     `json:"load_websites,omitempty"`
+	RedditSourceID uint     `json:"reddit_source_id,omitempty"`
+	WorkerName     string   `json:"worker_name,omitempty"`
+	WorkerDuration string   `json:"worker_duration,omitempty"`
 }
 
 func floatPtr(f float32) *float32 { return &f }
@@ -163,7 +169,7 @@ func parseToolEnvelope(s string) (*assistantToolEnvelope, bool) {
 		return nil, false
 	}
 	switch strings.TrimSpace(strings.ToLower(env.Tool)) {
-	case "intel_search", "google_search", "reddit_add_source":
+	case "intel_search", "google_search", "reddit_add_source", "reddit_edit_source", "reddit_edit_worker":
 		return &env, true
 	default:
 		return nil, false
@@ -188,6 +194,10 @@ func runPersistedToolRound(ctx context.Context, db *gorm.DB, ws *websocket.Conn,
 			resText, errText = runGoogleSearchTool(ctx, env)
 		case "reddit_add_source":
 			resText, errText = runRedditAddSourceTool(ctx, tx, env)
+		case "reddit_edit_source":
+			resText, errText = runRedditEditSourceTool(ctx, tx, env)
+		case "reddit_edit_worker":
+			resText, errText = runRedditEditWorkerTool(ctx, tx, env)
 		default:
 			errText = "unknown tool"
 		}
@@ -265,4 +275,70 @@ func runRedditAddSourceTool(ctx context.Context, tx *gorm.DB, env *assistantTool
 		return "", err.Error()
 	}
 	return fmt.Sprintf(`{"reddit_source_id":%d}`, src.ID), ""
+}
+
+func runRedditEditSourceTool(ctx context.Context, tx *gorm.DB, env *assistantToolEnvelope) (string, string) {
+	if env.RedditSourceID == 0 {
+		return "", "reddit_edit_source: reddit_source_id required"
+	}
+	var runner *uint
+	if env.RedditRunnerID != nil && *env.RedditRunnerID != 0 {
+		id := *env.RedditRunnerID
+		runner = &id
+	}
+	p := p_seer_reddit.RedditSourceUpdateParams{
+		SourceID: env.RedditSourceID,
+		RedditSourceCreateParams: p_seer_reddit.RedditSourceCreateParams{
+			RedditRunnerID: runner,
+			Subreddits:     env.Subreddits,
+			SearchQuery:    env.SearchQuery,
+			MaxFreshPosts:  env.MaxFreshPosts,
+			LoadWebsites:   env.LoadWebsites,
+		},
+	}
+	src, err := p_seer_reddit.UpdateRedditSource(ctx, tx, p)
+	if err != nil {
+		return "", err.Error()
+	}
+	return fmt.Sprintf(`{"reddit_source_id":%d}`, src.ID), ""
+}
+
+func runRedditEditWorkerTool(ctx context.Context, tx *gorm.DB, env *assistantToolEnvelope) (string, string) {
+	var rid uint
+	if env.RedditRunnerID != nil && *env.RedditRunnerID != 0 {
+		rid = *env.RedditRunnerID
+	}
+	if rid == 0 {
+		return "", "reddit_edit_worker: reddit_runner_id required"
+	}
+	name := strings.TrimSpace(env.WorkerName)
+	if name == "" {
+		return "", "reddit_edit_worker: worker_name required"
+	}
+	durStr := strings.TrimSpace(env.WorkerDuration)
+	if durStr == "" {
+		return "", "reddit_edit_worker: worker_duration required (Go duration, e.g. 1h, 45m, 90s)"
+	}
+	d, err := time.ParseDuration(durStr)
+	if err != nil {
+		return "", fmt.Sprintf("reddit_edit_worker: invalid worker_duration: %v", err)
+	}
+	runner, err := p_seer_reddit.UpdateRedditRunner(ctx, tx, p_seer_reddit.RedditRunnerUpdateParams{
+		ID:       rid,
+		Name:     name,
+		Duration: d,
+	})
+	if err != nil {
+		return "", err.Error()
+	}
+	out := map[string]any{
+		"reddit_runner_id": runner.ID,
+		"name":             runner.Name,
+		"duration":         runner.Duration.String(),
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		return "", err.Error()
+	}
+	return string(b), ""
 }

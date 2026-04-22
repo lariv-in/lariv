@@ -61,6 +61,7 @@ func GenerateTextStream(ctx context.Context, req GenerateRequest, onToken func(s
 	}
 	cfg := baseGenerateConfig(req)
 	cfg.SystemInstruction = systemInstruction(req.SystemPrompt, req.Thinking)
+	attachExplicitContextCache(ctx, cli, GoogleGenAIConfig.TextModel, cfg)
 	contents := genai.Text(strings.TrimSpace(req.UserPrompt))
 	return runGenerateStream(ctx, cli, GoogleGenAIConfig.TextModel, contents, cfg, onToken)
 }
@@ -161,6 +162,15 @@ func StatusSummary() string {
 	lines = append(lines, "Embedding model: "+GoogleGenAIConfig.EmbeddingModel)
 	lines = append(lines, "Thinking: "+GoogleGenAIConfig.ThinkingMode)
 	lines = append(lines, fmt.Sprintf("Retries: %d extra attempts (429/backoff), base %dms", GoogleGenAIConfig.RetryMax, GoogleGenAIConfig.RetryBaseMillis))
+	if GoogleGenAIConfig.ContextCacheEnabled {
+		ttl := GoogleGenAIConfig.ContextCacheTTLSeconds
+		if ttl <= 0 {
+			ttl = defaultContextCacheTTLSeconds
+		}
+		lines = append(lines, fmt.Sprintf("Explicit context cache: on (TTL %ds)", ttl))
+	} else {
+		lines = append(lines, "Explicit context cache: off")
+	}
 	if GoogleGenAIConfig.Backend == BackendVertex {
 		lines = append(lines, "Project: "+GoogleGenAIConfig.Project)
 		lines = append(lines, "Location: "+GoogleGenAIConfig.Location)

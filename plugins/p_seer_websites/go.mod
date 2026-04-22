@@ -53,6 +53,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lariv-in/lago/registry v0.5.10 // indirect
+	github.com/lariv-in/lago/syncmap v0.0.0-20260421131401-4ff0a5e51b63 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-runewidth v0.0.22 // indirect
 	github.com/mattn/go-sqlite3 v1.14.40 // indirect
@@ -97,3 +98,5 @@ replace github.com/lariv-in/lago/plugins/p_users => ../../plugins/p_users
 replace github.com/lariv-in/lago/registry => ../../registry
 
 replace github.com/lariv-in/lago/views => ../../views
+
+replace github.com/lariv-in/lago/syncmap => ../../syncmap

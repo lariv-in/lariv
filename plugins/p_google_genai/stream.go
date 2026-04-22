@@ -31,6 +31,7 @@ func GenerateChatStream(ctx context.Context, req GenerateRequest, messages []Cha
 	if sys != "" {
 		cfg.SystemInstruction = genai.NewContentFromText(sys, "")
 	}
+	attachExplicitContextCache(ctx, cli, GoogleGenAIConfig.TextModel, cfg)
 	return runGenerateStream(ctx, cli, GoogleGenAIConfig.TextModel, contents, cfg, onToken)
 }
 

@@ -35,6 +35,8 @@ const (
 //
 //	[Plugins.p_google_genai]
 //	apiKey = "..."     # or api_key = "..." (snake_case alias)
+//	contextCacheEnabled = false   # optional: explicit context cache for large system prompts (Gemini Caches API)
+//	contextCacheTTLSeconds = 3600
 //
 // The registry key must be exactly "p_google_genai" (see [lago.LoadConfigFromFile]).
 // If that block is missing, nothing is decoded and APIKey stays empty; the GenAI SDK
@@ -58,6 +60,13 @@ type Config struct {
 	RetryMax int `toml:"retryMax"`
 	// RetryBaseMillis is initial backoff; delays grow exponentially with jitter (min 50).
 	RetryBaseMillis int `toml:"retryBaseMillis"`
+
+	// ContextCacheEnabled uses Gemini explicit context caching ([google.golang.org/genai.Caches]):
+	// system instructions are stored server-side and referenced per request (lower latency / cost for large prompts).
+	// Requires sufficient cached token minimums per Google’s API; creation failures fall back to uncached requests.
+	ContextCacheEnabled bool `toml:"contextCacheEnabled"`
+	// ContextCacheTTLSeconds is TTL for newly created cache entries (default 3600 when enabled).
+	ContextCacheTTLSeconds int `toml:"contextCacheTTLSeconds"`
 }
 
 var GoogleGenAIConfig = &Config{}
@@ -123,6 +132,9 @@ func (c *Config) PostConfig() {
 	}
 	if c.RetryBaseMillis < 50 {
 		c.RetryBaseMillis = 50
+	}
+	if c.ContextCacheTTLSeconds < 0 {
+		c.ContextCacheTTLSeconds = 0
 	}
 }
 
