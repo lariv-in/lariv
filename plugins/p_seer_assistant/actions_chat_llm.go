@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const assistantSystemPrompt = `You are Seer Assistant inside the Lago app. You help operators manage Reddit ingestion, search Intel (vector summaries), and the public web (Google).
+const assistantSystemPrompt = `You are Seer Assistant inside the Lago app. You help operators manage Reddit ingestion, Seer Websites (crawl sources + workers), search Intel (vector summaries), and the public web (Google).
 
 When you need data or to perform an action, reply with a single JSON object and nothing else (no markdown fences, no commentary). Use one of:
 - {"tool":"intel_search","query":"<natural language query>","limit":<1-20>}
@@ -24,6 +24,12 @@ When you need data or to perform an action, reply with a single JSON object and 
 - {"tool":"reddit_add_source","subreddits":["nameWithoutRPrefix"],"search_query":"","max_fresh_posts":<uint optional>,"load_websites":<bool>,"reddit_runner_id":<optional; omit key entirely to leave worker unset; if present must match an existing runner id>}
 - {"tool":"reddit_edit_source","reddit_source_id":<uint>,"subreddits":["..."],"search_query":"","max_fresh_posts":<uint>,"load_websites":<bool>,"reddit_runner_id":<optional same as add>}
 - {"tool":"reddit_edit_worker","reddit_runner_id":<uint>,"worker_name":"<label>","worker_duration":"<Go duration e.g. 1h, 30m, 90s>"}
+- {"tool":"website_list_sources"}
+- {"tool":"website_list_workers"}
+- {"tool":"website_add_source","seed_url":"<https URL>","website_depth":<uint; link hops after seed, 0=seed only>,"website_runner_id":<optional uint; omit to leave worker unset>}
+- {"tool":"website_edit_source","website_source_id":<uint>,"seed_url":"<https URL>","website_depth":<uint>,"website_runner_id":<optional>}
+- {"tool":"website_add_worker","worker_name":"<label>","worker_duration":"<Go duration e.g. 1h, 30m>"}
+- {"tool":"website_edit_worker","website_runner_id":<uint>,"worker_name":"<label>","worker_duration":"<Go duration>"}
 
 Before reddit_add_source: run google_search first when you need to discover or verify subreddit names, topics, or anything else best confirmed on the web (then use findings in the next reddit_add_source call).
 
@@ -43,6 +49,11 @@ type assistantToolEnvelope struct {
 	RedditSourceID uint     `json:"reddit_source_id,omitempty"`
 	WorkerName     string   `json:"worker_name,omitempty"`
 	WorkerDuration string   `json:"worker_duration,omitempty"`
+	// Seer Websites (p_seer_websites); website_runner_id optional on add/edit source, required on website_edit_worker.
+	SeedURL         string `json:"seed_url,omitempty"`
+	WebsiteDepth    uint   `json:"website_depth,omitempty"`
+	WebsiteSourceID uint   `json:"website_source_id,omitempty"`
+	WebsiteRunnerFK *uint  `json:"website_runner_id,omitempty"`
 }
 
 func floatPtr(f float32) *float32 { return &f }
@@ -169,7 +180,11 @@ func parseToolEnvelope(s string) (*assistantToolEnvelope, bool) {
 		return nil, false
 	}
 	switch strings.TrimSpace(strings.ToLower(env.Tool)) {
-	case "intel_search", "google_search", "reddit_add_source", "reddit_edit_source", "reddit_edit_worker":
+	case "intel_search", "google_search",
+		"reddit_add_source", "reddit_edit_source", "reddit_edit_worker",
+		"website_list_sources", "website_list_workers",
+		"website_add_source", "website_edit_source",
+		"website_add_worker", "website_edit_worker":
 		return &env, true
 	default:
 		return nil, false
@@ -198,6 +213,18 @@ func runPersistedToolRound(ctx context.Context, db *gorm.DB, ws *websocket.Conn,
 			resText, errText = runRedditEditSourceTool(ctx, tx, env)
 		case "reddit_edit_worker":
 			resText, errText = runRedditEditWorkerTool(ctx, tx, env)
+		case "website_list_sources":
+			resText, errText = runWebsiteListSourcesTool(ctx, db, env)
+		case "website_list_workers":
+			resText, errText = runWebsiteListWorkersTool(ctx, db, env)
+		case "website_add_source":
+			resText, errText = runWebsiteAddSourceTool(ctx, tx, env)
+		case "website_edit_source":
+			resText, errText = runWebsiteEditSourceTool(ctx, tx, env)
+		case "website_add_worker":
+			resText, errText = runWebsiteAddWorkerTool(ctx, tx, env)
+		case "website_edit_worker":
+			resText, errText = runWebsiteEditWorkerTool(ctx, tx, env)
 		default:
 			errText = "unknown tool"
 		}

@@ -24,6 +24,65 @@ func websiteSourceFetchButtonAttrGetter() getters.Getter[gomponents.Node] {
 	}
 }
 
+func websiteSourceFetchButtonRow() components.PageInterface {
+	return &components.ContainerRow{
+		Page:    components.Page{Key: "seer_websites.WebsiteSourceFetchRow"},
+		Classes: "flex flex-wrap gap-2 items-center",
+		Children: []components.PageInterface{
+			&components.ButtonPost{
+				Label: "Run crawl now",
+				URL: lago.RoutePath("seer_websites.WebsiteSourceFetchRoute", map[string]getters.Getter[any]{
+					"source_id": getters.Any(getters.Key[uint]("websiteSource.ID")),
+				}),
+				Icon:    "arrow-path",
+				Classes: "btn-outline btn-primary btn-sm",
+				Attr:    websiteSourceFetchButtonAttrGetter(),
+			},
+		},
+	}
+}
+
+// websiteSourceFetchArea wraps the crawl button; while a crawl runs it HTMX-polls the detail page
+// and swaps this fragment so the button re-enables when the crawl finishes.
+type websiteSourceFetchArea struct {
+	components.Page
+}
+
+func (e websiteSourceFetchArea) GetKey() string { return e.Key }
+
+func (e websiteSourceFetchArea) GetRoles() []string { return e.Roles }
+
+func (websiteSourceFetchArea) Build(ctx context.Context) gomponents.Node {
+	id, err := getters.Key[uint]("websiteSource.ID")(ctx)
+	if err != nil {
+		return components.ContainerError{Error: getters.Static(err)}.Build(ctx)
+	}
+	urlStr, err := lago.RoutePath("seer_websites.WebsiteSourceDetailRoute", map[string]getters.Getter[any]{
+		"id": getters.Any(getters.Key[uint]("websiteSource.ID")),
+	})(ctx)
+	if err != nil {
+		return components.ContainerError{Error: getters.Static(err)}.Build(ctx)
+	}
+
+	row := components.Render(websiteSourceFetchButtonRow(), ctx)
+
+	parts := []gomponents.Node{
+		ID("seer-website-source-fetch-region"),
+		Class("mt-4"),
+	}
+	if WebsiteSourceCrawlIsRunning(id) {
+		parts = append(parts,
+			gomponents.Attr("hx-get", urlStr),
+			gomponents.Attr("hx-trigger", "every 3s"),
+			gomponents.Attr("hx-target", "this"),
+			gomponents.Attr("hx-swap", "outerHTML"),
+			gomponents.Attr("hx-select", "#seer-website-source-fetch-region"),
+		)
+	}
+	parts = append(parts, row)
+	return Div(parts...)
+}
+
 func websiteSourceDetailWorkerLabel(ctx context.Context) (string, error) {
 	ws, err := getters.Key[WebsiteSource]("websiteSource")(ctx)
 	if err != nil {
@@ -168,20 +227,8 @@ func registerWebsiteSourcePages() {
 									&components.FieldText{Getter: websiteSourceDetailWorkerLabel},
 								},
 							},
-							&components.ContainerRow{
-								Page:    components.Page{Key: "seer_websites.WebsiteSourceFetchRow"},
-								Classes: "flex flex-wrap gap-2 items-center mt-4",
-								Children: []components.PageInterface{
-									&components.ButtonPost{
-										Label: "Run crawl now",
-										URL: lago.RoutePath("seer_websites.WebsiteSourceFetchRoute", map[string]getters.Getter[any]{
-											"source_id": getters.Any(getters.Key[uint]("websiteSource.ID")),
-										}),
-										Icon:    "arrow-path",
-										Classes: "btn-outline btn-primary btn-sm",
-										Attr:    websiteSourceFetchButtonAttrGetter(),
-									},
-								},
+							&websiteSourceFetchArea{
+								Page: components.Page{Key: "seer_websites.WebsiteSourceFetchArea"},
 							},
 						},
 					},
