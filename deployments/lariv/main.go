@@ -5,6 +5,7 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 
+	_ "github.com/lariv-in/lago/plugins/p_livereloading"
 	_ "github.com/lariv-in/lago/plugins/p_contacts"
 	_ "github.com/lariv-in/lago/plugins/p_dashboard"
 	_ "github.com/lariv-in/lago/plugins/p_filesystem"

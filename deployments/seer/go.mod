@@ -10,8 +10,8 @@ require (
 	github.com/lariv-in/lago/plugins/p_pwa v0.5.10
 	github.com/lariv-in/lago/plugins/p_seer_assistant v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_deepsearch v0.0.0-20260419161526-9d250d818084
-	github.com/lariv-in/lago/plugins/p_seer_intel v0.0.0-00010101000000-000000000000
-	github.com/lariv-in/lago/plugins/p_seer_reddit v0.0.0-00010101000000-000000000000
+	github.com/lariv-in/lago/plugins/p_seer_intel v0.0.0-20260421170520-3ca65872f4a4
+	github.com/lariv-in/lago/plugins/p_seer_reddit v0.0.0-20260421170520-3ca65872f4a4
 	github.com/lariv-in/lago/plugins/p_seer_runners v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_websites v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
@@ -61,7 +61,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
 	golang.org/x/time v0.15.0 // indirect
@@ -122,8 +122,6 @@ require (
 	github.com/lariv-in/lago/components v0.5.10 // indirect
 	github.com/lariv-in/lago/getters v0.5.10 // indirect
 	github.com/lariv-in/lago/plugins/p_seer_gdelt v0.0.0-00010101000000-000000000000
-	github.com/lariv-in/lago/plugins/p_seer_opensky v0.0.0-00010101000000-000000000000
-	github.com/lariv-in/lago/plugins/p_seer_aisstream v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/registry v0.5.10 // indirect
 	github.com/lariv-in/lago/views v0.5.10 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
@@ -137,11 +135,11 @@ require (
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gorm.io/datatypes v1.2.7 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect

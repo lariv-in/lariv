@@ -76,6 +76,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/lariv-in/lago/syncmap v0.0.0-20260421131401-4ff0a5e51b63 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-runewidth v0.0.22 // indirect
 	github.com/mattn/go-sqlite3 v1.14.40 // indirect

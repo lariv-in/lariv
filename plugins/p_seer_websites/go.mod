@@ -11,8 +11,11 @@ require (
 	github.com/lariv-in/lago/lago v0.5.10
 	github.com/lariv-in/lago/plugins/p_seer_intel v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_users v0.5.10
+	github.com/lariv-in/lago/syncmap v0.0.0-20260421131401-4ff0a5e51b63
 	github.com/lariv-in/lago/views v0.5.10
+	golang.org/x/net v0.52.0
 	gorm.io/gorm v1.31.1
+	maragu.dev/gomponents v1.3.0
 )
 
 require (
@@ -53,7 +56,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lariv-in/lago/registry v0.5.10 // indirect
-	github.com/lariv-in/lago/syncmap v0.0.0-20260421131401-4ff0a5e51b63 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-runewidth v0.0.22 // indirect
 	github.com/mattn/go-sqlite3 v1.14.40 // indirect
@@ -73,7 +75,6 @@ require (
 	github.com/yuin/goldmark v1.8.2 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/exp v0.0.0-20260312153236-7ab1446f8b90 // indirect
-	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
@@ -82,7 +83,6 @@ require (
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-	maragu.dev/gomponents v1.3.0 // indirect
 )
 
 replace github.com/lariv-in/lago/plugins/p_seer_intel => ../../plugins/p_seer_intel
