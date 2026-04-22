@@ -65,7 +65,6 @@ func (e ShellBase) Build(ctx context.Context) Node {
 
 	return Doctype(HTML(
 		Lang("en"),
-		Text("Hello"),
 		Head(
 			Meta(Charset("UTF-8")),
 			Meta(Name("viewport"), Content("width=device-width, initial-scale=1.0")),
