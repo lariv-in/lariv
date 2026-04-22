@@ -15,7 +15,7 @@ func init() {
 		log.Panic(err)
 	}
 	if err := lago.RegistryPlugin.Register("p_google_genai", lago.Plugin{
-		Type:        lago.PluginTypeApp,
+		Type:        lago.PluginTypeAddon, // not listed on dashboard Apps grid; routes/status UI still registered
 		Icon:        "sparkles",
 		URL:         u,
 		VerboseName: "Google GenAI",
