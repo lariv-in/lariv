@@ -50,7 +50,9 @@ func StartServer(config LagoConfig) error {
 			return err
 		}
 		defer ln.Close()
+		slog.Info("Listening", "UDS", config.UDS);
 		return http.Serve(ln, router)
 	}
+	slog.Info("Listening", "TCP", config.Address);
 	return http.ListenAndServe(config.Address, router)
 }
