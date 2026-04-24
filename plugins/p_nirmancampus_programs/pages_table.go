@@ -1,46 +1,18 @@
 package p_nirmancampus_programs
 
 import (
-	"context"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/registry"
 )
 
-func universityFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$get.University")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, UniversityChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
-
 func universityFilterSelect() *components.InputSelect[string] {
 	return &components.InputSelect[string]{
 		Label:   "University",
 		Name:    "University",
 		Choices: getters.Static(UniversityChoices),
-		Getter:  universityFilterPairGetter(),
-	}
-}
-
-func programTypeFilterPairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$get.ProgramType")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, programTypeChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
+		Getter:  registry.PairFromGetter(getters.Key[string]("$get.University"), UniversityChoices),
 	}
 }
 
@@ -49,7 +21,7 @@ func programTypeFilterSelect() *components.InputSelect[string] {
 		Label:   "Program type",
 		Name:    "ProgramType",
 		Choices: getters.Static(programTypeChoices),
-		Getter:  programTypeFilterPairGetter(),
+		Getter:  registry.PairFromGetter(getters.Key[string]("$get.ProgramType"), programTypeChoices),
 	}
 }
 

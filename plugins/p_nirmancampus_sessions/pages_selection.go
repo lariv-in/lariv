@@ -6,6 +6,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
 func registerSelectionPages() {
@@ -34,6 +35,13 @@ func registerSelectionPages() {
 						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Code")},
+						},
+					},
+					{
+						Label: "Type",
+						Name:  "SessionType",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$row.SessionType"), SessionTypeChoices)},
 						},
 					},
 					{

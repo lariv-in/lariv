@@ -84,16 +84,7 @@ func registerFilterPages() {
 				Label:   "Method",
 				Name:    "PaymentMethod",
 				Choices: getters.Static(PaymentMethodChoices),
-				Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
-					s, err := getters.Key[string]("$get.PaymentMethod")(ctx)
-					if err != nil || s == "" {
-						return registry.Pair[string, string]{}, nil
-					}
-					if p, ok := registry.PairFromPairs(s, PaymentMethodChoices); ok {
-						return p, nil
-					}
-					return registry.Pair[string, string]{Key: s, Value: s}, nil
-				},
+				Getter:  registry.PairFromGetter(getters.Key[string]("$get.PaymentMethod"), PaymentMethodChoices),
 			},
 			&components.InputForeignKey[p_nirmancampus_students.Student]{
 				Label:       "Student",

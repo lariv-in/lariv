@@ -103,6 +103,22 @@ func PairValueFromKey(keyGetter getters.Getter[string], pairs []Pair[string, str
 	}
 }
 
+// PairFromGetter returns a getter for components.InputSelect current value: a
+// Pair with Key = stored value and Value = label. Empty key returns a zero pair.
+// Unknown keys return {Key: s, Value: s}, matching plugin-local *PairGetter helpers.
+func PairFromGetter(keyGetter getters.Getter[string], pairs []Pair[string, string]) getters.Getter[Pair[string, string]] {
+	return func(ctx context.Context) (Pair[string, string], error) {
+		s, err := keyGetter(ctx)
+		if err != nil || s == "" {
+			return Pair[string, string]{}, nil
+		}
+		if p, ok := PairFromPairs(s, pairs); ok {
+			return p, nil
+		}
+		return Pair[string, string]{Key: s, Value: s}, nil
+	}
+}
+
 func (p Pair[K, V]) ToKVJson() string {
 	b, err := json.Marshal(map[K]V{p.Key: p.Value})
 	if err != nil {

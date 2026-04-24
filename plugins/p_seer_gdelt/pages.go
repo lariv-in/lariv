@@ -294,10 +294,6 @@ func (e gdeltSearchResultsSection) Build(ctx context.Context) Node {
 	)
 }
 
-func gdeltPairGetter(field string, choices []registry.Pair[string, string]) getters.Getter[registry.Pair[string, string]] {
-	return gdeltPairGetterWithDefault(field, choices, "")
-}
-
 func gdeltPairGetterWithDefault(field string, choices []registry.Pair[string, string], fallback string) getters.Getter[registry.Pair[string, string]] {
 	return func(ctx context.Context) (registry.Pair[string, string], error) {
 		s, err := getters.Key[string]("$get." + field)(ctx)

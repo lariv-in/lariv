@@ -10,39 +10,13 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-func programUniversityPairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.University")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, UniversityChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
-
 func universityFormSelect() *components.InputSelect[string] {
 	return &components.InputSelect[string]{
 		Label:    "University",
 		Name:     "University",
 		Required: false,
 		Choices:  getters.Static(UniversityChoices),
-		Getter:   programUniversityPairGetter(),
-	}
-}
-
-func programProgramTypePairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.ProgramType")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, programTypeChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
+		Getter:   registry.PairFromGetter(getters.Key[string]("$in.University"), UniversityChoices),
 	}
 }
 
@@ -52,33 +26,7 @@ func programTypeFormSelect() *components.InputSelect[string] {
 		Name:     "ProgramType",
 		Required: false,
 		Choices:  getters.Static(programTypeChoices),
-		Getter:   programProgramTypePairGetter(),
-	}
-}
-
-func programAdmissionSessionsPairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.AdmissionSessions")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, admissionSessionChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
-
-func programTermTypePairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.TermType")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, termTypeChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
+		Getter:   registry.PairFromGetter(getters.Key[string]("$in.ProgramType"), programTypeChoices),
 	}
 }
 
@@ -88,7 +36,7 @@ func admissionSessionsFormSelect() *components.InputSelect[string] {
 		Name:     "AdmissionSessions",
 		Required: false,
 		Choices:  getters.Static(admissionSessionChoices),
-		Getter:   programAdmissionSessionsPairGetter(),
+		Getter:   registry.PairFromGetter(getters.Key[string]("$in.AdmissionSessions"), admissionSessionChoices),
 	}
 }
 
@@ -98,7 +46,7 @@ func termTypeFormSelect() *components.InputSelect[string] {
 		Name:     "TermType",
 		Required: false,
 		Choices:  getters.Static(termTypeChoices),
-		Getter:   programTermTypePairGetter(),
+		Getter:   registry.PairFromGetter(getters.Key[string]("$in.TermType"), termTypeChoices),
 	}
 }
 

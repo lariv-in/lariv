@@ -6,6 +6,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
 func registerFilterPages() {
@@ -17,6 +18,13 @@ func registerFilterPages() {
 				Label:  "Code",
 				Name:   "Code",
 				Getter: getters.Key[string]("$get.Code"),
+			},
+			&components.InputSelect[string]{
+				Label:      "Session type",
+				Name:       "SessionType",
+				Choices:    getters.Static(SessionTypeChoices),
+				Getter:     registry.PairFromGetter(getters.Key[string]("$get.SessionType"), SessionTypeChoices),
+				EmptyLabel: "All",
 			},
 			&components.InputTernary{
 				Label:      "Active",
@@ -46,6 +54,13 @@ func registerFilterPages() {
 				Label:  "Code",
 				Name:   "Code",
 				Getter: getters.Key[string]("$get.Code"),
+			},
+			&components.InputSelect[string]{
+				Label:      "Session type",
+				Name:       "SessionType",
+				Choices:    getters.Static(SessionTypeChoices),
+				Getter:     registry.PairFromGetter(getters.Key[string]("$get.SessionType"), SessionTypeChoices),
+				EmptyLabel: "All",
 			},
 			&components.InputTernary{
 				Label:      "Active",
@@ -100,6 +115,13 @@ func registerTablePages() {
 						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Code")},
+						},
+					},
+					{
+						Label: "Type",
+						Name:  "SessionType",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$row.SessionType"), SessionTypeChoices)},
 						},
 					},
 					{
