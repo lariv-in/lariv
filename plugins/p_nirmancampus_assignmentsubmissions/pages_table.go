@@ -1,8 +1,6 @@
 package p_nirmancampus_assignmentsubmissions
 
 import (
-	"context"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
@@ -23,16 +21,7 @@ func registerFilterPages() {
 				Label:   "Submission status",
 				Name:    "SubmissionStatus",
 				Choices: getters.Static(AssignmentSubmissionStatusChoices),
-				Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
-					s, err := getters.Key[string]("$get.SubmissionStatus")(ctx)
-					if err != nil || s == "" {
-						return registry.Pair[string, string]{}, nil
-					}
-					if p, ok := registry.PairFromPairs(s, AssignmentSubmissionStatusChoices); ok {
-						return p, nil
-					}
-					return registry.Pair[string, string]{Key: s, Value: s}, nil
-				},
+				Getter:  registry.PairFromGetter(getters.Key[string]("$get.SubmissionStatus"), AssignmentSubmissionStatusChoices),
 			},
 		},
 		ChildrenAction: []components.PageInterface{

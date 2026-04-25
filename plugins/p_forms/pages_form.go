@@ -1,8 +1,6 @@
 package forms
 
 import (
-	"context"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
@@ -272,12 +270,7 @@ func formFieldEditorBody() components.PageInterface {
 					Name:     "FieldType",
 					Required: true,
 					Choices:  getters.Static(FieldTypeChoices),
-					Getter: getters.Map(getters.Key[string]("$in.FieldType"), func(_ context.Context, ft string) (registry.Pair[string, string], error) {
-						if p, ok := registry.PairFromPairs(ft, FieldTypeChoices); ok {
-							return p, nil
-						}
-						return registry.Pair[string, string]{Key: ft, Value: ft}, nil
-					}),
+					Getter:   registry.PairFromGetter(getters.Key[string]("$in.FieldType"), FieldTypeChoices),
 				},
 				&components.ClientShow{
 					Page:      components.Page{Key: "forms.FormFieldOptionsWhenSelect"},

@@ -11,19 +11,6 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-func studentCategoryPairGetter() getters.Getter[registry.Pair[string, string]] {
-	return func(ctx context.Context) (registry.Pair[string, string], error) {
-		s, err := getters.Key[string]("$in.Category")(ctx)
-		if err != nil || s == "" {
-			return registry.Pair[string, string]{}, nil
-		}
-		if p, ok := registry.PairFromPairs(s, StudentCategoryChoices); ok {
-			return p, nil
-		}
-		return registry.Pair[string, string]{Key: s, Value: s}, nil
-	}
-}
-
 func studentFormFields() components.ContainerColumn {
 	return components.ContainerColumn{
 		Page: components.Page{
@@ -148,7 +135,7 @@ func studentFormFields() components.ContainerColumn {
 								Name:     "Category",
 								Required: false,
 								Choices:  getters.Static(StudentCategoryChoices),
-								Getter:   studentCategoryPairGetter(),
+								Getter:   registry.PairFromGetter(getters.Key[string]("$in.Category"), StudentCategoryChoices),
 							},
 						},
 					},

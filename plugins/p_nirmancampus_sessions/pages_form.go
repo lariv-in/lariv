@@ -6,6 +6,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
 func sessionFormFields() components.ContainerColumn {
@@ -38,6 +39,18 @@ func sessionFormFields() components.ContainerColumn {
 								Getter: getters.Key[string]("$in.Code"),
 							},
 						},
+					},
+				},
+			},
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.SessionType"),
+				Children: []components.PageInterface{
+					&components.InputSelect[string]{
+						Label:    "Session type",
+						Name:     "SessionType",
+						Required: true,
+						Choices:  getters.Static(SessionTypeChoices),
+						Getter:   registry.PairFromGetter(getters.Key[string]("$in.SessionType"), SessionTypeChoices),
 					},
 				},
 			},

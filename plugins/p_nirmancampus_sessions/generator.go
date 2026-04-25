@@ -30,22 +30,25 @@ func init() {
 
 			rows := []Session{
 				{
-					Name:     fmt.Sprintf("%s – %s", pastStart.Format("Jan 2006"), pastEnd.Format("Jan 2006")),
-					Start:    pastStart,
-					End:      pastEnd,
-					IsActive: false,
+					Name:        fmt.Sprintf("%s – %s", pastStart.Format("Jan 2006"), pastEnd.Format("Jan 2006")),
+					SessionType: SessionTypeChoices[0].Key,
+					Start:       pastStart,
+					End:         pastEnd,
+					IsActive:    false,
 				},
 				{
-					Name:     fmt.Sprintf("%s – %s", currentStart.Format("Jan 2006"), currentEnd.Format("Jan 2006")),
-					Start:    currentStart,
-					End:      currentEnd,
-					IsActive: true,
+					Name:        fmt.Sprintf("%s – %s", currentStart.Format("Jan 2006"), currentEnd.Format("Jan 2006")),
+					SessionType: SessionTypeChoices[0].Key,
+					Start:       currentStart,
+					End:         currentEnd,
+					IsActive:    true,
 				},
 				{
-					Name:     fmt.Sprintf("%s – %s", futureStart.Format("Jan 2006"), futureEnd.Format("Jan 2006")),
-					Start:    futureStart,
-					End:      futureEnd,
-					IsActive: false,
+					Name:        fmt.Sprintf("%s – %s", futureStart.Format("Jan 2006"), futureEnd.Format("Jan 2006")),
+					SessionType: SessionTypeChoices[1].Key,
+					Start:       futureStart,
+					End:         futureEnd,
+					IsActive:    false,
 				},
 			}
 

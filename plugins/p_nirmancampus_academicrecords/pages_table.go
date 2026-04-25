@@ -1,8 +1,6 @@
 package p_nirmancampus_academicrecords
 
 import (
-	"context"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
@@ -49,16 +47,7 @@ func registerFilterPages() {
 				Label:   "Status",
 				Name:    "Status",
 				Choices: getters.Static(AcademicRecordStatusChoices),
-				Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
-					s, err := getters.Key[string]("$get.Status")(ctx)
-					if err != nil || s == "" {
-						return registry.Pair[string, string]{}, nil
-					}
-					if p, ok := registry.PairFromPairs(s, AcademicRecordStatusChoices); ok {
-						return p, nil
-					}
-					return registry.Pair[string, string]{Key: s, Value: s}, nil
-				},
+				Getter:  registry.PairFromGetter(getters.Key[string]("$get.Status"), AcademicRecordStatusChoices),
 			},
 			&components.InputText{
 				Label:  "Term",

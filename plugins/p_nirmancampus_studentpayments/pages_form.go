@@ -153,16 +153,7 @@ func paymentUpdateFormFields() components.ContainerColumn {
 								Name:     "PaymentMethod",
 								Required: true,
 								Choices:  getters.Static(PaymentMethodChoices),
-								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
-									s, err := getters.Key[string]("$in.PaymentMethod")(ctx)
-									if err != nil || s == "" {
-										return registry.Pair[string, string]{}, nil
-									}
-									if p, ok := registry.PairFromPairs(s, PaymentMethodChoices); ok {
-										return p, nil
-									}
-									return registry.Pair[string, string]{Key: s, Value: s}, nil
-								},
+								Getter:   registry.PairFromGetter(getters.Key[string]("$in.PaymentMethod"), PaymentMethodChoices),
 							},
 						},
 					},

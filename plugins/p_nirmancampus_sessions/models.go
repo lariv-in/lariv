@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -17,14 +18,30 @@ import (
 type Session struct {
 	gorm.Model
 
-	Name     string
-	Code     string `gorm:"uniqueIndex;default:''"`
-	Start    time.Time
-	End      time.Time
-	IsActive bool `gorm:"default:true"`
+	Name        string
+	Code        string `gorm:"uniqueIndex;default:''"`
+	SessionType string `gorm:"type:varchar(32);not null;default:''"`
+	Start       time.Time
+	End         time.Time
+	IsActive    bool `gorm:"default:true"`
+}
+
+// SessionTypeChoices: stored [Session.SessionType] key -> label (slice order = dropdown order).
+var SessionTypeChoices = []registry.Pair[string, string]{
+	{Key: "Admission", Value: "Admission"},
+	{Key: "Exam", Value: "Exam"},
 }
 
 func (s *Session) BeforeSave(tx *gorm.DB) error {
+	if strings.TrimSpace(s.SessionType) == "" {
+		if len(SessionTypeChoices) == 0 {
+			return fmt.Errorf("session: SessionTypeChoices is empty")
+		}
+		s.SessionType = SessionTypeChoices[0].Key
+	} else if _, ok := registry.PairFromPairs(s.SessionType, SessionTypeChoices); !ok {
+		return fmt.Errorf("session type must be one of: Admission, Exam")
+	}
+
 	if strings.TrimSpace(s.Code) != "" || s.Start.IsZero() {
 		return nil
 	}
@@ -54,6 +71,6 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_sessions", lago.AdminPanel[Session]{
 		SearchField: "Name",
-		ListFields:  []string{"Name", "Code", "Start", "End", "IsActive"},
+		ListFields:  []string{"Name", "Code", "SessionType", "Start", "End", "IsActive"},
 	})
 }

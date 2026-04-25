@@ -464,16 +464,7 @@ func editFormFields() components.ContainerColumn {
 								Name:     "Status",
 								Required: true,
 								Choices:  getters.Static(AcademicRecordStatusChoices),
-								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
-									s, err := getters.Key[string]("$in.Status")(ctx)
-									if err != nil || s == "" {
-										return registry.Pair[string, string]{}, nil
-									}
-									if p, ok := registry.PairFromPairs(s, AcademicRecordStatusChoices); ok {
-										return p, nil
-									}
-									return registry.Pair[string, string]{Key: s, Value: s}, nil
-								},
+								Getter:   registry.PairFromGetter(getters.Key[string]("$in.Status"), AcademicRecordStatusChoices),
 							},
 						},
 					},
