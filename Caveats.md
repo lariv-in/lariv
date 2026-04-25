@@ -1,61 +1,60 @@
-# Caveats When Working On This Codebase
+# Caveats — This Codebase
 
-- NEVER write go.mod or go.sum manually, use go mod init, go mod tidy -e, go work use for project management, If you can't run the required commands to manage go.mod and go.sum, then ask the user to run the commands.
-- Do **not** create repo-local Go cache directories such as `.cache-go`, `.gocache`, `.gomodcache`, or custom `GOMODCACHE` / `GOCACHE` / `GOPATH` paths inside the workspace. Use the normal system Go caches; if sandbox or permission issues prevent that, stop and ask the user how they want to proceed instead of polluting the repo.
-- **Discover before you build:** Before designing a new component, getter, or interaction pattern, search and read what already exists—`components/`, `getters/`, `views/` (including `query_patcher*.go`, layer types, and helpers in `crud.go`), `registry/`, plugin `actions*.go` (business logic on models), and plugins that solve a similar problem. Prefer reusing, composing, or lightly extending existing pieces over adding parallel types or one-off logic.
-- **Do not use `recover()` in background goroutine wrappers** (e.g. `go func() { defer func() { recover() ... }(); ... }()`). That pattern hides bugs, can leave process-global state inconsistent if the goroutine owned locks or map entries, and is not a substitute for returning errors or cancelling work via `context`. Let panics propagate unless you are at a true process boundary with a documented recovery contract (rare in this repo).
-- **Package-level typed maps:** Prefer **`syncmap.SyncMap`** from `github.com/lariv-in/lago/syncmap` (`syncmap/syncmap.go`) over ad-hoc `sync.Mutex` + `map[K]V` when you need the usual `Load` / `Store` / `LoadAndDelete` / `LoadOrStore` style API. For a **global** map, hold it as a **pointer** so the `SyncMap` value is never copied after use: `var m *syncmap.SyncMap[K, V] = &syncmap.SyncMap[K, V]{}` (see `plugins/p_seer_reddit/runner_worker_pool.go`). The zero `SyncMap` is usable, but the pointer form gives one stable identity and matches the type’s “must not be copied” rule.
-- In nearly all cases, take the address of components before inserting them into something that requires `PageInterface`. Otherwise, the value will not implement `MutableParentInterface` and its children will not be patchable.
+- Never hand-edit `go.mod` / `go.sum`. Use `go mod init`, `go mod tidy -e`, `go work use`. Can't run those → ask user.
+- No repo-local Go caches: `.cache-go`, `.gocache`, `.gomodcache`, custom `GOMODCACHE` / `GOCACHE` / `GOPATH` inside workspace. Use system caches. Sandbox blocks that → ask user; don't pollute repo.
+- **Discover before build:** New component / getter / pattern → search `components/`, `getters/`, `views/` (`query_patcher*.go`, layers, `crud.go` helpers), `registry/`, plugin `actions*.go`, similar plugins. Reuse / compose / light extend. No parallel types / one-off logic unless needed.
+- **No `recover()` in background goroutine wrappers** (`go func() { defer recover() ... }`). Hides bugs; locks / maps can leave global state wrong; not error handling. Let panic propagate unless real process boundary + documented recovery (rare).
+- **Package-level typed maps:** Prefer `syncmap.SyncMap` (`github.com/lariv-in/lago/syncmap`). Global map → **pointer** so value never copied after use: `var m *syncmap.SyncMap[K,V] = &syncmap.SyncMap[K,V]{}` (see `plugins/p_seer_reddit/runner_worker_pool.go`). Zero value works; pointer = stable identity + "do not copy" rule.
+- Almost always: `&component` before inserting into thing needing `PageInterface`. Else no `MutableParentInterface` → children not patchable.
 
-- When you do add a component, it should implement at least `PageInterface` from `components/page.go`.
+- New component → implement `PageInterface` (`components/page.go`).
+- Children → `ParentInterface` (`components/parent.go`) for traversal.
+- Mutable children → `MutableParentInterface` (`components/parent.go`).
+- Input → `InputInterface` (`components/input.go`) so `FormComponent` finds / parses fields.
 
-- If a component has children, it should implement `ParentInterface` from `components/parent.go` so its children can be traversed.
-- If a component allows modifying its children, it should implement `MutableParentInterface` from `components/parent.go`.
-- If a component is an input, it needs to implement `InputInterface` from `components/input.go` so that `FormComponent` can detect it and parse its fields.
+- Request-dependent values → `Getter` from `getters/getters.go`. Shared context keys there: `ContextKeyDB`, `ContextKeyError`, `ContextKeyGet`, `ContextKeyIn`.
+- `getters/` = topic files as siblings (no subpackages): `key.go`, `deref.go`, `format.go`, `any.go`, `association.go`, `association_list.go`, `join_association_list.go`, `association_ids.go`, `foreign_key.go`, `select.go` / `select_multi.go`, `navigate.go`, `parse_int.go` / `parse_uint.go`, etc. Browse or `grep` `func ` for combinators.
 
-- Whenever something requires a value that can depend on the request, it should use a `Getter` from `getters/getters.go` (shared context key constants live there too: `ContextKeyDB`, `ContextKeyError`, `ContextKeyGet`, `ContextKeyIn`).
-- The `getters/` package is organized by topic in sibling files (no subpackages), e.g. `key.go` for `Key`, `deref.go`, `format.go`, `any.go`, `association.go`, `association_list.go`, `join_association_list.go`, `association_ids.go`, `foreign_key.go`, `select.go` / `select_multi.go`, `navigate.go`, and helpers like `parse_int.go` / `parse_uint.go`. Browse those files or `grep` for `func ` when looking for an existing combinator.
+- Custom getter → first check `getters/` + small compositions:
+   - Nullable `*T` field → `getters.Deref(getters.Key[*T]("$in.Field"))`.
+   - Format string from multiple getters → `getters.Format("format", getters.Any(g1), ...)`.
+   - Route param `id` → `getters.Any(getters.Key[uint]("$id"))`, not custom `uint→string` wrapper.
+   - M2M filter in `$get` → `getters.AssociationIDs(getters.ContextKeyGet, "Field")`, not manual unpack.
 
-- Before writing a custom getter, always confirm that no existing getter in `getters/` (and no small composition of existing getters) already covers the use case:
-   - Use `getters.Deref(getters.Key[*T]("$in.Field"))` for nullable pointer fields instead of writing custom wrapper functions.
-   - Use `getters.Format("format", getters.Any(getter1), ...)` to combine multiple getters into a formatted string instead of custom inline functions.
-   - For route params like `id`, prefer `getters.Any(getters.Key[uint]("$id"))` instead of writing custom `uint -> string` wrapper getters.
-   - For many-to-many filter state stored in `$get`, prefer `getters.AssociationIDs(getters.ContextKeyGet, "Field")` instead of manually unpacking `AssociationIDs`.
+- **Skip pointless getter fns:** No plugin-local `func …() getters.Getter[T]` that only forwards one combinator (`getters.Key`, `lago.RoutePath`, no extra logic). Use combinator at field. Static HTML attrs → `getters.Static(...)`.
+- **Named getter OK when:** DB load + preload needs, permission / role branch, merge context shapes, worker/agent state, formatting beyond `getters.Format` / `getters.Map`, other non-trivial logic. Empty placeholder `"—"` for blanks → prefer empty `FieldText` unless product wants dash.
+- Getter args → narrowest type. `any` almost always wrong.
 
-- **Avoid unnecessary getter functions:** Do not introduce a plugin-local `func …() getters.Getter[T]` that only forwards to a single existing combinator (e.g. wrapping `getters.Key` or `lago.RoutePath` with no extra logic). Use the combinator directly at the component field. Static HTML attrs are `getters.Static(...)`, not a custom closure.
-- **When a named getter *is* justified:** DB loads (including preload requirements), permission or role branching, merging multiple context shapes, worker/agent state, formatting that is not covered by `getters.Format` / `getters.Map`, or other non-trivial logic. If the only goal was an empty placeholder like `"—"` for blank fields, prefer leaving `FieldText` empty unless the product explicitly requires a dash.
-- When defining getter arguments, use the most restrictive type possible. `any` is almost always a bad idea.
+- FK selector: `InputForeignKey.Name`, selector route/page, `GetterSelect(...)` event name must match. `ParentID` input on `DestinationID` selector → wrong event name → input / modal break.
 
-- For foreign key selectors, the `InputForeignKey.Name`, the selector route/page it opens, and the `GetterSelect(...)` event name all need to match. If a `ParentID` input opens a selector table built for `DestinationID`, the selection event will be dispatched with the wrong name and the input will not update or close its modal.
+- Same for `InputManyToMany` + `GetterMultiSelect(...)`. Preserve `target_input` across modal open + filter/browse inside modal. Drop it → wrong field name → chips break.
 
-- The same name-matching rule applies to `InputManyToMany` and `GetterMultiSelect(...)`. Many-to-many selectors also need to preserve `target_input` across the initial modal open and any filter/browse requests inside the modal. If `target_input` is dropped, the selector will dispatch the wrong field name and the chips will not update.
+- `InputForeignKey.Getter` → `getters.Association[T](getters.Key[uint]("$in.FieldID"))`. Table from type `T` via GORM `db.Model()`.
 
-- For `InputForeignKey.Getter`, use `getters.Association[T](getters.Key[uint]("$in.FieldID"))`. It infers the table name from the type `T` via GORM's `db.Model()`.
+- `InputManyToMany.Getter` → preload + `getters.Key[[]T]("$in.Field")`, not custom lookup. Renders from submitted `AssociationIDs`; update/detail still preload so initial + detail have full rows.
 
-- For `InputManyToMany.Getter`, prefer preloaded associations plus `getters.Key[[]T]("$in.Field")` instead of custom lookup getters. `InputManyToMany` re-renders from submitted `AssociationIDs`, but update/detail views should still preload the association so initial render and detail pages have the full related objects available.
+- **Detail pages:** `components.FieldManyToMany[T]` (`field_manytomany.go`) read-only. Same **`Getter`** + **`Display`** as matching `InputManyToMany[T]` (`getters.JoinAssociationList[...]` if join table). **`Link`** optional: `getters.ContextKeyIn` per row like **`Display**`, e.g. `lago.RoutePath("plugin.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})`. Prefer over `FieldList` + per-row children for plain association lists. Keep `FieldList` when rows not typed model (e.g. `[]map[string]any`, heavy custom row UI).
 
-- For **detail pages**, use `components.FieldManyToMany[T]` (`components/field_manytomany.go`) to show the same many-to-many association read-only. Reuse the same **`Getter`** and **`Display`** as the matching `InputManyToMany[T]` (including `getters.JoinAssociationList[...]` when the association goes through a join table). **`Link`** is optional: when set, it runs with `getters.ContextKeyIn` bound to each related row (same as **`Display`**), e.g. `lago.RoutePath("plugin.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.ID"))})`. Prefer this over `FieldList` + per-row children for plain association lists; keep **`FieldList`** when each row is not a typed related model (e.g. ad-hoc `[]map[string]any` or heavily custom row UI).
+- Relation only on join model, not base GORM struct → shared `getters.JoinAssociationList[...]` / `getters.AssociationList[...]` + shared query patchers. No ad-hoc plugin lookup.
 
-- If the relation is intentionally not declared on the base GORM model and is instead represented by a separate join model, prefer shared getters such as `getters.JoinAssociationList[...]` / `getters.AssociationList[...]` plus shared query patchers instead of ad-hoc plugin-local lookup code.
+- Models not patchable via registries like pages/views. Extend other plugin's data → extension/join model in your plugin + page/view/query patches. Fields on base GORM model only when relationship truly belongs in base plugin as first-class.
 
-- Models are not patchable through registries the way pages and views are. If a plugin needs to extend another plugin's data model, prefer a separate extension/join model owned by the new plugin plus page/view/query patches around it. Only add fields directly to the base GORM model when that relationship truly belongs in the base plugin and is intended to be a first-class part of that model.
+- Filesystem selector routes:
+   - `filesystem.SelectRoute`, `filesystem.MoveSelectRoute` → directory pickers; dirs selectable.
+   - `filesystem.MultiSelectRoute` → file picker for asset M2M; files selectable; dir click → browse, not select.
 
-- The filesystem selector routes have two different behaviors:
-   - `filesystem.SelectRoute` and `filesystem.MoveSelectRoute` are directory pickers; directories are selectable.
-   - `filesystem.MultiSelectRoute` is a file picker for asset-style many-to-many fields; files are selectable, but clicking a directory should browse into it instead of selecting it.
-
-- time.Time should always be handled with consideration to the timezone, timezone is injected into the context in $tz key (*time.Location).
+- `time.Time` → respect TZ. `$tz` in context = `*time.Location`.
 
 # Database in request context
 
-- The app’s global HTTP stack attaches a `*gorm.DB` to each request context under **`getters.ContextKeyDB`** (string value `"$db"`). See `lago.DBLayer` in `lago/layers.go`.
-- **Do not** duplicate `ctx.Value("$db").(*gorm.DB)` or `r.Context().Value("$db")` type-assert patterns across the codebase. Use **`getters.DBFromContext(ctx)`** (`getters/db_context.go`), which returns `(*gorm.DB, error)` when the value is missing, not a `*gorm.DB`, or nil.
-- In HTTP handlers, call `getters.DBFromContext(r.Context())` (or your plugin’s thin wrapper if it only forwards to that, e.g. `filesystemDB`, `exportDB`).
-- **Tests** that need a DB in context should use `context.WithValue(ctx, getters.ContextKeyDB, db)` so the key stays consistent with production.
+- Global HTTP attaches `*gorm.DB` per request under **`getters.ContextKeyDB`** (`"$db"`). `lago.DBLayer` in `lago/layers.go`.
+- Don't scatter `ctx.Value("$db").(*gorm.DB)` / `r.Context().Value("$db")`. Use **`getters.DBFromContext(ctx)`** (`getters/db_context.go`) → `(*gorm.DB, error)` when missing.
+- HTTP handlers → `getters.DBFromContext(r.Context())` or thin plugin wrapper that forwards (`filesystemDB`, `exportDB`, …).
+- Tests → `context.WithValue(ctx, getters.ContextKeyDB, db)` to match prod key.
 
 # Choice fields (string columns)
 
-For a model field edited with a fixed set of string options (dropdown), define **one** ordered slice in the plugin’s `models.go` beside the GORM struct:
+Fixed string options (dropdown) → **one** ordered slice in plugin `models.go` next to GORM struct:
 
 ```go
 var MyFieldChoices = []registry.Pair[string, string]{
@@ -64,132 +63,130 @@ var MyFieldChoices = []registry.Pair[string, string]{
 }
 ```
 
-- **`Key`** is the persisted value (database column, `<option value>`, form POST). **`Value`** is the label shown in selects and read-only views.
-- **Slice order** is the option order in the UI (`InputSelect`, list filters, etc.). Do not add a parallel `const` block or `switch` that repeats those keys; use the same string literals everywhere.
-- **Detail / read-only:** For a stored string key, use `registry.ChoiceLabelGetter(getters.Key[string]("$in.Field"), MyFieldChoices)` so the UI shows the pair **`Value`** via `PairFromPairs`; unknown keys fall back to the raw key (aligned with form behavior). Do not add a one-off display getter that duplicates that logic.
-- **Forms and filters:** `components.InputSelect[string]` with `Choices: getters.Static(MyFieldChoices)`. Resolve the current selection with `registry.PairFromPairs(s, MyFieldChoices)` when `s` is non-empty; for unknown legacy values fall back to `registry.Pair[string, string]{Key: s, Value: s}` so the UI still renders.
-- **Maps when needed:** `registry.MapFromPairs(MyFieldChoices)` builds a `map[string]string` for ad-hoc lookups; `registry.PairFromMap` works on that map. Prefer the slice + `PairFromPairs` when you only need a single lookup—no package-level map is required.
-- **Helpers:** `registry.PairFromPairs`, `registry.MapFromPairs`, and (for legacy or map-based code paths) `registry.PairFromMap` / `registry.PairsFromMap` live in `registry/registry.go`. **`registry.KeysFromPairs`** returns keys in slice order (e.g. generators picking a random allowed value).
-- **Generators, form patchers, and tests** must use the **same `Key` string literals** as in the slice so inserts and validation stay aligned. Example: `plugins/p_nirmancampus_academicrecords` (`AcademicRecordStatusChoices`).
+- **`Key`** = persisted (DB, `<option value>`, POST). **`Value`** = UI label.
+- Slice order = UI order (`InputSelect`, filters, …). No parallel `const` / `switch` duplicating keys; same literals everywhere.
+- Detail / read-only stored key → `registry.ChoiceLabelGetter(getters.Key[string]("$in.Field"), MyFieldChoices)` → **`Value`** via `PairFromPairs`; unknown → raw key. No duplicate display getter.
+- Forms / filters → `components.InputSelect[string]`, `Choices: getters.Static(MyFieldChoices)`. Current value → `registry.PairFromPairs(s, MyFieldChoices)` when `s` non-empty; unknown legacy → `registry.Pair[string, string]{Key: s, Value: s}`.
+- Map helpers → `registry.MapFromPairs`, `registry.PairFromMap`. Single lookup → slice + `PairFromPairs` enough; no package map required.
+- Helpers in `registry/registry.go`: `PairFromPairs`, `MapFromPairs`, `PairFromMap`, `PairsFromMap`, **`KeysFromPairs`** (slice order, e.g. random allowed value).
+- Generators / form patchers / tests → **same `Key` literals** as slice. Example: `plugins/p_nirmancampus_academicrecords` (`AcademicRecordStatusChoices`).
 
 # Environment selector
 
-- `components.Environment[T]` (`components/environment.go`) renders a `<select>` that reads and writes the `environment` JSON cookie; the parsed map is available as `$environment` (`map[string]string`) on the request context.
-- `Options` should be a `Getter` returning `[]registry.Pair[T, string]` from `registry/registry.go`: **Key** is the option id (stored in the cookie and sent as `<option value>`), **Value** is the display label. Keys are stringified with `fmt.Sprint` for HTML and for comparing to the cookie string.
-- `Default` is optional. When the cookie has no entry for `Key`, it runs; a **zero** `T` means “no default” (do not treat as a selected id).
-- Register `Environment` as **`&components.Environment[T]{...}`** inside `[]PageInterface` (and in registries that expect pointers) so the node implements `MutableParentInterface` and remains patchable—the same pointer rule as other `PageInterface` children.
-- List views, query patchers, and any other code that scopes data by the user’s choice must read the same cookie value and parse it the same way (e.g. numeric id string for `Environment[uint]`).
+- `components.Environment[T]` (`environment.go`) → `<select>` on `environment` JSON cookie; parsed map `$environment` (`map[string]string`) on context.
+- `Options` → `Getter` returning `[]registry.Pair[T, string]`: **Key** = cookie id / `<option value>`, **Value** = label. Keys stringified with `fmt.Sprint` for HTML + cookie compare.
+- `Default` optional. Cookie missing key → runs; **zero** `T` = no default (not "selected id").
+- Register **`&components.Environment[T]{...}`** in `[]PageInterface` / registries needing pointers → `MutableParentInterface`, patchable (same pointer rule as other children).
+- List views / query patchers scoping by user choice → read same cookie, same parse (e.g. numeric id string for `Environment[uint]`).
 
 # SQL identifiers (PostgreSQL)
 
-- Column names **`start`** and **`end`** must be quoted in GORM `Order` clauses and other raw SQL fragments, e.g. `` Order(`"start" ASC`) `` or `Where(`"start" <= ? AND "end" >= ?`, ...)`, because unquoted `start` is not a valid column reference in PostgreSQL.
+- Columns **`start`**, **`end`** → quote in GORM `Order` / raw SQL: `` Order(`"start" ASC`) ``, `Where(`"start" <= ? AND "end" >= ?`, ...)`. Unquoted `start` invalid in PostgreSQL.
 
 # Registry
 
-Anything that needs to be patchable on an app-wide scale should be done via a registry from `registry/registry.go`.
+App-wide patchability → registry from `registry/registry.go`.
 
-Registries use the `Register` method to add to the registry and the `Patch` method to register a patch for an existing element in the registry.
+- `Register` adds; `Patch` patches existing entry.
 
-Existing registries:
-   - `lago/registry_commands.go` for adding custom commands
-   - `lago/registry_config.go` for adding config fields to `totschool.toml`
-   - `lago/registry_generators.go` for adding generators that run when the `generate` command is run
-   - `lago/registry_layers.go` for adding global layers, generally not needed
-   - `lago/registry_pages.go` for adding pages; always insert a pointer to a `PageInterface` implementer
-   - `lago/registry_plugins.go` for adding plugin information, primarily used by `p_dashboard/components/apps_grid.go`
-   - `lago/registry_routes.go` for adding HTTP routes
-   - `lago/registry_views.go` for adding views (see the views section below)
-   - `lago/regsitry_dbinit.go` for adding functions that run after the database is initialized; run model automigrations here
+Existing:
 
-# Plugin page source files (layout convention)
+- `lago/registry_commands.go` — commands
+- `lago/registry_config.go` — `totschool.toml` fields
+- `lago/registry_generators.go` — `generate` command
+- `lago/registry_layers.go` — global layers (rare)
+- `lago/registry_pages.go` — pages; always **pointer** to `PageInterface`
+- `lago/registry_plugins.go` — plugin metadata (`p_dashboard` apps grid)
+- `lago/registry_routes.go` — HTTP routes
+- `lago/registry_views.go` — views (see Views)
+- `lago/registry_dbinit.go` — post-DB-init fns; automigrations here
 
-For plugins with many registered pages, prefer **several files in the plugin root** (same package as the rest of the plugin), not a separate `pages/` or `models/` subpackage, unless there is a strong reason to split packages.
+# Plugin page source files (layout)
 
-- **`pages.go`** — `init()` that calls `registerMenuPages`, `registerFilterPages`, etc., plus **small** shared wiring (e.g. sidebar menus). Keep this file short when possible.
-- **`pages_<area>.go`** — larger page trees: name by concern, e.g. `pages_form.go` (create/update and shared form fields), `pages_detail.go` (detail view and closely related UI such as a delete confirmation modal), `pages_table.go` (list filters, main list table, and selection modal when they belong together), `pages_structure.go` (a sizeable secondary feature).
-- **Rule of thumb:** treat **detail**, **forms**, and **list/filter/table** surfaces as the primary splits when those definitions are large; merge **tiny** registrations into `pages.go` or into the most related larger file so the layout stays maintainable.
-- **Size:** aim for roughly **200–400 lines per file** where practical. Going slightly over is fine for cohesion; avoid many separate files that are only a few dozen lines each unless the boundary is conceptually important.
+Many pages → **several files in plugin root** (same package), not `pages/` / `models/` subpackage unless strong reason.
 
-See `plugins/p_nirmancampus_programs` for a concrete layout using this pattern.
+- **`pages.go`** — `init()` → `registerMenuPages`, `registerFilterPages`, …; small shared wiring (sidebars). Keep short.
+- **`pages_<area>.go`** — big trees by concern: `pages_form.go`, `pages_detail.go`, `pages_table.go`, `pages_structure.go`, …
+- Split heuristic: detail / forms / list-filter-table when large; tiny bits → `pages.go` or nearest big file.
+- Target ~**200–400 lines**/file when practical; cohesion > micro-files unless boundary matters.
+
+Example: `plugins/p_nirmancampus_programs`.
 
 # Plugin actions (`actions.go`, `actions_*.go`)
 
-- **Files:** `actions.go` holds action functions for the plugin; split into **`actions_<area>.go`** when one file gets large or concerns separate domains (same idea as `pages_<area>.go`). Keep everything in the **plugin root package**, not a subpackage.
-- **Role:** functions that **take, mutate, load, or return** one or more **data models** (GORM structs and related types). This is where **domain / business logic** lives—rules, invariants, orchestration across models, and operations that are not just HTTP or UI wiring.
-- **Not here:** page trees (`pages*.go`), view layers and handlers, thin `init()` registration only, or getters whose job is only to read request context for components. Call actions from views, commands, generators, or other actions when behavior belongs in the domain layer.
-- **Mental model:** like **methods on a Django model class** (or small groups of related model operations): behavior centered on the model(s), callable from multiple entry points (HTTP, CLI, jobs), instead of duplicating the same logic inside each handler.
+- **`actions.go`** + **`actions_<area>.go`** when large / separate domains. Plugin root package only.
+- **Here:** fns that **take / mutate / load / return** models (GORM + related). Domain logic: rules, invariants, orchestration, not pure HTTP/UI wiring.
+- **Not here:** page trees, view layers/handlers, bare `init()`, getters that only read context for components. Views / commands / generators / other actions call in when behavior = domain.
+- Mental model: Django model methods — behavior on model(s), many entry points, no duplicated handler logic.
 
-# HTTP routes nested under another app's prefix
+# HTTP routes under another app's prefix
 
-When a plugin mounts HTTP routes under another plugin's `AppUrl` (e.g. Students at `/students/`), use an **`addon/<slug>/`** segment after that base so your subtree does not structurally overlap the host's dynamic routes.
+Plugin mounts under host `AppUrl` (e.g. `/students/`) → use **`addon/<slug>/`** after base so subtree doesn't collide with host `{id}` routes.
 
-- **Convention:** `HostAppUrl + "addon/" + <short-slug> + "/"` as the route prefix for the nested feature (e.g. `p_nirmancampus_students.AppUrl + "addon/academicrecords/"` → `/students/addon/academicrecords/`).
-- **Why:** `http.ServeMux` rejects patterns that both match some paths. A host app often has `/prefix/{id}/`, `/prefix/{id}/edit/`, `/prefix/{id}/delete/`, etc. A naive path like `/prefix/academicrecords/...` can match those patterns with `id` interpreted as `academicrecords`, or collide with `/prefix/{id}/delete/` when a segment is `delete`. The fixed `addon/` segment keeps the nested feature's paths longer and unambiguous relative to `{id}` routes.
-- Prefer **`PluginTypeAddon`** in `registry_plugins.go` when the nested feature is not its own dashboard app tile; link into it from the host app's menu or UI.
+- Prefix: `HostAppUrl + "addon/" + short-slug + "/"` (e.g. `p_nirmancampus_students.AppUrl + "addon/academicrecords/"`).
+- **Why:** `http.ServeMux` rejects overlapping patterns. Host has `/prefix/{id}/`, `.../edit/`, `.../delete/`. Naive `/prefix/academicrecords/...` can bind `id=academicrecords` or clash with `delete`. Fixed `addon/` segment disambiguates.
+- Nested feature not own dashboard tile → prefer **`PluginTypeAddon`**; link from host menu/UI.
 
 # Views
 
-A view is the primary HTTP handler for a route. A `*views.View` (`views/views.go`) is only:
+View = primary HTTP handler for route. `*views.View` (`views/views.go`):
 
-- which `PageInterface` to render (`PageName` + `PageLookup`)
-- an **ordered** list of per-route layers (`Layers`), each implementing `views.Layer` (`Next(View, http.Handler) http.Handler`)
+- Which `PageInterface` (`PageName` + `PageLookup`)
+- **Ordered** `Layers` (`views.Layer` → `Next(View, http.Handler) http.Handler`)
 
-Global HTTP concerns (DB via `getters.ContextKeyDB`, `$request`, etc.) live in `views.GlobalLayer` and app registration, not inside the view struct. Build routes from `lago.GetPageView("plugin.PageName")`, then chain `WithLayer("stable.key", layer)`.
+Global concerns (`getters.ContextKeyDB`, `$request`, …) → `views.GlobalLayer` + app registration, not inside view struct. Routes: `lago.GetPageView("plugin.PageName")`, then `WithLayer("stable.key", layer)`.
 
+**HTMX redirects:** `views.HtmxRedirect(w, r, url, code)` (`htmx_redirect.go`) instead of raw `http.Redirect` for user navigation. `HX-Request` → `HX-Redirect` + 200; else `http.Redirect` with same `code`. Rare bypass only. `lago.RedirectView` + `RedirectLayer` + `views.HtmxRedirect(..., http.StatusMovedPermanently)`.
 
-**HTMX redirects:** use `views.HtmxRedirect(w, r, url, code)` (`views/htmx_redirect.go`) anywhere you would call `http.Redirect` for user-visible navigation. When `HX-Request` is `true`, it sets the `HX-Redirect` header and responds with `200`; otherwise it calls `http.Redirect` with the same `code` you pass (e.g. `http.StatusSeeOther` after POST, `http.StatusMovedPermanently` where appropriate). Do not call `http.Redirect` directly in app or plugin handlers unless you have a rare reason to bypass HTMX. `lago.RedirectView` registers a view whose `RedirectLayer` resolves a URL getter and ends with `views.HtmxRedirect(..., http.StatusMovedPermanently)`.
+**Typed CRUD layers** (one concern each; order matters):
 
-**Typed CRUD layer** (each owns one concern; order matters):
+- `LayerList[T]` — paginated list from URL; `components.ObjectList[T]` in context under `Key`; merge filters into `$get`; coerce from page's first form if present. Fail → `_global` in `getters.ContextKeyError`, `next` (no HTTP error response).
+- `LayerDetail[T]` — load one row by path PK; **before** update/delete needing same row. Same error pattern on fail.
+- `LayerCreate[T]` — POST create; success sets `$id`.
+- `LayerUpdate[T]` — POST update; record usually already in ctx (`LayerDetail` before).
+- `LayerDelete[T]` — POST delete (not HTTP DELETE; matches confirm forms).
+- `LayerSingleton[T]` — singleton GET/POST load/create.
+- `LayerJsonImport[T]` — JSON import.
+- `MethodLayer` — custom method handler.
 
-- `views.LayerList[T]` — paginated list query from URL params; puts `components.ObjectList[T]` in context under `Key`; merges filter/query state into `$get` (and coerces types from the page’s first form when present). On failure it sets `_global` in `getters.ContextKeyError` and calls `next` (no direct error HTTP response).
-- `views.LayerDetail[T]` — load one row by path param PK; place **before** update/delete layer that needs the same record. Same error pattern as list on failure.
-- `views.LayerCreate[T]` — POST create; sets `$id` on success.
-- `views.LayerUpdate[T]` — POST update; expects the record already in context (usually after `LayerDetail`).
-- `views.LayerDelete[T]` — POST delete (not HTTP `DELETE`; matches confirmation forms).
-- `views.LayerSingleton[T]` — singleton settings load/create on GET/POST.
-- `views.LayerJsonImport[T]` — JSON file import.
-- `views.MethodLayer` — custom handler for a specific HTTP method.
+**Query patching:** `views.QueryPatchers[T]` (`registry.Pair`s) on `LayerList` / `LayerDetail` / `LayerUpdate`. Prefer `views/query_patcher_*.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T,TJoin]` (reads `$get`). No duplicate ad-hoc query when these enough.
 
-**Query patching:** attach `views.QueryPatchers[T]` (named `registry.Pair`s) on `LayerList`, `LayerDetail`, or `LayerUpdate`. Prefer the built-in patchers in `views/query_patcher_*.go`: `QueryPatcherPreload[T]`, `QueryPatcherOrderBy[T]`, `QueryPatcherJoinFilter[T, TJoin]` (reads filter values from `$get`). Do not duplicate ad-hoc query logic when these suffice.
+- **`QueryPatcherPreload[T]`** (`query_patcher_preload.go`): **`Fields []string`** = GORM association names / dotted paths (same as `Preload`). Order preserved. **`Fields` empty** → no preloads that patcher.
+- **One preload patcher per layer:** single `registry.Pair`, one `QueryPatcherPreload[T]{Fields: [...]}` listing all associations for layer. Stable key e.g. **`"myplugin.preload"`** so other plugins replace/wrap one logical hook.
 
-- **`QueryPatcherPreload[T]`** (`views/query_patcher_preload.go`): set **`Fields []string`** to GORM association names or dotted paths (same strings you would pass to `Preload`, e.g. `"Student"`, `"AcademicRecord.Program"`, many-to-many field names). Each string is preloaded in order; **`Fields` empty → no preloads** for that patcher.
-- **One preload patcher per layer:** prefer a **single** `registry.Pair` whose `Value` is one `QueryPatcherPreload[T]{Fields: []string{...}}` listing every association needed for that layer, instead of multiple pairs each preloading one field. Use a **stable key** such as **`"myplugin.preload"`** (or another clear single name) for that pair so other plugins can replace or wrap one logical preload hook.
+**Form patching:** `views.FormPatchers` on `LayerCreate` / `LayerUpdate` (`form_patchers.go`). `InputManyToMany.Parse` → `AssociationIDs`; create/update/singleton persists M2M via GORM after row save — not plain scalar columns.
 
-**Form patching:** attach `views.FormPatchers` on `LayerCreate` and `LayerUpdate` (`views/form_patchers.go`). `InputManyToMany.Parse` still yields `AssociationIDs`; create/update/singleton layer persists many-to-many via GORM after the row save—do not model those inputs as plain scalar columns.
+- **Form patcher map:** after `view.ParseForm`, each entry = **concrete type** from that input's `Parse`. Validation: **one type** per field — one assertion or one owned `case`, not `switch` across `uint` / `*uint` / `int` / … Repo norms: `InputForeignKey` → **`uint`**; `InputDuration` → **`*time.Duration`**. Missing / wrong type / invalid (nil duration, zero id when forbidden) → **field error**; fix input or patcher contract, don't widen types.
 
-- **Form patcher values:** after `view.ParseForm`, each map entry has the **concrete type** produced by that input’s `Parse`. Treat each field as **exactly one type** in validation helpers: use a single type assertion (or a single `case` you truly own), not a `switch` over `uint` / `*uint` / `int` / `int64` / etc. Examples aligned with components in this repo: `InputForeignKey` → **`uint`** for the FK id; `InputDuration` → **`*time.Duration`** (see `components.InputDuration.Parse`). If the value is missing, the wrong type, or semantically invalid (e.g. nil duration, zero id when forbidden), return a **field error**—fix the input or the patcher contract instead of widening accepted shapes.
+**Cross-plugin view patches:** stable string key per layer (`"students.detail"`). Other packages → `InsertLayerBefore` / `InsertLayerAfter` / `PatchLayer` on those keys. No fragile position.
 
-**Patching views across plugins:** give every layer a stable string key (e.g. `"students.detail"`). Other packages should use `InsertLayerBefore`, `InsertLayerAfter`, or `PatchLayer` against those keys—not fragile positional assumptions.
+**Extra context on another plugin's page** (e.g. related `ObjectList` on base detail): don't hide DB in component getter. Small `views.Layer`, load in `Next`, `context.WithValue`, register/patch **after** parent-record layer (`InsertLayerAfter("base.detail", "myplugin.extra", …)`). `DataTable` → `getters.Key[...]` on that key.
 
-**Extra context on another plugin’s page** (e.g. related `ObjectList` on a base detail view): do **not** hide DB access inside a component getter. Implement a small type that satisfies `views.Layer`, load data in `Next`, `context.WithValue` the result, and register or patch it onto the base view **after** the layer that provides the parent record (e.g. `InsertLayerAfter("base.detail", "myplugin.extra", myLayer{})`). Point `DataTable` (or similar) at that context key with `getters.Key[...]`.
-
-**Custom forms and errors:** use `view.ParseForm` and `views.ContextWithErrorsAndValues` to re-render with field/global errors; do not recreate removed helpers like `HasErrors` / `RenderWithErrors`.
+**Custom forms / errors:** `view.ParseForm` + `views.ContextWithErrorsAndValues`. Don't resurrect removed `HasErrors` / `RenderWithErrors` patterns.
 
 # Error handling
 
-Error handling is very important. If an error occurs that could make the program behave incorrectly, it is preferable to panic rather than keep it running in a bad state.
+Wrong state from error → prefer **panic** over limping.
 
-Whenever a recoverable error occurs, it should be logged, no matter how unlikely.
+Recoverable error → **always** log.
 
-All edge cases need to be logged, no edge case should ever be ignored.
+Edge cases → log. Never silent ignore.
 
-Use `log/slog` for recoverable errors and `log.Panicf()` for non-recoverable errors.
+`log/slog` recoverable; `log.Panicf` non-recoverable.
 
-# Component Patching
+# Component patching
 
-Use the tree helpers in `components/parent.go`: `components.InsertChildBefore`, `components.InsertChildAfter`, `components.ReplaceChild`, and `components.RemoveChild`. They recurse through `MutableParentInterface` children and match by **concrete component type + `Page.Key`**.
+`components/parent.go`: `InsertChildBefore`, `InsertChildAfter`, `ReplaceChild`, `RemoveChild`. Recurse `MutableParentInterface`; match **concrete type + `Page.Key`**.
 
-- To **remove** a node from another plugin’s page tree, call `RemoveChild` with that node’s type and key (for example `components.RemoveChild[*components.ButtonLink](scaffold, "users.AuthSignupLink")`). Do **not** reimplement removal by walking the tree, comparing URLs/labels, or rebuilding child slices unless no stable key exists yet.
+- Remove node from other plugin → `RemoveChild` with type + key (e.g. `RemoveChild[*components.ButtonLink](scaffold, "users.AuthSignupLink")`). No custom tree walk by URL/label / slice rebuild unless no stable key yet.
 
-- If a page or form is intended to be extended by another plugin, add stable `Page.Key` values in the base plugin first, then patch against those keys. Do not rely on brittle structural matching when a reusable extension point can be made explicit.
+- Page/form meant for extension → stable `Page.Key` in base first; patch on keys. No brittle structure matching when explicit extension point possible.
 
-- If a selector route/page is generally useful beyond one addon, add it to the base plugin instead of creating a one-off copy in the addon plugin.
+- Selector route useful beyond one addon → put in base plugin, not addon copy.
 
 # Generators
 
-- Plugins register data generators via `lago.RegistryGenerator.Register("name", lago.Generator{Create: ..., Remove: ...})` inside their `init()` func.
-- Execution order is strictly determined by the `GeneratorOrder` array defined in the deployment's TOML config (e.g., `nirmancampus.toml`).
-- `RunGenerators` executes in two phases to respect foreign-key constraints:
-  - **Phase 1 (Remove):** Iterates *backwards* through the TOML list, deleting dependent tables before base tables.
-  - **Phase 2 (Create):** Iterates *forwards* through the TOML list, creating base tables before dependent ones.
-- **Many-to-Many Cleanup:** When writing a generator's `Remove` function, you must manually issue raw SQL to clear any many-to-many join tables (e.g., `db.Exec("DELETE FROM student_assets")`) before deleting the primary model, because GORM/PostgreSQL will not automatically cascade delete rows from many-to-many join tables, resulting in FK violation errors.
+- Register: `lago.RegistryGenerator.Register("name", lago.Generator{Create: …, Remove: …})` in `init()`.
+- Order = deployment TOML `GeneratorOrder` (e.g. `nirmancampus.toml`).
+- `RunGenerators`: **Phase 1 Remove** — reverse TOML order (dependents before bases). **Phase 2 Create** — forward (bases before dependents).
+- **M2M cleanup:** `Remove` must raw-SQL clear join tables (`db.Exec("DELETE FROM student_assets")`) before deleting primary row — GORM/PostgreSQL won't cascade M2M joins → FK errors otherwise.

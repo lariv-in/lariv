@@ -16,5 +16,5 @@ func loadWebsiteIntelKind(ctx context.Context, db *gorm.DB, id uint) (p_seer_int
 	if err := db.WithContext(ctx).First(&w, id).Error; err != nil {
 		return nil, err
 	}
-	return &w, nil
+	return new(w), nil
 }

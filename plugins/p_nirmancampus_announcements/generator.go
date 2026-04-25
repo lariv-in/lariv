@@ -36,7 +36,7 @@ func pickCreatedByForAnnouncements(db *gorm.DB) *uint {
 		}
 	}
 	id := u.ID
-	return &id
+	return new(id)
 }
 
 func init() {

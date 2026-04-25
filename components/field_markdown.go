@@ -24,7 +24,7 @@ func ParseMarkdownAST(md string) ast.Node {
 
 type FieldMarkdown struct {
 	Page
-	Getter getters.Getter[string]
+	Getter  getters.Getter[string]
 	Classes string
 	// RenderHooks is optional. When non-nil, called with request context and the markdown
 	// string from Getter; returned hooks run outermost-first (before built-in styling hooks).
@@ -47,6 +47,9 @@ func appendOrAssign(attr *ast.Attribute, values ...string) *ast.Attribute {
 }
 
 func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+	if !entering {
+		return ast.GoToNext, false
+	}
 	if n, ok := node.(*ast.Heading); ok {
 		if n.Level == 1 {
 			n.Attribute = appendOrAssign(n.Attribute, "text-2xl", "font-bold")
@@ -65,11 +68,12 @@ func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus
 		n.Attribute = appendOrAssign(n.Attribute, "my-2")
 	}
 	if n, ok := node.(*ast.List); ok {
-		if n.ListFlags&ast.ListTypeTerm != 0 {
-			n.Attribute = appendOrAssign(n.Attribute, "list-disc")
-		}
+		// ListTypeTerm is definition-list markup, not bullet UL. Bullet / loose lists
+		// have neither Ordered nor Term; they still need list-disc for Tailwind.
 		if n.ListFlags&ast.ListTypeOrdered != 0 {
 			n.Attribute = appendOrAssign(n.Attribute, "list-decimal")
+		} else {
+			n.Attribute = appendOrAssign(n.Attribute, "list-disc")
 		}
 		n.Attribute = appendOrAssign(n.Attribute, "my-2", "gap-2", "list-inside")
 	}

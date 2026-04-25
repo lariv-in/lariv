@@ -96,7 +96,7 @@ func (e InputDuration) Parse(v any, _ context.Context) (any, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid duration")
 	}
-	return &d, nil
+	return new(d), nil
 }
 
 func (e InputDuration) GetName() string {

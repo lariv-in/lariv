@@ -87,7 +87,7 @@ func normalizeWebsiteURL(raw string) (*url.URL, error) {
 	}
 	query := out.Query()
 	out.RawQuery = query.Encode()
-	return &out, nil
+	return new(out), nil
 }
 
 // fetchableWebsiteURL validates scheme/host and SSRF policy, returning canonical [*url.URL].

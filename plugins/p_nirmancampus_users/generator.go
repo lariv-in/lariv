@@ -18,7 +18,7 @@ func CreateSampleAdmin(db *gorm.DB) (*p_users.User, error) {
 	existing, err := gorm.G[p_users.User](db).Where("email = ?", sampleEmail).First(context.Background())
 	if err == nil {
 		fmt.Println("Sample admin (admin1) already exists")
-		return &existing, nil
+		return new(existing), nil
 	}
 
 	role := p_users.Role{Name: "admin"}
@@ -36,7 +36,7 @@ func CreateSampleAdmin(db *gorm.DB) (*p_users.User, error) {
 	}
 
 	fmt.Println("Created sample admin (admin1@lariv.in)")
-	return &user, nil
+	return new(user), nil
 }
 
 func init() {

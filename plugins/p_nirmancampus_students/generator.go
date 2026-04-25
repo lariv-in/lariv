@@ -37,7 +37,7 @@ func randomDOB() *time.Time {
 	yearsAgo := rand.Intn(16) + 5
 	daysOffset := rand.Intn(365)
 	dob := time.Date(now.Year()-yearsAgo, 1, 1+daysOffset, 0, 0, 0, 0, time.UTC)
-	return &dob
+	return new(dob)
 }
 
 var fathersNamePrefixes = []string{
@@ -132,7 +132,7 @@ func assignStudentPhoto(db *gorm.DB, files []p_filesystem.VNode) (photoID *uint,
 	if len(filesOut) > 0 && rand.Intn(100) < 80 {
 		picked := filesOut[rand.Intn(len(filesOut))]
 		id := picked.ID
-		return &id, filesOut, nil
+		return new(id), filesOut, nil
 	}
 	node, genErr := p_filesystem.GeneratePhotoFile(db)
 	if genErr != nil {
@@ -144,7 +144,7 @@ func assignStudentPhoto(db *gorm.DB, files []p_filesystem.VNode) (photoID *uint,
 		if err != nil {
 			return nil, filesOut, err
 		}
-		return &id, filesOut, nil
+		return new(id), filesOut, nil
 	}
 	return nil, filesOut, nil
 }
@@ -185,7 +185,7 @@ func CreateSampleStudent(db *gorm.DB) (*Student, error) {
 	err := db.Where("email = ?", sampleEmail).First(&existing).Error
 	if err == nil {
 		fmt.Println("Sample student (student1) already exists")
-		return &existing, nil
+		return new(existing), nil
 	}
 
 	dob := time.Date(2010, 6, 15, 0, 0, 0, 0, time.UTC)
@@ -219,7 +219,7 @@ func CreateSampleStudent(db *gorm.DB) (*Student, error) {
 	}
 
 	fmt.Println("Created sample student (student1@lariv.in)")
-	return &student, nil
+	return new(student), nil
 }
 
 func init() {

@@ -47,7 +47,7 @@ func GetVNodeByID(db *gorm.DB, id uint) (*VNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &node, nil
+	return new(node), nil
 }
 
 func GetVNodeByPath(db *gorm.DB, rawPath string) (*VNode, string, error) {

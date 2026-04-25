@@ -16,5 +16,5 @@ func loadRedditPostIntelKind(ctx context.Context, db *gorm.DB, id uint) (p_seer_
 	if err := db.WithContext(ctx).First(&rp, id).Error; err != nil {
 		return nil, err
 	}
-	return &rp, nil
+	return new(rp), nil
 }
