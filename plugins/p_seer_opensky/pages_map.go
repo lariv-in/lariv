@@ -143,15 +143,31 @@ func (e *openskyMapLibreMount) Build(ctx context.Context) Node {
     var idata = x.getImageData(0, 0, sz, sz);
     try { map.addImage("opensky-plane", idata, { pixelRatio: 1 }); } catch (e1) { try { map.addImage("opensky-plane", idata); } catch (e2) {} }
   }
+  function extrapolateCoordinate(lng, lat, heading, velocityMps, lastContact) {
+    lng = +lng; lat = +lat;
+    var vm = +velocityMps, hd = +heading, lc = +lastContact;
+    if (!isFinite(lng) || !isFinite(lat)) { return [0, 0]; }
+    if (!isFinite(vm) || vm <= 0 || !isFinite(lc) || lc <= 0) { return [lng, lat]; }
+    if (!isFinite(hd)) { hd = 0; }
+    var nowSec = Date.now() / 1000;
+    var dt = Math.max(0, nowSec - lc);
+    var brad = hd * Math.PI/180;
+    var m = vm * dt;
+    var latrad = lat * Math.PI/180;
+    var dN = m * Math.cos(brad);
+    var dE = m * Math.sin(brad);
+    return [lng + dE/(111320*Math.max(0.01, Math.cos(latrad))), lat + dN/111320];
+  }
   function buildFC(ac) {
     return {
       type: "FeatureCollection",
       features: (ac || []).map(function (a) {
+        var coords = extrapolateCoordinate(a.lng, a.lat, a.heading, a.velocityMps, a.lastContact);
         return {
           type: "Feature", id: a.icao24,
-          geometry: { type: "Point", coordinates: [a.lng, a.lat] },
+          geometry: { type: "Point", coordinates: coords },
           properties: {
-            heading: a.heading, title: a.title, detailPath: a.detailPath, icao: a.icao24, velocityMps: a.velocityMps || 0
+            heading: a.heading, title: a.title, detailPath: a.detailPath, icao: a.icao24, velocityMps: a.velocityMps || 0, lastContact: a.lastContact || 0
           }
         };
       })
@@ -161,9 +177,28 @@ func (e *openskyMapLibreMount) Build(ctx context.Context) Node {
     return (feats || []).map(function (f) {
       return {
         type: "Feature", id: f.id, geometry: { type: f.geometry.type, coordinates: f.geometry.coordinates.slice() },
-        properties: { heading: f.properties.heading, title: f.properties.title, detailPath: f.properties.detailPath, icao: f.properties.icao, velocityMps: f.properties.velocityMps }
+        properties: { heading: f.properties.heading, title: f.properties.title, detailPath: f.properties.detailPath, icao: f.properties.icao, velocityMps: f.properties.velocityMps, lastContact: f.properties.lastContact }
       };
     });
+  }
+  function mergeNewerFeatures(nextFeatures) {
+    var current = {}, out = [], i, f, key, old, nextLC, oldLC;
+    for (i = 0; i < workFeatures.length; i++) {
+      f = workFeatures[i];
+      if (!f || !f.properties) { continue; }
+      key = f.properties.icao || f.id;
+      if (key) { current[key] = f; }
+    }
+    for (i = 0; i < nextFeatures.length; i++) {
+      f = nextFeatures[i];
+      if (!f || !f.properties) { continue; }
+      key = f.properties.icao || f.id;
+      old = key ? current[key] : null;
+      nextLC = +(f.properties.lastContact || 0);
+      oldLC = old && old.properties ? +(old.properties.lastContact || 0) : -1;
+      out.push(old && nextLC <= oldLC ? old : f);
+    }
+    return out;
   }
   function removeAircraft() {
     closePopup();
@@ -245,11 +280,11 @@ func (e *openskyMapLibreMount) Build(ctx context.Context) Node {
   function replaceAircraft(ac) {
     aircraft = Array.isArray(ac) ? ac : [];
     var g = buildFC(aircraft);
-    workFeatures = cloneWorkFeatures(g.features);
+    workFeatures = mergeNewerFeatures(cloneWorkFeatures(g.features));
     timePrev = 0;
     var src = map.getSource("opensky-aircraft");
     if (src && src.setData) {
-      src.setData(g);
+      src.setData({ type: "FeatureCollection", features: workFeatures });
       if (workFeatures.length) { startAnimation(); }
       return;
     }

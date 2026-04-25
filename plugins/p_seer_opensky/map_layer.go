@@ -20,12 +20,13 @@ import (
 const openskyMapAircraftKey = "seer_opensky.map_aircraft"
 
 // Max distinct aircraft on the map (by latest last_contact). Fetches up to 2 state rows per aircraft.
-const openskyMapMaxAircraft = 5000
+const openskyMapMaxAircraft = 20000
 
 // openSkyMapAircraft is the JSON payload for the map script (one feature per icao24).
 type openSkyMapAircraft struct {
 	Icao24      string  `json:"icao24"`
 	ID          uint    `json:"id"` // GORM id of the latest (newest last_contact) row
+	LastContact int64   `json:"lastContact"`
 	Lat         float64 `json:"lat"`
 	Lng         float64 `json:"lng"`
 	Heading     float64 `json:"heading"` // degrees, 0 = north, for icon-rotate
@@ -200,6 +201,7 @@ ORDER BY icao24, last_contact ASC, id ASC`
 			air: openSkyMapAircraft{
 				Icao24:      icao,
 				ID:          newest.ID,
+				LastContact: newest.LastContact,
 				Lat:         newest.Lat,
 				Lng:         newest.Lng,
 				Heading:     heading,

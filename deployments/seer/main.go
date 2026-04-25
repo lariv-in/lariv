@@ -9,6 +9,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_filesystem"
 	_ "github.com/lariv-in/lago/plugins/p_google_genai"
 	_ "github.com/lariv-in/lago/plugins/p_pwa"
+	_ "github.com/lariv-in/lago/plugins/p_seer_aisstream"
 	_ "github.com/lariv-in/lago/plugins/p_seer_assistant"
 	_ "github.com/lariv-in/lago/plugins/p_seer_deepsearch"
 	_ "github.com/lariv-in/lago/plugins/p_seer_gdelt"
