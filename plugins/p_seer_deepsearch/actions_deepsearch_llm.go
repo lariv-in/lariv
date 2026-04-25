@@ -49,7 +49,7 @@ func deepsearchModel() string {
 	return m
 }
 
-func deepsearchGenerateContentJSON[T any](ctx context.Context, system, user string, maxOut int32, temp *float32, thinking bool, out *T) (raw string, err error) {
+func deepsearchGenerateContentJSON[T any](ctx context.Context, system, user string, maxOut int32, temp *float32, out *T) (raw string, err error) {
 	client, err := p_google_genai.NewClient(ctx)
 	if err != nil {
 		return "", err
@@ -62,9 +62,6 @@ func deepsearchGenerateContentJSON[T any](ctx context.Context, system, user stri
 	}
 	if temp != nil {
 		cfg.Temperature = temp
-	}
-	if thinking {
-		cfg.ThinkingConfig = &genai.ThinkingConfig{ThinkingLevel: genai.ThinkingLevelMedium}
 	}
 	resp, err := client.Models.GenerateContent(ctx, deepsearchModel(), []*genai.Content{genai.NewContentFromText(user, genai.RoleUser)}, cfg)
 	if err != nil {
@@ -102,7 +99,7 @@ Prefer high-recall, diverse angles. At most 8 strings.`
 
 	var arr []string
 	expandTemp := float32(0.35)
-	_, err := deepsearchGenerateContentJSON(ctx, sys, userQuery, deepSearchExpandMaxOutputTokens(), &expandTemp, false, &arr)
+	_, err := deepsearchGenerateContentJSON(ctx, sys, userQuery, deepSearchExpandMaxOutputTokens(), &expandTemp, &arr)
 	if err != nil {
 		slog.Error("p_seer_deepsearch: expand queries", "error", err)
 		return nil, fmt.Errorf("p_seer_deepsearch: expand queries: %w", err)
@@ -222,7 +219,7 @@ Rules:
 		prompt.WriteString(strings.Join(transcript, "\n\n"))
 	}
 	prompt.WriteString(fmt.Sprintf("\n\nChoose next action for round %d.", round))
-	raw, err := deepsearchGenerateContentJSON(ctx, sys, prompt.String(), 512, nil, true, &out)
+	raw, err := deepsearchGenerateContentJSON(ctx, sys, prompt.String(), 512, nil, &out)
 	return out, raw, err
 }
 
@@ -254,7 +251,6 @@ Output markdown only.`
 		SystemInstruction: genai.NewContentFromText(sys, genai.RoleUser),
 		Temperature:       &reportTemp,
 		MaxOutputTokens:   deepSearchReportMaxOutputTokens(),
-		ThinkingConfig:    &genai.ThinkingConfig{ThinkingLevel: genai.ThinkingLevelMedium},
 	}
 	resp, err := client.Models.GenerateContent(ctx, deepsearchModel(), []*genai.Content{genai.NewContentFromText(prompt.String(), genai.RoleUser)}, cfg)
 	if err != nil {

@@ -35,6 +35,27 @@ type intelEventLLMOut struct {
 	Datetime string `json:"datetime"`
 }
 
+// intelEventExtractResponseJSONSchema is the output contract for [extractIntelEventFromSummary].
+// Use [genai.GenerateContentConfig.ResponseJsonSchema] (not ResponseSchema) so the Gemini
+// API reliably applies JSON mode; the OpenAPI-style response_schema path can be ignored
+// for some model/version combinations, yielding prose (e.g. "Here is…") instead of JSON.
+var intelEventExtractResponseJSONSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"address": map[string]any{
+			"type":        "string",
+			"description": "Concise postal-style or place name for geocoding; empty if none.",
+		},
+		"datetime": map[string]any{
+			"type":        "string",
+			"format":      "date-time",
+			"description": "Event time in RFC3339, UTC (e.g. 2006-01-02T15:04:05Z).",
+		},
+	},
+	"required":             []string{"address", "datetime"},
+	"additionalProperties": false,
+}
+
 // extractIntelEventFromSummary asks Gemini ([p_google_genai]) for a JSON object containing address + event time.
 func extractIntelEventFromSummary(ctx context.Context, summary string) (address string, eventTime time.Time, err error) {
 	summary = strings.TrimSpace(summary)
@@ -55,10 +76,10 @@ func extractIntelEventFromSummary(ctx context.Context, summary string) (address 
 		model,
 		[]*genai.Content{genai.NewContentFromText(userPrompt, genai.RoleUser)},
 		&genai.GenerateContentConfig{
-			SystemInstruction: genai.NewContentFromText(intelEventExtractSystemPrompt, genai.RoleUser),
-			ResponseMIMEType:  "application/json",
-			ResponseSchema:    p_google_genai.NewSchema[intelEventLLMOut](),
-			MaxOutputTokens:   256,
+			SystemInstruction:  genai.NewContentFromText(intelEventExtractSystemPrompt, genai.RoleUser),
+			ResponseMIMEType:   "application/json",
+			ResponseJsonSchema: intelEventExtractResponseJSONSchema,
+			MaxOutputTokens:    256,
 		},
 	)
 	if err != nil {

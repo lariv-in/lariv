@@ -35,7 +35,7 @@ const (
 	maxDeepSearchReportMaxOutputTokens     = 65536
 	defaultDeepSearchExpandMaxOutputTokens = 1024
 	maxDeepSearchExpandMaxOutputTokens     = 8192
-	defaultDeepSearchLlmModel              = "gemini-2.0-flash"
+	defaultDeepSearchLlmModel              = "gemini-2.5-flash"
 )
 
 func (c *DeepSearchConfig) PostConfig() {

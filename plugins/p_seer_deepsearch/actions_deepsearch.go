@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	maxTotalScrapeURLs        = 30
+	maxTotalScrapeURLs        = 200
 	maxGeneratedSearchQueries = 8
 	// deepSearchScrapeConcurrency limits parallel headless scrapes (shared browser / IO).
 	deepSearchScrapeConcurrency = 4
