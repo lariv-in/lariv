@@ -75,7 +75,10 @@ type RedditSource struct {
 
 	Subreddits    datatypes.JSON `gorm:"type:json"`
 	SearchQuery   string
-	MaxFreshPosts uint `gorm:"not null;default:25"`
+	// Filter is optional text (e.g. one pattern per line) interpreted as whitelist or blacklist per [IsFilterWhitelist].
+	Filter            string `gorm:"type:text;not null;default:''"`
+	IsFilterWhitelist bool   `gorm:"not null;default:false"`
+	MaxFreshPosts     uint   `gorm:"not null;default:25"`
 	// LoadWebsites when true: discovered http(s) URLs from fetched posts are sent to [p_seer_websites.WebsiteScrapeURLQueue].
 	LoadWebsites bool `gorm:"not null;default:false"`
 

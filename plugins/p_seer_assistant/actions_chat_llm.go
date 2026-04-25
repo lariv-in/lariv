@@ -61,12 +61,14 @@ type assistantToolEnvelope struct {
 	Tool           string   `json:"tool"`
 	Query          string   `json:"query,omitempty"`
 	Limit          int      `json:"limit,omitempty"`
-	RedditRunnerID *uint    `json:"reddit_runner_id,omitempty"`
-	Subreddits     []string `json:"subreddits,omitempty"`
-	SearchQuery    string   `json:"search_query,omitempty"`
-	MaxFreshPosts  uint     `json:"max_fresh_posts,omitempty"`
-	LoadWebsites   bool     `json:"load_websites,omitempty"`
-	RedditSourceID uint     `json:"reddit_source_id,omitempty"`
+	RedditRunnerID     *uint    `json:"reddit_runner_id,omitempty"`
+	Subreddits         []string `json:"subreddits,omitempty"`
+	SearchQuery        string   `json:"search_query,omitempty"`
+	Filter             string   `json:"filter,omitempty"`
+	IsFilterWhitelist  bool     `json:"is_filter_whitelist,omitempty"`
+	MaxFreshPosts      uint     `json:"max_fresh_posts,omitempty"`
+	LoadWebsites       bool     `json:"load_websites,omitempty"`
+	RedditSourceID     uint     `json:"reddit_source_id,omitempty"`
 	WorkerName     string   `json:"worker_name,omitempty"`
 	WorkerDuration string   `json:"worker_duration,omitempty"`
 	// Seer Websites (p_seer_websites); website_runner_id optional on add/edit source, required on website_edit_worker.
@@ -460,11 +462,13 @@ func runRedditAddSourceTool(ctx context.Context, tx *gorm.DB, env *assistantTool
 		runner = &id
 	}
 	p := p_seer_reddit.RedditSourceCreateParams{
-		RedditRunnerID: runner,
-		Subreddits:     env.Subreddits,
-		SearchQuery:    env.SearchQuery,
-		MaxFreshPosts:  env.MaxFreshPosts,
-		LoadWebsites:   env.LoadWebsites,
+		RedditRunnerID:     runner,
+		Subreddits:         env.Subreddits,
+		SearchQuery:        env.SearchQuery,
+		Filter:             env.Filter,
+		IsFilterWhitelist:  env.IsFilterWhitelist,
+		MaxFreshPosts:      env.MaxFreshPosts,
+		LoadWebsites:       env.LoadWebsites,
 	}
 	src, err := p_seer_reddit.CreateRedditSource(ctx, tx, p)
 	if err != nil {
@@ -485,11 +489,13 @@ func runRedditEditSourceTool(ctx context.Context, tx *gorm.DB, env *assistantToo
 	p := p_seer_reddit.RedditSourceUpdateParams{
 		SourceID: env.RedditSourceID,
 		RedditSourceCreateParams: p_seer_reddit.RedditSourceCreateParams{
-			RedditRunnerID: runner,
-			Subreddits:     env.Subreddits,
-			SearchQuery:    env.SearchQuery,
-			MaxFreshPosts:  env.MaxFreshPosts,
-			LoadWebsites:   env.LoadWebsites,
+			RedditRunnerID:     runner,
+			Subreddits:         env.Subreddits,
+			SearchQuery:        env.SearchQuery,
+			Filter:             env.Filter,
+			IsFilterWhitelist:  env.IsFilterWhitelist,
+			MaxFreshPosts:      env.MaxFreshPosts,
+			LoadWebsites:       env.LoadWebsites,
 		},
 	}
 	src, err := p_seer_reddit.UpdateRedditSource(ctx, tx, p)

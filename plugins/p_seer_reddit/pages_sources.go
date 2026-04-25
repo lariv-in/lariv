@@ -109,6 +109,21 @@ func redditSourceLoadWebsitesYesNoFromDetail(ctx context.Context) (string, error
 	return "No", nil
 }
 
+func redditSourceFilterDisplayFromDetail(ctx context.Context) (string, error) {
+	rs, err := getters.Key[RedditSource]("redditSource")(ctx)
+	if err != nil {
+		return "", err
+	}
+	t := strings.TrimSpace(rs.Filter)
+	if t == "" {
+		return "—", nil
+	}
+	if rs.IsFilterWhitelist {
+		return fmt.Sprintf("%s (whitelist)", t), nil
+	}
+	return fmt.Sprintf("%s (blacklist)", t), nil
+}
+
 func redditSourceSelectionLabel(subreddits []byte, searchQuery string) string {
 	label := formatSubredditsJSON(subreddits, 3)
 	if searchQuery == "" {
@@ -273,6 +288,12 @@ func registerRedditSourcePages() {
 								Title: "Search query",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Key[string]("$in.SearchQuery")},
+								},
+							},
+							&components.LabelInline{
+								Title: "Filter",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: redditSourceFilterDisplayFromDetail},
 								},
 							},
 							&components.LabelInline{

@@ -16,9 +16,11 @@ import (
 type RedditSourceCreateParams struct {
 	RedditRunnerID *uint
 	Subreddits     []string
-	SearchQuery    string
-	MaxFreshPosts  uint
-	LoadWebsites   bool
+	SearchQuery         string
+	Filter              string
+	IsFilterWhitelist   bool
+	MaxFreshPosts       uint
+	LoadWebsites        bool
 }
 
 // ValidateRedditSourceCreate returns field-level errors keyed like form fields (e.g. Subreddits). Empty map means valid.
@@ -71,11 +73,13 @@ func CreateRedditSource(ctx context.Context, db *gorm.DB, p RedditSourceCreatePa
 		runnerCopy = &v
 	}
 	src := RedditSource{
-		RedditRunnerID: runnerCopy,
-		Subreddits:     datatypes.JSON(b),
-		SearchQuery:    strings.TrimSpace(p.SearchQuery),
-		MaxFreshPosts:  maxFresh,
-		LoadWebsites:   p.LoadWebsites,
+		RedditRunnerID:      runnerCopy,
+		Subreddits:          datatypes.JSON(b),
+		SearchQuery:         strings.TrimSpace(p.SearchQuery),
+		Filter:              strings.TrimSpace(p.Filter),
+		IsFilterWhitelist:   p.IsFilterWhitelist,
+		MaxFreshPosts:       maxFresh,
+		LoadWebsites:        p.LoadWebsites,
 	}
 	if err := db.WithContext(ctx).Create(&src).Error; err != nil {
 		return RedditSource{}, err
@@ -120,6 +124,12 @@ func RedditSourceCreateParamsFromFormMap(formData map[string]any) (RedditSourceC
 	}
 	if sq, ok := formData["SearchQuery"].(string); ok {
 		p.SearchQuery = sq
+	}
+	if f, ok := formData["Filter"].(string); ok {
+		p.Filter = f
+	}
+	if w, ok := formData["IsFilterWhitelist"].(bool); ok {
+		p.IsFilterWhitelist = w
 	}
 	p.MaxFreshPosts = uintFromFormAny(formData["MaxFreshPosts"])
 	if lw, ok := formData["LoadWebsites"].(bool); ok {

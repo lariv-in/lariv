@@ -92,11 +92,13 @@ func UpdateRedditSource(ctx context.Context, db *gorm.DB, p RedditSourceUpdatePa
 		runnerCopy = &v
 	}
 	updates := map[string]any{
-		"reddit_runner_id": runnerCopy,
-		"subreddits":       datatypes.JSON(b),
-		"search_query":     strings.TrimSpace(p.SearchQuery),
-		"max_fresh_posts":  maxFresh,
-		"load_websites":    p.LoadWebsites,
+		"reddit_runner_id":      runnerCopy,
+		"subreddits":            datatypes.JSON(b),
+		"search_query":          strings.TrimSpace(p.SearchQuery),
+		"filter":                strings.TrimSpace(p.Filter),
+		"is_filter_whitelist":   p.IsFilterWhitelist,
+		"max_fresh_posts":       maxFresh,
+		"load_websites":         p.LoadWebsites,
 	}
 	if err := db.WithContext(ctx).Model(&RedditSource{}).Where("id = ?", p.SourceID).Updates(updates).Error; err != nil {
 		return RedditSource{}, err
