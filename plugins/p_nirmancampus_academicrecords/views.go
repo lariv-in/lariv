@@ -39,7 +39,7 @@ func init() {
 			WithLayer("academicrecords.list", views.LayerList[AcademicRecord]{
 				Key: getters.Static("academicrecords"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.filter_by_session", Value: AcademicRecordListSessionFilter},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
@@ -54,7 +54,7 @@ func init() {
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}),
@@ -89,7 +89,7 @@ func init() {
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}).
@@ -119,7 +119,7 @@ func init() {
 				Key:          getters.Static("academicrecord"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},
 			}).
@@ -139,7 +139,7 @@ func init() {
 			WithLayer("academicrecords.select", views.LayerList[AcademicRecord]{
 				Key: getters.Static("academicrecords"),
 				QueryPatchers: views.QueryPatchers[AcademicRecord]{
-					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "Session", "ProgramStructureUnit"}}},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.filter_by_session", Value: AcademicRecordListSessionFilter},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
 				},

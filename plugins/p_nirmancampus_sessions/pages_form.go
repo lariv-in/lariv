@@ -6,7 +6,6 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/registry"
 )
 
 func sessionFormFields() components.ContainerColumn {
@@ -39,18 +38,6 @@ func sessionFormFields() components.ContainerColumn {
 								Getter: getters.Key[string]("$in.Code"),
 							},
 						},
-					},
-				},
-			},
-			&components.ContainerError{
-				Error: getters.Key[error]("$error.SessionType"),
-				Children: []components.PageInterface{
-					&components.InputSelect[string]{
-						Label:    "Session type",
-						Name:     "SessionType",
-						Required: true,
-						Choices:  getters.Static(SessionTypeChoices),
-						Getter:   registry.PairFromGetter(getters.Key[string]("$in.SessionType"), SessionTypeChoices),
 					},
 				},
 			},
@@ -110,17 +97,17 @@ func registerFormPages() {
 				Name:      getters.Static("sessions.SessionCreateForm"),
 				ActionURL: lago.RoutePath("sessions.CreateRoute", nil),
 				Children: []components.PageInterface{
-					&components.FormComponent[Session]{
+					&components.FormComponent[AdmissionSession]{
 						Attr: getters.FormBubbling(getters.Static("sessions.SessionCreateForm")),
 
-						Title:    "Create Session",
-						Subtitle: "Create a new session",
+						Title:    "Create session (admission)",
+						Subtitle: "Add an admission period",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							sessionFormFields(),
 						},
 						ChildrenAction: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Save Session"},
+							&components.ButtonSubmit{Label: "Save"},
 						},
 					},
 				},
@@ -139,12 +126,12 @@ func registerFormPages() {
 					"id": getters.Any(getters.Key[uint]("session.ID")),
 				}),
 				Children: []components.PageInterface{
-					&components.FormComponent[Session]{
-						Getter: getters.Key[Session]("session"),
+					&components.FormComponent[AdmissionSession]{
+						Getter: getters.Key[AdmissionSession]("session"),
 						Attr:   getters.FormBubbling(getters.Static("sessions.SessionUpdateForm")),
 
-						Title:    "Edit Session",
-						Subtitle: "Update session details",
+						Title:    "Edit session (admission)",
+						Subtitle: "Update admission period",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							sessionFormFields(),
@@ -156,7 +143,7 @@ func registerFormPages() {
 									&components.ContainerRow{
 										Classes: "flex justify-end gap-2",
 										Children: []components.PageInterface{
-											&components.ButtonSubmit{Label: "Save Session"},
+											&components.ButtonSubmit{Label: "Save"},
 											&components.ButtonModalForm{
 												Label:       "Delete",
 												Icon:        "trash",

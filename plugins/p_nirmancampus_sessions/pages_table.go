@@ -6,11 +6,10 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/registry"
 )
 
 func registerFilterPages() {
-	lago.RegistryPage.Register("sessions.SessionFilter", &components.FormComponent[Session]{
+	lago.RegistryPage.Register("sessions.SessionFilter", &components.FormComponent[AdmissionSession]{
 		Attr: getters.FormBoostedGet(lago.RoutePath("sessions.DefaultRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
@@ -18,13 +17,6 @@ func registerFilterPages() {
 				Label:  "Code",
 				Name:   "Code",
 				Getter: getters.Key[string]("$get.Code"),
-			},
-			&components.InputSelect[string]{
-				Label:      "Session type",
-				Name:       "SessionType",
-				Choices:    getters.Static(SessionTypeChoices),
-				Getter:     registry.PairFromGetter(getters.Key[string]("$get.SessionType"), SessionTypeChoices),
-				EmptyLabel: "All",
 			},
 			&components.InputTernary{
 				Label:      "Active",
@@ -46,7 +38,7 @@ func registerFilterPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("sessions.sessionselectionFilter", &components.FormComponent[Session]{
+	lago.RegistryPage.Register("sessions.sessionselectionFilter", &components.FormComponent[AdmissionSession]{
 		Attr: getters.FormBoostedGet(lago.RoutePath("sessions.SelectRoute", nil)),
 
 		ChildrenInput: []components.PageInterface{
@@ -54,13 +46,6 @@ func registerFilterPages() {
 				Label:  "Code",
 				Name:   "Code",
 				Getter: getters.Key[string]("$get.Code"),
-			},
-			&components.InputSelect[string]{
-				Label:      "Session type",
-				Name:       "SessionType",
-				Choices:    getters.Static(SessionTypeChoices),
-				Getter:     registry.PairFromGetter(getters.Key[string]("$get.SessionType"), SessionTypeChoices),
-				EmptyLabel: "All",
 			},
 			&components.InputTernary{
 				Label:      "Active",
@@ -88,11 +73,13 @@ func registerTablePages() {
 			lago.DynamicPage{Name: "sessions.SessionMenu"},
 		},
 		Children: []components.PageInterface{
-			&components.DataTable[Session]{
-				Page:    components.Page{Key: "sessions.SessionTableBody"},
-				UID:     "session-table",
+			&components.FieldTitle{Getter: getters.Static("All Sessions"), Classes: "mb-4"},
+			&components.DataTable[AdmissionSession]{
+				Page:    components.Page{Key: "sessions.SessionTableBodyAdmission"},
+				UID:     "session-table-admission",
+				Title:   "Admission sessions",
 				Classes: "w-full",
-				Data:    getters.Key[components.ObjectList[Session]]("sessions"),
+				Data:    getters.Key[components.ObjectList[AdmissionSession]]("sessions"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "sessions.SessionFilter"}},
 					&components.TableButtonCreate{Link: lago.RoutePath("sessions.CreateRoute", nil)},
@@ -102,53 +89,66 @@ func registerTablePages() {
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
-				Columns: []components.TableColumn{
-					{
-						Label: "Name",
-						Name:  "Name",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
-						},
-					},
-					{
-						Label: "Code",
-						Name:  "Code",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$row.Code")},
-						},
-					},
-					{
-						Label: "Type",
-						Name:  "SessionType",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$row.SessionType"), SessionTypeChoices)},
-						},
-					},
-					{
-						Label: "Start",
-						Name:  "Start",
-						Children: []components.PageInterface{
-							&components.FieldDate{Getter: getters.Key[time.Time]("$row.Start")},
-						},
-					},
-					{
-						Label: "End",
-						Name:  "End",
-						Children: []components.PageInterface{
-							&components.FieldDate{Getter: getters.Key[time.Time]("$row.End")},
-						},
-					},
-					{
-						Label: "Active",
-						Name:  "IsActive",
-						Children: []components.PageInterface{
-							&components.FieldCheckbox{Getter: getters.Key[bool]("$row.IsActive")},
-						},
-					},
+				Columns: sessionTableColumns[AdmissionSession](),
+			},
+			&components.DataTable[ExamSession]{
+				Page:    components.Page{Key: "sessions.SessionTableBodyExam"},
+				UID:     "session-table-exam",
+				Title:   "Exam sessions",
+				Classes: "w-full",
+				Data:    getters.Key[components.ObjectList[ExamSession]]("exam_sessions"),
+				Actions: []components.PageInterface{
+					&components.TableButtonCreate{Link: lago.RoutePath("sessions.ExamCreateRoute", nil)},
 				},
+				RowAttr: getters.RowAttrNavigate(
+					lago.RoutePath("sessions.ExamDetailRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("$row.ID")),
+					}),
+				),
+				Columns: sessionTableColumns[ExamSession](),
 			},
 		},
 	})
+}
+
+func sessionTableColumns[T any]() []components.TableColumn {
+	return []components.TableColumn{
+		{
+			Label: "Name",
+			Name:  "Name",
+			Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Key[string]("$row.Name")},
+			},
+		},
+		{
+			Label: "Code",
+			Name:  "Code",
+			Children: []components.PageInterface{
+				&components.FieldText{Getter: getters.Key[string]("$row.Code")},
+			},
+		},
+		{
+			Label: "Start",
+			Name:  "Start",
+			Children: []components.PageInterface{
+				&components.FieldDate{Getter: getters.Key[time.Time]("$row.Start")},
+			},
+		},
+		{
+			Label: "End",
+			Name:  "End",
+			Children: []components.PageInterface{
+				&components.FieldDate{Getter: getters.Key[time.Time]("$row.End")},
+			},
+		},
+		{
+			Label: "Active",
+			Name:  "IsActive",
+			Children: []components.PageInterface{
+				&components.FieldCheckbox{Getter: getters.Key[bool]("$row.IsActive")},
+			},
+		},
+	}
 }
 
 // --- Detail & Delete ---

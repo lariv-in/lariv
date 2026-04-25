@@ -30,7 +30,7 @@ type AcademicRecord struct {
 	ProgramID              uint                                         `gorm:"not null;index"`
 	Program                p_nirmancampus_programs.Program              `gorm:"constraint:OnDelete:RESTRICT;foreignKey:ProgramID;references:ID"`
 	SessionID              uint                                         `gorm:"not null;index"`
-	Session                sessions.Session                             `gorm:"constraint:OnDelete:RESTRICT;foreignKey:SessionID;references:ID"`
+	AdmissionSession       sessions.AdmissionSession                    `gorm:"constraint:OnDelete:RESTRICT;foreignKey:SessionID;references:ID"`
 	ProgramStructureUnitID uint                                         `gorm:"not null;index"`
 	ProgramStructureUnit   p_nirmancampus_programs.ProgramStructureUnit `gorm:"constraint:OnDelete:RESTRICT;foreignKey:ProgramStructureUnitID;references:ID"`
 	Date                   time.Time                                    `gorm:"type:date"`
@@ -47,7 +47,7 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_academicrecords", lago.AdminPanel[AcademicRecord]{
 		SearchField: "Status",
-		ListFields:  []string{"Status", "ProgramStructureUnit.TermNumber", "Date", "Session.Name", "Program.Name", "Student.StudentNo", "UpdatedAt"},
-		Preload:     []string{"Student", "Program", "Session", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"},
+		ListFields:  []string{"Status", "ProgramStructureUnit.TermNumber", "Date", "AdmissionSession.Name", "Program.Name", "Student.StudentNo", "UpdatedAt"},
+		Preload:     []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit", "CompulsoryCourses", "OptionalCourses"},
 	})
 }

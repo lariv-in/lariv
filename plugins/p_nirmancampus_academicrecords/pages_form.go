@@ -166,14 +166,14 @@ func createFormFields() components.ContainerColumn {
 					&components.ContainerError{
 						Error: getters.Key[error]("$error.SessionID"),
 						Children: []components.PageInterface{
-							&components.InputForeignKey[sessions.Session]{
-								Label:       "Session",
+							&components.InputForeignKey[sessions.AdmissionSession]{
+								Label:       "Admission session",
 								Name:        "SessionID",
 								Required:    true,
 								Url:         lago.RoutePath("sessions.SelectRoute", nil),
 								Display:     getters.Key[string]("$in.Name"),
-								Placeholder: "Select a session…",
-								Getter: getters.Association[sessions.Session](
+								Placeholder: "Select an admission session…",
+								Getter: getters.Association[sessions.AdmissionSession](
 									getters.Key[uint]("$in.SessionID"),
 								),
 							},
@@ -370,9 +370,9 @@ func editFormFields() components.ContainerColumn {
 						},
 					},
 					&components.LabelInline{
-						Title: "Session",
+						Title: "Admission session",
 						Children: []components.PageInterface{
-							&components.FieldText{Getter: getters.Key[string]("$in.Session.Name")},
+							&components.FieldText{Getter: getters.Key[string]("$in.AdmissionSession.Name")},
 						},
 					},
 					&components.LabelInline{
@@ -493,7 +493,7 @@ func registerFormPages() {
 						Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
 						Title:    "Create Academic Record",
-						Subtitle: "Pick student, program, session, and status.",
+						Subtitle: "Pick student, program, admission session, and status.",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
 							createFormFields(),

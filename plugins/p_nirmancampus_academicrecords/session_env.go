@@ -22,7 +22,7 @@ func AcademicSessionsListGetter(ctx context.Context) ([]registry.Pair[uint, stri
 	if err != nil {
 		return []registry.Pair[uint, string]{}, nil
 	}
-	rows, err := gorm.G[sessions.Session](db).Order(`"start" DESC`).Find(ctx)
+	rows, err := gorm.G[sessions.AdmissionSession](db).Order(`"start" DESC`).Find(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +47,12 @@ func academicRecordsSessionEnvironmentDefault(ctx context.Context) (uint, error)
 }
 
 func defaultAcademicSessionID(ctx context.Context, db *gorm.DB) (uint, error) {
-	var active sessions.Session
+	var active sessions.AdmissionSession
 	err := db.Where("is_active = ?", true).Order(`"start" DESC`).First(&active).Error
 	if err == nil && active.ID != 0 {
 		return active.ID, nil
 	}
-	var latest sessions.Session
+	var latest sessions.AdmissionSession
 	err = db.Order(`"start" DESC`).First(&latest).Error
 	if err != nil {
 		return 0, err

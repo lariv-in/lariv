@@ -38,7 +38,7 @@ func init() {
 				Key:          getters.Static("assignmentsubmission"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
-					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.preload", Value: views.QueryPatcherPreload[AssignmentSubmission]{Fields: []string{"Course", "AcademicRecord.Student", "AcademicRecord.Program", "AcademicRecord.Session", "Assets"}}},
+					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.preload", Value: views.QueryPatcherPreload[AssignmentSubmission]{Fields: []string{"Course", "AcademicRecord.Student", "AcademicRecord.Program", "AcademicRecord.AdmissionSession", "Assets"}}},
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.scope_by_role", Value: AssignmentSubmissionScopeByRole},
 				},
 			}),
@@ -63,7 +63,7 @@ func init() {
 				Key:          getters.Static("assignmentsubmission"),
 				PathParamKey: getters.Static("id"),
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
-					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.preload", Value: views.QueryPatcherPreload[AssignmentSubmission]{Fields: []string{"Course", "AcademicRecord.Student", "AcademicRecord.Program", "AcademicRecord.Session", "Assets"}}},
+					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.preload", Value: views.QueryPatcherPreload[AssignmentSubmission]{Fields: []string{"Course", "AcademicRecord.Student", "AcademicRecord.Program", "AcademicRecord.AdmissionSession", "Assets"}}},
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{Key: "assignmentsubmissions.scope_by_role", Value: AssignmentSubmissionScopeByRole},
 				},
 			}).

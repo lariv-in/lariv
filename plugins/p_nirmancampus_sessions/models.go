@@ -6,71 +6,97 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
-// Session represents an academic session window.
-//
-// Source parity notes (Django):
-// - code is optional on create, auto-generated on save
-// - code is unique
-type Session struct {
+// AdmissionSession represents an admission-period window.
+type AdmissionSession struct {
 	gorm.Model
 
-	Name        string
-	Code        string `gorm:"uniqueIndex;default:''"`
-	SessionType string `gorm:"type:varchar(32);not null;default:''"`
-	Start       time.Time
-	End         time.Time
-	IsActive    bool `gorm:"default:true"`
+	Name     string
+	Code     string `gorm:"uniqueIndex;default:''"`
+	Start    time.Time
+	End      time.Time
+	IsActive bool `gorm:"default:true"`
 }
 
-// SessionTypeChoices: stored [Session.SessionType] key -> label (slice order = dropdown order).
-var SessionTypeChoices = []registry.Pair[string, string]{
-	{Key: "Admission", Value: "Admission"},
-	{Key: "Exam", Value: "Exam"},
+// ExamSession uses the same fields for an exam-period window.
+type ExamSession struct {
+	gorm.Model
+
+	Name     string
+	Code     string `gorm:"uniqueIndex;default:''"`
+	Start    time.Time
+	End      time.Time
+	IsActive bool `gorm:"default:true"`
 }
 
-func (s *Session) BeforeSave(tx *gorm.DB) error {
-	if strings.TrimSpace(s.SessionType) == "" {
-		if len(SessionTypeChoices) == 0 {
-			return fmt.Errorf("session: SessionTypeChoices is empty")
-		}
-		s.SessionType = SessionTypeChoices[0].Key
-	} else if _, ok := registry.PairFromPairs(s.SessionType, SessionTypeChoices); !ok {
-		return fmt.Errorf("session type must be one of: Admission, Exam")
-	}
-
+func (s *AdmissionSession) BeforeSave(tx *gorm.DB) error {
 	if strings.TrimSpace(s.Code) != "" || s.Start.IsZero() {
 		return nil
 	}
-
-	// Generate code grouped by (start month, start year), matching the Django logic.
-	monthStart := time.Date(s.Start.Year(), s.Start.Month(), 1, 0, 0, 0, 0, s.Start.Location())
-	monthEnd := monthStart.AddDate(0, 1, 0)
-
-	var count int64
-	if err := tx.Model(&Session{}).
-		Where("start >= ? AND start < ?", monthStart, monthEnd).
-		Where("id <> ?", s.ID).
-		Count(&count).Error; err != nil {
+	var exclude uint
+	if s.ID > 0 {
+		exclude = s.ID
+	}
+	code, err := generateSessionMonthCode(tx, s.Start, exclude, &AdmissionSession{})
+	if err != nil {
 		return err
 	}
-
-	currentMonthStr := strings.ToUpper(s.Start.Format("January"))[:4]
-	s.Code = fmt.Sprintf("%s%d-%d", currentMonthStr, s.Start.Year(), count+1)
+	s.Code = code
 	return nil
+}
+
+func (s *ExamSession) BeforeSave(tx *gorm.DB) error {
+	if strings.TrimSpace(s.Code) != "" || s.Start.IsZero() {
+		return nil
+	}
+	var exclude uint
+	if s.ID > 0 {
+		exclude = s.ID
+	}
+	code, err := generateSessionMonthCode(tx, s.Start, exclude, &ExamSession{})
+	if err != nil {
+		return err
+	}
+	s.Code = code
+	return nil
+}
+
+// generateSessionMonthCode builds a code like JAN2026-1 for rows in the same calendar
+// month as start, counting existing rows in the same table as model.
+func generateSessionMonthCode(db *gorm.DB, start time.Time, excludeID uint, model any) (string, error) {
+	if start.IsZero() {
+		return "", nil
+	}
+	monthStart := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, start.Location())
+	monthEnd := monthStart.AddDate(0, 1, 0)
+	var count int64
+	q := db.Model(model).
+		Where("start >= ? AND start < ?", monthStart, monthEnd)
+	if excludeID > 0 {
+		q = q.Where("id <> ?", excludeID)
+	}
+	if err := q.Count(&count).Error; err != nil {
+		return "", err
+	}
+	currentMonthStr := strings.ToUpper(start.Format("January"))[:4]
+	return fmt.Sprintf("%s%d-%d", currentMonthStr, start.Year(), count+1), nil
 }
 
 func init() {
 	lago.OnDBInit("p_nirmancampus_sessions.models", func(d *gorm.DB) *gorm.DB {
-		lago.RegisterModel[Session](d)
+		lago.RegisterModel[AdmissionSession](d)
+		lago.RegisterModel[ExamSession](d)
 		return d
 	})
 
-	lago.RegistryAdmin.Register("p_nirmancampus_sessions", lago.AdminPanel[Session]{
+	lago.RegistryAdmin.Register("p_nirmancampus_sessions", lago.AdminPanel[AdmissionSession]{
 		SearchField: "Name",
-		ListFields:  []string{"Name", "Code", "SessionType", "Start", "End", "IsActive"},
+		ListFields:  []string{"Name", "Code", "Start", "End", "IsActive"},
+	})
+	lago.RegistryAdmin.Register("p_nirmancampus_sessions.exam_sessions", lago.AdminPanel[ExamSession]{
+		SearchField: "Name",
+		ListFields:  []string{"Name", "Code", "Start", "End", "IsActive"},
 	})
 }

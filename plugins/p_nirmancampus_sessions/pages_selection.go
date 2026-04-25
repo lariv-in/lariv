@@ -6,18 +6,17 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/registry"
 )
 
 func registerSelectionPages() {
 	lago.RegistryPage.Register("sessions.sessionselectionTable", &components.Modal{
 		UID: "session-selection-modal",
 		Children: []components.PageInterface{
-			&components.DataTable[Session]{
+			&components.DataTable[AdmissionSession]{
 				Page:    components.Page{Key: "sessions.sessionselectionTableBody"},
 				UID:     "session-selection-table",
-				Title:   "Select Session",
-				Data:    getters.Key[components.ObjectList[Session]]("sessions"),
+				Title:   "Select admission session",
+				Data:    getters.Key[components.ObjectList[AdmissionSession]]("sessions"),
 				RowAttr: getters.RowAttrSelect("SessionID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "sessions.sessionselectionFilter"}},
@@ -35,13 +34,6 @@ func registerSelectionPages() {
 						Name:  "Code",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Code")},
-						},
-					},
-					{
-						Label: "Type",
-						Name:  "SessionType",
-						Children: []components.PageInterface{
-							&components.FieldText{Getter: registry.PairValueFromKey(getters.Key[string]("$row.SessionType"), SessionTypeChoices)},
 						},
 					},
 					{

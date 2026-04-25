@@ -50,12 +50,12 @@ func init() {
 				return fmt.Errorf("need at least one program structure unit before generating academic records")
 			}
 
-			sessions, err := gorm.G[sessions.Session](db).Order("id ASC").Find(context.Background())
+			admissionSessions, err := gorm.G[sessions.AdmissionSession](db).Order("id ASC").Find(context.Background())
 			if err != nil {
-				return fmt.Errorf("failed to load sessions: %w", err)
+				return fmt.Errorf("failed to load admission sessions: %w", err)
 			}
-			if len(sessions) == 0 {
-				return fmt.Errorf("need at least one session (sessions plugin) before generating academic records")
+			if len(admissionSessions) == 0 {
+				return fmt.Errorf("need at least one admission session (sessions plugin) before generating academic records")
 			}
 
 			courses, err := gorm.G[p_nirmancampus_courses.Course](db).Order("id ASC").Find(context.Background())
@@ -74,7 +74,7 @@ func init() {
 				rec := AcademicRecord{
 					StudentID:              st.ID,
 					ProgramID:              unit.ProgramID,
-					SessionID:              sessions[k%len(sessions)].ID,
+					SessionID:              admissionSessions[k%len(admissionSessions)].ID,
 					ProgramStructureUnitID: unit.ID,
 					Date:                   admissionDate.AddDate(0, 0, -k),
 					Status:                 sampleStatuses[k%len(sampleStatuses)],

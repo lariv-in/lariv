@@ -24,8 +24,8 @@ func tableColumns() []components.TableColumn {
 				Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.ProgramStructureUnit.TermNumber"))),
 			},
 		}},
-		{Label: "Session", Name: "Session.Name", Children: []components.PageInterface{
-			&components.FieldText{Getter: getters.Key[string]("$row.Session.Name")},
+		{Label: "Admission session", Name: "AdmissionSession.Name", Children: []components.PageInterface{
+			&components.FieldText{Getter: getters.Key[string]("$row.AdmissionSession.Name")},
 		}},
 		{Label: "Status", Name: "Status", Children: []components.PageInterface{
 			&components.FieldText{Getter: getters.Key[string]("$row.Status")},
@@ -84,7 +84,7 @@ func registerFilterPages() {
 
 func registerTablePages() {
 	academicRecordsSessionEnvironment := &components.Environment[uint]{
-		Label:   "Session",
+		Label:   "Admission session",
 		Key:     getters.Static(academicRecordsEnvironmentSessionKey),
 		Options: AcademicSessionsListGetter,
 		Default: academicRecordsSessionEnvironmentDefault,

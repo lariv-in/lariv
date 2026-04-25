@@ -34,9 +34,9 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
-								Title: "Session",
+								Title: "Admission session",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Key[string]("$in.Session.Name")},
+									&components.FieldText{Getter: getters.Key[string]("$in.AdmissionSession.Name")},
 								},
 							},
 							&components.LabelInline{
