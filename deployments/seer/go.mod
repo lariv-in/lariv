@@ -7,10 +7,12 @@ require (
 	github.com/lariv-in/lago/plugins/p_dashboard v0.5.10
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.10
 	github.com/lariv-in/lago/plugins/p_google_genai v0.0.0-00010101000000-000000000000
+	github.com/lariv-in/lago/plugins/p_livereloading v0.0.0-20260425015217-4dcf321277c2
 	github.com/lariv-in/lago/plugins/p_pwa v0.5.10
 	github.com/lariv-in/lago/plugins/p_seer_assistant v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_deepsearch v0.0.0-20260419161526-9d250d818084
 	github.com/lariv-in/lago/plugins/p_seer_intel v0.0.0-20260421170520-3ca65872f4a4
+	github.com/lariv-in/lago/plugins/p_seer_opensky v0.0.0
 	github.com/lariv-in/lago/plugins/p_seer_reddit v0.0.0-20260421170520-3ca65872f4a4
 	github.com/lariv-in/lago/plugins/p_seer_runners v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_websites v0.0.0-00010101000000-000000000000

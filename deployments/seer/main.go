@@ -5,7 +5,6 @@ import (
 
 	"github.com/lariv-in/lago/lago"
 
-	_ "github.com/lariv-in/lago/plugins/p_livereloading"
 	_ "github.com/lariv-in/lago/plugins/p_dashboard"
 	_ "github.com/lariv-in/lago/plugins/p_filesystem"
 	_ "github.com/lariv-in/lago/plugins/p_google_genai"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/lariv-in/lago/plugins/p_seer_deepsearch"
 	_ "github.com/lariv-in/lago/plugins/p_seer_gdelt"
 	_ "github.com/lariv-in/lago/plugins/p_seer_intel"
+	_ "github.com/lariv-in/lago/plugins/p_seer_opensky"
 	_ "github.com/lariv-in/lago/plugins/p_seer_reddit"
 	_ "github.com/lariv-in/lago/plugins/p_seer_runners"
 	_ "github.com/lariv-in/lago/plugins/p_seer_websites"

@@ -1,10 +1,14 @@
 package views
 
 import (
+	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"reflect"
+	"strings"
+	"syscall"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -45,8 +49,35 @@ func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 	}
 	err := components.Render(page, ctx).Render(w)
 	if err != nil {
+		// Do not panic when the client is already gone (common with slow layers + devtools, live reload).
+		if isBenignResponseWriteError(err) {
+			slog.Debug("views: render after client closed", "error", err)
+			return
+		}
 		panic(err)
 	}
+}
+
+// isBenignResponseWriteError is true for typical disconnect errors from ResponseWriter.
+func isBenignResponseWriteError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, syscall.EPIPE) {
+		return true
+	}
+	if errors.Is(err, syscall.ECONNRESET) {
+		return true
+	}
+	if errors.Is(err, context.Canceled) {
+		return true
+	}
+	if errors.Is(err, net.ErrClosed) {
+		return true
+	}
+	s := err.Error()
+	return strings.Contains(s, "broken pipe") ||
+		strings.Contains(s, "use of closed network connection")
 }
 
 // ParseForm finds the first FormComponent in the view's page, parses the request form,

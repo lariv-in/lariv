@@ -187,6 +187,8 @@ github.com/lariv-in/lago/plugins/p_dashboard v0.5.10 h1:N9msDguhn6WlxtIwlF+XpU4i
 github.com/lariv-in/lago/plugins/p_dashboard v0.5.10/go.mod h1:t0YAJioxFcIJYXZjougWxGTilxC0hB3J2pPUGNbeYSI=
 github.com/lariv-in/lago/plugins/p_filesystem v0.5.10 h1:yqgauaaduSscsmvMd8sNCb5p+t6swmTkmnQveEluyu8=
 github.com/lariv-in/lago/plugins/p_filesystem v0.5.10/go.mod h1:lzSL1qu5EnNU/14IvYQPbQ5oRFEh1wbFPzcBVp1Ugso=
+github.com/lariv-in/lago/plugins/p_livereloading v0.0.0-20260425015217-4dcf321277c2 h1:idtWKsFaGBWmPqiKHjZXgU3FyDP9ekLatlennt9++aY=
+github.com/lariv-in/lago/plugins/p_livereloading v0.0.0-20260425015217-4dcf321277c2/go.mod h1:C5UCqMR7QaS1yaMHn2Um5GeeUrUHhDI4wSisCOoIyms=
 github.com/lariv-in/lago/plugins/p_pwa v0.5.10 h1:/7ndYciEeLEBL9Ye8wLe3WdNEPwLZ4si3TH1M8MTDfY=
 github.com/lariv-in/lago/plugins/p_pwa v0.5.10/go.mod h1:PN4goanUDK28QoIyBuL8lOXghyll3561PVYxxvWmWaY=
 github.com/lariv-in/lago/plugins/p_seer_deepsearch v0.0.0-20260419161526-9d250d818084 h1:cOoSIgV+U3pvpYAUoLLkq6YUdotf2+QyO2uCgiFOsNY=
