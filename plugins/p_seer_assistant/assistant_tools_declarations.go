@@ -40,6 +40,11 @@ type redditEditWorkerArgs struct {
 	WorkerDuration string `json:"worker_duration"`
 }
 
+type redditAddWorkerArgs struct {
+	WorkerName     string `json:"worker_name"`
+	WorkerDuration string `json:"worker_duration"`
+}
+
 type websiteListArgs struct{}
 
 type websiteAddSourceArgs struct {
@@ -88,6 +93,11 @@ func assistantGeminiTools() []*genai.Tool {
 			Name:        "reddit_edit_source",
 			Description: "Update an existing Reddit source by reddit_source_id.",
 			Parameters:  p_google_genai.NewSchema[redditEditSourceArgs](),
+		},
+		{
+			Name:        "reddit_add_worker",
+			Description: "Create a Reddit runner worker schedule (worker_name, worker_duration as Go duration string e.g. 1h, 30m).",
+			Parameters:  p_google_genai.NewSchema[redditAddWorkerArgs](),
 		},
 		{
 			Name:        "reddit_edit_worker",

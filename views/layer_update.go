@@ -53,6 +53,7 @@ func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 		values, fieldErrors = m.FormPatchers.Apply(view, r, values, fieldErrors)
+		ctx = r.Context()
 		if len(fieldErrors) != 0 {
 			for fname, ferr := range fieldErrors {
 				slog.Error("views: layer update: field error", "field", fname, "error", ferr)

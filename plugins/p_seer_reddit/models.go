@@ -19,12 +19,51 @@ const (
 type RedditRunner struct {
 	gorm.Model
 
-	Name     string        `gorm:"size:64;not null;uniqueIndex"`
-	Duration time.Duration `gorm:"not null"`
+	Name            string        `gorm:"size:64;not null;uniqueIndex"`
+	Duration        time.Duration `gorm:"not null"`
+	RedditSourceIDs []uint        `gorm:"-"`
 }
 
 func (RedditRunner) TableName() string {
 	return RedditRunnersTable
+}
+
+// redditRunnerFromUpdateDest reads the struct GORM is updating/creating, including
+// [RedditRunner.RedditSourceIDs] (gorm:"-"). The hook receiver may not carry ignored fields.
+func redditRunnerFromUpdateDest(tx *gorm.DB) *RedditRunner {
+	if tx == nil || tx.Statement == nil {
+		return nil
+	}
+	switch d := tx.Statement.Dest.(type) {
+	case RedditRunner:
+		return &d
+	case *RedditRunner:
+		if d == nil {
+			return nil
+		}
+		return d
+	default:
+		return nil
+	}
+}
+
+func (r *RedditRunner) AfterSave(tx *gorm.DB) error {
+	runner := redditRunnerFromUpdateDest(tx)
+	if runner == nil {
+		runner = r
+	}
+	if runner == nil || runner.ID == 0 {
+		return nil
+	}
+	// Form gives the full desired set: detach this worker from all sources, then re-attach the submitted ids.
+	if err := tx.Model(&RedditSource{}).Where("reddit_runner_id = ?", runner.ID).Update("reddit_runner_id", nil).Error; err != nil {
+		return err
+	}
+	ids := runner.RedditSourceIDs
+	if len(ids) == 0 {
+		return nil
+	}
+	return tx.Model(&RedditSource{}).Where("id IN ?", ids).Update("reddit_runner_id", runner.ID).Error
 }
 
 // RedditSource configures which subreddits to fetch and how.

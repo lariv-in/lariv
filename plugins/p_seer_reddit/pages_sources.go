@@ -109,6 +109,33 @@ func redditSourceLoadWebsitesYesNoFromDetail(ctx context.Context) (string, error
 	return "No", nil
 }
 
+func redditSourceSelectionLabel(subreddits []byte, searchQuery string) string {
+	label := formatSubredditsJSON(subreddits, 3)
+	if searchQuery == "" {
+		return label
+	}
+	return fmt.Sprintf("%s (%s)", label, searchQuery)
+}
+
+func redditSourceSelectionDisplayFromIn(ctx context.Context) (string, error) {
+	subreddits, err := getters.Key[datatypes.JSON]("$in.Subreddits")(ctx)
+	if err != nil {
+		return "", err
+	}
+	searchQuery, _ := getters.IfOr(getters.Key[string]("$in.SearchQuery"), ctx, "")
+	return redditSourceSelectionLabel([]byte(subreddits), searchQuery), nil
+}
+
+func redditSourceSelectionDisplayFromRow(ctx context.Context) (string, error) {
+	rowAny := ctx.Value("$row")
+	m, ok := rowAny.(map[string]any)
+	if !ok {
+		return "—", nil
+	}
+	searchQuery, _ := m["SearchQuery"].(string)
+	return redditSourceSelectionLabel(subredditsBytesFromRowValue(m["Subreddits"]), searchQuery), nil
+}
+
 func redditSourceDetailWorkerLabel(ctx context.Context) (string, error) {
 	rs, err := getters.Key[RedditSource]("redditSource")(ctx)
 	if err != nil {
@@ -173,6 +200,40 @@ func registerRedditSourcePages() {
 						Label: "Websites",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: redditSourceLoadWebsitesYesNoFromRow},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	lago.RegistryPage.Register("seer_reddit.RedditSourceUnsetSelectionTable", &components.Modal{
+		UID: "reddit-source-unset-selection-modal",
+		Children: []components.PageInterface{
+			&components.DataTable[RedditSource]{
+				Page:  components.Page{Key: "seer_reddit.RedditSourceUnsetSelectionTableBody"},
+				UID:   "reddit-source-unset-selection-table",
+				Title: "Select Reddit sources without worker",
+				Data:  getters.Key[components.ObjectList[RedditSource]]("redditSources"),
+				RowAttr: getters.RowAttrSelectMulti(
+					getters.IfOrElse(
+						getters.Key[string]("$get.target_input"),
+						getters.Static("RedditSourceIDs"),
+					),
+					getters.Key[uint]("$row.ID"),
+					redditSourceSelectionDisplayFromRow,
+				),
+				Columns: []components.TableColumn{
+					{
+						Label: "Source",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: redditSourceSelectionDisplayFromRow},
+						},
+					},
+					{
+						Label: "Max fresh",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Format("%d", getters.Any(getters.Key[uint]("$row.MaxFreshPosts")))},
 						},
 					},
 				},

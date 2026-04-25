@@ -97,20 +97,13 @@ var codec = websocket.Codec{
 	Marshal:   marshal,
 }
 
-// assistantWebSocketSyncFromDB validates optional ?session_id= and dry-runs [genai.Chats.Create]
-// so transcript from the DB is compatible with the chat session API before any message is sent.
-func assistantWebSocketSyncFromDB(req *http.Request) {
+// assistantWebSocketSyncSessionFromDB dry-runs [genai.Chats.Create] so transcript
+// from the DB is compatible with the chat session API before the model call.
+func assistantWebSocketSyncSessionFromDB(req *http.Request, sid uint) {
 	ctx := req.Context()
-	sidStr := req.URL.Query().Get("session_id")
-	if sidStr == "" {
+	if sid == 0 {
 		return
 	}
-	sid64, err := strconv.ParseUint(sidStr, 10, 64)
-	if err != nil || sid64 == 0 {
-		slog.Warn("seer_assistant: ws open invalid session_id", "value", sidStr, "error", err)
-		return
-	}
-	sid := uint(sid64)
 	user, ok := ctx.Value("$user").(p_users.User)
 	if !ok {
 		return
@@ -152,7 +145,6 @@ func assistantWebSocketConn(ws *websocket.Conn) {
 	if req == nil {
 		return
 	}
-	assistantWebSocketSyncFromDB(req)
 	for {
 		var userMessage UserMessage
 		err := codec.Receive(ws, &userMessage)
@@ -180,6 +172,7 @@ func assistantWebSocketConn(ws *websocket.Conn) {
 			}
 			return
 		}
+		assistantWebSocketSyncSessionFromDB(req, savedMessage.SessionID)
 		contentChan, errChan := RunAssistant(req, savedMessage.SessionID)
 		var streamedAssistant *genai.Content
 		for contentChan != nil || errChan != nil {

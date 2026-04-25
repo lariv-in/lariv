@@ -8,6 +8,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"gorm.io/gorm"
 )
 
 func redditRunnerFormFields() components.PageInterface {
@@ -33,13 +34,39 @@ func redditRunnerFormFields() components.PageInterface {
 						Label:    "Duration",
 						Name:     "Duration",
 						Required: true,
-						Getter: getters.Ref(getters.Key[time.Duration]("$in.Duration")),
-						Classes: "w-full max-w-xl",
+						Getter:   getters.Ref(getters.Key[time.Duration]("$in.Duration")),
+						Classes:  "w-full max-w-xl",
+					},
+				},
+			},
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.RedditSourceIDs"),
+				Children: []components.PageInterface{
+					&components.InputManyToMany[RedditSource]{
+						Label:       "Reddit sources without worker",
+						Name:        "RedditSourceIDs",
+						Getter:      redditSourcesForCurrentRunner,
+						Url:         lago.RoutePath("seer_reddit.RedditSourceUnsetSelectRoute", nil),
+						Display:     redditSourceSelectionDisplayFromIn,
+						Placeholder: "Select unassigned sources...",
+						Classes:     "w-full max-w-xl",
 					},
 				},
 			},
 		},
 	}
+}
+
+func redditSourcesForCurrentRunner(ctx context.Context) ([]RedditSource, error) {
+	id, err := getters.Key[uint]("$in.ID")(ctx)
+	if err != nil || id == 0 {
+		return nil, err
+	}
+	db, err := getters.DBFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return gorm.G[RedditSource](db).Where("reddit_runner_id = ?", id).Order("id DESC").Find(ctx)
 }
 
 func redditRunnerDetailWorkerPoolActionsGetter() getters.Getter[components.PageInterface] {
@@ -170,6 +197,19 @@ func registerRedditRunnerPages() {
 								Children: []components.PageInterface{
 									&components.FieldDuration{
 										Getter: getters.Ref(getters.Key[time.Duration]("redditRunner.Duration")),
+									},
+								},
+							},
+							&components.LabelNewline{
+								Title: "Assigned subreddits",
+								Children: []components.PageInterface{
+									&components.FieldManyToMany[RedditSource]{
+										Getter:  redditSourcesForCurrentRunner,
+										Display: redditSourceSelectionDisplayFromIn,
+										Link: lago.RoutePath("seer_reddit.RedditSourceDetailRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("$in.ID")),
+										}),
+										Classes: "w-full max-w-xl",
 									},
 								},
 							},
