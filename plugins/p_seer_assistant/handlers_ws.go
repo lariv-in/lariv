@@ -290,7 +290,7 @@ func assistantToolHTML(content *genai.Content) string {
 		inner = `<span class="opacity-50 text-sm">(empty)</span>`
 	}
 	return fmt.Sprintf(
-		`<div id="seer_assistant_transcript" hx-swap-oob="beforeend"><div class="chat chat-start mb-2"><div class="chat-header text-xs opacity-70">Tool</div><div class="chat-bubble chat-bubble-neutral text-sm text-base-content">%s</div></div></div>`,
+		`<div id="seer_assistant_transcript" hx-swap-oob="beforeend"><div class="chat chat-start mb-2"><div class="chat-header text-xs opacity-70">Tool</div><div class="chat-bubble chat-bubble-accent text-sm">%s</div></div></div>`,
 		inner,
 	)
 }
@@ -409,7 +409,7 @@ func assistantFunctionCallHTML(fc *genai.FunctionCall) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-fn-call text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-fn-call text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Function call`)
 	if fc.Name != "" {
 		b.WriteString(`: <span class="font-mono">`)
@@ -476,7 +476,7 @@ func assistantFunctionResponseHTML(fr *genai.FunctionResponse) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-fn-resp text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-fn-resp text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Function response`)
 	if fr.Name != "" {
 		b.WriteString(`: <span class="font-mono">`)
@@ -554,7 +554,7 @@ func assistantToolCallHTML(tc *genai.ToolCall) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-tool-call text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-tool-call text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Tool call`)
 	if tc.ToolType != "" {
 		b.WriteString(`: <span class="font-mono">`)
@@ -582,7 +582,7 @@ func assistantToolResponseHTML(tr *genai.ToolResponse) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-tool-resp text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-tool-resp text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Tool response`)
 	if tr.ToolType != "" {
 		b.WriteString(`: <span class="font-mono">`)
