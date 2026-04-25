@@ -60,7 +60,7 @@ func verifyWebsiteRunnerFK(ctx context.Context, db *gorm.DB, id *uint) (*uint, e
 	if n == 0 {
 		return nil, fmt.Errorf("p_seer_websites: website runner id %d not found", v)
 	}
-	return &v, nil
+	return new(v), nil
 }
 
 // CreateWebsiteSourceFromParams inserts a [WebsiteSource] after URL + depth validation.

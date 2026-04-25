@@ -10,6 +10,7 @@ import (
 
 	"github.com/lariv-in/lago/plugins/p_google_genai"
 	"github.com/lariv-in/lago/plugins/p_seer_intel"
+	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
 
@@ -37,6 +38,48 @@ func deepSearchReportMaxOutputTokens() int32 {
 	return int32(n)
 }
 
+func deepsearchModel() string {
+	if DeepSearchAppConfig == nil {
+		return defaultDeepSearchLlmModel
+	}
+	m := strings.TrimSpace(DeepSearchAppConfig.LlmModel)
+	if m == "" {
+		return defaultDeepSearchLlmModel
+	}
+	return m
+}
+
+func deepsearchGenerateContentJSON[T any](ctx context.Context, system, user string, maxOut int32, temp *float32, out *T) (raw string, err error) {
+	client, err := p_google_genai.NewClient(ctx)
+	if err != nil {
+		return "", err
+	}
+	cfg := &genai.GenerateContentConfig{
+		SystemInstruction: genai.NewContentFromText(system, genai.RoleUser),
+		ResponseMIMEType:  "application/json",
+		ResponseSchema:    p_google_genai.NewSchema[T](),
+		MaxOutputTokens:   maxOut,
+	}
+	if temp != nil {
+		cfg.Temperature = temp
+	}
+	resp, err := client.Models.GenerateContent(ctx, deepsearchModel(), []*genai.Content{genai.NewContentFromText(user, genai.RoleUser)}, cfg)
+	if err != nil {
+		return "", err
+	}
+	if resp == nil {
+		return "", fmt.Errorf("p_seer_deepsearch: nil generate response")
+	}
+	raw = strings.TrimSpace(resp.Text())
+	if raw == "" {
+		return "", fmt.Errorf("p_seer_deepsearch: empty model response")
+	}
+	if err := json.Unmarshal([]byte(raw), out); err != nil {
+		return raw, fmt.Errorf("p_seer_deepsearch: json decode: %w", err)
+	}
+	return raw, nil
+}
+
 // expandDeepSearchQueries asks Gemini ([p_google_genai]) for distinct web search query strings (JSON array).
 func expandDeepSearchQueries(ctx context.Context, userQuery string) ([]string, error) {
 	userQuery = strings.TrimSpace(userQuery)
@@ -56,20 +99,10 @@ Prefer high-recall, diverse angles. At most 8 strings.`
 
 	var arr []string
 	expandTemp := float32(0.35)
-	raw, err := p_google_genai.GenerateJSON(ctx, p_google_genai.GenerateRequest{
-		SystemPrompt:    sys,
-		UserPrompt:      userQuery,
-		Temperature:     &expandTemp,
-		MaxOutputTokens: int(deepSearchExpandMaxOutputTokens()),
-		Thinking:        &p_google_genai.ThinkingConfig{Mode: p_google_genai.ThinkingModeDisabled},
-	}, &arr)
+	_, err := deepsearchGenerateContentJSON(ctx, sys, userQuery, deepSearchExpandMaxOutputTokens(), &expandTemp, &arr)
 	if err != nil {
 		slog.Error("p_seer_deepsearch: expand queries", "error", err)
 		return nil, fmt.Errorf("p_seer_deepsearch: expand queries: %w", err)
-	}
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return nil, fmt.Errorf("p_seer_deepsearch: expand queries returned empty")
 	}
 	var out []string
 	seen := make(map[string]struct{}, len(arr))
@@ -186,12 +219,7 @@ Rules:
 		prompt.WriteString(strings.Join(transcript, "\n\n"))
 	}
 	prompt.WriteString(fmt.Sprintf("\n\nChoose next action for round %d.", round))
-	raw, err := p_google_genai.GenerateJSON(ctx, p_google_genai.GenerateRequest{
-		SystemPrompt:    sys,
-		UserPrompt:      prompt.String(),
-		MaxOutputTokens: 512,
-		Thinking:        &p_google_genai.ThinkingConfig{Mode: p_google_genai.ThinkingModeEnabled},
-	}, &out)
+	raw, err := deepsearchGenerateContentJSON(ctx, sys, prompt.String(), 512, nil, &out)
 	return out, raw, err
 }
 
@@ -215,13 +243,23 @@ Output markdown only.`
 		prompt.WriteString(strings.Join(transcript, "\n\n"))
 	}
 	reportTemp := float32(0.25)
-	return p_google_genai.GenerateText(ctx, p_google_genai.GenerateRequest{
-		SystemPrompt:    sys,
-		UserPrompt:      prompt.String(),
-		Temperature:     &reportTemp,
-		MaxOutputTokens: int(deepSearchReportMaxOutputTokens()),
-		Thinking:        &p_google_genai.ThinkingConfig{Mode: p_google_genai.ThinkingModeEnabled},
-	})
+	client, err := p_google_genai.NewClient(ctx)
+	if err != nil {
+		return "", err
+	}
+	cfg := &genai.GenerateContentConfig{
+		SystemInstruction: genai.NewContentFromText(sys, genai.RoleUser),
+		Temperature:       &reportTemp,
+		MaxOutputTokens:   deepSearchReportMaxOutputTokens(),
+	}
+	resp, err := client.Models.GenerateContent(ctx, deepsearchModel(), []*genai.Content{genai.NewContentFromText(prompt.String(), genai.RoleUser)}, cfg)
+	if err != nil {
+		return "", err
+	}
+	if resp == nil {
+		return "", fmt.Errorf("p_seer_deepsearch: nil generate response")
+	}
+	return strings.TrimSpace(resp.Text()), nil
 }
 
 func dispatchDeepSearchDecision(ctx context.Context, db *gorm.DB, decision deepSearchToolDecision) (any, error) {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/lariv-in/lago/plugins/p_google_genai"
 	"github.com/pgvector/pgvector-go"
+	"google.golang.org/genai"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -19,11 +20,24 @@ func EmbedQueryText(ctx context.Context, text string) ([]float32, error) {
 	if text == "" {
 		return nil, fmt.Errorf("p_seer_intel: EmbedQueryText: empty text")
 	}
-	values, err := p_google_genai.EmbedText(ctx, p_google_genai.EmbedTaskSearchQuery, text)
+	client, err := p_google_genai.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	model := strings.TrimSpace(IntelConfigValue.EmbeddingModel)
+	if model == "" {
+		return nil, fmt.Errorf("p_seer_intel: EmbedQueryText: embeddingModel is empty")
+	}
+	valuesResp, err := client.Models.EmbedContent(ctx,
+		model,
+		[]*genai.Content{genai.NewContentFromText(text, genai.RoleUser)},
+		nil,
+	)
 	if err != nil {
 		slog.Error("p_seer_intel: embed query", "error", err)
 		return nil, fmt.Errorf("p_seer_intel: embed query: %w", err)
 	}
+	values := valuesResp.Embeddings[0].Values
 	if len(values) != SeerIntelEmbeddingDim {
 		return nil, fmt.Errorf("p_seer_intel: embed dimension %d, want %d", len(values), SeerIntelEmbeddingDim)
 	}

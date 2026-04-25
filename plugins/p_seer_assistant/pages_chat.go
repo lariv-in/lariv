@@ -37,8 +37,11 @@ type assistantChatRoot struct {
 }
 
 func (e *assistantChatRoot) Build(ctx context.Context) Node {
-	wsPath := AppUrl + "ws/"
 	sid := assistantOpenSessionID(ctx)
+	wsPath := AppUrl + "ws/"
+	if sid != 0 {
+		wsPath = fmt.Sprintf("%s?session_id=%d", wsPath, sid)
+	}
 	hiddenVal := "0"
 	if sid != 0 {
 		hiddenVal = fmt.Sprintf("%d", sid)
@@ -56,6 +59,49 @@ func (e *assistantChatRoot) Build(ctx context.Context) Node {
 		Class("max-w-3xl mx-auto p-4 flex flex-col gap-4 min-h-[60vh]"),
 		Attr("hx-ext", "ws"),
 		Attr("ws-connect", wsPath),
+		Script(Raw(`document.body.addEventListener("htmx:wsConfigSend", function(event) {
+  if (!event || !event.detail || !event.detail.parameters) {
+    return;
+  }
+  if (!event.target || event.target.id !== "seer_assistant_chat_form") {
+    return;
+  }
+  var raw = event.detail.parameters.session_id;
+  if (raw === undefined || raw === null || raw === "") {
+    event.detail.parameters.session_id = 0;
+    return;
+  }
+  var parsed = Number(raw);
+  if (!Number.isNaN(parsed)) {
+    event.detail.parameters.session_id = parsed;
+  }
+});
+document.body.addEventListener("keydown", function(event) {
+  if (!event.target || event.target.id !== "seer_assistant_chat_message") {
+    return;
+  }
+  if (event.key !== "Enter" || event.shiftKey) {
+    return;
+  }
+  event.preventDefault();
+  var form = event.target.form;
+  if (form) {
+    form.requestSubmit();
+  }
+});
+document.body.addEventListener("htmx:wsAfterSend", function(event) {
+  if (!event.target || event.target.id !== "seer_assistant_chat_form") {
+    return;
+  }
+  var ta = document.getElementById("seer_assistant_chat_message");
+  var btn = document.getElementById("seer_assistant_chat_send");
+  if (ta) {
+    ta.value = "";
+  }
+  if (btn) {
+    btn.disabled = true;
+  }
+});`)),
 		Div(ID("seer_assistant_errors")),
 		Div(
 			ID("seer_assistant_transcript"),
@@ -64,9 +110,10 @@ func (e *assistantChatRoot) Build(ctx context.Context) Node {
 		),
 		Div(
 			ID("seer_assistant_stream"),
-			Class("text-sm font-mono whitespace-pre-wrap min-h-[1.5rem] border border-dashed border-base-300 rounded p-2"),
+			Class("min-h-[1.5rem] border border-dashed border-base-300 rounded p-2 text-sm"),
 		),
 		FormEl(
+			ID("seer_assistant_chat_form"),
 			Class("flex flex-col gap-2"),
 			Attr("ws-send", ""),
 			Input(
@@ -76,6 +123,7 @@ func (e *assistantChatRoot) Build(ctx context.Context) Node {
 				Value(hiddenVal),
 			),
 			Textarea(
+				ID("seer_assistant_chat_message"),
 				Name("message"),
 				Class("textarea textarea-bordered w-full"),
 				Rows("3"),
@@ -83,6 +131,7 @@ func (e *assistantChatRoot) Build(ctx context.Context) Node {
 				Required(),
 			),
 			Button(
+				ID("seer_assistant_chat_send"),
 				Type("submit"),
 				Class("btn btn-primary self-end"),
 				Text("Send"),
@@ -126,52 +175,50 @@ func assistantTranscriptNodes(ctx context.Context, sessionID uint) ([]Node, erro
 	if err != nil {
 		return nil, err
 	}
-	turns, err := BuildChatTurns(ctx, db, sessionID)
+	contents, err := LoadSessionContents(ctx, db, sessionID)
 	if err != nil {
 		return nil, err
 	}
-	out := make([]Node, 0, len(turns))
-	for _, t := range turns {
-		// Pass raw text to Text(); gomponents escapes once. Do not pre-escape or
-		// apostrophes become visible as &#39; (double-escape).
-		body := t.Content
-		switch t.Role {
+	out := make([]Node, 0, len(contents))
+	for _, c := range contents {
+		inner := strings.TrimSpace(assistantGenaiContentHTML(c))
+		if inner == "" {
+			continue
+		}
+		switch assistantTranscriptTurnKind(c) {
 		case "assistant":
-			out = append(out, assistantBubbleAssistant(body))
-		case "user":
-			if strings.HasPrefix(t.Content, "[tool ") {
-				out = append(out, assistantBubbleTool(body))
-			} else {
-				out = append(out, assistantBubbleUser(body))
-			}
+			out = append(out, assistantBubbleAssistantHTML(inner))
+		case "tool":
+			out = append(out, assistantBubbleToolHTML(inner))
 		default:
-			out = append(out, assistantBubbleUser(body))
+			out = append(out, assistantBubbleUserHTML(inner))
 		}
 	}
 	return out, nil
 }
 
-func assistantBubbleUser(body string) Node {
+// assistantBubble*HTML: inner is from assistantGenaiContentHTML (escaped leaves); use Raw, not Text.
+func assistantBubbleUserHTML(inner string) Node {
 	return Div(
 		Class("chat chat-end mb-2"),
 		Div(Class("chat-header text-xs opacity-70"), Text("You")),
-		Div(Class("chat-bubble chat-bubble-primary whitespace-pre-wrap"), Text(body)),
+		Div(Class("chat-bubble chat-bubble-primary"), Raw(inner)),
 	)
 }
 
-func assistantBubbleAssistant(body string) Node {
+func assistantBubbleAssistantHTML(inner string) Node {
 	return Div(
 		Class("chat chat-start mb-2"),
 		Div(Class("chat-header text-xs opacity-70"), Text("Assistant")),
-		Div(Class("chat-bubble chat-bubble-secondary whitespace-pre-wrap"), Text(body)),
+		Div(Class("chat-bubble chat-bubble-secondary"), Raw(inner)),
 	)
 }
 
-func assistantBubbleTool(body string) Node {
+func assistantBubbleToolHTML(inner string) Node {
 	return Div(
 		Class("chat chat-start mb-2"),
 		Div(Class("chat-header text-xs opacity-70"), Text("Tool")),
-		Div(Class("chat-bubble chat-bubble-accent text-sm whitespace-pre-wrap"), Text(body)),
+		Div(Class("chat-bubble chat-bubble-neutral text-sm text-base-content"), Raw(inner)),
 	)
 }
 

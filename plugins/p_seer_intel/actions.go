@@ -10,6 +10,7 @@ import (
 
 	"github.com/lariv-in/lago/plugins/p_google_genai"
 	"github.com/pgvector/pgvector-go"
+	"google.golang.org/genai"
 )
 
 const intelSummarySystemPrompt = `You write concise factual summaries for an intelligence ingest pipeline.
@@ -53,7 +54,7 @@ func intelTitleFallback(content string) string {
 	return "Intel"
 }
 
-// NewFromIntelKind builds an [Intel] from k using text + embeddings from [p_google_genai].
+// NewFromIntelKind builds an [Intel] from k using text + embeddings from [p_google_genai].inteaction
 // [Intel.Kind] / [Intel.KindID] are set from k.
 func NewFromIntelKind(ctx context.Context, k IntelKind) (Intel, error) {
 	if k == nil {
@@ -63,48 +64,53 @@ func NewFromIntelKind(ctx context.Context, k IntelKind) (Intel, error) {
 	if strings.TrimSpace(content) == "" {
 		return Intel{}, fmt.Errorf("p_seer_intel: NewFromIntelKind: empty content")
 	}
-	titleTemp := float32(0.2)
-	titleText, err := p_google_genai.GenerateText(ctx, p_google_genai.GenerateRequest{
-		SystemPrompt:    intelTitleSystemPrompt,
-		UserPrompt:      content,
-		Temperature:     &titleTemp,
-		MaxOutputTokens: 128,
-		Thinking:        &p_google_genai.ThinkingConfig{Mode: p_google_genai.ThinkingModeDisabled},
-	})
+	client, err := p_google_genai.NewClient(ctx)
+	if err != nil {
+		return Intel{}, err
+	}
+	resp, err := client.Models.GenerateContent(ctx,
+		IntelConfigValue.TitleModel,
+		[]*genai.Content{genai.NewContentFromText(content, genai.RoleUser)},
+		&genai.GenerateContentConfig{
+			SystemInstruction: genai.NewContentFromText(intelTitleSystemPrompt, genai.RoleUser),
+		})
 	if err != nil {
 		slog.Error("p_seer_intel: title generate", "error", err)
 		return Intel{}, fmt.Errorf("p_seer_intel: title generate: %w", err)
 	}
-	title := normalizeIntelTitle(titleText)
+	title := normalizeIntelTitle(resp.Text())
 	if title == "" {
 		title = intelTitleFallback(content)
 	}
 
-	sumTemp := float32(0.3)
-	summary, err := p_google_genai.GenerateText(ctx, p_google_genai.GenerateRequest{
-		SystemPrompt: intelSummarySystemPrompt,
-		UserPrompt:   content,
-		Temperature:  &sumTemp,
-		Thinking:     &p_google_genai.ThinkingConfig{Mode: p_google_genai.ThinkingModeDisabled},
-	})
+	summaryResp, err := client.Models.GenerateContent(ctx,
+		IntelConfigValue.SummaryModel,
+		[]*genai.Content{genai.NewContentFromText(content, genai.RoleUser)},
+		&genai.GenerateContentConfig{
+			SystemInstruction: genai.NewContentFromText(intelSummarySystemPrompt, genai.RoleUser),
+		})
 	if err != nil {
 		slog.Error("p_seer_intel: summary generate", "error", err)
 		return Intel{}, fmt.Errorf("p_seer_intel: summary generate: %w", err)
 	}
-	summary = strings.TrimSpace(summary)
+	summary := strings.TrimSpace(summaryResp.Text())
 	if summary == "" {
 		return Intel{}, fmt.Errorf("p_seer_intel: summary generate returned empty text")
 	}
 
-	values, err := p_google_genai.EmbedText(ctx, p_google_genai.EmbedTaskSearchDocument, content)
+	valuesResp, err := client.Models.EmbedContent(ctx,
+		IntelConfigValue.EmbeddingModel,
+		[]*genai.Content{genai.NewContentFromText(content, genai.RoleUser)},
+		nil,
+	)
 	if err != nil {
 		slog.Error("p_seer_intel: embed content", "error", err)
 		return Intel{}, fmt.Errorf("p_seer_intel: embed content: %w", err)
 	}
+	values := valuesResp.Embeddings[0].Values
 	if len(values) != SeerIntelEmbeddingDim {
 		return Intel{}, fmt.Errorf("p_seer_intel: embed dimension %d, want %d", len(values), SeerIntelEmbeddingDim)
 	}
-
 	vec := pgvector.NewVector(values)
 	return Intel{
 		Title:     title,

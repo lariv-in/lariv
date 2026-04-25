@@ -33,9 +33,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditSourceDetail").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail", views.LayerDetail[RedditSource]{
-				Key:            getters.Static("redditSource"),
-				PathParamKey:   getters.Static("id"),
-				QueryPatchers:  sourceDetailPatchers,
+				Key:           getters.Static("redditSource"),
+				PathParamKey:  getters.Static("id"),
+				QueryPatchers: sourceDetailPatchers,
 			}))
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceCreateView",
@@ -54,9 +54,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditSourceUpdateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail", views.LayerDetail[RedditSource]{
-				Key:            getters.Static("redditSource"),
-				PathParamKey:   getters.Static("id"),
-				QueryPatchers:  sourceDetailPatchers,
+				Key:           getters.Static("redditSource"),
+				PathParamKey:  getters.Static("id"),
+				QueryPatchers: sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_source.update", views.LayerUpdate[RedditSource]{
 				Key: getters.Static("redditSource"),
@@ -72,9 +72,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditSourceDeleteForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.delete_detail", views.LayerDetail[RedditSource]{
-				Key:            getters.Static("redditSource"),
-				PathParamKey:   getters.Static("id"),
-				QueryPatchers:  sourceDetailPatchers,
+				Key:           getters.Static("redditSource"),
+				PathParamKey:  getters.Static("id"),
+				QueryPatchers: sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_source.delete", views.LayerDelete[RedditSource]{
 				Key:        getters.Static("redditSource"),
@@ -102,9 +102,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
-				Key:            getters.Static("redditSource"),
-				PathParamKey:   getters.Static("source_id"),
-				QueryPatchers:  sourceDetailPatchers,
+				Key:           getters.Static("redditSource"),
+				PathParamKey:  getters.Static("source_id"),
+				QueryPatchers: sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_post.list_by_source", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
@@ -126,9 +126,9 @@ func init() {
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
-				Key:            getters.Static("redditSource"),
-				PathParamKey:   getters.Static("source_id"),
-				QueryPatchers:  sourceDetailPatchers,
+				Key:           getters.Static("redditSource"),
+				PathParamKey:  getters.Static("source_id"),
+				QueryPatchers: sourceDetailPatchers,
 			}).
 			WithLayer("seer_reddit.reddit_post.list_by_source", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
@@ -284,7 +284,7 @@ func redditRunnerIDFromFormMap(formData map[string]any) (*uint, bool) {
 	if rid == 0 {
 		return nil, true
 	}
-	return &rid, true
+	return new(rid), true
 }
 
 type redditRunnerValidate struct{}

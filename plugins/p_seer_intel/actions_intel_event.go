@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/lariv-in/lago/plugins/p_google_genai"
+	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +35,27 @@ type intelEventLLMOut struct {
 	Datetime string `json:"datetime"`
 }
 
+// intelEventExtractResponseJSONSchema is the output contract for [extractIntelEventFromSummary].
+// Use [genai.GenerateContentConfig.ResponseJsonSchema] (not ResponseSchema) so the Gemini
+// API reliably applies JSON mode; the OpenAPI-style response_schema path can be ignored
+// for some model/version combinations, yielding prose (e.g. "Here is…") instead of JSON.
+var intelEventExtractResponseJSONSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"address": map[string]any{
+			"type":        "string",
+			"description": "Concise postal-style or place name for geocoding; empty if none.",
+		},
+		"datetime": map[string]any{
+			"type":        "string",
+			"format":      "date-time",
+			"description": "Event time in RFC3339, UTC (e.g. 2006-01-02T15:04:05Z).",
+		},
+	},
+	"required":             []string{"address", "datetime"},
+	"additionalProperties": false,
+}
+
 // extractIntelEventFromSummary asks Gemini ([p_google_genai]) for a JSON object containing address + event time.
 func extractIntelEventFromSummary(ctx context.Context, summary string) (address string, eventTime time.Time, err error) {
 	summary = strings.TrimSpace(summary)
@@ -42,18 +64,33 @@ func extractIntelEventFromSummary(ctx context.Context, summary string) (address 
 	}
 	userPrompt := fmt.Sprintf("Current UTC time: %s\n\nSummary:\n%s", time.Now().UTC().Format(time.RFC3339), summary)
 	var out intelEventLLMOut
-	raw, err := p_google_genai.GenerateJSON(ctx, p_google_genai.GenerateRequest{
-		SystemPrompt:    intelEventExtractSystemPrompt,
-		UserPrompt:      userPrompt,
-		MaxOutputTokens: 256,
-		Thinking:        &p_google_genai.ThinkingConfig{Mode: p_google_genai.ThinkingModeDisabled},
-	}, &out)
+	client, err := p_google_genai.NewClient(ctx)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	model := strings.TrimSpace(IntelConfigValue.SummaryModel)
+	if model == "" {
+		return "", time.Time{}, fmt.Errorf("p_seer_intel: event extract: summaryModel is empty")
+	}
+	resp, err := client.Models.GenerateContent(ctx,
+		model,
+		[]*genai.Content{genai.NewContentFromText(userPrompt, genai.RoleUser)},
+		&genai.GenerateContentConfig{
+			SystemInstruction:  genai.NewContentFromText(intelEventExtractSystemPrompt, genai.RoleUser),
+			ResponseMIMEType:   "application/json",
+			ResponseJsonSchema: intelEventExtractResponseJSONSchema,
+			MaxOutputTokens:    256,
+		},
+	)
 	if err != nil {
 		return "", time.Time{}, fmt.Errorf("p_seer_intel: event extract generate: %w", err)
 	}
-	raw = strings.TrimSpace(raw)
+	raw := strings.TrimSpace(resp.Text())
 	if raw == "" {
 		return "", time.Time{}, fmt.Errorf("p_seer_intel: event extract returned empty")
+	}
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		return "", time.Time{}, fmt.Errorf("p_seer_intel: event extract json: %w", err)
 	}
 	eventTime, err = time.Parse(time.RFC3339, strings.TrimSpace(out.Datetime))
 	if err != nil {

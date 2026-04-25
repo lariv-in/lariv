@@ -17,8 +17,7 @@ func (p *PageURL) URLPtr() *url.URL {
 	if p == nil || p.Host == "" {
 		return nil
 	}
-	u := p.URL
-	return &u
+	return new(p.URL)
 }
 
 // SetFromURL copies u into p (nil clears to zero).

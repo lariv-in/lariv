@@ -9,6 +9,9 @@ import (
 // IntelConfig holds Intel-specific settings loaded from [Plugins.p_seer_intel].
 type IntelConfig struct {
 	GeocodingAPIKey string `toml:"geocodingApiKey"`
+	TitleModel      string `toml:"titleModel"`
+	SummaryModel    string `toml:"summaryModel"`
+	EmbeddingModel  string `toml:"embeddingModel"`
 }
 
 var IntelConfigValue = &IntelConfig{}

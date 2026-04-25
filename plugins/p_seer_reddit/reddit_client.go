@@ -106,7 +106,7 @@ func fetchSubredditPosts(ctx context.Context, subreddit string, after *string) (
 		slog.Error("p_seer_reddit: decode listing", "error", err, "subreddit", subreddit)
 		return nil, err
 	}
-	return &out, nil
+	return new(out), nil
 }
 
 func fetchSubredditPostsSearch(ctx context.Context, subreddit, query string, after *string) (*redditObject[redditListing[RedditPostData]], error) {
@@ -146,5 +146,5 @@ func fetchSubredditPostsSearch(ctx context.Context, subreddit, query string, aft
 		slog.Error("p_seer_reddit: decode search", "error", err, "subreddit", subreddit)
 		return nil, err
 	}
-	return &out, nil
+	return new(out), nil
 }

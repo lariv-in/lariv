@@ -80,7 +80,7 @@ func GeneratePhotoFile(db *gorm.DB) (*VNode, error) {
 		return nil, nil
 	}
 	picked := files[rand.Intn(len(files))]
-	return &picked, nil
+	return new(picked), nil
 }
 
 func init() {

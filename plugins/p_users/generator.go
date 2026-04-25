@@ -82,7 +82,7 @@ func GenerateUser(db *gorm.DB, roleName string) (*User, error) {
 	if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return new(user), nil
 }
 
 // GenerateUserWithoutPassword creates a user with realistic Indian data but no password.
@@ -108,7 +108,7 @@ func GenerateUserWithoutPassword(db *gorm.DB, roleName string) (*User, error) {
 	if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return new(user), nil
 }
 
 // CreateOverallSuperuser idempotently creates the system superuser (superadmin@lariv.in).
@@ -117,7 +117,7 @@ func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
 	existing, err := gorm.G[User](db).Where("email = ?", "superadmin@lariv.in").First(context.Background())
 	if err == nil {
 		fmt.Println("Overall superuser already exists")
-		return &existing, nil
+		return new(existing), nil
 	}
 
 	role := Role{Name: "superuser"}
@@ -134,7 +134,7 @@ func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
 		return nil, err
 	}
 	fmt.Println("Created overall superuser")
-	return &user, nil
+	return new(user), nil
 }
 
 func init() {

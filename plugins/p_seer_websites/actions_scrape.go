@@ -146,8 +146,7 @@ func cloneURL(u *url.URL) *url.URL {
 	if u == nil {
 		return nil
 	}
-	c := *u
-	return &c
+	return new(*u)
 }
 
 // websiteScrapeFormPatcher fills [Website.Markdown] and normalizes [Website.URL] before [views.LayerCreate] persists.

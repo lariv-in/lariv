@@ -354,8 +354,7 @@ func (r *Registry[T]) AllStable(sorter RegistrySorter[T]) *[]Pair[string, T] {
 	} else {
 		if r.isBuilding {
 			r.mu.RUnlock()
-			empty := []Pair[string, T]{}
-			return &empty
+			return new([]Pair[string, T]{})
 		}
 		r.mu.RUnlock()
 		r.mu.Lock()
@@ -366,8 +365,7 @@ func (r *Registry[T]) AllStable(sorter RegistrySorter[T]) *[]Pair[string, T] {
 	}
 
 	if !r.isBuilt {
-		empty := []Pair[string, T]{}
-		return &empty
+		return new([]Pair[string, T]{})
 	}
 	ent := r.itemsList[sorter]
 	if ent == nil {
