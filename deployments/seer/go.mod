@@ -8,9 +8,11 @@ require (
 	github.com/lariv-in/lago/plugins/p_filesystem v0.5.10
 	github.com/lariv-in/lago/plugins/p_google_genai v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_pwa v0.5.10
+	github.com/lariv-in/lago/plugins/p_seer_aisstream v0.0.0
 	github.com/lariv-in/lago/plugins/p_seer_assistant v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_deepsearch v0.0.0-20260419161526-9d250d818084
 	github.com/lariv-in/lago/plugins/p_seer_intel v0.0.0-20260421170520-3ca65872f4a4
+	github.com/lariv-in/lago/plugins/p_seer_opensky v0.0.0
 	github.com/lariv-in/lago/plugins/p_seer_reddit v0.0.0-20260421170520-3ca65872f4a4
 	github.com/lariv-in/lago/plugins/p_seer_runners v0.0.0-00010101000000-000000000000
 	github.com/lariv-in/lago/plugins/p_seer_websites v0.0.0-00010101000000-000000000000
@@ -27,6 +29,7 @@ require (
 	codeberg.org/readeck/go-readability/v2 v2.1.1 // indirect
 	github.com/JohannesKaufmann/dom v0.2.0 // indirect
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.0 // indirect
+	github.com/aisstream/ais-message-models/golang/aisStream v0.0.0-20230628154343-8650fc5bf8c3 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect

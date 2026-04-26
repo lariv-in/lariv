@@ -218,7 +218,7 @@ func assistantBubbleToolHTML(inner string) Node {
 	return Div(
 		Class("chat chat-start mb-2"),
 		Div(Class("chat-header text-xs opacity-70"), Text("Tool")),
-		Div(Class("chat-bubble chat-bubble-neutral text-sm text-base-content"), Raw(inner)),
+		Div(Class("chat-bubble chat-bubble-accent text-sm"), Raw(inner)),
 	)
 }
 

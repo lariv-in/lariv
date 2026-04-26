@@ -18,24 +18,33 @@ type googleSearchArgs struct {
 }
 
 type redditAddSourceArgs struct {
-	RedditRunnerID *uint    `json:"reddit_runner_id,omitempty"`
-	Subreddits     []string `json:"subreddits,omitempty"`
-	SearchQuery    string   `json:"search_query,omitempty"`
-	MaxFreshPosts  uint     `json:"max_fresh_posts,omitempty"`
-	LoadWebsites   bool     `json:"load_websites,omitempty"`
+	RedditRunnerID      *uint    `json:"reddit_runner_id,omitempty"`
+	Subreddits          []string `json:"subreddits,omitempty"`
+	SearchQuery         string   `json:"search_query,omitempty"`
+	Filter              string   `json:"filter,omitempty"`
+	IsFilterWhitelist   bool     `json:"is_filter_whitelist,omitempty"`
+	MaxFreshPosts       uint     `json:"max_fresh_posts,omitempty"`
+	LoadWebsites        bool     `json:"load_websites,omitempty"`
 }
 
 type redditEditSourceArgs struct {
-	RedditSourceID uint     `json:"reddit_source_id"`
-	RedditRunnerID *uint    `json:"reddit_runner_id,omitempty"`
-	Subreddits     []string `json:"subreddits,omitempty"`
-	SearchQuery    string   `json:"search_query,omitempty"`
-	MaxFreshPosts  uint     `json:"max_fresh_posts,omitempty"`
-	LoadWebsites   bool     `json:"load_websites,omitempty"`
+	RedditSourceID      uint     `json:"reddit_source_id"`
+	RedditRunnerID      *uint    `json:"reddit_runner_id,omitempty"`
+	Subreddits          []string `json:"subreddits,omitempty"`
+	SearchQuery         string   `json:"search_query,omitempty"`
+	Filter              string   `json:"filter,omitempty"`
+	IsFilterWhitelist   bool     `json:"is_filter_whitelist,omitempty"`
+	MaxFreshPosts       uint     `json:"max_fresh_posts,omitempty"`
+	LoadWebsites        bool     `json:"load_websites,omitempty"`
 }
 
 type redditEditWorkerArgs struct {
 	RedditRunnerID *uint  `json:"reddit_runner_id"`
+	WorkerName     string `json:"worker_name"`
+	WorkerDuration string `json:"worker_duration"`
+}
+
+type redditAddWorkerArgs struct {
 	WorkerName     string `json:"worker_name"`
 	WorkerDuration string `json:"worker_duration"`
 }
@@ -80,14 +89,20 @@ func assistantGeminiTools() []*genai.Tool {
 			Parameters:  p_google_genai.NewSchema[googleSearchArgs](),
 		},
 		{
-			Name:        "reddit_add_source",
-			Description: "Create a Reddit ingestion source (subreddits and/or search query, optional runner).",
-			Parameters:  p_google_genai.NewSchema[redditAddSourceArgs](),
+			Name: "reddit_add_source",
+			Description: "Create a Reddit ingestion source (subreddits and/or search query, optional runner). " +
+				"Optional filter: non-empty filter triggers an LLM gate on ingest; is_filter_whitelist true means only matching posts are kept, false means matching posts are rejected (blacklist).",
+			Parameters: p_google_genai.NewSchema[redditAddSourceArgs](),
 		},
 		{
-			Name:        "reddit_edit_source",
-			Description: "Update an existing Reddit source by reddit_source_id.",
-			Parameters:  p_google_genai.NewSchema[redditEditSourceArgs](),
+			Name: "reddit_edit_source",
+			Description: "Update an existing Reddit source by reddit_source_id (same fields as create, including filter and is_filter_whitelist).",
+			Parameters: p_google_genai.NewSchema[redditEditSourceArgs](),
+		},
+		{
+			Name:        "reddit_add_worker",
+			Description: "Create a Reddit runner worker schedule (worker_name, worker_duration as Go duration string e.g. 1h, 30m).",
+			Parameters:  p_google_genai.NewSchema[redditAddWorkerArgs](),
 		},
 		{
 			Name:        "reddit_edit_worker",

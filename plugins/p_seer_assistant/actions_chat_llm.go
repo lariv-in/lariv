@@ -61,12 +61,14 @@ type assistantToolEnvelope struct {
 	Tool           string   `json:"tool"`
 	Query          string   `json:"query,omitempty"`
 	Limit          int      `json:"limit,omitempty"`
-	RedditRunnerID *uint    `json:"reddit_runner_id,omitempty"`
-	Subreddits     []string `json:"subreddits,omitempty"`
-	SearchQuery    string   `json:"search_query,omitempty"`
-	MaxFreshPosts  uint     `json:"max_fresh_posts,omitempty"`
-	LoadWebsites   bool     `json:"load_websites,omitempty"`
-	RedditSourceID uint     `json:"reddit_source_id,omitempty"`
+	RedditRunnerID     *uint    `json:"reddit_runner_id,omitempty"`
+	Subreddits         []string `json:"subreddits,omitempty"`
+	SearchQuery        string   `json:"search_query,omitempty"`
+	Filter             string   `json:"filter,omitempty"`
+	IsFilterWhitelist  bool     `json:"is_filter_whitelist,omitempty"`
+	MaxFreshPosts      uint     `json:"max_fresh_posts,omitempty"`
+	LoadWebsites       bool     `json:"load_websites,omitempty"`
+	RedditSourceID     uint     `json:"reddit_source_id,omitempty"`
 	WorkerName     string   `json:"worker_name,omitempty"`
 	WorkerDuration string   `json:"worker_duration,omitempty"`
 	// Seer Websites (p_seer_websites); website_runner_id optional on add/edit source, required on website_edit_worker.
@@ -334,7 +336,8 @@ func assistantContentHasFunctionCall(c *genai.Content) bool {
 func assistantAllowedToolName(name string) bool {
 	switch strings.TrimSpace(strings.ToLower(name)) {
 	case "intel_search", "google_search",
-		"reddit_add_source", "reddit_edit_source", "reddit_edit_worker",
+		"reddit_add_source", "reddit_edit_source",
+		"reddit_add_worker", "reddit_edit_worker",
 		"website_list_sources", "website_list_workers",
 		"website_add_source", "website_edit_source",
 		"website_add_worker", "website_edit_worker":
@@ -391,6 +394,8 @@ func runToolRound(ctx context.Context, db *gorm.DB, env *assistantToolEnvelope) 
 			resText, errText = runRedditAddSourceTool(ctx, tx, env)
 		case "reddit_edit_source":
 			resText, errText = runRedditEditSourceTool(ctx, tx, env)
+		case "reddit_add_worker":
+			resText, errText = runRedditAddWorkerTool(ctx, tx, env)
 		case "reddit_edit_worker":
 			resText, errText = runRedditEditWorkerTool(ctx, tx, env)
 		case "website_list_sources":
@@ -457,11 +462,13 @@ func runRedditAddSourceTool(ctx context.Context, tx *gorm.DB, env *assistantTool
 		runner = &id
 	}
 	p := p_seer_reddit.RedditSourceCreateParams{
-		RedditRunnerID: runner,
-		Subreddits:     env.Subreddits,
-		SearchQuery:    env.SearchQuery,
-		MaxFreshPosts:  env.MaxFreshPosts,
-		LoadWebsites:   env.LoadWebsites,
+		RedditRunnerID:     runner,
+		Subreddits:         env.Subreddits,
+		SearchQuery:        env.SearchQuery,
+		Filter:             env.Filter,
+		IsFilterWhitelist:  env.IsFilterWhitelist,
+		MaxFreshPosts:      env.MaxFreshPosts,
+		LoadWebsites:       env.LoadWebsites,
 	}
 	src, err := p_seer_reddit.CreateRedditSource(ctx, tx, p)
 	if err != nil {
@@ -482,11 +489,13 @@ func runRedditEditSourceTool(ctx context.Context, tx *gorm.DB, env *assistantToo
 	p := p_seer_reddit.RedditSourceUpdateParams{
 		SourceID: env.RedditSourceID,
 		RedditSourceCreateParams: p_seer_reddit.RedditSourceCreateParams{
-			RedditRunnerID: runner,
-			Subreddits:     env.Subreddits,
-			SearchQuery:    env.SearchQuery,
-			MaxFreshPosts:  env.MaxFreshPosts,
-			LoadWebsites:   env.LoadWebsites,
+			RedditRunnerID:     runner,
+			Subreddits:         env.Subreddits,
+			SearchQuery:        env.SearchQuery,
+			Filter:             env.Filter,
+			IsFilterWhitelist:  env.IsFilterWhitelist,
+			MaxFreshPosts:      env.MaxFreshPosts,
+			LoadWebsites:       env.LoadWebsites,
 		},
 	}
 	src, err := p_seer_reddit.UpdateRedditSource(ctx, tx, p)
@@ -494,6 +503,38 @@ func runRedditEditSourceTool(ctx context.Context, tx *gorm.DB, env *assistantToo
 		return "", err.Error()
 	}
 	return fmt.Sprintf(`{"reddit_source_id":%d}`, src.ID), ""
+}
+
+func runRedditAddWorkerTool(ctx context.Context, tx *gorm.DB, env *assistantToolEnvelope) (string, string) {
+	name := strings.TrimSpace(env.WorkerName)
+	if name == "" {
+		return "", "reddit_add_worker: worker_name required"
+	}
+	durStr := strings.TrimSpace(env.WorkerDuration)
+	if durStr == "" {
+		return "", "reddit_add_worker: worker_duration required (Go duration, e.g. 1h, 45m, 90s)"
+	}
+	d, err := time.ParseDuration(durStr)
+	if err != nil {
+		return "", fmt.Sprintf("reddit_add_worker: invalid worker_duration: %v", err)
+	}
+	runner, err := p_seer_reddit.CreateRedditRunner(ctx, tx, p_seer_reddit.RedditRunnerCreateParams{
+		Name:     name,
+		Duration: d,
+	})
+	if err != nil {
+		return "", err.Error()
+	}
+	out := map[string]any{
+		"reddit_runner_id": runner.ID,
+		"name":             runner.Name,
+		"duration":         runner.Duration.String(),
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		return "", err.Error()
+	}
+	return string(b), ""
 }
 
 func runRedditEditWorkerTool(ctx context.Context, tx *gorm.DB, env *assistantToolEnvelope) (string, string) {

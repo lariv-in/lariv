@@ -97,20 +97,13 @@ var codec = websocket.Codec{
 	Marshal:   marshal,
 }
 
-// assistantWebSocketSyncFromDB validates optional ?session_id= and dry-runs [genai.Chats.Create]
-// so transcript from the DB is compatible with the chat session API before any message is sent.
-func assistantWebSocketSyncFromDB(req *http.Request) {
+// assistantWebSocketSyncSessionFromDB dry-runs [genai.Chats.Create] so transcript
+// from the DB is compatible with the chat session API before the model call.
+func assistantWebSocketSyncSessionFromDB(req *http.Request, sid uint) {
 	ctx := req.Context()
-	sidStr := req.URL.Query().Get("session_id")
-	if sidStr == "" {
+	if sid == 0 {
 		return
 	}
-	sid64, err := strconv.ParseUint(sidStr, 10, 64)
-	if err != nil || sid64 == 0 {
-		slog.Warn("seer_assistant: ws open invalid session_id", "value", sidStr, "error", err)
-		return
-	}
-	sid := uint(sid64)
 	user, ok := ctx.Value("$user").(p_users.User)
 	if !ok {
 		return
@@ -152,7 +145,6 @@ func assistantWebSocketConn(ws *websocket.Conn) {
 	if req == nil {
 		return
 	}
-	assistantWebSocketSyncFromDB(req)
 	for {
 		var userMessage UserMessage
 		err := codec.Receive(ws, &userMessage)
@@ -180,6 +172,7 @@ func assistantWebSocketConn(ws *websocket.Conn) {
 			}
 			return
 		}
+		assistantWebSocketSyncSessionFromDB(req, savedMessage.SessionID)
 		contentChan, errChan := RunAssistant(req, savedMessage.SessionID)
 		var streamedAssistant *genai.Content
 		for contentChan != nil || errChan != nil {
@@ -290,7 +283,7 @@ func assistantToolHTML(content *genai.Content) string {
 		inner = `<span class="opacity-50 text-sm">(empty)</span>`
 	}
 	return fmt.Sprintf(
-		`<div id="seer_assistant_transcript" hx-swap-oob="beforeend"><div class="chat chat-start mb-2"><div class="chat-header text-xs opacity-70">Tool</div><div class="chat-bubble chat-bubble-neutral text-sm text-base-content">%s</div></div></div>`,
+		`<div id="seer_assistant_transcript" hx-swap-oob="beforeend"><div class="chat chat-start mb-2"><div class="chat-header text-xs opacity-70">Tool</div><div class="chat-bubble chat-bubble-accent text-sm">%s</div></div></div>`,
 		inner,
 	)
 }
@@ -409,7 +402,7 @@ func assistantFunctionCallHTML(fc *genai.FunctionCall) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-fn-call text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-fn-call text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Function call`)
 	if fc.Name != "" {
 		b.WriteString(`: <span class="font-mono">`)
@@ -476,7 +469,7 @@ func assistantFunctionResponseHTML(fr *genai.FunctionResponse) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-fn-resp text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-fn-resp text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Function response`)
 	if fr.Name != "" {
 		b.WriteString(`: <span class="font-mono">`)
@@ -554,7 +547,7 @@ func assistantToolCallHTML(tc *genai.ToolCall) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-tool-call text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-tool-call text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Tool call`)
 	if tc.ToolType != "" {
 		b.WriteString(`: <span class="font-mono">`)
@@ -582,7 +575,7 @@ func assistantToolResponseHTML(tr *genai.ToolResponse) string {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString(`<div class="assistant-part assistant-part-tool-resp text-sm">`)
+	b.WriteString(`<div class="assistant-part assistant-part-tool-resp text-sm space-y-2">`)
 	b.WriteString(`<div class="mb-2 font-semibold text-base-content">Tool response`)
 	if tr.ToolType != "" {
 		b.WriteString(`: <span class="font-mono">`)

@@ -10,13 +10,13 @@ use (
 	./deployments/totschool_lago
 	./getters
 	./lago
-	./plugins/p_livereloading
 	./plugins/p_contacts
 	./plugins/p_dashboard
 	./plugins/p_export
 	./plugins/p_filesystem
 	./plugins/p_forms
 	./plugins/p_google_genai
+	./plugins/p_livereloading
 	./plugins/p_nirmancampus_academicrecords
 	./plugins/p_nirmancampus_announcements
 	./plugins/p_nirmancampus_assignmentsubmissions
@@ -31,10 +31,12 @@ use (
 	./plugins/p_nirmancampus_website
 	./plugins/p_otp
 	./plugins/p_pwa
+	./plugins/p_seer_aisstream
 	./plugins/p_seer_assistant
 	./plugins/p_seer_deepsearch
 	./plugins/p_seer_gdelt
 	./plugins/p_seer_intel
+	./plugins/p_seer_opensky
 	./plugins/p_seer_reddit
 	./plugins/p_seer_runners
 	./plugins/p_seer_websites

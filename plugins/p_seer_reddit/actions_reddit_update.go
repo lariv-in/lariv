@@ -11,6 +11,38 @@ import (
 	"gorm.io/gorm"
 )
 
+// RedditRunnerCreateParams creates a [RedditRunner] by name and cadence duration.
+type RedditRunnerCreateParams struct {
+	Name     string
+	Duration time.Duration
+}
+
+// CreateRedditRunner inserts a runner after validation.
+func CreateRedditRunner(ctx context.Context, db *gorm.DB, p RedditRunnerCreateParams) (RedditRunner, error) {
+	if db == nil {
+		return RedditRunner{}, fmt.Errorf("p_seer_reddit: CreateRedditRunner: nil db")
+	}
+	name := strings.TrimSpace(p.Name)
+	if name == "" {
+		return RedditRunner{}, fmt.Errorf("p_seer_reddit: CreateRedditRunner: empty name")
+	}
+	if p.Duration <= 0 {
+		return RedditRunner{}, fmt.Errorf("p_seer_reddit: CreateRedditRunner: duration must be positive")
+	}
+	var conflict int64
+	if err := db.WithContext(ctx).Model(&RedditRunner{}).Where("name = ?", name).Count(&conflict).Error; err != nil {
+		return RedditRunner{}, err
+	}
+	if conflict > 0 {
+		return RedditRunner{}, fmt.Errorf("p_seer_reddit: runner name %q already exists", name)
+	}
+	runner := RedditRunner{Name: name, Duration: p.Duration}
+	if err := db.WithContext(ctx).Create(&runner).Error; err != nil {
+		return RedditRunner{}, err
+	}
+	return runner, nil
+}
+
 // RedditSourceUpdateParams replaces editable fields on an existing [RedditSource].
 // Fields match [RedditSourceCreateParams]; [SourceID] targets the row.
 type RedditSourceUpdateParams struct {
@@ -60,11 +92,13 @@ func UpdateRedditSource(ctx context.Context, db *gorm.DB, p RedditSourceUpdatePa
 		runnerCopy = &v
 	}
 	updates := map[string]any{
-		"reddit_runner_id": runnerCopy,
-		"subreddits":       datatypes.JSON(b),
-		"search_query":     strings.TrimSpace(p.SearchQuery),
-		"max_fresh_posts":  maxFresh,
-		"load_websites":    p.LoadWebsites,
+		"reddit_runner_id":      runnerCopy,
+		"subreddits":            datatypes.JSON(b),
+		"search_query":          strings.TrimSpace(p.SearchQuery),
+		"filter":                strings.TrimSpace(p.Filter),
+		"is_filter_whitelist":   p.IsFilterWhitelist,
+		"max_fresh_posts":       maxFresh,
+		"load_websites":         p.LoadWebsites,
 	}
 	if err := db.WithContext(ctx).Model(&RedditSource{}).Where("id = ?", p.SourceID).Updates(updates).Error; err != nil {
 		return RedditSource{}, err

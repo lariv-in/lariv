@@ -58,6 +58,55 @@ func redditSourceCreateFormFields() components.PageInterface {
 					},
 				},
 			},
+			&components.ClientData{
+				Page: components.Page{Key: "seer_reddit.RedditSourceForm.FilterBlock"},
+				Data: "{ isFilterWhitelist: false }",
+				Init: "isFilterWhitelist = $el.querySelector('[name=IsFilterWhitelist]')?.checked ?? false",
+				Children: []components.PageInterface{
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.IsFilterWhitelist"),
+						Children: []components.PageInterface{
+							&components.InputCheckbox{
+								Page:    components.Page{Key: "seer_reddit.RedditSourceForm.IsFilterWhitelist"},
+								Label:   "Treat filter as whitelist (off = blacklist)",
+								Name:    "IsFilterWhitelist",
+								Getter:  getters.Key[bool]("$in.IsFilterWhitelist"),
+								XModel:  "isFilterWhitelist",
+								Classes: "w-full max-w-xl",
+							},
+						},
+					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Filter"),
+						Children: []components.PageInterface{
+							&components.ClientIf{
+								Condition: "isFilterWhitelist",
+								Children: []components.PageInterface{
+									&components.InputTextarea{
+										Label:   "Filter (whitelist: keep posts that match one of these lines)",
+										Name:    "Filter",
+										Rows:    4,
+										Getter:  getters.Key[string]("$in.Filter"),
+										Classes: "w-full max-w-xl",
+									},
+								},
+							},
+							&components.ClientIf{
+								Condition: "!isFilterWhitelist",
+								Children: []components.PageInterface{
+									&components.InputTextarea{
+										Label:   "Filter (blacklist: drop posts that match one of these lines)",
+										Name:    "Filter",
+										Rows:    4,
+										Getter:  getters.Key[string]("$in.Filter"),
+										Classes: "w-full max-w-xl",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			&components.ContainerError{
 				Error: getters.Key[error]("$error.MaxFreshPosts"),
 				Children: []components.PageInterface{

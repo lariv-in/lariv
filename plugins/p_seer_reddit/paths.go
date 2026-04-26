@@ -15,6 +15,11 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("seer_reddit.RedditSourceCreateView"),
 	})
 
+	_ = lago.RegistryRoute.Register("seer_reddit.RedditSourceUnsetSelectRoute", lago.Route{
+		Path:    AppUrl + "sources/unset/select/",
+		Handler: lago.NewDynamicView("seer_reddit.RedditSourceUnsetSelectView"),
+	})
+
 	_ = lago.RegistryRoute.Register("seer_reddit.RedditPostListBySourceRoute", lago.Route{
 		Path:    AppUrl + "sources/{source_id}/posts/",
 		Handler: lago.NewDynamicView("seer_reddit.RedditPostListBySourceView"),

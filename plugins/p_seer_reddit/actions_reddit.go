@@ -193,10 +193,6 @@ func isLikelyUniqueViolation(err error) bool {
 }
 
 func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post RedditPostData) (inserted bool, err error) {
-	if r.LoadWebsites {
-		enqueueURLsFromRedditPost(post)
-	}
-
 	pid := strings.TrimSpace(post.ID)
 
 	linked, err := redditSourcePostLinkExists(ctx, db, r.ID, pid)
@@ -205,12 +201,18 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 		return false, err
 	}
 	if linked {
+		if r.LoadWebsites {
+			enqueueURLsFromRedditPost(post)
+		}
 		return false, nil
 	}
 
 	var existing RedditPost
 	err = db.WithContext(ctx).Where("post_id = ?", pid).First(&existing).Error
 	if err == nil {
+		if r.LoadWebsites {
+			enqueueURLsFromRedditPost(post)
+		}
 		if err := db.Model(r).Association("RedditPosts").Append(&existing); err != nil {
 			slog.Error("p_seer_reddit: append existing post to source", "error", err, "reddit_source_id", r.ID, "post_id", pid)
 			return false, err
@@ -226,6 +228,24 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 	var tomb RedditPost
 	if err2 := db.WithContext(ctx).Unscoped().Where("post_id = ?", pid).First(&tomb).Error; err2 == nil && tomb.DeletedAt.Valid {
 		return false, nil
+	}
+
+	if redditSourceUsesFilterLlm(r) {
+		pass, _, ferr := redditLLMPassesFilter(ctx, r, post)
+		if ferr != nil {
+			slog.Warn("p_seer_reddit: filter llm", "error", ferr, "reddit_source_id", r.ID, "post_id", pid)
+			if err := r.createRedditPostFilterRejectedTomb(ctx, db, pid); err != nil {
+				return false, err
+			}
+			// true → increment per-fetch "fresh" cap; row is tomb-only, not a full post.
+			return true, nil
+		}
+		if !pass {
+			if err := r.createRedditPostFilterRejectedTomb(ctx, db, pid); err != nil {
+				return false, err
+			}
+			return true, nil
+		}
 	}
 
 	title := strings.TrimSpace(post.Title)
@@ -262,11 +282,17 @@ func (r *RedditSource) persistPostIfNew(ctx context.Context, db *gorm.DB, post R
 		if existing.DeletedAt.Valid {
 			return false, nil
 		}
+		if r.LoadWebsites {
+			enqueueURLsFromRedditPost(post)
+		}
 		if err := db.Model(r).Association("RedditPosts").Append(&existing); err != nil {
 			slog.Error("p_seer_reddit: append after duplicate create", "error", err, "reddit_source_id", r.ID, "post_id", pid)
 			return false, err
 		}
 		return true, nil
+	}
+	if r.LoadWebsites {
+		enqueueURLsFromRedditPost(post)
 	}
 	if err := db.Model(r).Association("RedditPosts").Append(&rp); err != nil {
 		slog.Error("p_seer_reddit: append new post to source", "error", err, "reddit_source_id", r.ID, "post_id", pid)

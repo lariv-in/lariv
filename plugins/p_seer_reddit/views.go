@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_seer_intel"
@@ -93,6 +94,10 @@ func init() {
 	sourceDetailPatchers := views.QueryPatchers[RedditSource]{
 		{Key: "seer_reddit.source.preload_runner", Value: views.QueryPatcherPreload[RedditSource]{Fields: []string{"RedditRunner"}}},
 	}
+	sourceUnsetPatchers := views.QueryPatchers[RedditSource]{
+		{Key: "seer_reddit.source.unset_runner", Value: redditSourceUnsetRunnerPatcher{}},
+		{Key: "seer_reddit.source.order", Value: views.QueryPatcherOrderBy[RedditSource]{Order: "id DESC"}},
+	}
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceListView",
 		lago.GetPageView("seer_reddit.RedditSourceTable").
@@ -100,6 +105,14 @@ func init() {
 			WithLayer("seer_reddit.reddit_source.list", views.LayerList[RedditSource]{
 				Key:           getters.Static("redditSources"),
 				QueryPatchers: sourcePatchers,
+			}))
+
+	lago.RegistryView.Register("seer_reddit.RedditSourceUnsetSelectView",
+		lago.GetPageView("seer_reddit.RedditSourceUnsetSelectionTable").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("seer_reddit.reddit_source.unset_select_list", views.LayerList[RedditSource]{
+				Key:           getters.Static("redditSources"),
+				QueryPatchers: sourceUnsetPatchers,
 			}))
 
 	lago.RegistryView.Register("seer_reddit.RedditSourceDetailView",
@@ -301,6 +314,7 @@ func init() {
 				Key:          getters.Static("redditRunner"),
 				PathParamKey: getters.Static("id"),
 			}).
+			WithLayer("seer_reddit.reddit_runner.enrich_source_ids", redditRunnerEnrichSourceIDsLayer{}).
 			WithLayer("seer_reddit.reddit_runner.update", views.LayerUpdate[RedditRunner]{
 				Key: getters.Static("redditRunner"),
 				SuccessURL: lago.RoutePath("seer_reddit.RedditRunnerDetailRoute", map[string]getters.Getter[any]{
@@ -339,6 +353,12 @@ func (redditPostActiveOnlyPatcher) Patch(_ views.View, _ *http.Request, q gorm.C
 	return q.Where("deleted_at IS NULL")
 }
 
+type redditSourceUnsetRunnerPatcher struct{}
+
+func (redditSourceUnsetRunnerPatcher) Patch(_ views.View, _ *http.Request, q gorm.ChainInterface[RedditSource]) gorm.ChainInterface[RedditSource] {
+	return q.Where("reddit_runner_id IS NULL")
+}
+
 type redditSourceCreateValidate struct{}
 
 func (redditSourceCreateValidate) Patch(_ views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
@@ -370,7 +390,10 @@ func redditRunnerIDFromFormMap(formData map[string]any) (*uint, bool) {
 
 type redditRunnerValidate struct{}
 
-func (redditRunnerValidate) Patch(_ views.View, _ *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+func (redditRunnerValidate) Patch(_ views.View, r *http.Request, formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+	if formErrors == nil {
+		formErrors = map[string]error{}
+	}
 	name, _ := formData["Name"].(string)
 	if strings.TrimSpace(name) == "" {
 		formErrors["Name"] = errors.New("name is required")
@@ -388,5 +411,49 @@ func (redditRunnerValidate) Patch(_ views.View, _ *http.Request, formData map[st
 	if d == nil || *d <= 0 {
 		formErrors["Duration"] = errors.New("duration must be positive")
 	}
+	formData, formErrors = redditRunnerSourceIDsValidateAndFlatten(formData, formErrors)
+	formErrors = validateRedditRunnerSourceIDs(r, formData, formErrors)
 	return formData, formErrors
+}
+
+func redditRunnerSourceIDsValidateAndFlatten(formData map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
+	raw, ok := formData["RedditSourceIDs"]
+	if !ok {
+		return formData, formErrors
+	}
+	assoc, ok := raw.(components.AssociationIDs)
+	if !ok {
+		formErrors["RedditSourceIDs"] = errors.New("invalid Reddit sources")
+		delete(formData, "RedditSourceIDs")
+		return formData, formErrors
+	}
+	formData["RedditSourceIDs"] = assoc.IDs
+	return formData, formErrors
+}
+
+func validateRedditRunnerSourceIDs(r *http.Request, formData map[string]any, formErrors map[string]error) map[string]error {
+	ids, _ := formData["RedditSourceIDs"].([]uint)
+	if len(ids) == 0 || formErrors["RedditSourceIDs"] != nil {
+		return formErrors
+	}
+	db, err := getters.DBFromContext(r.Context())
+	if err != nil {
+		formErrors["RedditSourceIDs"] = err
+		return formErrors
+	}
+	query := db.WithContext(r.Context()).Model(&RedditSource{}).Where("id IN ?", ids)
+	if runner, ok := r.Context().Value("redditRunner").(RedditRunner); ok && runner.ID != 0 {
+		query = query.Where("reddit_runner_id IS NULL OR reddit_runner_id = ?", runner.ID)
+	} else {
+		query = query.Where("reddit_runner_id IS NULL")
+	}
+	var count int64
+	if err := query.Count(&count).Error; err != nil {
+		formErrors["RedditSourceIDs"] = err
+		return formErrors
+	}
+	if count != int64(len(ids)) {
+		formErrors["RedditSourceIDs"] = errors.New("select only Reddit sources without workers")
+	}
+	return formErrors
 }
