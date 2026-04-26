@@ -19,10 +19,10 @@ func registerDetail() {
 					&components.ContainerColumn{Children: []components.PageInterface{
 						&components.FieldTitle{Getter: getters.Key[string]("$in.Name")},
 						&components.FieldSubtitle{Getter: currentVNodeTitle()},
-						&components.LabelInline{Title: "Path", Classes: "mt-2", Children: []components.PageInterface{&components.FieldText{Getter: currentVNodePath()}}},
+						&components.LabelInline{Title: "Path", Classes: "mt-2", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$in.ResolvedPath")}}},
 						&components.LabelInline{Title: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$in")}}},
 						&components.LabelInline{Title: "Size", Children: []components.PageInterface{&components.FieldText{Getter: vnodeSizeForKey("$in")}}},
-						&components.LabelInline{Title: "Items", Children: []components.PageInterface{&components.FieldText{Getter: vnodeChildrenCountForKey("$in")}}},
+						&components.LabelInline{Title: "Items", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$in.ListChildrenCount")}}},
 						&components.LabelInline{Title: "Created At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.CreatedAt")}}},
 						&components.LabelInline{Title: "Modified At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.UpdatedAt")}}},
 						&components.ShowIf{

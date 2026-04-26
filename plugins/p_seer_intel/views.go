@@ -26,5 +26,6 @@ func init() {
 			WithLayer("seer_intel.intel.detail", views.LayerDetail[Intel]{
 				Key:          getters.Static("intel"),
 				PathParamKey: getters.Static("id"),
-			}))
+			}).
+			WithLayer("seer_intel.intel.source_href", intelSourceDetailHrefLayer{}))
 }

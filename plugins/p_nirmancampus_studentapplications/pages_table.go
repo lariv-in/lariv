@@ -1,7 +1,6 @@
 package p_nirmancampus_studentapplications
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/lariv-in/lago/components"
@@ -43,20 +42,13 @@ func registerFilterPages() {
 	})
 }
 
-func applicationCreateUrlGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if role == "superuser" || role == "admin" || role == roleNameUnassigned {
-			return lago.RoutePath("studentapplications.CreateRoute", nil)(ctx)
-		}
-		return "", fmt.Errorf("you do not have permission to do this action")
-	}
-}
-
 func registerTablePages() {
+	create := lago.RoutePath("studentapplications.CreateRoute", nil)
+	studentApplicationTableCreateLink := getters.Match(getters.Key[string]("$role"), map[string]getters.Getter[string]{
+		"superuser":        create,
+		"admin":            create,
+		roleNameUnassigned: create,
+	}, getters.Static(fmt.Errorf("you do not have permission to do this action")))
 	lago.RegistryPage.Register("studentapplications.ApplicationTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "studentapplications.ApplicationMenu"},
@@ -69,7 +61,7 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[StudentApplication]]("studentapplications"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "studentapplications.ApplicationFilter"}},
-					&components.TableButtonCreate{Link: applicationCreateUrlGetter()},
+					&components.TableButtonCreate{Link: studentApplicationTableCreateLink},
 				},
 				RowAttr: getters.RowAttrNavigate(lago.RoutePath("studentapplications.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{

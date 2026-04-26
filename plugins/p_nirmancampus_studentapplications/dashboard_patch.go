@@ -13,26 +13,6 @@ func init() {
 	registerDashboardAppsPagePatch()
 }
 
-func getterRoleIsUnassigned() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return false, nil
-		}
-		return role == roleNameUnassigned, nil
-	}
-}
-
-func getterRoleIsNotUnassigned() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return true, nil
-		}
-		return role != roleNameUnassigned, nil
-	}
-}
-
 func registerDashboardAppsPagePatch() {
 	lago.RegistryPage.Patch("dashboard.AppsPage", func(page components.PageInterface) components.PageInterface {
 		scaffold, ok := page.(*components.ShellTopbarScaffold)
@@ -46,8 +26,10 @@ func registerDashboardAppsPagePatch() {
 			appsGrid := layout.Children[0]
 			layout.Children = []components.PageInterface{
 				&components.ShowIf{
-					Page:   components.Page{Key: "studentapplications.DashboardUnassignedActions"},
-					Getter: getterRoleIsUnassigned(),
+					Page: components.Page{Key: "studentapplications.DashboardUnassignedActions"},
+					Getter: getters.Match(getters.Key[string]("$role"), map[string]getters.Getter[any]{
+						roleNameUnassigned: getters.Static[any](true),
+					}, getters.Static[error](nil)),
 					Children: []components.PageInterface{
 						components.ContainerColumn{
 							Page:    components.Page{Key: "studentapplications.DashboardUnassignedColumn"},
@@ -80,8 +62,10 @@ func registerDashboardAppsPagePatch() {
 					},
 				},
 				&components.ShowIf{
-					Page:   components.Page{Key: "studentapplications.DashboardAppsGrid"},
-					Getter: getterRoleIsNotUnassigned(),
+					Page: components.Page{Key: "studentapplications.DashboardAppsGrid"},
+					Getter: getters.BoolNot(getters.Map(getters.Key[string]("$role"), func(_ context.Context, r string) (bool, error) {
+						return r == roleNameUnassigned, nil
+					})),
 					Children: []components.PageInterface{
 						appsGrid,
 					},

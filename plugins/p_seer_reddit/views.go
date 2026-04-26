@@ -1,17 +1,90 @@
 package p_seer_reddit
 
 import (
+	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_seer_intel"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
+
+// redditPostListBySourceFlagLayer sets [redditPostListBySource] so list toolbars can use [getters.Key] (vs. error-swallowing checks on [redditSource.ID]).
+type redditPostListBySourceFlagLayer struct{ Value bool }
+
+func (l redditPostListBySourceFlagLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), "redditPostListBySource", l.Value)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// redditPostIntelContextLayer fills [redditPostIntelAddVisible], [redditPostIntelLinkVisible], [redditPostIntelDetailHref] after [views.LayerDetail] for [RedditPost].
+type redditPostIntelContextLayer struct{}
+
+func (redditPostIntelContextLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		post, ok := ctx.Value("redditPost").(RedditPost)
+		if !ok {
+			post = RedditPost{}
+		}
+		setEmpty := func() {
+			ctx = context.WithValue(ctx, "redditPostIntelAddVisible", false)
+			ctx = context.WithValue(ctx, "redditPostIntelLinkVisible", false)
+			ctx = context.WithValue(ctx, "redditPostIntelDetailHref", "")
+		}
+		if post.ID == 0 {
+			setEmpty()
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			slog.Error("seer_reddit: reddit post intel context: db", "error", err)
+			setEmpty()
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		exists, err := p_seer_intel.IntelExistsForSource(ctx, db, (RedditPost{}).Kind(), post.ID)
+		if err != nil {
+			slog.Error("seer_reddit: reddit post intel context: exists check", "error", err)
+			exists = false
+		}
+		href := ""
+		if exists {
+			href, err = p_seer_intel.IntelDetailPathForSource(ctx, (RedditPost{}).Kind(), post.ID)
+			if err != nil {
+				slog.Error("seer_reddit: reddit post intel context: detail path", "error", err)
+				href = ""
+			}
+		}
+		ctx = context.WithValue(ctx, "redditPostIntelAddVisible", !exists)
+		ctx = context.WithValue(ctx, "redditPostIntelLinkVisible", exists)
+		ctx = context.WithValue(ctx, "redditPostIntelDetailHref", href)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// redditRunnerWorkerPoolStateLayer sets [workerPoolIsRunning] after [views.LayerDetail] for [RedditRunner].
+type redditRunnerWorkerPoolStateLayer struct{}
+
+func (redditRunnerWorkerPoolStateLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		run, ok := ctx.Value("redditRunner").(RedditRunner)
+		running := ok && run.ID != 0 && RedditRunnerWorkerPoolIsRunning(run.ID)
+		ctx = context.WithValue(ctx, "workerPoolIsRunning", running)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func init() {
 	sourcePatchers := views.QueryPatchers[RedditSource]{
@@ -93,6 +166,7 @@ func init() {
 	lago.RegistryView.Register("seer_reddit.RedditPostListView",
 		lago.GetPageView("seer_reddit.RedditPostTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: false}).
 			WithLayer("seer_reddit.reddit_post.list", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
 				QueryPatchers: postPatchers,
@@ -101,6 +175,7 @@ func init() {
 	lago.RegistryView.Register("seer_reddit.RedditPostListBySourceView",
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: true}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
 				Key:           getters.Static("redditSource"),
 				PathParamKey:  getters.Static("source_id"),
@@ -114,6 +189,7 @@ func init() {
 	lago.RegistryView.Register("seer_reddit.RedditPostListBulkAddIntelView",
 		lago.GetPageView("seer_reddit.RedditPostTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: false}).
 			WithLayer("seer_reddit.reddit_post.list", views.LayerList[RedditPost]{
 				Key:           getters.Static("redditPosts"),
 				QueryPatchers: postPatchers,
@@ -125,6 +201,7 @@ func init() {
 	lago.RegistryView.Register("seer_reddit.RedditPostListBySourceBulkAddIntelView",
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: true}).
 			WithLayer("seer_reddit.reddit_source.detail_by_source_id", views.LayerDetail[RedditSource]{
 				Key:           getters.Static("redditSource"),
 				PathParamKey:  getters.Static("source_id"),
@@ -142,6 +219,7 @@ func init() {
 	lago.RegistryView.Register("seer_reddit.RedditSourceFetchPostsView",
 		lago.GetPageView("seer_reddit.RedditPostTableBySource").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("seer_reddit.post_list_by_source_flag", redditPostListBySourceFlagLayer{Value: true}).
 			WithLayer("seer_reddit.fetch_posts", redditSourceFetchPostsActionLayer{}))
 
 	lago.RegistryView.Register("seer_reddit.RedditPostDetailView",
@@ -151,7 +229,8 @@ func init() {
 				Key:           getters.Static("redditPost"),
 				PathParamKey:  getters.Static("id"),
 				QueryPatchers: postDetailPatchers,
-			}))
+			}).
+			WithLayer("seer_reddit.reddit_post.intel", redditPostIntelContextLayer{}))
 
 	lago.RegistryView.Register("seer_reddit.RedditPostAddIntelView",
 		lago.GetPageView("seer_reddit.RedditPostDetail").
@@ -161,7 +240,8 @@ func init() {
 				PathParamKey:  getters.Static("id"),
 				QueryPatchers: postDetailPatchers,
 			}).
-			WithLayer("seer_reddit.reddit_post.add_intel", redditPostAddIntelLayer{}))
+			WithLayer("seer_reddit.reddit_post.add_intel", redditPostAddIntelLayer{}).
+			WithLayer("seer_reddit.reddit_post.intel", redditPostIntelContextLayer{}))
 
 	lago.RegistryView.Register("seer_reddit.RedditPostSoftDeleteView",
 		lago.GetPageView("seer_reddit.RedditPostDeleteForm").
@@ -199,7 +279,8 @@ func init() {
 			WithLayer("seer_reddit.reddit_runner.detail", views.LayerDetail[RedditRunner]{
 				Key:          getters.Static("redditRunner"),
 				PathParamKey: getters.Static("id"),
-			}))
+			}).
+			WithLayer("seer_reddit.reddit_runner.worker_pool_state", redditRunnerWorkerPoolStateLayer{}))
 
 	lago.RegistryView.Register("seer_reddit.RedditRunnerCreateView",
 		lago.GetPageView("seer_reddit.RedditRunnerCreateForm").

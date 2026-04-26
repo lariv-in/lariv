@@ -14,7 +14,7 @@ func websiteListColumns() []components.TableColumn {
 			Label: "URL",
 			Children: []components.PageInterface{
 				&components.FieldText{
-					Getter:  websiteURLStringFromRowContext(),
+					Getter:  pageURLStringFromKey("$row.URL"),
 					Classes: "break-all max-w-prose",
 				},
 			},

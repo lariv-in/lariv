@@ -22,7 +22,7 @@ func registerStudentsMenuAssignmentSubmissionsEntry() {
 			return page
 		}
 		menu.Children = append(menu.Children, &components.SidebarMenuItem{
-			Title: getters.Static("Assignment submissions"),
+			Title: getters.Static("All Assignment Submissions"),
 			Url:   lago.RoutePath("assignmentsubmissions.DefaultRoute", nil),
 		})
 		return menu

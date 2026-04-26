@@ -4,6 +4,7 @@ import (
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/registry"
 )
 
@@ -23,6 +24,14 @@ func registerFilterPages() {
 				Choices: getters.Static(AssignmentSubmissionStatusChoices),
 				Getter:  registry.PairFromGetter(getters.Key[string]("$get.SubmissionStatus"), AssignmentSubmissionStatusChoices),
 			},
+			&components.InputForeignKey[p_nirmancampus_academicrecords.AcademicRecord]{
+				Label:       "Academic record",
+				Name:        "AcademicRecordID",
+				Url:         lago.RoutePath("academicrecords.SelectRoute", nil),
+				Display:     getters.Format("%s (%s)", getters.Any(getters.Key[string]("$in.Student.Name")), getters.Any(getters.Key[string]("$in.AdmissionSession.Name"))),
+				Placeholder: "Filter by academic record...",
+				Getter:      academicRecordForInputForeignKey(),
+			},
 		},
 		ChildrenAction: []components.PageInterface{
 			&components.ContainerRow{
@@ -37,11 +46,18 @@ func registerFilterPages() {
 }
 
 func registerTablePages() {
+	assignmentSubmissionsSessionEnvironment := &components.Environment[uint]{
+		Label:   "Admission session",
+		Key:     getters.Static(assignmentSubmissionsEnvironmentSessionKey),
+		Options: p_nirmancampus_academicrecords.AcademicSessionsListGetter,
+		Default: assignmentSubmissionsSessionEnvironmentDefault,
+	}
 	lago.RegistryPage.Register("assignmentsubmissions.Table", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "students.StudentMenu"},
 		},
 		Children: []components.PageInterface{
+			assignmentSubmissionsSessionEnvironment,
 			&components.DataTable[AssignmentSubmission]{
 				Page:    components.Page{Key: "assignmentsubmissions.TableBody"},
 				UID:     "assignment-submissions-table",
@@ -64,6 +80,19 @@ func registerTablePages() {
 						Name:  "Course.Name",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Course.Name")},
+						},
+					},
+					{
+						Label: "Academic record",
+						Name:  "AcademicRecord.Student.Name",
+						Children: []components.PageInterface{
+							&components.FieldText{
+								Getter: getters.Format(
+									"%s (%s)",
+									getters.Any(getters.Key[string]("$row.AcademicRecord.Student.Name")),
+									getters.Any(getters.Key[string]("$row.AcademicRecord.AdmissionSession.Name")),
+								),
+							},
 						},
 					},
 					{

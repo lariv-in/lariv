@@ -30,8 +30,8 @@ func registerWebsiteFormPages() {
 								Label:    "Page URL",
 								Name:     "URL",
 								Required: true,
-								Getter: websiteURLStringFromInContext(),
-								Classes: "w-full",
+								Getter:   pageURLStringFromKey("$in.URL"),
+								Classes:  "w-full",
 							},
 						},
 						ChildrenAction: []components.PageInterface{

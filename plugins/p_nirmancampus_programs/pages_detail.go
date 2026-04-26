@@ -2,7 +2,6 @@ package p_nirmancampus_programs
 
 import (
 	"context"
-	"strings"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -10,23 +9,6 @@ import (
 	courses "github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/registry"
 )
-
-func courseListDisplayGetter(g getters.Getter[[]courses.Course]) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		list, err := g(ctx)
-		if err != nil {
-			return "", err
-		}
-		if len(list) == 0 {
-			return "", nil
-		}
-		codes := make([]string, 0, len(list))
-		for _, c := range list {
-			codes = append(codes, c.Code)
-		}
-		return strings.Join(codes, ", "), nil
-	}
-}
 
 func registerDetailPages() {
 	programStructureNonEmpty := getters.Map(

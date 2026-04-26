@@ -34,8 +34,10 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("filesystem.VNodeUpdateForm"),
-				ActionURL: currentVNodeEditRoute(),
+				Name: getters.Static("filesystem.VNodeUpdateForm"),
+				ActionURL: lago.RoutePath("filesystem.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("vnode.ID")),
+				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[VNode]{
 						Getter: getters.Key[VNode]("vnode"),
@@ -77,13 +79,17 @@ func registerForms() {
 										Children: []components.PageInterface{
 											&components.ButtonSubmit{Label: "Save"},
 											&components.ButtonModalForm{
-												Label:       "Delete",
-												Icon:        "trash",
-												Name:        getters.Static("filesystem.VNodeDeleteForm"),
-												Url:         currentVNodeDeleteRoute(),
-												FormPostURL: currentVNodeDeleteRoute(),
-												ModalUID:    "filesystem-vnode-delete-modal",
-												Classes:     "btn-error",
+												Label: "Delete",
+												Icon:  "trash",
+												Name:  getters.Static("filesystem.VNodeDeleteForm"),
+												Url: lago.RoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("vnode.ID")),
+												}),
+												FormPostURL: lago.RoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("vnode.ID")),
+												}),
+												ModalUID: "filesystem-vnode-delete-modal",
+												Classes:  "btn-error",
 											},
 										},
 									},
@@ -100,8 +106,10 @@ func registerForms() {
 		Sidebar: filesystemSidebar(),
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name:      getters.Static("filesystem.VNodeMoveForm"),
-				ActionURL: currentVNodeMoveRoute(),
+				Name: getters.Static("filesystem.VNodeMoveForm"),
+				ActionURL: lago.RoutePath("filesystem.MoveRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("vnode.ID")),
+				}),
 				Children: []components.PageInterface{
 					&components.FormComponent[VNode]{
 						Getter: getters.Key[VNode]("vnode"),

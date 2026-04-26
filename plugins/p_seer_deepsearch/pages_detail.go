@@ -2,8 +2,6 @@ package p_seer_deepsearch
 
 import (
 	"context"
-	"sort"
-	"strconv"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -12,91 +10,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_seer_intel"
 	"github.com/lariv-in/lago/registry"
 )
-
-func deepSearchPollingActive(status string) bool {
-	switch status {
-	case DeepSearchStatusDone, DeepSearchStatusFailed, DeepSearchStatusCancelled:
-		return false
-	default:
-		return true
-	}
-}
-
-func deepSearchShowStopActionGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		ds, err := getters.Key[DeepSearch]("deepSearch")(ctx)
-		if err != nil {
-			return false, err
-		}
-		switch ds.Status {
-		case DeepSearchStatusPending, DeepSearchStatusRunning, DeepSearchStatusExpandingQueries,
-			DeepSearchStatusSearching, DeepSearchStatusScraping, DeepSearchStatusIngestingIntel,
-			DeepSearchStatusReporting:
-			return true, nil
-		default:
-			return false, nil
-		}
-	}
-}
-
-func deepSearchShowRestartActionGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		ds, err := getters.Key[DeepSearch]("deepSearch")(ctx)
-		if err != nil {
-			return false, err
-		}
-		switch ds.Status {
-		case DeepSearchStatusDone, DeepSearchStatusFailed, DeepSearchStatusCancelled:
-			return true, nil
-		default:
-			return false, nil
-		}
-	}
-}
-
-func deepSearchDetailPollURL(ctx context.Context, id uint) (string, error) {
-	return lago.RoutePath("seer_deepsearch.DetailRoute", map[string]getters.Getter[any]{
-		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(id), 10))),
-	})(ctx)
-}
-
-func deepSearchDetailShellGetter(inner components.PageInterface) getters.Getter[components.PageInterface] {
-	return func(ctx context.Context) (components.PageInterface, error) {
-		ds, err := getters.Key[DeepSearch]("deepSearch")(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if !deepSearchPollingActive(ds.Status) {
-			return inner, nil
-		}
-		u, err := deepSearchDetailPollURL(ctx, ds.ID)
-		if err != nil {
-			return nil, err
-		}
-		return &components.HTMXPolling{
-			Page:     components.Page{Key: "seer_deepsearch.DeepSearchDetailPolling"},
-			URL:      getters.Static(u),
-			Children: []components.PageInterface{inner},
-		}, nil
-	}
-}
-
-func deepSearchLogsGetter() getters.Getter[[]DeepSearchLog] {
-	return func(ctx context.Context) ([]DeepSearchLog, error) {
-		ds, err := getters.Key[DeepSearch]("deepSearch")(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if len(ds.Logs) == 0 {
-			return []DeepSearchLog{}, nil
-		}
-		out := append([]DeepSearchLog(nil), ds.Logs...)
-		sort.Slice(out, func(i, j int) bool {
-			return out[i].CreatedAt.After(out[j].CreatedAt)
-		})
-		return out, nil
-	}
-}
 
 func deepSearchDetailContentColumn() components.PageInterface {
 	return components.ContainerColumn{

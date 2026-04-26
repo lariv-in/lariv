@@ -1,35 +1,12 @@
 package p_seer_deepsearch
 
 import (
-	"context"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"maragu.dev/gomponents"
-	ghtml "maragu.dev/gomponents/html"
 )
 
 var deepSearchHomeFormName = getters.Static("seer_deepsearch.HomeSearchForm")
-
-// deepSearchHomeFormAttr merges [getters.FormBubbling] with an explicit form action so
-// [components.FormListenBoostedPost] path checks pass (form pathname must match POST target).
-func deepSearchHomeFormAttr() getters.Getter[gomponents.Node] {
-	return func(ctx context.Context) (gomponents.Node, error) {
-		actionURL, err := lago.RoutePath("seer_deepsearch.StartRoute", nil)(ctx)
-		if err != nil {
-			return nil, err
-		}
-		bub, err := getters.FormBubbling(deepSearchHomeFormName)(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return gomponents.Group{
-			ghtml.Action(actionURL),
-			bub,
-		}, nil
-	}
-}
 
 func registerDeepSearchMenuPages() {
 	lago.RegistryPage.Register("seer_deepsearch.DeepSearchMenu", &components.SidebarMenu{

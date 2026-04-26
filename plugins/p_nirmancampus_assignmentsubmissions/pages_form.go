@@ -2,9 +2,6 @@ package p_nirmancampus_assignmentsubmissions
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"log/slog"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -13,44 +10,7 @@ import (
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
 	"github.com/lariv-in/lago/registry"
-	"gorm.io/gorm"
 )
-
-func bulkAcademicRecordStudentLineGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		rec, ok := bulkAcademicRecordFromContext(ctx)
-		if !ok || rec.ID == 0 {
-			return "", nil
-		}
-		return fmt.Sprintf("%s — %s", rec.Student.Name, rec.Student.StudentNo), nil
-	}
-}
-
-// assignmentSubmissionFormAcademicRecordGetter loads the academic record for the FK input with
-// preloads so Display (Student.StudentNo) works; plain getters.Association does not preload Student.
-func assignmentSubmissionFormAcademicRecordGetter() getters.Getter[p_nirmancampus_academicrecords.AcademicRecord] {
-	return func(ctx context.Context) (p_nirmancampus_academicrecords.AcademicRecord, error) {
-		var zero p_nirmancampus_academicrecords.AcademicRecord
-		id, err := getters.Key[uint]("$in.AcademicRecordID")(ctx)
-		if err != nil || id == 0 {
-			return zero, nil
-		}
-		db, dberr := getters.DBFromContext(ctx)
-		if dberr != nil {
-			return zero, nil
-		}
-		var rec p_nirmancampus_academicrecords.AcademicRecord
-		err = db.Preload("Student").Preload("Program").First(&rec, id).Error
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return zero, nil
-			}
-			slog.Error("assignmentSubmissionFormAcademicRecordGetter: load failed", "error", err, "id", id)
-			return zero, err
-		}
-		return rec, nil
-	}
-}
 
 func assignmentSubmissionFormCourseAndAcademicRecordRow() *components.ContainerRow {
 	return &components.ContainerRow{
@@ -82,7 +42,7 @@ func assignmentSubmissionFormCourseAndAcademicRecordRow() *components.ContainerR
 						Url:         lago.RoutePath("academicrecords.SelectRoute", nil),
 						Display:     getters.Key[string]("$in.Student.StudentNo"),
 						Placeholder: "Select an academic record...",
-						Getter:      assignmentSubmissionFormAcademicRecordGetter(),
+						Getter:      academicRecordForInputForeignKey(),
 					},
 				},
 			},
@@ -207,7 +167,7 @@ func registerFormPages() {
 										Required: true,
 										Url:      lago.RoutePath("academicrecords.SelectRoute", nil),
 										Display:  getters.Key[string]("$in.Student.StudentNo"),
-										Getter:   assignmentSubmissionFormAcademicRecordGetter(),
+										Getter:   academicRecordForInputForeignKey(),
 									},
 								},
 							},

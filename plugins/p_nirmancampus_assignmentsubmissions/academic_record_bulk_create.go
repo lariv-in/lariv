@@ -26,7 +26,7 @@ const bulkSelectedCourseIDsFieldName = "BulkSelectedCourseIDs"
 
 type academicRecordBulkCreateLoadLayer struct{}
 
-func (academicRecordBulkCreateLoadLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (academicRecordBulkCreateLoadLayer) Next(view views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		aidStr := r.URL.Query().Get("AcademicRecordID")
 		if aidStr == "" {
@@ -48,9 +48,10 @@ func (academicRecordBulkCreateLoadLayer) Next(_ views.View, next http.Handler) h
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		var rec p_nirmancampus_academicrecords.AcademicRecord
-		if err := db.Preload("CompulsoryCourses").Preload("OptionalCourses").Preload("Student").
-			First(&rec, uint(id64)).Error; err != nil {
+		q := p_nirmancampus_academicrecords.AcademicRecordQueryPatchersBulkModal.Apply(
+			view, r, gorm.G[p_nirmancampus_academicrecords.AcademicRecord](db).Scopes())
+		rec, err := q.Where("id = ?", uint(id64)).First(r.Context())
+		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				ctx := views.ContextWithErrorsAndValues(r.Context(), nil, map[string]error{
 					"_form": fmt.Errorf("academic record not found"),
@@ -64,7 +65,10 @@ func (academicRecordBulkCreateLoadLayer) Next(_ views.View, next http.Handler) h
 			return
 		}
 		ctx := context.WithValue(r.Context(), bulkAcademicRecordContextKey, rec)
-		ctx = views.ContextWithErrorsAndValues(ctx, map[string]any{"AcademicRecordID": rec.ID}, nil)
+		ctx = views.ContextWithErrorsAndValues(ctx, map[string]any{
+			"AcademicRecordID": rec.ID,
+			"AcademicRecord":   rec,
+		}, nil)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -176,12 +180,12 @@ func bulkCreateFromAcademicRecordPostHandler(view *views.View) http.Handler {
 			for _, cid := range selected {
 				course := allowed[cid]
 				row := AssignmentSubmission{
-					AssignmentTitle:    course.Name,
-					MaxMarks:           0,
-					Marks:              0,
+					AssignmentTitle:  course.Name,
+					MaxMarks:         0,
+					Marks:            0,
 					SubmissionStatus: AssignmentSubmissionStatusCreatedKey,
-					CourseID:           cid,
-					AcademicRecordID:   rec.ID,
+					CourseID:         cid,
+					AcademicRecordID: rec.ID,
 				}
 				if err := tx.Create(&row).Error; err != nil {
 					return err

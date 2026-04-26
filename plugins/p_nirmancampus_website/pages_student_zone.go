@@ -1,23 +1,11 @@
 package p_nirmancampus_website
 
 import (
-	"context"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 )
-
-func getterNotIsLink() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		v, err := getters.Key[bool]("$in.IsLink")(ctx)
-		if err != nil {
-			return true, nil
-		}
-		return !v, nil
-	}
-}
 
 func init() {
 	registerStudentZoneAdminMenuPages()
@@ -595,7 +583,7 @@ func registerStudentZoneAdminDetailPages() {
 								},
 							},
 							&components.ShowIf{
-								Getter: getterNotIsLink(),
+								Getter: getters.BoolNot(getters.Key[bool]("$in.IsLink")),
 								Children: []components.PageInterface{
 									&components.LabelInline{
 										Title: "File",

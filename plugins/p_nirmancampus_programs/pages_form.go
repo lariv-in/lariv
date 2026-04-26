@@ -1,9 +1,6 @@
 package p_nirmancampus_programs
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
@@ -169,19 +166,6 @@ func programFormFields() components.ContainerColumn {
 				},
 			},
 		},
-	}
-}
-
-func programCreateUrlGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if role == "superuser" || role == "admin" {
-			return lago.RoutePath("programs.CreateRoute", nil)(ctx)
-		}
-		return "", fmt.Errorf("you do not have permission to do this action")
 	}
 }
 

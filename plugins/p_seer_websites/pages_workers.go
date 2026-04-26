@@ -41,45 +41,6 @@ func websiteRunnerFormFields() components.PageInterface {
 	}
 }
 
-func websiteRunnerDetailWorkerPoolActionsGetter() getters.Getter[components.PageInterface] {
-	return func(ctx context.Context) (components.PageInterface, error) {
-		id, err := getters.Key[uint]("$in.ID")(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if WebsiteRunnerWorkerPoolIsRunning(id) {
-			return &components.ContainerRow{
-				Page:    components.Page{Key: "seer_websites.WebsiteRunnerDetailWorkerPoolActions"},
-				Classes: "flex flex-wrap gap-2 items-center mt-2",
-				Children: []components.PageInterface{
-					&components.ButtonPost{
-						Label: "Stop worker pool",
-						URL: lago.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
-							"id": getters.Any(getters.Key[uint]("$in.ID")),
-						}),
-						Icon:    "stop",
-						Classes: "btn-outline btn-error btn-sm",
-					},
-				},
-			}, nil
-		}
-		return &components.ContainerRow{
-			Page:    components.Page{Key: "seer_websites.WebsiteRunnerDetailWorkerPoolActions"},
-			Classes: "flex flex-wrap gap-2 items-center mt-2",
-			Children: []components.PageInterface{
-				&components.ButtonPost{
-					Label: "Start worker pool",
-					URL: lago.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("$in.ID")),
-					}),
-					Icon:    "play",
-					Classes: "btn-outline btn-success btn-sm",
-				},
-			},
-		}, nil
-	}
-}
-
 func registerWebsiteRunnerPages() {
 	createName := getters.Static("seer_websites.WebsiteRunnerCreateForm")
 	updateName := getters.Static("seer_websites.WebsiteRunnerUpdateForm")
@@ -172,7 +133,48 @@ func registerWebsiteRunnerPages() {
 									},
 								},
 							},
-							&components.GetterPage{Getter: websiteRunnerDetailWorkerPoolActionsGetter()},
+							&components.ShowIf{
+								Page:   components.Page{Key: "seer_websites.WebsiteRunnerDetailWorkerPoolStopWrap"},
+								Getter: getters.Any(getters.Key[bool]("workerPoolIsRunning")),
+								Children: []components.PageInterface{
+									&components.ContainerRow{
+										Page:    components.Page{Key: "seer_websites.WebsiteRunnerDetailWorkerPoolActions"},
+										Classes: "flex flex-wrap gap-2 items-center mt-2",
+										Children: []components.PageInterface{
+											&components.ButtonPost{
+												Label: "Stop worker pool",
+												URL: lago.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.ID")),
+												}),
+												Icon:    "stop",
+												Classes: "btn-outline btn-error btn-sm",
+											},
+										},
+									},
+								},
+							},
+							&components.ShowIf{
+								Page: components.Page{Key: "seer_websites.WebsiteRunnerDetailWorkerPoolStartWrap"},
+								Getter: getters.Map(getters.Key[bool]("workerPoolIsRunning"), func(_ context.Context, running bool) (any, error) {
+									return !running, nil
+								}),
+								Children: []components.PageInterface{
+									&components.ContainerRow{
+										Page:    components.Page{Key: "seer_websites.WebsiteRunnerDetailWorkerPoolActions"},
+										Classes: "flex flex-wrap gap-2 items-center mt-2",
+										Children: []components.PageInterface{
+											&components.ButtonPost{
+												Label: "Start worker pool",
+												URL: lago.RoutePath("seer_websites.WebsiteRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.ID")),
+												}),
+												Icon:    "play",
+												Classes: "btn-outline btn-success btn-sm",
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},

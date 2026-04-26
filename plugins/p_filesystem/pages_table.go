@@ -26,7 +26,7 @@ func registerTables() {
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.Name")}}},
 					{Label: "Type", Name: "Type", Children: []components.PageInterface{&components.FieldText{Getter: vnodeTypeForKey("$row")}}},
 					{Label: "Size", Name: "Size", Children: []components.PageInterface{&components.FieldText{Getter: vnodeSizeForKey("$row")}}},
-					{Label: "Items", Name: "Items", Children: []components.PageInterface{&components.FieldText{Getter: vnodeChildrenCountForKey("$row")}}},
+					{Label: "Items", Name: "Items", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$row.ListChildrenCount")}}},
 					{Label: "Modified", Name: "UpdatedAt", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$row.UpdatedAt")}}},
 				},
 			},

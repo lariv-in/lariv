@@ -98,7 +98,7 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 			&components.DataTable[AssignmentSubmission]{
 				Page:        components.Page{Key: "assignmentsubmissions.AcademicRecordDetailTable"},
 				UID:         "academic-record-assignment-submissions-table",
-				Title:       "Assignment submissions",
+				Title:       "Assignment Submissions",
 				Classes:     "w-full",
 				Data:        getters.Key[components.ObjectList[AssignmentSubmission]](academicRecordDetailSubmissionsContextKey),
 				DefaultView: "Grid",

@@ -11,19 +11,6 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-func websiteSourceFetchButtonAttrGetter() getters.Getter[gomponents.Node] {
-	return func(ctx context.Context) (gomponents.Node, error) {
-		id, err := getters.Key[uint]("websiteSource.ID")(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if WebsiteSourceCrawlIsRunning(id) {
-			return Disabled(), nil
-		}
-		return nil, nil
-	}
-}
-
 func websiteSourceFetchButtonRow() components.PageInterface {
 	return &components.ContainerRow{
 		Page:    components.Page{Key: "seer_websites.WebsiteSourceFetchRow"},
@@ -36,7 +23,12 @@ func websiteSourceFetchButtonRow() components.PageInterface {
 				}),
 				Icon:    "arrow-path",
 				Classes: "btn-outline btn-primary btn-sm",
-				Attr:    websiteSourceFetchButtonAttrGetter(),
+				Attr: getters.Map(getters.Key[uint]("websiteSource.ID"), func(_ context.Context, id uint) (gomponents.Node, error) {
+					if WebsiteSourceCrawlIsRunning(id) {
+						return Disabled(), nil
+					}
+					return nil, nil
+				}),
 			},
 		},
 	}
@@ -132,7 +124,7 @@ func websiteSourceFormFields() components.PageInterface {
 						Label:    "Seed URL",
 						Name:     "URL",
 						Required: true,
-						Getter:   websiteURLStringFromMapURLField("$in.URL"),
+						Getter:   pageURLStringFromKey("$in.URL"),
 						Classes:  "w-full max-w-xl",
 					},
 				},
@@ -141,10 +133,10 @@ func websiteSourceFormFields() components.PageInterface {
 				Error: getters.Key[error]("$error.Depth"),
 				Children: []components.PageInterface{
 					&components.InputNumber[uint]{
-						Label:    "Link depth",
-						Name:     "Depth",
-						Getter:   getters.Key[uint]("$in.Depth"),
-						Classes:  "w-full max-w-md",
+						Label:   "Link depth",
+						Name:    "Depth",
+						Getter:  getters.Key[uint]("$in.Depth"),
+						Classes: "w-full max-w-md",
 					},
 				},
 			},
@@ -176,7 +168,7 @@ func registerWebsiteSourcePages() {
 						Label: "URL",
 						Children: []components.PageInterface{
 							&components.FieldText{
-								Getter:  websiteURLStringFromMapURLField("$row.URL"),
+								Getter:  pageURLStringFromKey("$row.URL"),
 								Classes: "break-all max-w-prose",
 							},
 						},
@@ -210,7 +202,7 @@ func registerWebsiteSourcePages() {
 								Title: "Seed URL",
 								Children: []components.PageInterface{
 									&components.FieldText{
-										Getter:  websiteURLStringFromMapURLField("$in.URL"),
+										Getter:  pageURLStringFromKey("$in.URL"),
 										Classes: "break-all",
 									},
 								},

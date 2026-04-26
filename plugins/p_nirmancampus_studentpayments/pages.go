@@ -22,7 +22,7 @@ func registerStudentsMenuPaymentsEntry() {
 			return page
 		}
 		menu.Children = append(menu.Children, &components.SidebarMenuItem{
-			Title: getters.Static("Payments"),
+			Title: getters.Static("All Payments"),
 			Url:   lago.RoutePath("studentpayments.DefaultRoute", nil),
 		})
 		return menu

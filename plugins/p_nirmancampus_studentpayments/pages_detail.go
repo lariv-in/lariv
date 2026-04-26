@@ -56,7 +56,7 @@ func registerDetailPages() {
 							&components.LabelInline{
 								Title: "Paid on",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: paidAtDisplay(getters.Key[*time.Time]("$in.PaidAt"))},
+									&components.FieldDatetime{Getter: getters.Deref(getters.Key[*time.Time]("$in.PaidAt"))},
 								},
 							},
 							&components.LabelNewline{

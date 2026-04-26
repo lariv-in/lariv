@@ -3,9 +3,9 @@ package p_nirmancampus_assignmentsubmissions
 import (
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_academicrecords"
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_courses"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 

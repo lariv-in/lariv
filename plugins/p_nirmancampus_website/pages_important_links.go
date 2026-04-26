@@ -1,33 +1,11 @@
 package p_nirmancampus_website
 
 import (
-	"context"
-
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_filesystem"
 )
-
-func importantLinkGetterNotIsLink() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		v, err := getters.Key[bool]("$in.IsLink")(ctx)
-		if err != nil {
-			return true, nil
-		}
-		return !v, nil
-	}
-}
-
-func importantLinkGetterNotIsLinkRow() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		v, err := getters.Key[bool]("$row.IsLink")(ctx)
-		if err != nil {
-			return true, nil
-		}
-		return !v, nil
-	}
-}
 
 func init() {
 	registerImportantLinksAdminFilterPages()
@@ -323,7 +301,7 @@ func registerImportantLinksAdminTablePages() {
 								},
 							},
 							&components.ShowIf{
-								Getter: getters.Any(importantLinkGetterNotIsLinkRow()),
+								Getter: getters.BoolNot(getters.Key[bool]("$row.IsLink")),
 								Children: []components.PageInterface{
 									&p_filesystem.FieldFile{
 										VNode: getters.Association[p_filesystem.VNode](getters.Deref(getters.Key[*uint]("$row.FileID"))),
@@ -391,7 +369,7 @@ func registerImportantLinksAdminDetailPages() {
 								},
 							},
 							&components.ShowIf{
-								Getter: importantLinkGetterNotIsLink(),
+								Getter: getters.BoolNot(getters.Key[bool]("$in.IsLink")),
 								Children: []components.PageInterface{
 									&components.LabelInline{
 										Title: "File",

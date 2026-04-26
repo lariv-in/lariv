@@ -21,14 +21,19 @@ func init() {
 				QueryPatchers: views.QueryPatchers[AssignmentSubmission]{
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{
 						Key:   "assignmentsubmissions.preload",
-						Value: views.QueryPatcherPreload[AssignmentSubmission]{Fields: []string{"Course"}},
+						Value: views.QueryPatcherPreload[AssignmentSubmission]{Fields: []string{"Course", "AcademicRecord.Student", "AcademicRecord.AdmissionSession"}},
+					},
+					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{
+						Key:   "assignmentsubmissions.filter_by_session",
+						Value: AssignmentSubmissionListSessionFilter,
 					},
 					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{
 						Key:   "assignmentsubmissions.scope_by_role",
 						Value: AssignmentSubmissionScopeByRole,
 					},
 				},
-			}),
+			}).
+			WithLayer("assignmentsubmissions.list_filter_academic_record", listFilterAcademicRecordLoadLayer{}),
 	)
 
 	lago.RegistryView.Register("assignmentsubmissions.DetailView",

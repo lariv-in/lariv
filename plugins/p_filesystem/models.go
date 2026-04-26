@@ -27,6 +27,11 @@ type VNode struct {
 	FilePath    string
 	ParentID    *uint  `gorm:"index"`
 	Parent      *VNode `gorm:"constraint:OnDelete:CASCADE"`
+
+	// ResolvedPath is "/name/..." and ListChildrenCount is a label like "3 items" or "-", set by view
+	// layers; not in the database.
+	ResolvedPath      string `gorm:"-"`
+	ListChildrenCount string `gorm:"-"`
 }
 
 func (VNode) TableName() string {

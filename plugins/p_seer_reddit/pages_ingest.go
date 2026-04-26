@@ -2,144 +2,17 @@ package p_seer_reddit
 
 import (
 	"context"
-	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/plugins/p_seer_intel"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
-// redditPostBulkAddIntelFormURL is the POST target for bulk intel ingest; preserves the list URL query string (e.g. page).
-func redditPostBulkAddIntelFormURL(routeName string, pathParams map[string]getters.Getter[any]) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		base, err := lago.RoutePath(routeName, pathParams)(ctx)
-		if err != nil {
-			return "", err
-		}
-		reqVal := ctx.Value("$request")
-		r, ok := reqVal.(*http.Request)
-		if !ok || r == nil || r.URL == nil || r.URL.RawQuery == "" {
-			return base, nil
-		}
-		return base + "?" + r.URL.RawQuery, nil
-	}
-}
-
-// redditPostIntelMissingGetter is true when no [p_seer_intel.Intel] row exists yet for this post (kind + KindID).
-func redditPostIntelMissingGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		post, err := getters.Key[RedditPost]("redditPost")(ctx)
-		if err != nil {
-			return false, err
-		}
-		if post.ID == 0 {
-			return false, nil
-		}
-		db, err := getters.DBFromContext(ctx)
-		if err != nil {
-			return false, err
-		}
-		exists, err := p_seer_intel.IntelExistsForSource(ctx, db, (RedditPost{}).Kind(), post.ID)
-		if err != nil {
-			return false, err
-		}
-		return !exists, nil
-	}
-}
-
-// redditPostIntelPresentGetter is true when an [p_seer_intel.Intel] row exists for this post.
-func redditPostIntelPresentGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		post, err := getters.Key[RedditPost]("redditPost")(ctx)
-		if err != nil {
-			return false, err
-		}
-		if post.ID == 0 {
-			return false, nil
-		}
-		db, err := getters.DBFromContext(ctx)
-		if err != nil {
-			return false, err
-		}
-		ok, err := p_seer_intel.IntelExistsForSource(ctx, db, (RedditPost{}).Kind(), post.ID)
-		return ok, err
-	}
-}
-
-// redditPostIntelDetailHrefGetter returns the app path to [seer_intel.DetailRoute] for intel linked to this post.
-func redditPostIntelDetailHrefGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		post, err := getters.Key[RedditPost]("redditPost")(ctx)
-		if err != nil {
-			return "", err
-		}
-		return p_seer_intel.IntelDetailPathForSource(ctx, (RedditPost{}).Kind(), post.ID)
-	}
-}
-
-// redditPostToolbarBusyGetter disables Reddit post toolbar POSTs while intel ingest or async source fetch runs.
-func redditPostToolbarBusyGetter() getters.Getter[Node] {
-	return func(context.Context) (Node, error) {
-		if redditIntelIngestActive.Load() || redditFetchPostsActive.Load() {
-			return Group{Disabled(), Class("btn-disabled")}, nil
-		}
-		return nil, nil
-	}
-}
-
-func redditPostListViewPollURL(ctx context.Context, bySource bool, sourceID uint) (string, error) {
-	routeName := "seer_reddit.RedditPostListRoute"
-	var pathArgs map[string]getters.Getter[any]
-	if bySource {
-		routeName = "seer_reddit.RedditPostListBySourceRoute"
-		pathArgs = map[string]getters.Getter[any]{
-			"source_id": getters.Any(getters.Static(strconv.FormatUint(uint64(sourceID), 10))),
-		}
-	}
-	base, err := lago.RoutePath(routeName, pathArgs)(ctx)
-	if err != nil {
-		return "", err
-	}
-	reqVal := ctx.Value("$request")
-	r, ok := reqVal.(*http.Request)
-	if !ok || r == nil || r.URL == nil || r.URL.RawQuery == "" {
-		return base, nil
-	}
-	return base + "?" + r.URL.RawQuery, nil
-}
-
-func redditPostDetailPollURL(ctx context.Context, postID uint) (string, error) {
-	base, err := lago.RoutePath("seer_reddit.RedditPostDetailRoute", map[string]getters.Getter[any]{
-		"id": getters.Any(getters.Static(strconv.FormatUint(uint64(postID), 10))),
-	})(ctx)
-	if err != nil {
-		return "", err
-	}
-	reqVal := ctx.Value("$request")
-	r, ok := reqVal.(*http.Request)
-	if !ok || r == nil || r.URL == nil || r.URL.RawQuery == "" {
-		return base, nil
-	}
-	return base + "?" + r.URL.RawQuery, nil
-}
-
-// redditPostTableHasSourceContext is true when `redditSource.ID` is available (by-source post list shell).
-func redditPostTableHasSourceContext() getters.Getter[bool] {
-	return func(ctx context.Context) (bool, error) {
-		_, err := getters.Key[uint]("redditSource.ID")(ctx)
-		return err == nil, nil
-	}
-}
-
 // newRedditPostDataTable builds the shared Reddit post [components.DataTable] for global and by-source lists;
-// toolbar actions that differ by shell use [components.ShowIf].
+// toolbar actions that differ by shell use [components.ShowIf] with [redditPostListBySource] from the view layer.
 func newRedditPostDataTable() *components.DataTable[RedditPost] {
-	sourceScoped := redditPostTableHasSourceContext()
+	bySource := getters.Key[bool]("redditPostListBySource")
 	sourceID := getters.Any(getters.Key[uint]("redditSource.ID"))
 	return &components.DataTable[RedditPost]{
 		Page:    components.Page{Key: "seer_reddit.RedditPostTableBody"},
@@ -148,7 +21,7 @@ func newRedditPostDataTable() *components.DataTable[RedditPost] {
 		Data:    getters.Key[components.ObjectList[RedditPost]]("redditPosts"),
 		Actions: []components.PageInterface{
 			&components.ShowIf{
-				Getter: getters.Any(sourceScoped),
+				Getter: getters.Any(bySource),
 				Children: []components.PageInterface{
 					&components.ContainerRow{
 						Page:    components.Page{Key: "seer_reddit.RedditPostTableSourceActionsRow"},
@@ -175,7 +48,7 @@ func newRedditPostDataTable() *components.DataTable[RedditPost] {
 				},
 			},
 			&components.ShowIf{
-				Getter: getters.BoolNot(sourceScoped),
+				Getter: getters.BoolNot(bySource),
 				Children: []components.PageInterface{
 					&components.ButtonPost{
 						Page:    components.Page{Key: "seer_reddit.RedditPostTableBulkAddIntel"},
@@ -197,57 +70,6 @@ func newRedditPostDataTable() *components.DataTable[RedditPost] {
 	}
 }
 
-func redditPostListTableShellGetter(bySource bool) getters.Getter[components.PageInterface] {
-	return func(ctx context.Context) (components.PageInterface, error) {
-		var sourceID uint
-		if bySource {
-			sid, err := getters.Key[uint]("redditSource.ID")(ctx)
-			if err != nil {
-				return nil, err
-			}
-			sourceID = sid
-		}
-		tbl := newRedditPostDataTable()
-		busy := redditIntelIngestActive.Load()
-		if bySource {
-			busy = busy || redditFetchPostsActive.Load()
-		}
-		if !busy {
-			return tbl, nil
-		}
-		u, err := redditPostListViewPollURL(ctx, bySource, sourceID)
-		if err != nil {
-			return nil, err
-		}
-		return &components.HTMXPolling{
-			Page:     components.Page{Key: "seer_reddit.RedditPostTablePolling"},
-			URL:      getters.Static(u),
-			Children: []components.PageInterface{tbl},
-		}, nil
-	}
-}
-
-func redditPostDetailShellGetter(inner components.PageInterface) getters.Getter[components.PageInterface] {
-	return func(ctx context.Context) (components.PageInterface, error) {
-		post, err := getters.Key[RedditPost]("redditPost")(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if !redditIntelIngestActive.Load() {
-			return inner, nil
-		}
-		u, err := redditPostDetailPollURL(ctx, post.ID)
-		if err != nil {
-			return nil, err
-		}
-		return &components.HTMXPolling{
-			Page:     components.Page{Key: "seer_reddit.RedditPostDetailPolling"},
-			URL:      getters.Static(u),
-			Children: []components.PageInterface{inner},
-		}, nil
-	}
-}
-
 // redditPostDetailContentColumn is the main column for [seer_reddit.RedditPostDetail].
 func redditPostDetailContentColumn() components.PageInterface {
 	return components.ContainerColumn{
@@ -260,7 +82,7 @@ func redditPostDetailContentColumn() components.PageInterface {
 					&components.FieldTitle{Getter: getters.Key[string]("$in.Title")},
 					&components.ShowIf{
 						Page:   components.Page{Key: "seer_reddit.RedditPostDetailAddIntelWrap"},
-						Getter: redditPostIntelMissingGetter(),
+						Getter: getters.Any(getters.Key[bool]("redditPostIntelAddVisible")),
 						Children: []components.PageInterface{
 							&components.ButtonPost{
 								Page:    components.Page{Key: "seer_reddit.RedditPostDetailAddIntelBtn"},
@@ -306,8 +128,8 @@ func redditPostDetailContentColumn() components.PageInterface {
 				Title: "Created (UTC)",
 				Children: []components.PageInterface{
 					&components.FieldText{
-						Getter: getters.Map(getters.Key[RedditPost]("redditPost"), func(_ context.Context, p RedditPost) (string, error) {
-							return time.Unix(int64(p.CreatedUTCUnix), 0).UTC().Format(time.RFC3339), nil
+						Getter: getters.Map(getters.Key[float64]("$in.CreatedUTCUnix"), func(_ context.Context, u float64) (string, error) {
+							return time.Unix(int64(u), 0).UTC().Format(time.RFC3339), nil
 						}),
 					},
 				},
@@ -323,14 +145,14 @@ func redditPostDetailContentColumn() components.PageInterface {
 			},
 			&components.ShowIf{
 				Page:   components.Page{Key: "seer_reddit.RedditPostDetailIntelLinkWrap"},
-				Getter: getters.Any(redditPostIntelPresentGetter()),
+				Getter: getters.Any(getters.Key[bool]("redditPostIntelLinkVisible")),
 				Children: []components.PageInterface{
 					&components.LabelInline{
 						Title: "Intel",
 						Children: []components.PageInterface{
 							&components.FieldLink{
 								Page:    components.Page{Key: "seer_reddit.RedditPostDetailIntelLink"},
-								Href:    redditPostIntelDetailHrefGetter(),
+								Href:    getters.Key[string]("redditPostIntelDetailHref"),
 								Label:   getters.Static("View intel"),
 								Classes: "link link-primary",
 							},

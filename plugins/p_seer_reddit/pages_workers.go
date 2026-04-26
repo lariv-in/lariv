@@ -2,7 +2,6 @@ package p_seer_reddit
 
 import (
 	"context"
-
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -33,51 +32,12 @@ func redditRunnerFormFields() components.PageInterface {
 						Label:    "Duration",
 						Name:     "Duration",
 						Required: true,
-						Getter: getters.Ref(getters.Key[time.Duration]("$in.Duration")),
-						Classes: "w-full max-w-xl",
+						Getter:   getters.Ref(getters.Key[time.Duration]("$in.Duration")),
+						Classes:  "w-full max-w-xl",
 					},
 				},
 			},
 		},
-	}
-}
-
-func redditRunnerDetailWorkerPoolActionsGetter() getters.Getter[components.PageInterface] {
-	return func(ctx context.Context) (components.PageInterface, error) {
-		id, err := getters.Key[uint]("$in.ID")(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if RedditRunnerWorkerPoolIsRunning(id) {
-			return &components.ContainerRow{
-				Page:    components.Page{Key: "seer_reddit.RedditRunnerDetailWorkerPoolActions"},
-				Classes: "flex flex-wrap gap-2 items-center mt-2",
-				Children: []components.PageInterface{
-					&components.ButtonPost{
-						Label: "Stop worker pool",
-						URL: lago.RoutePath("seer_reddit.RedditRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
-							"id": getters.Any(getters.Key[uint]("$in.ID")),
-						}),
-						Icon:    "stop",
-						Classes: "btn-outline btn-error btn-sm",
-					},
-				},
-			}, nil
-		}
-		return &components.ContainerRow{
-			Page:    components.Page{Key: "seer_reddit.RedditRunnerDetailWorkerPoolActions"},
-			Classes: "flex flex-wrap gap-2 items-center mt-2",
-			Children: []components.PageInterface{
-				&components.ButtonPost{
-					Label: "Start worker pool",
-					URL: lago.RoutePath("seer_reddit.RedditRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("$in.ID")),
-					}),
-					Icon:    "play",
-					Classes: "btn-outline btn-success btn-sm",
-				},
-			},
-		}, nil
 	}
 }
 
@@ -173,7 +133,48 @@ func registerRedditRunnerPages() {
 									},
 								},
 							},
-							&components.GetterPage{Getter: redditRunnerDetailWorkerPoolActionsGetter()},
+							&components.ShowIf{
+								Page:   components.Page{Key: "seer_reddit.RedditRunnerDetailWorkerPoolStopWrap"},
+								Getter: getters.Any(getters.Key[bool]("workerPoolIsRunning")),
+								Children: []components.PageInterface{
+									&components.ContainerRow{
+										Page:    components.Page{Key: "seer_reddit.RedditRunnerDetailWorkerPoolActions"},
+										Classes: "flex flex-wrap gap-2 items-center mt-2",
+										Children: []components.PageInterface{
+											&components.ButtonPost{
+												Label: "Stop worker pool",
+												URL: lago.RoutePath("seer_reddit.RedditRunnerWorkerPoolStopRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.ID")),
+												}),
+												Icon:    "stop",
+												Classes: "btn-outline btn-error btn-sm",
+											},
+										},
+									},
+								},
+							},
+							&components.ShowIf{
+								Page: components.Page{Key: "seer_reddit.RedditRunnerDetailWorkerPoolStartWrap"},
+								Getter: getters.Map(getters.Key[bool]("workerPoolIsRunning"), func(_ context.Context, running bool) (any, error) {
+									return !running, nil
+								}),
+								Children: []components.PageInterface{
+									&components.ContainerRow{
+										Page:    components.Page{Key: "seer_reddit.RedditRunnerDetailWorkerPoolActions"},
+										Classes: "flex flex-wrap gap-2 items-center mt-2",
+										Children: []components.PageInterface{
+											&components.ButtonPost{
+												Label: "Start worker pool",
+												URL: lago.RoutePath("seer_reddit.RedditRunnerWorkerPoolStartRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.ID")),
+												}),
+												Icon:    "play",
+												Classes: "btn-outline btn-success btn-sm",
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},

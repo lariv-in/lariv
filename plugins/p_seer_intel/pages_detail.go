@@ -1,7 +1,6 @@
 package p_seer_intel
 
 import (
-	"context"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -48,7 +47,7 @@ func registerDetailPages() {
 								Children: []components.PageInterface{
 									&components.FieldLink{
 										Page:    components.Page{Key: "seer_intel.IntelDetailSourceLink"},
-										Href:    intelDetailHrefFromIntelKindIntelDetail(),
+										Href:    getters.Key[string](intelSourceDetailHrefKey),
 										Label:   getters.Static("Open source"),
 										Classes: "link link-primary",
 									},
@@ -60,26 +59,4 @@ func registerDetailPages() {
 			},
 		},
 	})
-}
-
-// intelDetailHrefFromIntelKindIntelDetail resolves [LoadIntelKind] for the row in context and returns [IntelKind.IntelDetail].
-func intelDetailHrefFromIntelKindIntelDetail() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		in, err := getters.Key[Intel]("intel")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if in.Kind == "" || in.KindID == 0 {
-			return "", nil
-		}
-		db, err := getters.DBFromContext(ctx)
-		if err != nil {
-			return "", err
-		}
-		k, err := LoadIntelKind(ctx, db, in.Kind, in.KindID)
-		if err != nil {
-			return "", nil
-		}
-		return k.IntelDetail(ctx)
-	}
 }

@@ -14,7 +14,6 @@ import (
 
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
-	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 )
 
@@ -55,13 +54,23 @@ func FetchNewRedditPosts(ctx context.Context, db *gorm.DB, src *RedditSource) er
 
 	var mu sync.Mutex
 	var freshTotal int
-	g, gctx := errgroup.WithContext(ctx)
+	var wg sync.WaitGroup
+	var firstErr error
 	for _, name := range names {
-		g.Go(func() error {
-			return src.fetchSubredditListings(gctx, db, name, query, maxFresh, &mu, &freshTotal)
-		})
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := src.fetchSubredditListings(ctx, db, name, query, maxFresh, &mu, &freshTotal); err != nil {
+				mu.Lock()
+				if firstErr == nil {
+					firstErr = err
+				}
+				mu.Unlock()
+			}
+		}()
 	}
-	return g.Wait()
+	wg.Wait()
+	return firstErr
 }
 
 func (r *RedditSource) fetchSubredditListings(ctx context.Context, db *gorm.DB, subredditName, searchQuery string, maxFresh int, mu *sync.Mutex, freshTotal *int) error {

@@ -1,7 +1,6 @@
 package p_nirmancampus_studentpayments
 
 import (
-	"context"
 	"time"
 
 	"github.com/lariv-in/lago/components"
@@ -10,20 +9,6 @@ import (
 	"github.com/lariv-in/lago/plugins/p_nirmancampus_students"
 	"github.com/lariv-in/lago/registry"
 )
-
-func paidAtDisplay(getter getters.Getter[*time.Time]) getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		t, err := getter(ctx)
-		if err != nil || t == nil || t.IsZero() {
-			return "", nil
-		}
-		loc, _ := ctx.Value("$tz").(*time.Location)
-		if loc == nil {
-			loc = time.UTC
-		}
-		return t.In(loc).Format(time.DateOnly), nil
-	}
-}
 
 func paymentTableColumns() []components.TableColumn {
 	return []components.TableColumn{
@@ -62,7 +47,7 @@ func paymentTableColumns() []components.TableColumn {
 			Label: "Paid on",
 			Name:  "PaidAt",
 			Children: []components.PageInterface{
-				&components.FieldText{Getter: paidAtDisplay(getters.Key[*time.Time]("$row.PaidAt"))},
+				&components.FieldDatetime{Getter: getters.Deref(getters.Key[*time.Time]("$row.PaidAt"))},
 			},
 		},
 		{

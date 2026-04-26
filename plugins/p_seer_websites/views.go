@@ -1,17 +1,80 @@
 package p_seer_websites
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/plugins/p_seer_intel"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"github.com/lariv-in/lago/views"
 )
+
+// websiteIntelContextLayer loads intel flags and detail href into context after [views.LayerDetail] for [Website].
+type websiteIntelContextLayer struct{}
+
+func (websiteIntelContextLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		site, ok := ctx.Value("website").(Website)
+		if !ok {
+			site = Website{}
+		}
+		setEmpty := func() {
+			ctx = context.WithValue(ctx, "websiteIntelAddVisible", false)
+			ctx = context.WithValue(ctx, "websiteIntelLinkVisible", false)
+			ctx = context.WithValue(ctx, "websiteIntelDetailHref", "")
+		}
+		if site.ID == 0 {
+			setEmpty()
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		db, err := getters.DBFromContext(ctx)
+		if err != nil {
+			slog.Error("seer_websites: website intel context: db", "error", err)
+			setEmpty()
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		exists, err := p_seer_intel.IntelExistsForSource(ctx, db, (Website{}).Kind(), site.ID)
+		if err != nil {
+			slog.Error("seer_websites: website intel context: exists check", "error", err)
+			exists = false
+		}
+		href := ""
+		if exists {
+			href, err = p_seer_intel.IntelDetailPathForSource(ctx, (Website{}).Kind(), site.ID)
+			if err != nil {
+				slog.Error("seer_websites: website intel context: detail path", "error", err)
+				href = ""
+			}
+		}
+		ctx = context.WithValue(ctx, "websiteIntelAddVisible", !exists)
+		ctx = context.WithValue(ctx, "websiteIntelLinkVisible", exists)
+		ctx = context.WithValue(ctx, "websiteIntelDetailHref", href)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// websiteRunnerWorkerPoolStateLayer sets [workerPoolIsRunning] from in-process pool state after [views.LayerDetail] for [WebsiteRunner].
+type websiteRunnerWorkerPoolStateLayer struct{}
+
+func (websiteRunnerWorkerPoolStateLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		run, ok := ctx.Value("websiteRunner").(WebsiteRunner)
+		running := ok && run.ID != 0 && WebsiteRunnerWorkerPoolIsRunning(run.ID)
+		ctx = context.WithValue(ctx, "workerPoolIsRunning", running)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func init() {
 	websitePatchers := views.QueryPatchers[Website]{
@@ -50,7 +113,8 @@ func init() {
 				Key:           getters.Static("website"),
 				PathParamKey:  getters.Static("id"),
 				QueryPatchers: websiteDetailPatchers,
-			}))
+			}).
+			WithLayer("seer_websites.website.intel", websiteIntelContextLayer{}))
 
 	lago.RegistryView.Register("seer_websites.WebsiteAddIntelView",
 		lago.GetPageView("seer_websites.WebsiteDetail").
@@ -60,7 +124,8 @@ func init() {
 				PathParamKey:  getters.Static("id"),
 				QueryPatchers: websiteDetailPatchers,
 			}).
-			WithLayer("seer_websites.website.add_intel", websiteAddIntelLayer{}))
+			WithLayer("seer_websites.website.add_intel", websiteAddIntelLayer{}).
+			WithLayer("seer_websites.website.intel", websiteIntelContextLayer{}))
 
 	lago.RegistryView.Register("seer_websites.WebsiteAddAllIntelView",
 		lago.GetPageView("seer_websites.WebsiteTable").
@@ -183,7 +248,8 @@ func init() {
 			WithLayer("seer_websites.website_runner.detail", views.LayerDetail[WebsiteRunner]{
 				Key:          getters.Static("websiteRunner"),
 				PathParamKey: getters.Static("id"),
-			}))
+			}).
+			WithLayer("seer_websites.website_runner.worker_pool_state", websiteRunnerWorkerPoolStateLayer{}))
 
 	lago.RegistryView.Register("seer_websites.WebsiteRunnerCreateView",
 		lago.GetPageView("seer_websites.WebsiteRunnerCreateForm").

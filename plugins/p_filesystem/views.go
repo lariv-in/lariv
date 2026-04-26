@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -63,7 +64,15 @@ func (m loadVNodeByPathParamLayer) Next(_ views.View, next http.Handler) http.Ha
 			http.NotFound(w, r)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "vnode", *node)
+		n := *node
+		n.ResolvedPath = n.GetPath(db)
+		n.ListChildrenCount = n.GetChildrenCount(db)
+		ctx := context.WithValue(r.Context(), "vnode", n)
+		if n.ParentID != nil {
+			if p, perr := GetVNodeByID(db, *n.ParentID); perr == nil {
+				ctx = context.WithValue(ctx, "vnodeParent", *p)
+			}
+		}
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -403,6 +412,54 @@ func multiUploadHandler(v *views.View) http.Handler {
 	})
 }
 
+// vNodeListEnrichLayer fills [VNode.ListChildrenCount] for each row (directories) after [views.LayerList].
+type vNodeListEnrichLayer struct{}
+
+func (vNodeListEnrichLayer) Next(_ views.View, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ol, ok := r.Context().Value("vnodes").(components.ObjectList[VNode])
+		if !ok || len(ol.Items) == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+		db, err := filesystemDB(r)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		var dirIDs []uint
+		for _, n := range ol.Items {
+			if n.IsDirectory {
+				dirIDs = append(dirIDs, n.ID)
+			}
+		}
+		countByID := make(map[uint]int64, len(dirIDs))
+		if len(dirIDs) > 0 {
+			var aggs []struct {
+				ParentID uint  `gorm:"column:parent_id"`
+				Cnt      int64 `gorm:"column:cnt"`
+			}
+			if err := db.Model(&VNode{}).Select("parent_id, count(*) as cnt").Where("parent_id IN (?)", dirIDs).Group("parent_id").Find(&aggs).Error; err != nil {
+				slog.Error("filesystem: list enrich: child count query", "error", err)
+			} else {
+				for _, a := range aggs {
+					countByID[a.ParentID] = a.Cnt
+				}
+			}
+		}
+		for i := range ol.Items {
+			if !ol.Items[i].IsDirectory {
+				ol.Items[i].ListChildrenCount = "-"
+				continue
+			}
+			c := countByID[ol.Items[i].ID]
+			ol.Items[i].ListChildrenCount = fmt.Sprintf("%d items", c)
+		}
+		ctx := context.WithValue(r.Context(), "vnodes", ol)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func downloadHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		node, err := vnodeFromContext(r)
@@ -496,13 +553,15 @@ func init() {
 	lago.RegistryView.Register("filesystem.ListView",
 		lago.GetPageView("filesystem.VNodeTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("filesystem.list", listRoot()))
+			WithLayer("filesystem.list", listRoot()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.BrowseView",
 		lago.GetPageView("filesystem.VNodeTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
-			WithLayer("filesystem.list", listBrowse()))
+			WithLayer("filesystem.list", listBrowse()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.DetailView",
 		lago.GetPageView("filesystem.VNodeDetail").
@@ -573,35 +632,41 @@ func init() {
 	lago.RegistryView.Register("filesystem.SelectView",
 		lago.GetPageView("filesystem.ParentSelectionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("filesystem.list", listSelectRoot()))
+			WithLayer("filesystem.list", listSelectRoot()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.SelectChildView",
 		lago.GetPageView("filesystem.ParentSelectionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
-			WithLayer("filesystem.list", listSelectChild()))
+			WithLayer("filesystem.list", listSelectChild()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.MultiSelectView",
 		lago.GetPageView("filesystem.MultiSelectionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("filesystem.list", listMultiRoot()))
+			WithLayer("filesystem.list", listMultiRoot()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.MultiSelectChildView",
 		lago.GetPageView("filesystem.MultiSelectionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
-			WithLayer("filesystem.list", listMultiChild()))
+			WithLayer("filesystem.list", listMultiChild()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.MoveSelectView",
 		lago.GetPageView("filesystem.DestinationSelectionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("filesystem.list", listMoveRoot()))
+			WithLayer("filesystem.list", listMoveRoot()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.MoveSelectChildView",
 		lago.GetPageView("filesystem.DestinationSelectionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
-			WithLayer("filesystem.list", listMoveChild()))
+			WithLayer("filesystem.list", listMoveChild()).
+			WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{}))
 
 	lago.RegistryView.Register("filesystem.DownloadView",
 		lago.GetPageView("filesystem.VNodeDetail").

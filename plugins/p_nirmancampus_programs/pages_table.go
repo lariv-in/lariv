@@ -1,6 +1,8 @@
 package p_nirmancampus_programs
 
 import (
+	"fmt"
+
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
@@ -96,7 +98,10 @@ func registerTablePages() {
 				Data:    getters.Key[components.ObjectList[Program]]("programs"),
 				Actions: []components.PageInterface{
 					&components.TableButtonFilter{Child: lago.DynamicPage{Name: "programs.ProgramFilter"}},
-					&components.TableButtonCreate{Link: programCreateUrlGetter()},
+					&components.TableButtonCreate{Link: getters.Match(getters.Key[string]("$role"), map[string]getters.Getter[string]{
+						"superuser": lago.RoutePath("programs.CreateRoute", nil),
+						"admin":     lago.RoutePath("programs.CreateRoute", nil),
+					}, getters.Static(fmt.Errorf("you do not have permission to do this action")))},
 				},
 				RowAttr: getters.RowAttrNavigate(
 					lago.RoutePath("programs.DetailRoute", map[string]getters.Getter[any]{

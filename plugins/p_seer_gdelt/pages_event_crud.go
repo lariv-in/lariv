@@ -2,7 +2,6 @@ package p_seer_gdelt
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -217,12 +216,6 @@ func gdeltDetailAccordionPanel(title string, open bool, fields ...components.Pag
 	}
 }
 
-func gdeltFmtAny(path string) getters.Getter[string] {
-	return getters.Map(getters.Key[any](path), func(_ context.Context, v any) (string, error) {
-		return fmt.Sprint(v), nil
-	})
-}
-
 func gdeltEventDetailRows() []components.PageInterface {
 	return []components.PageInterface{
 		&components.Accordion{
@@ -391,39 +384,6 @@ func eventListColumns() []components.TableColumn {
 				})},
 			},
 		},
-	}
-}
-
-func gdeltListSQLDateGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		n, err := getters.Key[int]("$row.SQLDate")(ctx)
-		if err != nil || n == 0 {
-			return "", err
-		}
-		s := strconv.Itoa(n)
-		if len(s) != 8 {
-			return s, nil
-		}
-		return s[:4] + "-" + s[4:6] + "-" + s[6:], nil
-	}
-}
-
-func gdeltListActorsGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		a1, _ := getters.Key[string]("$row.Actor1Name")(ctx)
-		a2, _ := getters.Key[string]("$row.Actor2Name")(ctx)
-		a1 = strings.TrimSpace(a1)
-		a2 = strings.TrimSpace(a2)
-		switch {
-		case a1 != "" && a2 != "":
-			return a1 + " / " + a2, nil
-		case a1 != "":
-			return a1, nil
-		case a2 != "":
-			return a2, nil
-		default:
-			return "", nil
-		}
 	}
 }
 

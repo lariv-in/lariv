@@ -85,7 +85,7 @@ func studentDetailPaymentColumns() []components.TableColumn {
 			Label: "Paid on",
 			Name:  "PaidAt",
 			Children: []components.PageInterface{
-				&components.FieldText{Getter: paidAtDisplay(getters.Key[*time.Time]("$row.PaidAt"))},
+				&components.FieldDatetime{Getter: getters.Deref(getters.Key[*time.Time]("$row.PaidAt"))},
 			},
 		},
 		{
@@ -109,8 +109,8 @@ func studentDetailPaymentsSection() components.PageInterface {
 		DefaultView: "Grid",
 		Actions: []components.PageInterface{
 			&components.ButtonModalForm{
-				Page:        components.Page{Roles: []string{"admin", "superuser"}},
-				Name:        createFormName,
+				Page: components.Page{Roles: []string{"admin", "superuser"}},
+				Name: createFormName,
 				Url: getters.Format(
 					"%s?StudentID=%d",
 					getters.Any(lago.RoutePath("studentpayments.CreateRoute", nil)),

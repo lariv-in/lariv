@@ -1,7 +1,6 @@
 package p_nirmancampus_announcements
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -59,20 +58,12 @@ func registerFilterPages() {
 	})
 }
 
-func announcementCreateUrlGetter() getters.Getter[string] {
-	return func(ctx context.Context) (string, error) {
-		role, err := getters.Key[string]("$role")(ctx)
-		if err != nil {
-			return "", err
-		}
-		if role == "superuser" || role == "admin" {
-			return lago.RoutePath("announcements.CreateRoute", nil)(ctx)
-		}
-		return "", fmt.Errorf("you do not have permission to do this action")
-	}
-}
-
 func registerTablePages() {
+	create := lago.RoutePath("announcements.CreateRoute", nil)
+	announcementTableCreateLink := getters.Match(getters.Key[string]("$role"), map[string]getters.Getter[string]{
+		"superuser": create,
+		"admin":     create,
+	}, getters.Static(fmt.Errorf("you do not have permission to do this action")))
 	lago.RegistryPage.Register("announcements.AnnouncementTable", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
 			lago.DynamicPage{Name: "announcements.AnnouncementMenu"},
@@ -88,7 +79,7 @@ func registerTablePages() {
 						Child: lago.DynamicPage{Name: "announcements.AnnouncementFilter"},
 					},
 					&components.TableButtonCreate{
-						Link: announcementCreateUrlGetter(),
+						Link: announcementTableCreateLink,
 						Page: components.Page{Roles: []string{"admin", "superuser"}},
 					},
 				},
