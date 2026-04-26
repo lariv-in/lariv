@@ -20,7 +20,7 @@ import (
 const openskyMapAircraftKey = "seer_opensky.map_aircraft"
 
 // Max distinct aircraft on the map (by latest last_contact). Fetches up to 2 state rows per aircraft.
-const openskyMapMaxAircraft = 20000
+const openskyMapMaxAircraft = 200
 
 // openSkyMapAircraft is the JSON payload for the map script (one feature per icao24).
 type openSkyMapAircraft struct {
@@ -50,6 +50,20 @@ type openSkyMapRow struct {
 
 type openSkyMapLayer struct{}
 
+type openSkyViewportBounds struct {
+	West  float64
+	South float64
+	East  float64
+	North float64
+}
+
+func (b *openSkyViewportBounds) IsValid() bool {
+	if b == nil {
+		return false
+	}
+	return b.South <= b.North
+}
+
 func (openSkyMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -66,7 +80,7 @@ func (openSkyMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		aircraft, err := buildOpenSkyMapAircraft(ctx, db)
+		aircraft, err := buildOpenSkyMapAircraft(ctx, db, nil)
 		if err != nil && (errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)) {
 			// Client closed or deadline; avoid _global + Render panic (broken pipe) for gone clients.
 			aircraft, err = []openSkyMapAircraft{}, nil
@@ -86,7 +100,7 @@ func (openSkyMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 
 // buildOpenSkyMapAircraft returns one entry per icao (latest point), ordered by that row's last_contact desc.
 // PostgreSQL only; other dialects return nil, nil.
-func buildOpenSkyMapAircraft(ctx context.Context, db *gorm.DB) ([]openSkyMapAircraft, error) {
+func buildOpenSkyMapAircraft(ctx context.Context, db *gorm.DB, bounds *openSkyViewportBounds) ([]openSkyMapAircraft, error) {
 	if db == nil {
 		return nil, nil
 	}
@@ -107,7 +121,7 @@ WITH latest AS (
     AND COALESCE(BTRIM(s.icao24), '') <> ''
     AND s."position" IS NOT NULL
     AND ((s."position")[0] <> 0 OR (s."position")[1] <> 0)
-    AND s.last_contact >= ?
+    AND s.last_contact >= ?%s
   ORDER BY s.icao24, s.last_contact DESC, s.id DESC
 ),
 top_icao AS (
@@ -140,7 +154,7 @@ r AS (
       WHERE s.deleted_at IS NULL
         AND s.icao24 = t.icao24
         AND s."position" IS NOT NULL
-        AND ((s."position")[0] <> 0 OR (s."position")[1] <> 0)
+        AND ((s."position")[0] <> 0 OR (s."position")[1] <> 0)%s
       ORDER BY s.last_contact DESC, s.id DESC
       LIMIT 2
     ) x
@@ -152,11 +166,18 @@ ORDER BY icao24, last_contact ASC, id ASC`
 	if w := Config.MapLastContactWindow(); w > 0 {
 		cutoff = time.Now().Add(-w).Unix()
 	}
+	latestBBoxSQL, latestBBoxArgs := openSkyBoundsWhereSQL(bounds, `(s."position")[0]`, `(s."position")[1]`)
+	innerBBoxSQL, innerBBoxArgs := openSkyBoundsWhereSQL(bounds, `(s."position")[0]`, `(s."position")[1]`)
+	sql = fmt.Sprintf(sql, latestBBoxSQL, innerBBoxSQL)
+
 	var rows []openSkyMapRow
 	// Read-only; use WithoutCancel so devtools/livereload/nested requests do not
 	// drop this query mid-flight (GORM "context canceled" + empty map).
 	qctx := context.WithoutCancel(ctx)
-	if err := db.WithContext(qctx).Raw(sql, cutoff).Scan(&rows).Error; err != nil {
+	args := []any{cutoff}
+	args = append(args, latestBBoxArgs...)
+	args = append(args, innerBBoxArgs...)
+	if err := db.WithContext(qctx).Raw(sql, args...).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 	by := make(map[string][]openSkyMapRow, 256)
@@ -218,6 +239,21 @@ ORDER BY icao24, last_contact ASC, id ASC`
 		out = append(out, s.air)
 	}
 	return out, nil
+}
+
+func openSkyBoundsWhereSQL(bounds *openSkyViewportBounds, lngExpr, latExpr string) (string, []any) {
+	if !bounds.IsValid() {
+		return "", nil
+	}
+	if bounds.East >= bounds.West {
+		return fmt.Sprintf(`
+    AND %s BETWEEN ? AND ?
+    AND %s BETWEEN ? AND ?`, lngExpr, latExpr), []any{bounds.West, bounds.East, bounds.South, bounds.North}
+	}
+	// Dateline wrap: keep points where lng >= west OR lng <= east.
+	return fmt.Sprintf(`
+    AND (%s >= ? OR %s <= ?)
+    AND %s BETWEEN ? AND ?`, lngExpr, lngExpr, latExpr), []any{bounds.West, bounds.East, bounds.South, bounds.North}
 }
 
 func openSkyStateDetailPath(id uint) string {

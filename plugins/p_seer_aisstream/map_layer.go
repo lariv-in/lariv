@@ -15,7 +15,7 @@ import (
 )
 
 const aisStreamMapVesselsKey = "seer_aisstream.map_vessels"
-const aisStreamMapMaxVessels = 20000
+const aisStreamMapMaxVessels = 6000
 
 type aisStreamMapVessel struct {
 	ID         uint    `json:"id"`
@@ -31,6 +31,20 @@ type aisStreamMapVessel struct {
 
 type aisStreamMapLayer struct{}
 
+type aisStreamViewportBounds struct {
+	West  float64
+	South float64
+	East  float64
+	North float64
+}
+
+func (b *aisStreamViewportBounds) IsValid() bool {
+	if b == nil {
+		return false
+	}
+	return b.South <= b.North
+}
+
 func (aisStreamMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -45,7 +59,7 @@ func (aisStreamMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		vessels, err := buildAISStreamMapVessels(ctx, db)
+		vessels, err := buildAISStreamMapVessels(ctx, db, nil)
 		if err != nil {
 			slog.Error("p_seer_aisstream: map layer: load", "error", err)
 			ctx = views.ContextWithErrorsAndValues(ctx, nil, map[string]error{"_global": fmt.Errorf("map vessels: %w", err)})
@@ -57,7 +71,7 @@ func (aisStreamMapLayer) Next(_ views.View, next http.Handler) http.Handler {
 	})
 }
 
-func buildAISStreamMapVessels(ctx context.Context, db *gorm.DB) ([]aisStreamMapVessel, error) {
+func buildAISStreamMapVessels(ctx context.Context, db *gorm.DB, bounds *aisStreamViewportBounds) ([]aisStreamMapVessel, error) {
 	if db == nil {
 		return nil, nil
 	}
@@ -71,6 +85,17 @@ func buildAISStreamMapVessels(ctx context.Context, db *gorm.DB) ([]aisStreamMapV
 		Where("position IS NOT NULL").
 		Order("received_at DESC").
 		Limit(aisStreamMapMaxVessels)
+	if bounds != nil && bounds.IsValid() {
+		if bounds.East >= bounds.West {
+			q = q.
+				Where("(position)[0] BETWEEN ? AND ?", bounds.West, bounds.East).
+				Where("(position)[1] BETWEEN ? AND ?", bounds.South, bounds.North)
+		} else {
+			q = q.
+				Where("((position)[0] >= ? OR (position)[0] <= ?)", bounds.West, bounds.East).
+				Where("(position)[1] BETWEEN ? AND ?", bounds.South, bounds.North)
+		}
+	}
 	if !cutoff.IsZero() {
 		q = q.Where("received_at >= ?", cutoff)
 	}

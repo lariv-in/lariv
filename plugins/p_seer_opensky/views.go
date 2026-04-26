@@ -14,8 +14,7 @@ var stateListQueryPatchers = views.QueryPatchers[OpenSkyState]{
 func init() {
 	lago.RegistryView.Register("seer_opensky.MapView",
 		lago.GetPageView("seer_opensky.MapPage").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("seer_opensky.map", openSkyMapLayer{}))
+			WithLayer("users.auth", p_users.AuthenticationLayer{}))
 
 	lago.RegistryView.Register("seer_opensky.StateListView",
 		lago.GetPageView("seer_opensky.StateTablePage").
@@ -26,7 +25,7 @@ func init() {
 				QueryPatchers: stateListQueryPatchers,
 			}))
 
-		lago.RegistryView.Register("seer_opensky.StateCreateView",
+	lago.RegistryView.Register("seer_opensky.StateCreateView",
 		lago.GetPageView("seer_opensky.StateCreateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("seer_opensky.state.create", views.LayerCreate[OpenSkyState]{
