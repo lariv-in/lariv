@@ -24,9 +24,10 @@ func studentFormFields() components.ContainerColumn {
 						Error: getters.Key[error]("$error.Name"),
 						Children: []components.PageInterface{
 							&components.InputText{
-								Label:  "Name",
-								Name:   "Name",
-								Getter: getters.Key[string]("$in.Name"),
+								Label:    "Name",
+								Name:     "Name",
+								Required: true,
+								Getter:   getters.Key[string]("$in.Name"),
 							},
 						},
 					},
