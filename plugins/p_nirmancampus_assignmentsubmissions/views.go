@@ -31,6 +31,10 @@ func init() {
 						Key:   "assignmentsubmissions.scope_by_role",
 						Value: AssignmentSubmissionScopeByRole,
 					},
+					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{
+						Key:   "assignmentsubmissions.list_order",
+						Value: AssignmentSubmissionListOrder,
+					},
 				},
 			}).
 			WithLayer("assignmentsubmissions.list_filter_academic_record", listFilterAcademicRecordLoadLayer{}),
@@ -57,6 +61,17 @@ func init() {
 			WithLayer("assignmentsubmissions.bulk_academic_record_post", views.MethodLayer{
 				Method:  http.MethodPost,
 				Handler: bulkCreateFromAcademicRecordPostHandler,
+			}),
+	)
+
+	lago.RegistryView.Register("assignmentsubmissions.BulkAddMarksFromAcademicRecordView",
+		lago.GetPageView("assignmentsubmissions.BulkAddMarksFromAcademicRecordForm").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleLayer).
+			WithLayer("assignmentsubmissions.bulk_add_marks_load", academicRecordBulkAddMarksLoadLayer{}).
+			WithLayer("assignmentsubmissions.bulk_add_marks_post", views.MethodLayer{
+				Method:  http.MethodPost,
+				Handler: bulkAddMarksFromAcademicRecordPostHandler,
 			}),
 	)
 

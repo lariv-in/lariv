@@ -32,13 +32,17 @@ func missingVNodeGetter() getters.Getter[any] {
 func filesystemSidebar() []components.PageInterface {
 	return []components.PageInterface{
 		&components.ShowIf{
-			Getter: hasVNodeGetter(),
+			Getter: getters.Map(getters.Key[VNode]("vnode"), func(_ context.Context, n VNode) (any, error) {
+				return n.ID != 0, nil
+			}),
 			Children: []components.PageInterface{
 				lago.DynamicPage{Name: "filesystem.VNodeMenu"},
 			},
 		},
 		&components.ShowIf{
-			Getter: missingVNodeGetter(),
+			Getter: getters.Map(getters.Key[VNode]("vnode"), func(_ context.Context, n VNode) (any, error) {
+				return n.ID == 0, nil
+			}),
 			Children: []components.PageInterface{
 				lago.DynamicPage{Name: "filesystem.MainMenu"},
 			},

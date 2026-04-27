@@ -47,7 +47,7 @@ func createFormFields() components.ContainerColumn {
 								Name:        "StudentID",
 								Required:    true,
 								Url:         lago.RoutePath("students.SelectRoute", nil),
-								Display:     getters.Key[string]("$in.StudentNo"),
+								Display:     getters.Key[string]("$in.Name"),
 								Placeholder: "Select a student...",
 								Getter: getters.Association[p_nirmancampus_students.Student](
 									getters.Key[uint]("$in.StudentID"),
@@ -85,10 +85,10 @@ func createFormFields() components.ContainerColumn {
 								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
 									s, err := getters.Key[string]("$in.Status")(ctx)
 									if err != nil || s == "" {
-										if p, ok := registry.PairFromPairs("Enrolled", AcademicRecordStatusChoices); ok {
+										if p, ok := registry.PairFromPairs("Not Applied", AcademicRecordStatusChoices); ok {
 											return p, nil
 										}
-										return registry.Pair[string, string]{Key: "Enrolled", Value: "Enrolled"}, nil
+										return registry.Pair[string, string]{Key: "Not Applied", Value: "Not Applied"}, nil
 									}
 									if p, ok := registry.PairFromPairs(s, AcademicRecordStatusChoices); ok {
 										return p, nil

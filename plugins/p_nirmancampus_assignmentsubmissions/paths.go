@@ -13,6 +13,11 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("assignmentsubmissions.BulkCreateFromAcademicRecordView"),
 	})
 
+	_ = lago.RegistryRoute.Register("assignmentsubmissions.BulkAddMarksFromAcademicRecordRoute", lago.Route{
+		Path:    AppUrl + "bulk-add-marks-academic-record/",
+		Handler: lago.NewDynamicView("assignmentsubmissions.BulkAddMarksFromAcademicRecordView"),
+	})
+
 	_ = lago.RegistryRoute.Register("assignmentsubmissions.DetailRoute", lago.Route{
 		Path:    AppUrl + "{id}/",
 		Handler: lago.NewDynamicView("assignmentsubmissions.DetailView"),

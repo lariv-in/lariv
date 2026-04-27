@@ -42,6 +42,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.filter_by_session", Value: AcademicRecordListSessionFilter},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.list_order", Value: AcademicRecordListOrder},
 				},
 			}),
 	)
@@ -142,6 +143,7 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.preload", Value: views.QueryPatcherPreload[AcademicRecord]{Fields: []string{"Student", "Program", "AdmissionSession", "ProgramStructureUnit"}}},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.filter_by_session", Value: AcademicRecordListSessionFilter},
 					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.scope_by_role", Value: AcademicRecordScopeByRole},
+					registry.Pair[string, views.QueryPatcher[AcademicRecord]]{Key: "academicrecords.list_order", Value: AcademicRecordListOrder},
 				},
 			}),
 	)

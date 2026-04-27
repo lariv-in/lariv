@@ -48,7 +48,8 @@ func (studentAcademicRecordsContextLayer) Next(_ views.View, next http.Handler) 
 			Preload("CompulsoryCourses").
 			Preload("OptionalCourses").
 			Where("student_id = ?", student.ID).
-			Order("id ASC").
+			Order("created_at DESC").
+			Order("id DESC").
 			Find(&rows).Error; err != nil {
 			slog.Error("attachStudentAcademicRecordsContext: query failed", "error", err)
 			next.ServeHTTP(w, r)
