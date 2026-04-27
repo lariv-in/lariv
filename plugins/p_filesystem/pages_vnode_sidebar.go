@@ -9,20 +9,36 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
+func hasVNodeGetter() getters.Getter[any] {
+	return func(ctx context.Context) (any, error) {
+		node, ok := ctx.Value("vnode").(VNode)
+		if !ok {
+			return false, nil
+		}
+		return node.ID != 0, nil
+	}
+}
+
+func missingVNodeGetter() getters.Getter[any] {
+	return func(ctx context.Context) (any, error) {
+		node, ok := ctx.Value("vnode").(VNode)
+		if !ok {
+			return true, nil
+		}
+		return node.ID == 0, nil
+	}
+}
+
 func filesystemSidebar() []components.PageInterface {
 	return []components.PageInterface{
 		&components.ShowIf{
-			Getter: getters.Map(getters.Key[uint]("vnode.ID"), func(_ context.Context, id uint) (any, error) {
-				return id != 0, nil
-			}),
+			Getter: hasVNodeGetter(),
 			Children: []components.PageInterface{
 				lago.DynamicPage{Name: "filesystem.VNodeMenu"},
 			},
 		},
 		&components.ShowIf{
-			Getter: getters.Map(getters.Key[uint]("vnode.ID"), func(_ context.Context, id uint) (any, error) {
-				return id == 0, nil
-			}),
+			Getter: missingVNodeGetter(),
 			Children: []components.PageInterface{
 				lago.DynamicPage{Name: "filesystem.MainMenu"},
 			},
