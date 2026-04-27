@@ -12,16 +12,16 @@ import (
 func filesystemSidebar() []components.PageInterface {
 	return []components.PageInterface{
 		&components.ShowIf{
-			Getter: getters.Map(getters.Key[uint]("vnode.ID"), func(_ context.Context, id uint) (any, error) {
-				return id != 0, nil
+			Getter: getters.Map(getters.Key[VNode]("vnode"), func(_ context.Context, n VNode) (any, error) {
+				return n.ID != 0, nil
 			}),
 			Children: []components.PageInterface{
 				lago.DynamicPage{Name: "filesystem.VNodeMenu"},
 			},
 		},
 		&components.ShowIf{
-			Getter: getters.Map(getters.Key[uint]("vnode.ID"), func(_ context.Context, id uint) (any, error) {
-				return id == 0, nil
+			Getter: getters.Map(getters.Key[VNode]("vnode"), func(_ context.Context, n VNode) (any, error) {
+				return n.ID == 0, nil
 			}),
 			Children: []components.PageInterface{
 				lago.DynamicPage{Name: "filesystem.MainMenu"},

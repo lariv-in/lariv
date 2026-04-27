@@ -181,7 +181,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	}
 	buttonAttrs = append(buttonAttrs, content)
 
-	return Div(Class("w-full fk-modal-host"),
+	return Div(Class("fk-modal-host"),
 		Attr("@lago-form-submit.window.stop", script),
 		Button(Group(buttonAttrs)),
 	)

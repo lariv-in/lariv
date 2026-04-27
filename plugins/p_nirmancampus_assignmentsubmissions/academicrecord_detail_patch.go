@@ -84,15 +84,37 @@ func academicRecordDetailBulkCreateSubmissionsButton() *components.ButtonModalFo
 	}
 }
 
+func academicRecordDetailBulkAddMarksButton() *components.ButtonModalForm {
+	return &components.ButtonModalForm{
+		Page:  components.Page{Roles: []string{"admin", "superuser"}},
+		Label: "Add Marks for Student",
+		Name:  getters.Static("assignmentsubmissions.BulkAddMarksFromAcademicRecordForm"),
+		Url: getters.Format(
+			"%s?AcademicRecordID=%d",
+			getters.Any(lago.RoutePath("assignmentsubmissions.BulkAddMarksFromAcademicRecordRoute", nil)),
+			getters.Any(getters.Key[uint]("academicrecord.ID")),
+		),
+		FormPostURL: getters.Format(
+			"%s?AcademicRecordID=%d",
+			getters.Any(lago.RoutePath("assignmentsubmissions.BulkAddMarksFromAcademicRecordRoute", nil)),
+			getters.Any(getters.Key[uint]("academicrecord.ID")),
+		),
+		ModalUID: "assignmentsubmissions-bulk-add-marks-academic-record-modal",
+		Classes:  "btn-outline btn-sm",
+		Attr:     getters.ModalRefreshList(getters.Static(""), getters.Static("#academic-record-assignment-submissions-table")),
+	}
+}
+
 func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface {
 	return &components.ContainerColumn{
 		Page:    components.Page{Key: "assignmentsubmissions.AcademicRecordDetailSubmissionsSection"},
-		Classes: "w-full mt-4 flex flex-col gap-2",
+		Classes: "mt-4 flex flex-col gap-2",
 		Children: []components.PageInterface{
 			&components.ContainerRow{
-				Classes: "flex justify-end w-full",
+				Classes: "flex gap-2",
 				Children: []components.PageInterface{
 					academicRecordDetailBulkCreateSubmissionsButton(),
+					academicRecordDetailBulkAddMarksButton(),
 				},
 			},
 			&components.DataTable[AssignmentSubmission]{

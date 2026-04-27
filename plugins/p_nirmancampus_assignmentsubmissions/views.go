@@ -60,6 +60,17 @@ func init() {
 			}),
 	)
 
+	lago.RegistryView.Register("assignmentsubmissions.BulkAddMarksFromAcademicRecordView",
+		lago.GetPageView("assignmentsubmissions.BulkAddMarksFromAcademicRecordForm").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.admin_role", assignmentSubmissionsAdminRoleLayer).
+			WithLayer("assignmentsubmissions.bulk_add_marks_load", academicRecordBulkAddMarksLoadLayer{}).
+			WithLayer("assignmentsubmissions.bulk_add_marks_post", views.MethodLayer{
+				Method:  http.MethodPost,
+				Handler: bulkAddMarksFromAcademicRecordPostHandler,
+			}),
+	)
+
 	lago.RegistryView.Register("assignmentsubmissions.UpdateView",
 		lago.GetPageView("assignmentsubmissions.UpdateForm").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).

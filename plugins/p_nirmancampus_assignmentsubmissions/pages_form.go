@@ -196,6 +196,67 @@ func registerFormPages() {
 		},
 	})
 
+	lago.RegistryPage.Register("assignmentsubmissions.BulkAddMarksFromAcademicRecordForm", &components.Modal{
+		Page: components.Page{
+			Key:   "assignmentsubmissions.BulkAddMarksFromAcademicRecordModal",
+			Roles: []string{"admin", "superuser"},
+		},
+		UID: "assignmentsubmissions-bulk-add-marks-academic-record-modal",
+		Children: []components.PageInterface{
+			&components.FormComponent[academicRecordBulkMarksForm]{
+				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
+
+				Title:    "Add marks for student",
+				Subtitle: "Enter marks for each assignment submission. Values must be between 0 and max marks when a max is set.",
+				Classes:  "@container",
+				ChildrenInput: []components.PageInterface{
+					&components.ContainerColumn{
+						Page: components.Page{Key: "assignmentsubmissions.BulkAddMarksFromAcademicRecordFormBody"},
+						Children: []components.PageInterface{
+							&components.LabelInline{
+								Title: "Student",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: bulkAcademicRecordStudentLineGetter()},
+								},
+							},
+							&components.ContainerError{
+								Error: getters.Key[error]("$error.AcademicRecordID"),
+								Children: []components.PageInterface{
+									&components.InputForeignKey[p_nirmancampus_academicrecords.AcademicRecord]{
+										Hidden:   true,
+										Name:     "AcademicRecordID",
+										Required: true,
+										Url:      lago.RoutePath("academicrecords.SelectRoute", nil),
+										Display:  getters.Key[string]("$in.Student.StudentNo"),
+										Getter:   academicRecordForInputForeignKey(),
+									},
+								},
+							},
+							&components.ContainerError{
+								Error: getters.Key[error]("$error.BulkSubmissionMarks"),
+								Children: []components.PageInterface{
+									&InputBulkSubmissionMarks{
+										Page:  components.Page{Key: "assignmentsubmissions.BulkAddMarksInputs"},
+										Label: "Marks by assignment",
+										Name:  bulkSubmissionMarksFieldName,
+									},
+								},
+							},
+						},
+					},
+				},
+				ChildrenAction: []components.PageInterface{
+					&components.ContainerRow{
+						Classes: "flex justify-end gap-2 mt-2",
+						Children: []components.PageInterface{
+							&components.ButtonSubmit{Label: "Save marks", Classes: "btn-primary"},
+						},
+					},
+				},
+			},
+		},
+	})
+
 	lago.RegistryPage.Register("assignmentsubmissions.UpdateForm", &components.ShellScaffold{
 		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
