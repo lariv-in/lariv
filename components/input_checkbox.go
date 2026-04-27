@@ -19,6 +19,7 @@ type InputCheckbox struct {
 	Required bool
 	Classes  string
 	Hidden   bool
+	Attr     getters.Getter[Node]
 }
 
 func (e InputCheckbox) Build(ctx context.Context) Node {
@@ -48,16 +49,24 @@ func (e InputCheckbox) Build(ctx context.Context) Node {
 	return Div(
 		Class(e.Classes),
 		Label(
-			Class("label text-sm font-bold cursor-pointer justify-start gap-1 flex flex-col items-start"),
-			Span(Class("label-text"), Text(e.Label)),
+			Class("label text-sm font-bold cursor-pointer justify-start gap-2 flex flex-row items-center"),
 			Input(
 				Type("checkbox"),
-				Name(e.Name),
+				If(e.Name != "", Name(e.Name)),
 				Value("true"),
 				Class("checkbox"),
 				If(e.XModel != "", Attr("x-model", e.XModel)),
 				checkedNode,
+				Iff(e.Attr != nil, func() Node {
+					n, err := e.Attr(ctx)
+					if err != nil {
+						slog.Error("InputCheckbox Attr getter failed", "error", err, "key", e.Key)
+						return Raw("")
+					}
+					return n
+				}),
 			),
+			Span(Class("label-text"), Text(e.Label)),
 		),
 	)
 }

@@ -40,6 +40,29 @@ func bulkAcademicRecordFromContext(ctx context.Context) (p_nirmancampus_academic
 	return rec, ok && rec.ID != 0
 }
 
+func courseHasSubmissionSet(ctx context.Context) map[uint]struct{} {
+	m, _ := ctx.Value(bulkAcademicRecordCoursesWithSubmissionKey).(map[uint]struct{})
+	return m
+}
+
+func inputCheckboxCourseAlreadySubmitted(ctx context.Context, c p_nirmancampus_courses.Course) Node {
+	return components.InputCheckbox{
+		Label:   c.Name,
+		Getter:  getters.Static(true),
+		Classes: "my-0 opacity-80",
+		Attr:    getters.Static(Disabled()),
+	}.Build(ctx)
+}
+
+func inputCheckboxOpenCourse(ctx context.Context, c p_nirmancampus_courses.Course, itemIndex int, checked bool) Node {
+	return components.InputCheckbox{
+		Label:   c.Name,
+		Getter:  getters.Static(checked),
+		XModel:  fmt.Sprintf("items[%d].checked", itemIndex),
+		Classes: "my-0",
+	}.Build(ctx)
+}
+
 func (e InputBulkAcademicRecordCourses) Build(ctx context.Context) Node {
 	rec, ok := bulkAcademicRecordFromContext(ctx)
 	if !ok {
@@ -62,34 +85,53 @@ func (e InputBulkAcademicRecordCourses) Build(ctx context.Context) Node {
 		}
 	}
 
-	withSubmission, _ := ctx.Value(bulkAcademicRecordCoursesWithSubmissionKey).(map[uint]struct{})
+	withSub := courseHasSubmissionSet(ctx)
 
 	seen := map[uint]struct{}{}
-	var items []bulkCourseCheckbox
-	add := func(c p_nirmancampus_courses.Course, section string) {
+	var subComp, subOpt, openComp, openOpt []p_nirmancampus_courses.Course
+	var openItems []bulkCourseCheckbox
+	addOpen := func(c p_nirmancampus_courses.Course, section string) {
 		if c.ID == 0 {
 			return
-		}
-		if withSubmission != nil {
-			if _, has := withSubmission[c.ID]; has {
-				return
-			}
 		}
 		if _, dup := seen[c.ID]; dup {
 			return
 		}
 		seen[c.ID] = struct{}{}
 		_, sel := selected[c.ID]
-		items = append(items, bulkCourseCheckbox{ID: c.ID, Name: c.Name, Section: section, Checked: sel})
+		openItems = append(openItems, bulkCourseCheckbox{ID: c.ID, Name: c.Name, Section: section, Checked: sel})
+		if section == "compulsory" {
+			openComp = append(openComp, c)
+		} else {
+			openOpt = append(openOpt, c)
+		}
 	}
 	for _, c := range rec.CompulsoryCourses {
-		add(c, "compulsory")
+		if c.ID == 0 {
+			continue
+		}
+		if withSub != nil {
+			if _, has := withSub[c.ID]; has {
+				subComp = append(subComp, c)
+				continue
+			}
+		}
+		addOpen(c, "compulsory")
 	}
 	for _, c := range rec.OptionalCourses {
-		add(c, "optional")
+		if c.ID == 0 {
+			continue
+		}
+		if withSub != nil {
+			if _, has := withSub[c.ID]; has {
+				subOpt = append(subOpt, c)
+				continue
+			}
+		}
+		addOpen(c, "optional")
 	}
 
-	itemsJSON, err := json.Marshal(items)
+	itemsJSON, err := json.Marshal(openItems)
 	if err != nil {
 		slog.Error("InputBulkAcademicRecordCourses marshal failed", "error", err, "key", e.Key)
 		itemsJSON = []byte("[]")
@@ -115,6 +157,25 @@ $el.closest('form').addEventListener('submit', (ev) => {
 }, true);
 `, string(nameLit))
 
+	var preComp []Node
+	for _, c := range subComp {
+		preComp = append(preComp, inputCheckboxCourseAlreadySubmitted(ctx, c))
+	}
+	var preOpt []Node
+	for _, c := range subOpt {
+		preOpt = append(preOpt, inputCheckboxCourseAlreadySubmitted(ctx, c))
+	}
+	var openCompNodes []Node
+	for i, c := range openComp {
+		openCompNodes = append(openCompNodes, inputCheckboxOpenCourse(ctx, c, i, openItems[i].Checked))
+	}
+	var openOptNodes []Node
+	base := len(openComp)
+	for j, c := range openOpt {
+		idx := base + j
+		openOptNodes = append(openOptNodes, inputCheckboxOpenCourse(ctx, c, idx, openItems[idx].Checked))
+	}
+
 	return Div(Class("my-1 flex flex-col gap-3"),
 		Label(Class("label text-sm font-bold"), Text(label)),
 		Div(
@@ -122,31 +183,11 @@ $el.closest('form').addEventListener('submit', (ev) => {
 			Attr("x-data", fmt.Sprintf(`{ items: %s }`, string(itemsJSON))),
 			Attr("x-init", initJS),
 			Div(Class("text-xs font-semibold uppercase opacity-70"), Text("Compulsory")),
-			Template(
-				Attr("x-for", "item in items.filter(i => i.section === 'compulsory')"),
-				Attr(":key", "'c-'+item.id"),
-				Label(Class("label cursor-pointer flex flex-row items-center gap-2 text-sm"),
-					Input(
-						Type("checkbox"),
-						Class("checkbox"),
-						Attr("x-model", "item.checked"),
-					),
-					Span(Attr("x-text", "item.name")),
-				),
-			),
+			Group(preComp),
+			Group(openCompNodes),
 			Div(Class("text-xs font-semibold uppercase opacity-70 mt-2"), Text("Optional")),
-			Template(
-				Attr("x-for", "item in items.filter(i => i.section === 'optional')"),
-				Attr(":key", "'o-'+item.id"),
-				Label(Class("label cursor-pointer flex flex-row items-center gap-2 text-sm"),
-					Input(
-						Type("checkbox"),
-						Class("checkbox"),
-						Attr("x-model", "item.checked"),
-					),
-					Span(Attr("x-text", "item.name")),
-				),
-			),
+			Group(preOpt),
+			Group(openOptNodes),
 			Input(Type("hidden"), Name(e.Name)),
 		),
 	)
