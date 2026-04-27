@@ -9,26 +9,6 @@ import (
 	"github.com/lariv-in/lago/lago"
 )
 
-func hasVNodeGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		node, ok := ctx.Value("vnode").(VNode)
-		if !ok {
-			return false, nil
-		}
-		return node.ID != 0, nil
-	}
-}
-
-func missingVNodeGetter() getters.Getter[any] {
-	return func(ctx context.Context) (any, error) {
-		node, ok := ctx.Value("vnode").(VNode)
-		if !ok {
-			return true, nil
-		}
-		return node.ID == 0, nil
-	}
-}
-
 func filesystemSidebar() []components.PageInterface {
 	return []components.PageInterface{
 		&components.ShowIf{
