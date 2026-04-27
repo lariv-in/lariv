@@ -62,11 +62,18 @@ func (e InputBulkAcademicRecordCourses) Build(ctx context.Context) Node {
 		}
 	}
 
+	withSubmission, _ := ctx.Value(bulkAcademicRecordCoursesWithSubmissionKey).(map[uint]struct{})
+
 	seen := map[uint]struct{}{}
 	var items []bulkCourseCheckbox
 	add := func(c p_nirmancampus_courses.Course, section string) {
 		if c.ID == 0 {
 			return
+		}
+		if withSubmission != nil {
+			if _, has := withSubmission[c.ID]; has {
+				return
+			}
 		}
 		if _, dup := seen[c.ID]; dup {
 			return

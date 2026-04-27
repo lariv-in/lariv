@@ -19,6 +19,10 @@ import (
 // bulkAcademicRecordContextKey holds the loaded academic record (with courses) for the bulk-create modal.
 const bulkAcademicRecordContextKey = "assignmentsubmissions.bulk_academic_record"
 
+// bulkAcademicRecordCoursesWithSubmissionKey is course IDs that already have an assignment submission
+// for this academic record (excluded from the bulk course checklist).
+const bulkAcademicRecordCoursesWithSubmissionKey = "assignmentsubmissions.bulk_courses_with_submission"
+
 // academicRecordBulkSubmissionsForm is a marker type for the bulk-create modal form (no DB table).
 type academicRecordBulkSubmissionsForm struct{}
 
@@ -64,7 +68,21 @@ func (academicRecordBulkCreateLoadLayer) Next(view views.View, next http.Handler
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
+		existing := map[uint]struct{}{}
+		var withSub []uint
+		if err := db.Model(&AssignmentSubmission{}).Where("academic_record_id = ?", rec.ID).Pluck("course_id", &withSub).Error; err != nil {
+			slog.Error("academicRecordBulkCreateLoadLayer: list courses with submission failed", "error", err, "academic_record_id", rec.ID)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), nil, map[string]error{"_form": err})
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+		for _, cid := range withSub {
+			if cid != 0 {
+				existing[cid] = struct{}{}
+			}
+		}
 		ctx := context.WithValue(r.Context(), bulkAcademicRecordContextKey, rec)
+		ctx = context.WithValue(ctx, bulkAcademicRecordCoursesWithSubmissionKey, existing)
 		ctx = views.ContextWithErrorsAndValues(ctx, map[string]any{
 			"AcademicRecordID": rec.ID,
 			"AcademicRecord":   rec,
@@ -73,17 +91,30 @@ func (academicRecordBulkCreateLoadLayer) Next(view views.View, next http.Handler
 	})
 }
 
-func allowedCourseIDsForBulk(rec p_nirmancampus_academicrecords.AcademicRecord) map[uint]p_nirmancampus_courses.Course {
+// alreadySubmittedCourseIDs may be nil. When non-nil, courses in the set are omitted (no second submission for same course + record).
+func allowedCourseIDsForBulk(rec p_nirmancampus_academicrecords.AcademicRecord, alreadySubmittedCourseIDs map[uint]struct{}) map[uint]p_nirmancampus_courses.Course {
 	out := make(map[uint]p_nirmancampus_courses.Course)
 	for _, c := range rec.CompulsoryCourses {
-		if c.ID != 0 {
-			out[c.ID] = c
+		if c.ID == 0 {
+			continue
 		}
+		if alreadySubmittedCourseIDs != nil {
+			if _, skip := alreadySubmittedCourseIDs[c.ID]; skip {
+				continue
+			}
+		}
+		out[c.ID] = c
 	}
 	for _, c := range rec.OptionalCourses {
-		if c.ID != 0 {
-			out[c.ID] = c
+		if c.ID == 0 {
+			continue
 		}
+		if alreadySubmittedCourseIDs != nil {
+			if _, skip := alreadySubmittedCourseIDs[c.ID]; skip {
+				continue
+			}
+		}
+		out[c.ID] = c
 	}
 	return out
 }
@@ -137,7 +168,8 @@ func bulkCreateFromAcademicRecordPostHandler(view *views.View) http.Handler {
 			errs[bulkSelectedCourseIDsFieldName] = fmt.Errorf("select at least one course")
 		}
 
-		allowed := allowedCourseIDsForBulk(rec)
+		existingSubmitted, _ := r.Context().Value(bulkAcademicRecordCoursesWithSubmissionKey).(map[uint]struct{})
+		allowed := allowedCourseIDsForBulk(rec, existingSubmitted)
 		for _, cid := range selected {
 			if _, ok := allowed[cid]; !ok {
 				errs[bulkSelectedCourseIDsFieldName] = fmt.Errorf("one or more selected courses are not on this academic record")
