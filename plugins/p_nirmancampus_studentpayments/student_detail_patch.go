@@ -42,7 +42,7 @@ func (studentPaymentsContextLayer) Next(_ views.View, next http.Handler) http.Ha
 		if err := db.Model(&Payment{}).
 			Preload("Student").
 			Where("student_id = ?", student.ID).
-			Order(`"paid_at" DESC NULLS LAST`).
+			Order("created_at DESC").
 			Order("id DESC").
 			Find(&rows).Error; err != nil {
 			slog.Error("studentPaymentsContextLayer: query failed", "error", err)

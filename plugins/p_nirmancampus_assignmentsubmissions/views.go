@@ -31,6 +31,10 @@ func init() {
 						Key:   "assignmentsubmissions.scope_by_role",
 						Value: AssignmentSubmissionScopeByRole,
 					},
+					registry.Pair[string, views.QueryPatcher[AssignmentSubmission]]{
+						Key:   "assignmentsubmissions.list_order",
+						Value: AssignmentSubmissionListOrder,
+					},
 				},
 			}).
 			WithLayer("assignmentsubmissions.list_filter_academic_record", listFilterAcademicRecordLoadLayer{}),

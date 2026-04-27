@@ -20,6 +20,7 @@ func init() {
 				Key: getters.Static("students"),
 				QueryPatchers: views.QueryPatchers[Student]{
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
+					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.list_order", Value: StudentListOrder},
 				},
 			}))
 
@@ -90,6 +91,7 @@ func init() {
 				Key: getters.Static("students"),
 				QueryPatchers: views.QueryPatchers[Student]{
 					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.scope_by_role", Value: StudentScopeByRole},
+					registry.Pair[string, views.QueryPatcher[Student]]{Key: "students.list_order", Value: StudentListOrder},
 				},
 			}))
 }

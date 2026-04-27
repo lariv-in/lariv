@@ -115,6 +115,15 @@ func (academicRecordListSessionFilter) Patch(_ views.View, r *http.Request, quer
 // the environment cookie (or the default active / latest session).
 var AcademicRecordListSessionFilter views.QueryPatcher[AcademicRecord] = academicRecordListSessionFilter{}
 
+type academicRecordListOrder struct{}
+
+func (academicRecordListOrder) Patch(_ views.View, _ *http.Request, query gorm.ChainInterface[AcademicRecord]) gorm.ChainInterface[AcademicRecord] {
+	return query.Order("created_at DESC").Order("id DESC")
+}
+
+// AcademicRecordListOrder is the default sort for list and select views (newest first).
+var AcademicRecordListOrder views.QueryPatcher[AcademicRecord] = academicRecordListOrder{}
+
 // AcademicRecordQueryPatchersAssignmentSubmissionInput loads one [AcademicRecord] for
 // [components.InputForeignKey] display in other plugins (preloads + same role scope as list/detail).
 var AcademicRecordQueryPatchersAssignmentSubmissionInput = views.QueryPatchers[AcademicRecord]{

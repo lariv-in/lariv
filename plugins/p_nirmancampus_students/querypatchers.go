@@ -34,3 +34,12 @@ func (studentScopeByRole) Patch(_ views.View, r *http.Request, query gorm.ChainI
 }
 
 var StudentScopeByRole views.QueryPatcher[Student] = studentScopeByRole{}
+
+type studentListOrder struct{}
+
+func (studentListOrder) Patch(_ views.View, _ *http.Request, query gorm.ChainInterface[Student]) gorm.ChainInterface[Student] {
+	return query.Order("created_at DESC").Order("id DESC")
+}
+
+// StudentListOrder is the default sort for list and select views (newest first).
+var StudentListOrder views.QueryPatcher[Student] = studentListOrder{}

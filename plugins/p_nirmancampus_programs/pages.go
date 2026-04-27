@@ -31,7 +31,7 @@ func registerMenuPages() {
 				Url:   lago.RoutePath("programs.DefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
-				Title: getters.Static("Courses"),
+				Title: getters.Static("All Courses"),
 				Url:   lago.RoutePath("courses.DefaultRoute", nil),
 			},
 		},

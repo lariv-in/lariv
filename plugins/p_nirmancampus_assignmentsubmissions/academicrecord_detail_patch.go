@@ -45,7 +45,8 @@ func (academicRecordSubmissionsContextLayer) Next(_ views.View, next http.Handle
 		if err := db.Model(&AssignmentSubmission{}).
 			Preload("Course").
 			Where("academic_record_id = ?", record.ID).
-			Order("id ASC").
+			Order("created_at DESC").
+			Order("id DESC").
 			Find(&rows).Error; err != nil {
 			slog.Error("attachAcademicRecordSubmissionsContext: query failed", "error", err)
 			next.ServeHTTP(w, r)

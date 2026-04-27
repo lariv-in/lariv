@@ -28,13 +28,13 @@ func (formPatcherAcademicRecordProgramStructureUnitRequired) Patch(_ views.View,
 	return values, formErrors
 }
 
-// formPatcherAcademicRecordCreate sets Status (default) and CompulsoryCourses
+// formPatcherAcademicRecordCreate sets Status default ("Not Applied") and CompulsoryCourses
 // from the selected ProgramStructureUnit.
 type formPatcherAcademicRecordCreate struct{}
 
 func (formPatcherAcademicRecordCreate) Patch(_ views.View, r *http.Request, values map[string]any, formErrors map[string]error) (map[string]any, map[string]error) {
 	if s, ok := values["Status"].(string); !ok || s == "" {
-		values["Status"] = "Enrolled"
+		values["Status"] = "Not Applied"
 	}
 
 	tz, _ := r.Context().Value("$tz").(*time.Location)

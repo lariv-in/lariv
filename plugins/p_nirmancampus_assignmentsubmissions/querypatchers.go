@@ -107,3 +107,12 @@ func (assignmentSubmissionListSessionFilter) Patch(_ views.View, r *http.Request
 }
 
 var AssignmentSubmissionListSessionFilter views.QueryPatcher[AssignmentSubmission] = assignmentSubmissionListSessionFilter{}
+
+type assignmentSubmissionListOrder struct{}
+
+func (assignmentSubmissionListOrder) Patch(_ views.View, _ *http.Request, query gorm.ChainInterface[AssignmentSubmission]) gorm.ChainInterface[AssignmentSubmission] {
+	return query.Order("created_at DESC").Order("id DESC")
+}
+
+// AssignmentSubmissionListOrder is the default sort for the list view (newest first).
+var AssignmentSubmissionListOrder views.QueryPatcher[AssignmentSubmission] = assignmentSubmissionListOrder{}

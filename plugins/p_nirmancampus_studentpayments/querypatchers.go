@@ -51,8 +51,8 @@ var PaymentScopeByRole views.QueryPatcher[Payment] = paymentScopeByRole{}
 type paymentListOrder struct{}
 
 func (paymentListOrder) Patch(_ views.View, _ *http.Request, query gorm.ChainInterface[Payment]) gorm.ChainInterface[Payment] {
-	return query.Order(`"paid_at" DESC NULLS LAST`).Order("id DESC")
+	return query.Order("created_at DESC").Order("id DESC")
 }
 
-// PaymentListOrder sorts list views by paid date then id.
+// PaymentListOrder is the default sort for list views (newest first by creation time).
 var PaymentListOrder views.QueryPatcher[Payment] = paymentListOrder{}
