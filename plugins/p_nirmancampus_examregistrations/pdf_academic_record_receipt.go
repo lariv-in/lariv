@@ -93,21 +93,19 @@ func academicRecordExamPDFMarkdown(r *http.Request, ar *p_nirmancampus_academicr
 	}
 
 	var table strings.Builder
-	fmt.Fprintf(&table, "| Exam | Course | Status | Fee | Marks | Recorded |\n|---|---|---|---|---|---|\n")
+	fmt.Fprintf(&table, "| Exam | Course | Status | Fee | Recorded |\n|---|---|---|---|---|\n")
 	for _, s := range rows {
-		marks := fmt.Sprintf("%d / %d", s.Marks, s.MaxMarks)
 		course := s.Course.Name
 		recAt := "—"
 		if !s.CreatedAt.IsZero() {
 			recAt = s.CreatedAt.Format("2006-01-02 15:04")
 		}
 		fee := fmt.Sprintf("₹ %d", s.Fee)
-		fmt.Fprintf(&table, "| %s | %s | %s | %s | %s | %s |\n",
+		fmt.Fprintf(&table, "| %s | %s | %s | %s | %s |\n",
 			mdTblExam(s.ExamTitle),
 			mdTblExam(course),
 			mdTblExam(registrationStatusLabel(s.RegistrationStatus)),
 			mdTblExam(fee),
-			mdTblExam(marks),
 			mdTblExam(recAt))
 	}
 

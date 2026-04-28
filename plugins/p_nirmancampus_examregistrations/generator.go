@@ -16,14 +16,12 @@ import (
 var sampleRegistrationRows = []struct {
 	title  string
 	status string
-	max    int
-	marks  int
 	fee    uint
 }{
-	{title: "Midterm Exam", status: ExamRegistrationStatusNotRegisteredKey, max: 50, marks: 0, fee: 500},
-	{title: "Final Exam", status: "registered", max: 100, marks: 0, fee: 1200},
-	{title: "Practical Exam", status: "registered", max: 25, marks: 18, fee: 300},
-	{title: "Supplementary", status: ExamRegistrationStatusNotRegisteredKey, max: 100, marks: 0, fee: 800},
+	{title: "Midterm Exam", status: ExamRegistrationStatusNotRegisteredKey, fee: 500},
+	{title: "Final Exam", status: "registered", fee: 1200},
+	{title: "Practical Exam", status: "registered", fee: 300},
+	{title: "Supplementary", status: ExamRegistrationStatusNotRegisteredKey, fee: 800},
 }
 
 func init() {
@@ -56,9 +54,7 @@ func init() {
 				c := courses[i%len(courses)]
 				reg := ExamRegistration{
 					ExamTitle:          fmt.Sprintf("%s #%d", row.title, i+1),
-					MaxMarks:           row.max,
 					RegistrationStatus: row.status,
-					Marks:              row.marks,
 					Fee:                row.fee,
 					CourseID:           c.ID,
 					AcademicRecordID:   ar.ID,

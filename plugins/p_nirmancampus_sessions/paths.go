@@ -34,26 +34,6 @@ func registerRoutes() {
 		Path:    AppUrl + "admissionsessions/select/",
 		Handler: lago.NewDynamicView("sessions.SelectView"),
 	})
-
-	_ = lago.RegistryRoute.Register("sessions.ExamCreateRoute", lago.Route{
-		Path:    AppUrl + "examsessions/new/",
-		Handler: lago.NewDynamicView("sessions.ExamCreateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("sessions.ExamDetailRoute", lago.Route{
-		Path:    AppUrl + "examsessions/{id}/",
-		Handler: lago.NewDynamicView("sessions.ExamDetailView"),
-	})
-
-	_ = lago.RegistryRoute.Register("sessions.ExamUpdateRoute", lago.Route{
-		Path:    AppUrl + "examsessions/{id}/edit/",
-		Handler: lago.NewDynamicView("sessions.ExamUpdateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("sessions.ExamDeleteRoute", lago.Route{
-		Path:    AppUrl + "examsessions/{id}/delete/",
-		Handler: lago.NewDynamicView("sessions.ExamDeleteView"),
-	})
 }
 
 func init() {

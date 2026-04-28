@@ -89,29 +89,13 @@ func registerTablePages() {
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),
-				Columns: sessionTableColumns[AdmissionSession](),
-			},
-			&components.DataTable[ExamSession]{
-				Page:    components.Page{Key: "sessions.SessionTableBodyExam"},
-				UID:     "session-table-exam",
-				Title:   "Exam sessions",
-				Classes: "w-full",
-				Data:    getters.Key[components.ObjectList[ExamSession]]("exam_sessions"),
-				Actions: []components.PageInterface{
-					&components.TableButtonCreate{Link: lago.RoutePath("sessions.ExamCreateRoute", nil)},
-				},
-				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("sessions.ExamDetailRoute", map[string]getters.Getter[any]{
-						"id": getters.Any(getters.Key[uint]("$row.ID")),
-					}),
-				),
-				Columns: sessionTableColumns[ExamSession](),
+				Columns: admissionSessionTableColumns(),
 			},
 		},
 	})
 }
 
-func sessionTableColumns[T any]() []components.TableColumn {
+func admissionSessionTableColumns() []components.TableColumn {
 	return []components.TableColumn{
 		{
 			Label: "Name",

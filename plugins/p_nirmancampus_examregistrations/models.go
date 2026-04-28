@@ -22,9 +22,7 @@ type ExamRegistration struct {
 	gorm.Model
 
 	ExamTitle          string `gorm:"type:varchar(255);not null;index"`
-	MaxMarks           int    `gorm:"not null"`
 	RegistrationStatus string `gorm:"type:varchar(50);not null;index"`
-	Marks              int    `gorm:"not null"`
 	Fee                uint   `gorm:"not null;default:0"`
 
 	CourseID uint                          `gorm:"not null;index"`
@@ -47,8 +45,6 @@ func init() {
 		ListFields: []string{
 			"ExamTitle",
 			"RegistrationStatus",
-			"Marks",
-			"MaxMarks",
 			"Fee",
 			"Course.Name",
 			"AcademicRecord.Student.StudentNo",

@@ -40,13 +40,6 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
-								Page:  components.Page{Roles: []string{"admin", "superuser"}},
-								Title: "Marks",
-								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("%d / %d", getters.Any(getters.Key[int]("$in.Marks")), getters.Any(getters.Key[int]("$in.MaxMarks")))},
-								},
-							},
-							&components.LabelInline{
 								Title: "Academic record",
 								Children: []components.PageInterface{
 									&components.FieldText{Getter: getters.Format("%s (%s)", getters.Any(getters.Key[string]("$in.AcademicRecord.Student.Name")), getters.Any(getters.Key[string]("$in.AcademicRecord.AdmissionSession.Name")))},

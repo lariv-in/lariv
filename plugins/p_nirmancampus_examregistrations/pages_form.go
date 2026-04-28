@@ -93,28 +93,6 @@ func examRegistrationUpdateFormFields() *components.ContainerColumn {
 						},
 					},
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.MaxMarks"),
-						Children: []components.PageInterface{
-							&components.InputNumber[int]{
-								Label:    "Max marks",
-								Name:     "MaxMarks",
-								Required: true,
-								Getter:   getters.Key[int]("$in.MaxMarks"),
-							},
-						},
-					},
-					&components.ContainerError{
-						Error: getters.Key[error]("$error.Marks"),
-						Children: []components.PageInterface{
-							&components.InputNumber[int]{
-								Label:    "Marks",
-								Name:     "Marks",
-								Required: true,
-								Getter:   getters.Key[int]("$in.Marks"),
-							},
-						},
-					},
-					&components.ContainerError{
 						Error: getters.Key[error]("$error.Fee"),
 						Children: []components.PageInterface{
 							&components.InputNumber[uint]{

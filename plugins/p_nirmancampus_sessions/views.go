@@ -17,12 +17,6 @@ func (sessionIsActiveFilterQueryPatcher) Patch(_ views.View, r *http.Request, qu
 	return applyIsActiveFilterToQuery(r, query)
 }
 
-type examSessionIsActiveFilterQueryPatcher struct{}
-
-func (examSessionIsActiveFilterQueryPatcher) Patch(_ views.View, r *http.Request, query gorm.ChainInterface[ExamSession]) gorm.ChainInterface[ExamSession] {
-	return applyIsActiveFilterToQuery(r, query)
-}
-
 func applyIsActiveFilterToQuery[R any](r *http.Request, query gorm.ChainInterface[R]) gorm.ChainInterface[R] {
 	getMap, ok := r.Context().Value("$get").(map[string]any)
 	if !ok {
@@ -52,7 +46,7 @@ func applyIsActiveFilterToQuery[R any](r *http.Request, query gorm.ChainInterfac
 func init() {
 	listPageSize := getters.Static[uint](200)
 
-	// List: admission + exam tables on one page ("All Sessions").
+	// List: admission sessions ("All Sessions").
 	lago.RegistryView.Register("sessions.ListView",
 		lago.GetPageView("sessions.SessionTable").
 			WithLayer("users.auth", p_users.AuthenticationLayer{}).
@@ -63,16 +57,6 @@ func init() {
 					registry.Pair[string, views.QueryPatcher[AdmissionSession]]{
 						Key:   "sessions.filter_is_active",
 						Value: sessionIsActiveFilterQueryPatcher{},
-					},
-				},
-			}).
-			WithLayer("sessions.list_exam", views.LayerList[ExamSession]{
-				Key:      getters.Static("exam_sessions"),
-				PageSize: listPageSize,
-				QueryPatchers: views.QueryPatchers[ExamSession]{
-					registry.Pair[string, views.QueryPatcher[ExamSession]]{
-						Key:   "sessions.filter_is_active_exam",
-						Value: examSessionIsActiveFilterQueryPatcher{},
 					},
 				},
 			}))
@@ -137,50 +121,5 @@ func init() {
 						Value: sessionIsActiveFilterQueryPatcher{},
 					},
 				},
-			}))
-
-	// --- Exam session CRUD ---
-
-	lago.RegistryView.Register("sessions.ExamDetailView",
-		lago.GetPageView("sessions.ExamDetail").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("sessions.exam_detail", views.LayerDetail[ExamSession]{
-				Key:          getters.Static("exam_session"),
-				PathParamKey: getters.Static("id"),
-			}))
-
-	lago.RegistryView.Register("sessions.ExamCreateView",
-		lago.GetPageView("sessions.ExamCreateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("sessions.exam_create", views.LayerCreate[ExamSession]{
-				SuccessURL: lago.RoutePath("sessions.ExamDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("$id")),
-				}),
-			}))
-
-	lago.RegistryView.Register("sessions.ExamUpdateView",
-		lago.GetPageView("sessions.ExamUpdateForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("sessions.exam_detail", views.LayerDetail[ExamSession]{
-				Key:          getters.Static("exam_session"),
-				PathParamKey: getters.Static("id"),
-			}).
-			WithLayer("sessions.exam_update", views.LayerUpdate[ExamSession]{
-				Key: getters.Static("exam_session"),
-				SuccessURL: lago.RoutePath("sessions.ExamDetailRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("exam_session.ID")),
-				}),
-			}))
-
-	lago.RegistryView.Register("sessions.ExamDeleteView",
-		lago.GetPageView("sessions.ExamDeleteForm").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("sessions.exam_detail", views.LayerDetail[ExamSession]{
-				Key:          getters.Static("exam_session"),
-				PathParamKey: getters.Static("id"),
-			}).
-			WithLayer("sessions.exam_delete", views.LayerDelete[ExamSession]{
-				Key:        getters.Static("exam_session"),
-				SuccessURL: lago.RoutePath("sessions.DefaultRoute", nil),
 			}))
 }

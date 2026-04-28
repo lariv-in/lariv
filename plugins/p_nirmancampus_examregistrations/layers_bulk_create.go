@@ -171,8 +171,6 @@ func bulkCreateFromAcademicRecordPostHandler(view *views.View) http.Handler {
 				c := allowed[cid]
 				if err := tx.Create(&ExamRegistration{
 					ExamTitle:          c.Name,
-					MaxMarks:           0,
-					Marks:              0,
 					Fee:                c.Fee,
 					RegistrationStatus: ExamRegistrationStatusNotRegisteredKey,
 					CourseID:           cid,

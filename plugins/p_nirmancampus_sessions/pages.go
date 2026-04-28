@@ -13,7 +13,6 @@ func init() {
 	registerTablePages()
 	registerDetailPages()
 	registerSelectionPages()
-	registerExamPages()
 }
 
 // --- Menus ---
