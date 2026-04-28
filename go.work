@@ -31,6 +31,7 @@ use (
 	./plugins/p_nirmancampus_academicrecords
 	./plugins/p_nirmancampus_announcements
 	./plugins/p_nirmancampus_assignmentsubmissions
+	./plugins/p_nirmancampus_examregistrations
 	./plugins/p_nirmancampus_courses
 	./plugins/p_nirmancampus_forms
 	./plugins/p_nirmancampus_programs

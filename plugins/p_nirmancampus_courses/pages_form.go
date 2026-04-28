@@ -38,6 +38,12 @@ func courseFormFields() *components.ContainerColumn {
 							&components.InputText{Label: "Type", Name: "CourseType", Getter: getters.Key[string]("$in.CourseType")},
 						},
 					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Fee"),
+						Children: []components.PageInterface{
+							&components.InputNumber[uint]{Label: "Fee (₹)", Name: "Fee", Required: false, Getter: getters.Key[uint]("$in.Fee")},
+						},
+					},
 				},
 			},
 			&components.ContainerError{

@@ -18,6 +18,11 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("academicrecords.DetailView"),
 	})
 
+	_ = lago.RegistryRoute.Register("academicrecords.DownloadPdfRoute", lago.Route{
+		Path:    AppUrl + "{id}/download-pdf/",
+		Handler: lago.NewDynamicView("academicrecords.DownloadPdfView"),
+	})
+
 	_ = lago.RegistryRoute.Register("academicrecords.UpdateRoute", lago.Route{
 		Path:    AppUrl + "{id}/edit/",
 		Handler: lago.NewDynamicView("academicrecords.UpdateView"),

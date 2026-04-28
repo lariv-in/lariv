@@ -19,7 +19,7 @@ var sampleSubmissionRows = []struct {
 	max    int
 	marks  int
 }{
-	{title: "Unit Test 1", status: AssignmentSubmissionStatusCreatedKey, max: 20, marks: 16},
+	{title: "Unit Test 1", status: AssignmentSubmissionStatusNotMarkedKey, max: 20, marks: 16},
 	{title: "Midterm Assignment", status: "marked", max: 40, marks: 31},
 	{title: "Project Report", status: "uploaded", max: 30, marks: 0},
 	{title: "Lab Practical", status: "marked", max: 10, marks: 8},

@@ -9,12 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// AssignmentSubmissionStatusCreatedKey is the default for new rows (create form patcher, empty form state).
-const AssignmentSubmissionStatusCreatedKey = "created"
+// AssignmentSubmissionStatusNotMarkedKey is the default for new rows (create form patcher, bulk create, empty form state).
+const AssignmentSubmissionStatusNotMarkedKey = "not_marked"
 
 // AssignmentSubmissionStatusChoices defines stored keys and UI labels for SubmissionStatus.
 var AssignmentSubmissionStatusChoices = []registry.Pair[string, string]{
-	{Key: AssignmentSubmissionStatusCreatedKey, Value: "Created"},
+	{Key: AssignmentSubmissionStatusNotMarkedKey, Value: "Not Marked"},
 	{Key: "marked", Value: "Marked"},
 	{Key: "uploaded", Value: "Uploaded"},
 }

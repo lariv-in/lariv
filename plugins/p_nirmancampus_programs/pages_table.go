@@ -138,6 +138,13 @@ func registerTablePages() {
 						},
 					},
 					{
+						Label: "Fee",
+						Name:  "Fee",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$row.Fee")))},
+						},
+					},
+					{
 						Label: "Description",
 						Name:  "Description",
 						Children: []components.PageInterface{
@@ -193,6 +200,13 @@ func registerSelectionPages() {
 						Name:  "ProgramType",
 						Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.ProgramType")},
+						},
+					},
+					{
+						Label: "Fee",
+						Name:  "Fee",
+						Children: []components.PageInterface{
+							&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$row.Fee")))},
 						},
 					},
 				},

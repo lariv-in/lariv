@@ -15,6 +15,7 @@ var sampleCourses = []Course{
 		IsActive:    true,
 		CourseType:  "Core",
 		Description: "Fundamentals of programming using a high-level language and problem-solving.",
+		Fee:         3500,
 	},
 	{
 		Name:        "Data Structures",
@@ -22,6 +23,7 @@ var sampleCourses = []Course{
 		IsActive:    true,
 		CourseType:  "Core",
 		Description: "Lists, trees, graphs, hashing, and basic complexity analysis.",
+		Fee:         4000,
 	},
 	{
 		Name:        "Database Systems",
@@ -29,6 +31,7 @@ var sampleCourses = []Course{
 		IsActive:    true,
 		CourseType:  "Core",
 		Description: "Relational model, SQL, transactions, and storage internals.",
+		Fee:         4500,
 	},
 	{
 		Name:        "Modern English Poetry",
@@ -36,6 +39,7 @@ var sampleCourses = []Course{
 		IsActive:    true,
 		CourseType:  "Elective",
 		Description: "Survey of major poets and movements from the late nineteenth century onward.",
+		Fee:         2800,
 	},
 	{
 		Name:        "Calculus I",
@@ -43,6 +47,7 @@ var sampleCourses = []Course{
 		IsActive:    true,
 		CourseType:  "Foundation",
 		Description: "Limits, derivatives, and introductory integration with applications.",
+		Fee:         3200,
 	},
 	{
 		Name:        "Organic Chemistry I",
@@ -50,6 +55,7 @@ var sampleCourses = []Course{
 		IsActive:    true,
 		CourseType:  "Core",
 		Description: "Structure, nomenclature, and reactions of organic compounds.",
+		Fee:         3800,
 	},
 	{
 		Name:        "Classical Mechanics",
@@ -57,6 +63,7 @@ var sampleCourses = []Course{
 		IsActive:    true,
 		CourseType:  "Core",
 		Description: "Newtonian mechanics, conservation laws, and rigid-body motion.",
+		Fee:         4200,
 	},
 	{
 		Name:        "Macroeconomics",
@@ -64,6 +71,7 @@ var sampleCourses = []Course{
 		IsActive:    false,
 		CourseType:  "Elective",
 		Description: "National income, fiscal and monetary policy, and growth (inactive sample course).",
+		Fee:         3000,
 	},
 }
 

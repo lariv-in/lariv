@@ -22,6 +22,18 @@ func registerDetailPages() {
 					components.ContainerColumn{
 						Page: components.Page{Key: "academicrecords.AcademicRecordDetailContent"},
 						Children: []components.PageInterface{
+							components.ContainerRow{
+								Classes: "flex justify-end mb-2 flex-wrap gap-2",
+								Children: []components.PageInterface{
+									&components.ButtonDownload{
+										Label: "Download PDF",
+										Link: lago.RoutePath("academicrecords.DownloadPdfRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("$in.ID")),
+										}),
+										Classes: "btn-outline btn-secondary btn-sm",
+									},
+								},
+							},
 							&components.FieldTitle{Getter: getters.Key[string]("$in.Student.Name")},
 							&components.FieldSubtitle{Getter: getters.Key[string]("$in.Student.StudentNo")},
 							&components.LabelInline{

@@ -1,6 +1,8 @@
 package p_nirmancampus_studentpayments
 
 import (
+	"net/http"
+
 	"github.com/lariv-in/lago/getters"
 	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
@@ -92,6 +94,15 @@ func init() {
 				QueryPatchers: views.QueryPatchers[Payment]{
 					registry.Pair[string, views.QueryPatcher[Payment]]{Key: "studentpayments.scope_by_role", Value: PaymentScopeByRole},
 				},
+			}),
+	)
+
+	lago.RegistryView.Register("studentpayments.DownloadReceiptView",
+		lago.GetPageView("studentpayments.PaymentDetail").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("studentpayments.download_receipt", views.MethodLayer{
+				Method:  http.MethodGet,
+				Handler: downloadReceiptHandler,
 			}),
 	)
 }

@@ -23,6 +23,11 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("assignmentsubmissions.DetailView"),
 	})
 
+	_ = lago.RegistryRoute.Register("assignmentsubmissions.AcademicRecordAssignmentReceiptRoute", lago.Route{
+		Path:    AppUrl + "academic-record/{id}/download-receipt/",
+		Handler: lago.NewDynamicView("assignmentsubmissions.AcademicRecordAssignmentReceiptView"),
+	})
+
 	_ = lago.RegistryRoute.Register("assignmentsubmissions.UpdateRoute", lago.Route{
 		Path:    AppUrl + "{id}/edit/",
 		Handler: lago.NewDynamicView("assignmentsubmissions.UpdateView"),

@@ -17,6 +17,7 @@ type Program struct {
 	Standard    string
 	Description string `gorm:"type:text"`
 	IsActive    bool   `gorm:"not null;default:true"`
+	Fee         uint   `gorm:"not null;default:0"`
 	SemesterID  *uint  `gorm:"index;uniqueIndex:ux_program_semester_code"`
 
 	Students []p_students.Student `gorm:"many2many:program_students;"`

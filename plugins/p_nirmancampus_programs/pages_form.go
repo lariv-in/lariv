@@ -134,13 +134,13 @@ func programFormFields() components.ContainerColumn {
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.ProgramFee"),
+						Error: getters.Key[error]("$error.Fee"),
 						Children: []components.PageInterface{
 							&components.InputNumber[uint]{
-								Label:    "Program fee (₹)",
-								Name:     "ProgramFee",
+								Label:    "Fee (₹)",
+								Name:     "Fee",
 								Required: false,
-								Getter:   getters.Key[uint]("$in.ProgramFee"),
+								Getter:   getters.Key[uint]("$in.Fee"),
 							},
 						},
 					},

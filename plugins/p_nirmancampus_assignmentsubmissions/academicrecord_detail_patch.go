@@ -112,10 +112,17 @@ func academicRecordDetailAssignmentSubmissionsSection() components.PageInterface
 		Classes: "mt-4 flex flex-col gap-2",
 		Children: []components.PageInterface{
 			&components.ContainerRow{
-				Classes: "flex gap-2",
+				Classes: "flex flex-wrap gap-2 items-center",
 				Children: []components.PageInterface{
 					academicRecordDetailBulkCreateSubmissionsButton(),
 					academicRecordDetailBulkAddMarksButton(),
+					&components.ButtonDownload{
+						Label: "Download Receipt",
+						Link: lago.RoutePath("assignmentsubmissions.AcademicRecordAssignmentReceiptRoute", map[string]getters.Getter[any]{
+							"id": getters.Any(getters.Key[uint]("academicrecord.ID")),
+						}),
+						Classes: "btn-outline btn-secondary btn-sm",
+					},
 				},
 			},
 			&components.DataTable[AssignmentSubmission]{

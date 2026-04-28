@@ -1,4 +1,4 @@
-package p_nirmancampus_assignmentsubmissions
+package p_nirmancampus_examregistrations
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/lariv-in/lago/registry"
 )
 
-func assignmentSubmissionFormCourseAndAcademicRecordRow() *components.ContainerRow {
+func examRegistrationFormCourseAndAcademicRecordRow() *components.ContainerRow {
 	return &components.ContainerRow{
 		Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 		Children: []components.PageInterface{
@@ -50,41 +50,41 @@ func assignmentSubmissionFormCourseAndAcademicRecordRow() *components.ContainerR
 	}
 }
 
-func assignmentSubmissionUpdateFormFields() *components.ContainerColumn {
+func examRegistrationUpdateFormFields() *components.ContainerColumn {
 	return &components.ContainerColumn{
-		Page: components.Page{Key: "assignmentsubmissions.FormFieldsBody"},
+		Page: components.Page{Key: "examregistrations.FormFieldsBody"},
 		Children: []components.PageInterface{
 			&components.ContainerRow{
 				Classes: "grid grid-cols-1 gap-1 @md:grid-cols-2",
 				Children: []components.PageInterface{
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.AssignmentTitle"),
+						Error: getters.Key[error]("$error.ExamTitle"),
 						Children: []components.PageInterface{
 							&components.InputText{
-								Label:    "Assignment title",
-								Name:     "AssignmentTitle",
+								Label:    "Exam title",
+								Name:     "ExamTitle",
 								Required: true,
-								Getter:   getters.Key[string]("$in.AssignmentTitle"),
+								Getter:   getters.Key[string]("$in.ExamTitle"),
 							},
 						},
 					},
 					&components.ContainerError{
-						Error: getters.Key[error]("$error.SubmissionStatus"),
+						Error: getters.Key[error]("$error.RegistrationStatus"),
 						Children: []components.PageInterface{
 							&components.InputSelect[string]{
-								Label:    "Submission status",
-								Name:     "SubmissionStatus",
+								Label:    "Registration status",
+								Name:     "RegistrationStatus",
 								Required: true,
-								Choices:  getters.Static(AssignmentSubmissionStatusChoices),
+								Choices:  getters.Static(ExamRegistrationStatusChoices),
 								Getter: func(ctx context.Context) (registry.Pair[string, string], error) {
-									s, err := getters.Key[string]("$in.SubmissionStatus")(ctx)
+									s, err := getters.Key[string]("$in.RegistrationStatus")(ctx)
 									if err != nil || s == "" {
-										if p, ok := registry.PairFromPairs(AssignmentSubmissionStatusNotMarkedKey, AssignmentSubmissionStatusChoices); ok {
+										if p, ok := registry.PairFromPairs(ExamRegistrationStatusNotRegisteredKey, ExamRegistrationStatusChoices); ok {
 											return p, nil
 										}
-										return registry.Pair[string, string]{Key: AssignmentSubmissionStatusNotMarkedKey, Value: "Not Marked"}, nil
+										return registry.Pair[string, string]{Key: ExamRegistrationStatusNotRegisteredKey, Value: "Not Registered"}, nil
 									}
-									if p, ok := registry.PairFromPairs(s, AssignmentSubmissionStatusChoices); ok {
+									if p, ok := registry.PairFromPairs(s, ExamRegistrationStatusChoices); ok {
 										return p, nil
 									}
 									return registry.Pair[string, string]{Key: s, Value: s}, nil
@@ -114,9 +114,20 @@ func assignmentSubmissionUpdateFormFields() *components.ContainerColumn {
 							},
 						},
 					},
+					&components.ContainerError{
+						Error: getters.Key[error]("$error.Fee"),
+						Children: []components.PageInterface{
+							&components.InputNumber[uint]{
+								Label:    "Fee (₹)",
+								Name:     "Fee",
+								Required: false,
+								Getter:   getters.Key[uint]("$in.Fee"),
+							},
+						},
+					},
 				},
 			},
-			assignmentSubmissionFormCourseAndAcademicRecordRow(),
+			examRegistrationFormCourseAndAcademicRecordRow(),
 			&components.ContainerError{
 				Error: getters.Key[error]("$error.Assets"),
 				Children: []components.PageInterface{
@@ -133,24 +144,24 @@ func assignmentSubmissionUpdateFormFields() *components.ContainerColumn {
 }
 
 func registerFormPages() {
-	lago.RegistryPage.Register("assignmentsubmissions.FormFields", assignmentSubmissionUpdateFormFields())
+	lago.RegistryPage.Register("examregistrations.FormFields", examRegistrationUpdateFormFields())
 
-	lago.RegistryPage.Register("assignmentsubmissions.BulkCreateFromAcademicRecordForm", &components.Modal{
+	lago.RegistryPage.Register("examregistrations.BulkCreateFromAcademicRecordForm", &components.Modal{
 		Page: components.Page{
-			Key:   "assignmentsubmissions.BulkCreateFromAcademicRecordModal",
+			Key:   "examregistrations.BulkCreateFromAcademicRecordModal",
 			Roles: []string{"admin", "superuser"},
 		},
-		UID: "assignmentsubmissions-bulk-create-academic-record-modal",
+		UID: "examregistrations-bulk-create-academic-record-modal",
 		Children: []components.PageInterface{
-			&components.FormComponent[academicRecordBulkSubmissionsForm]{
+			&components.FormComponent[academicRecordBulkRegistrationsForm]{
 				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
-				Title:    "Create submissions for student",
-				Subtitle: "Select compulsory and/or optional courses. Title defaults to course name; marks stay zero until you edit each submission.",
+				Title:    "Create exam registrations for student",
+				Subtitle: "Select compulsory and/or optional courses. Title defaults to course name; fee defaults to the course fee where set.",
 				Classes:  "@container",
 				ChildrenInput: []components.PageInterface{
 					&components.ContainerColumn{
-						Page: components.Page{Key: "assignmentsubmissions.BulkCreateFromAcademicRecordFormBody"},
+						Page: components.Page{Key: "examregistrations.BulkCreateFromAcademicRecordFormBody"},
 						Children: []components.PageInterface{
 							&components.LabelInline{
 								Title: "Student",
@@ -175,7 +186,7 @@ func registerFormPages() {
 								Error: getters.Key[error]("$error.BulkSelectedCourseIDs"),
 								Children: []components.PageInterface{
 									&InputBulkAcademicRecordCourses{
-										Page:  components.Page{Key: "assignmentsubmissions.BulkCreateCourseSelection"},
+										Page:  components.Page{Key: "examregistrations.BulkCreateCourseSelection"},
 										Label: "Courses on this academic record",
 										Name:  bulkSelectedCourseIDsFieldName,
 									},
@@ -188,7 +199,7 @@ func registerFormPages() {
 					&components.ContainerRow{
 						Classes: "flex justify-end gap-2 mt-2",
 						Children: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Create submissions", Classes: "btn-primary"},
+							&components.ButtonSubmit{Label: "Create registrations", Classes: "btn-primary"},
 						},
 					},
 				},
@@ -196,88 +207,27 @@ func registerFormPages() {
 		},
 	})
 
-	lago.RegistryPage.Register("assignmentsubmissions.BulkAddMarksFromAcademicRecordForm", &components.Modal{
-		Page: components.Page{
-			Key:   "assignmentsubmissions.BulkAddMarksFromAcademicRecordModal",
-			Roles: []string{"admin", "superuser"},
-		},
-		UID: "assignmentsubmissions-bulk-add-marks-academic-record-modal",
-		Children: []components.PageInterface{
-			&components.FormComponent[academicRecordBulkMarksForm]{
-				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
-
-				Title:    "Add marks for student",
-				Subtitle: "Enter marks for each assignment submission. Values must be between 0 and max marks when a max is set.",
-				Classes:  "@container",
-				ChildrenInput: []components.PageInterface{
-					&components.ContainerColumn{
-						Page: components.Page{Key: "assignmentsubmissions.BulkAddMarksFromAcademicRecordFormBody"},
-						Children: []components.PageInterface{
-							&components.LabelInline{
-								Title: "Student",
-								Children: []components.PageInterface{
-									&components.FieldText{Getter: bulkAcademicRecordStudentLineGetter()},
-								},
-							},
-							&components.ContainerError{
-								Error: getters.Key[error]("$error.AcademicRecordID"),
-								Children: []components.PageInterface{
-									&components.InputForeignKey[p_nirmancampus_academicrecords.AcademicRecord]{
-										Hidden:   true,
-										Name:     "AcademicRecordID",
-										Required: true,
-										Url:      lago.RoutePath("academicrecords.SelectRoute", nil),
-										Display:  getters.Key[string]("$in.Student.StudentNo"),
-										Getter:   academicRecordForInputForeignKey(),
-									},
-								},
-							},
-							&components.ContainerError{
-								Error: getters.Key[error]("$error.BulkSubmissionMarks"),
-								Children: []components.PageInterface{
-									&InputBulkSubmissionMarks{
-										Page:  components.Page{Key: "assignmentsubmissions.BulkAddMarksInputs"},
-										Label: "Marks by assignment",
-										Name:  bulkSubmissionMarksFieldName,
-									},
-								},
-							},
-						},
-					},
-				},
-				ChildrenAction: []components.PageInterface{
-					&components.ContainerRow{
-						Classes: "flex justify-end gap-2 mt-2",
-						Children: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Save marks", Classes: "btn-primary"},
-						},
-					},
-				},
-			},
-		},
-	})
-
-	lago.RegistryPage.Register("assignmentsubmissions.UpdateForm", &components.ShellScaffold{
+	lago.RegistryPage.Register("examregistrations.UpdateForm", &components.ShellScaffold{
 		Page: components.Page{Roles: []string{"admin", "superuser"}},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "assignmentsubmissions.DetailMenu"},
+			lago.DynamicPage{Name: "examregistrations.DetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
-				Name: getters.Static("assignmentsubmissions.UpdateForm"),
-				ActionURL: lago.RoutePath("assignmentsubmissions.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID")),
+				Name: getters.Static("examregistrations.UpdateForm"),
+				ActionURL: lago.RoutePath("examregistrations.UpdateRoute", map[string]getters.Getter[any]{
+					"id": getters.Any(getters.Key[uint]("examregistration.ID")),
 				}),
 				Children: []components.PageInterface{
-					&components.FormComponent[AssignmentSubmission]{
-						Getter: getters.Key[AssignmentSubmission]("assignmentsubmission"),
-						Attr:   getters.FormBubbling(getters.Static("assignmentsubmissions.UpdateForm")),
+					&components.FormComponent[ExamRegistration]{
+						Getter: getters.Key[ExamRegistration]("examregistration"),
+						Attr:   getters.FormBubbling(getters.Static("examregistrations.UpdateForm")),
 
-						Title:    "Edit submission",
-						Subtitle: "Update assignment submission details",
+						Title:    "Edit registration",
+						Subtitle: "Update exam registration details",
 						Classes:  "@container",
 						ChildrenInput: []components.PageInterface{
-							assignmentSubmissionUpdateFormFields(),
+							examRegistrationUpdateFormFields(),
 						},
 						ChildrenAction: []components.PageInterface{
 							&components.ContainerRow{
@@ -286,15 +236,15 @@ func registerFormPages() {
 									&components.ContainerRow{
 										Classes: "flex justify-end gap-2",
 										Children: []components.PageInterface{
-											&components.ButtonSubmit{Label: "Save submission"},
+											&components.ButtonSubmit{Label: "Save registration"},
 											&components.ButtonModalForm{
 												Page:        components.Page{Roles: []string{"admin", "superuser"}},
 												Label:       "Delete",
 												Icon:        "trash",
-												Name:        getters.Static("assignmentsubmissions.DeleteForm"),
-												Url:         lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID"))}),
-												FormPostURL: lago.RoutePath("assignmentsubmissions.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("assignmentsubmission.ID"))}),
-												ModalUID:    "assignmentsubmission-delete-modal",
+												Name:        getters.Static("examregistrations.DeleteForm"),
+												Url:         lago.RoutePath("examregistrations.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("examregistration.ID"))}),
+												FormPostURL: lago.RoutePath("examregistrations.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("examregistration.ID"))}),
+												ModalUID:    "examregistration-delete-modal",
 												Classes:     "btn-error",
 											},
 										},

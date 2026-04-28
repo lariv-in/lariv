@@ -52,7 +52,7 @@ type Program struct {
 	ProgramType       string `gorm:"type:varchar(32);not null;default:''"`
 	AdmissionSessions string `gorm:"type:varchar(32);not null;default:''"`
 	TermType          string `gorm:"type:varchar(32);not null;default:''"`
-	ProgramFee        uint   `gorm:"not null;default:0"`
+	Fee               uint   `gorm:"not null;default:0"`
 
 	ProgramMedia          []ProgramMedia         `gorm:"many2many:program_program_media;"`
 	ProgramStructureUnits []ProgramStructureUnit `gorm:"foreignKey:ProgramID"`
@@ -87,6 +87,6 @@ func init() {
 
 	lago.RegistryAdmin.Register("p_nirmancampus_programs", lago.AdminPanel[Program]{
 		SearchField: "Name",
-		ListFields:  []string{"Name", "Code", "University", "ProgramType", "ProgramFee"},
+		ListFields:  []string{"Name", "Code", "University", "ProgramType", "Fee"},
 	})
 }

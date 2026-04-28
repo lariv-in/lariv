@@ -31,7 +31,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "bachelor",
 			AdmissionSessions: "both",
 			TermType:          "semester",
-			ProgramFee:        45000,
+			Fee:               45000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-CS101"}, OptionalPoolCodes: []string{"GEN-MTH101", "GEN-ENG205"}},
@@ -48,7 +48,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "bachelor",
 			AdmissionSessions: "both",
 			TermType:          "semester",
-			ProgramFee:        32000,
+			Fee:               32000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-ENG205"}, OptionalPoolCodes: []string{"GEN-MTH101", "GEN-CS101"}},
@@ -64,7 +64,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "bachelor",
 			AdmissionSessions: "both",
 			TermType:          "year",
-			ProgramFee:        28000,
+			Fee:               28000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 0, CompulsoryCodes: []string{"GEN-MTH101", "GEN-ECO201"}, OptionalPoolCodes: nil},
@@ -80,7 +80,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "bachelor",
 			AdmissionSessions: "july",
 			TermType:          "semester",
-			ProgramFee:        42000,
+			Fee:               42000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 0, CompulsoryCodes: []string{"GEN-MTH101", "GEN-PHY301"}, OptionalPoolCodes: nil},
@@ -96,7 +96,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "diploma",
 			AdmissionSessions: "jan",
 			TermType:          "semester",
-			ProgramFee:        18000,
+			Fee:               18000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-MTH101"}, OptionalPoolCodes: []string{"GEN-ENG205"}},
@@ -112,7 +112,7 @@ var sampleProgramSeeds = []struct {
 			ProgramType:       "masters",
 			AdmissionSessions: "july",
 			TermType:          "year",
-			ProgramFee:        24000,
+			Fee:               24000,
 		},
 		Units: []programStructureUnitSeed{
 			{TermNumber: 1, OptionalCourseCount: 1, CompulsoryCodes: []string{"GEN-ECO201", "GEN-ENG205"}, OptionalPoolCodes: []string{"GEN-CS301", "GEN-CHM201"}},

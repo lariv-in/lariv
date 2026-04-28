@@ -18,6 +18,11 @@ func registerRoutes() {
 		Handler: lago.NewDynamicView("studentpayments.DetailView"),
 	})
 
+	_ = lago.RegistryRoute.Register("studentpayments.DownloadReceiptRoute", lago.Route{
+		Path:    AppUrl + "{id}/download-receipt/",
+		Handler: lago.NewDynamicView("studentpayments.DownloadReceiptView"),
+	})
+
 	_ = lago.RegistryRoute.Register("studentpayments.UpdateRoute", lago.Route{
 		Path:    AppUrl + "{id}/edit/",
 		Handler: lago.NewDynamicView("studentpayments.UpdateView"),

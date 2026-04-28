@@ -56,9 +56,9 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
-								Title: "Program fee",
+								Title: "Fee",
 								Children: []components.PageInterface{
-									&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$in.ProgramFee")))},
+									&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$in.Fee")))},
 								},
 							},
 							&components.LabelNewline{

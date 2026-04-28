@@ -99,6 +99,9 @@ func registerTablePages() {
 					{Label: "Type", Name: "CourseType", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.Key[string]("$row.CourseType")},
 					}},
+					{Label: "Fee", Name: "Fee", Children: []components.PageInterface{
+						&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$row.Fee")))},
+					}},
 					{Label: "Active", Name: "IsActive", Children: []components.PageInterface{
 						&components.FieldCheckbox{Getter: getters.Key[bool]("$row.IsActive")},
 					}},
@@ -136,6 +139,9 @@ func registerSelectionPages() {
 					}},
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.Key[string]("$row.Code")},
+					}},
+					{Label: "Fee", Name: "Fee", Children: []components.PageInterface{
+						&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$row.Fee")))},
 					}},
 				},
 			},
@@ -176,6 +182,9 @@ func registerSelectionPages() {
 					}},
 					{Label: "Code", Name: "Code", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.Key[string]("$row.Code")},
+					}},
+					{Label: "Fee", Name: "Fee", Children: []components.PageInterface{
+						&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$row.Fee")))},
 					}},
 				},
 			},

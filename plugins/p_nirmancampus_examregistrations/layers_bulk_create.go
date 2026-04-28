@@ -1,4 +1,4 @@
-package p_nirmancampus_assignmentsubmissions
+package p_nirmancampus_examregistrations
 
 import (
 	"context"
@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	bulkAcademicRecordContextKey                 = "assignmentsubmissions.bulk_academic_record"
-	bulkAcademicRecordCoursesWithSubmissionKey   = "assignmentsubmissions.bulk_courses_with_submission"
+	bulkAcademicRecordContextKey                 = "examregistrations.bulk_academic_record"
+	bulkAcademicRecordCoursesWithRegistrationKey = "examregistrations.bulk_courses_with_registration"
 )
 
-type academicRecordBulkSubmissionsForm struct{}
+type academicRecordBulkRegistrationsForm struct{}
 
 const bulkSelectedCourseIDsFieldName = "BulkSelectedCourseIDs"
 
@@ -56,7 +56,7 @@ func (academicRecordBulkCreateLoadLayer) Next(view views.View, next http.Handler
 			return
 		}
 		var courseIDs []uint
-		if err := db.Model(&AssignmentSubmission{}).Where("academic_record_id = ?", rec.ID).Pluck("course_id", &courseIDs).Error; err != nil {
+		if err := db.Model(&ExamRegistration{}).Where("academic_record_id = ?", rec.ID).Pluck("course_id", &courseIDs).Error; err != nil {
 			next.ServeHTTP(w, r.WithContext(views.ContextWithErrorsAndValues(r.Context(), nil, map[string]error{"_form": err})))
 			return
 		}
@@ -68,21 +68,20 @@ func (academicRecordBulkCreateLoadLayer) Next(view views.View, next http.Handler
 		}
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, bulkAcademicRecordContextKey, rec)
-		ctx = context.WithValue(ctx, bulkAcademicRecordCoursesWithSubmissionKey, existing)
+		ctx = context.WithValue(ctx, bulkAcademicRecordCoursesWithRegistrationKey, existing)
 		ctx = views.ContextWithErrorsAndValues(ctx, map[string]any{"AcademicRecordID": rec.ID, "AcademicRecord": rec}, nil)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// alreadySubmittedCourseIDs may be nil. When non-nil, courses in the set are omitted.
-func allowedCourseIDsForBulk(rec p_nirmancampus_academicrecords.AcademicRecord, alreadySubmitted map[uint]struct{}) map[uint]p_nirmancampus_courses.Course {
+func allowedCourseIDsForBulk(rec p_nirmancampus_academicrecords.AcademicRecord, alreadyRegistered map[uint]struct{}) map[uint]p_nirmancampus_courses.Course {
 	out := make(map[uint]p_nirmancampus_courses.Course)
 	add := func(c p_nirmancampus_courses.Course) {
 		if c.ID == 0 {
 			return
 		}
-		if alreadySubmitted != nil {
-			if _, skip := alreadySubmitted[c.ID]; skip {
+		if alreadyRegistered != nil {
+			if _, skip := alreadyRegistered[c.ID]; skip {
 				return
 			}
 		}
@@ -140,8 +139,8 @@ func bulkCreateFromAcademicRecordPostHandler(view *views.View) http.Handler {
 			errs[bulkSelectedCourseIDsFieldName] = fmt.Errorf("select at least one course")
 		}
 
-		existingSubmitted, _ := r.Context().Value(bulkAcademicRecordCoursesWithSubmissionKey).(map[uint]struct{})
-		allowed := allowedCourseIDsForBulk(rec, existingSubmitted)
+		existingRegistered, _ := r.Context().Value(bulkAcademicRecordCoursesWithRegistrationKey).(map[uint]struct{})
+		allowed := allowedCourseIDsForBulk(rec, existingRegistered)
 		for _, cid := range selected {
 			if _, ok := allowed[cid]; !ok {
 				errs[bulkSelectedCourseIDsFieldName] = fmt.Errorf("one or more selected courses are not on this academic record")
@@ -159,24 +158,25 @@ func bulkCreateFromAcademicRecordPostHandler(view *views.View) http.Handler {
 			return
 		}
 		var n int64
-		if err := db.Model(&AssignmentSubmission{}).Where("academic_record_id = ? AND course_id IN ?", rec.ID, selected).Count(&n).Error; err != nil {
+		if err := db.Model(&ExamRegistration{}).Where("academic_record_id = ? AND course_id IN ?", rec.ID, selected).Count(&n).Error; err != nil {
 			render(map[string]error{"_form": err})
 			return
 		}
 		if n > 0 {
-			render(map[string]error{"_form": fmt.Errorf("one or more selected courses already have a submission for this academic record; adjust selection")})
+			render(map[string]error{"_form": fmt.Errorf("one or more selected courses already have an exam registration for this academic record; adjust selection")})
 			return
 		}
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			for _, cid := range selected {
 				c := allowed[cid]
-				if err := tx.Create(&AssignmentSubmission{
-					AssignmentTitle:  c.Name,
-					MaxMarks:         0,
-					Marks:            0,
-					SubmissionStatus: AssignmentSubmissionStatusNotMarkedKey,
-					CourseID:         cid,
-					AcademicRecordID: rec.ID,
+				if err := tx.Create(&ExamRegistration{
+					ExamTitle:          c.Name,
+					MaxMarks:           0,
+					Marks:              0,
+					Fee:                c.Fee,
+					RegistrationStatus: ExamRegistrationStatusNotRegisteredKey,
+					CourseID:           cid,
+					AcademicRecordID:   rec.ID,
 				}).Error; err != nil {
 					return err
 				}

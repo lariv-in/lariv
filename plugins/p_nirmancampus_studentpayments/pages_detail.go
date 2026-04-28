@@ -21,6 +21,18 @@ func registerDetailPages() {
 					components.ContainerColumn{
 						Page: components.Page{Key: "studentpayments.PaymentDetailContent"},
 						Children: []components.PageInterface{
+							components.ContainerRow{
+								Classes: "flex justify-end mb-2",
+								Children: []components.PageInterface{
+									&components.ButtonDownload{
+										Label: "Download Receipt",
+										Link: lago.RoutePath("studentpayments.DownloadReceiptRoute", map[string]getters.Getter[any]{
+											"id": getters.Any(getters.Key[uint]("$in.ID")),
+										}),
+										Classes: "btn-outline btn-secondary btn-sm",
+									},
+								},
+							},
 							&components.FieldTitle{
 								Getter: getters.Format(
 									"%s · %s",

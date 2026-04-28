@@ -13,6 +13,7 @@ type Course struct {
 	Code        string `gorm:"unique"`
 	CourseType  string `gorm:"type:varchar(64);not null;default:''"`
 	Description string
+	Fee         uint `gorm:"not null;default:0"`
 }
 
 func init() {
@@ -20,5 +21,8 @@ func init() {
 		lago.RegisterModel[Course](d)
 		return d
 	})
-	lago.RegistryAdmin.Register("p_nirmancampus_courses", lago.AdminPanel[Course]{SearchField: "Name"})
+	lago.RegistryAdmin.Register("p_nirmancampus_courses", lago.AdminPanel[Course]{
+		SearchField: "Name",
+		ListFields:  []string{"Name", "Code", "CourseType", "Fee", "IsActive"},
+	})
 }

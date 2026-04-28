@@ -118,4 +118,13 @@ func init() {
 				},
 			}),
 	)
+
+	lago.RegistryView.Register("assignmentsubmissions.AcademicRecordAssignmentReceiptView",
+		lago.GetPageView("academicrecords.AcademicRecordDetail").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("assignmentsubmissions.academic_record_assignment_receipt", views.MethodLayer{
+				Method:  http.MethodGet,
+				Handler: downloadAcademicRecordAssignmentReceiptHandler,
+			}),
+	)
 }

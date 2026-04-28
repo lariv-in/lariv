@@ -30,6 +30,12 @@ func registerDetailPages() {
 								},
 							},
 							&components.LabelInline{
+								Title: "Fee",
+								Children: []components.PageInterface{
+									&components.FieldText{Getter: getters.Format("₹ %d", getters.Any(getters.Key[uint]("$in.Fee")))},
+								},
+							},
+							&components.LabelInline{
 								Title: "Active",
 								Children: []components.PageInterface{
 									&components.FieldCheckbox{Getter: getters.Key[bool]("$in.IsActive")},

@@ -133,6 +133,15 @@ func init() {
 			}),
 	)
 
+	lago.RegistryView.Register("academicrecords.DownloadPdfView",
+		lago.GetPageView("academicrecords.AcademicRecordDetail").
+			WithLayer("users.auth", p_users.AuthenticationLayer{}).
+			WithLayer("academicrecords.download_pdf", views.MethodLayer{
+				Method:  http.MethodGet,
+				Handler: downloadAcademicRecordPDFHandler,
+			}),
+	)
+
 	// Selection view
 	lago.RegistryView.Register("academicrecords.SelectView",
 		lago.GetPageView("academicrecords.AcademicRecordSelectionTable").
