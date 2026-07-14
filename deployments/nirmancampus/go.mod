@@ -98,3 +98,5 @@ require (
 replace github.com/lariv-in/lago/plugins/p_nirmancampus_studentpayments => ../../plugins/p_nirmancampus_studentpayments
 
 replace github.com/lariv-in/lago/plugins/p_nirmancampus_examregistrations => ../../plugins/p_nirmancampus_examregistrations
+
+retract [v0.0.0, v0.6.2]

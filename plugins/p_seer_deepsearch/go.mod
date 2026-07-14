@@ -129,3 +129,4 @@ replace github.com/lariv-in/lago/syncmap => ../../syncmap
 replace github.com/lariv-in/lago/views => ../../views
 
 replace github.com/lariv-in/lago/plugins/p_google_genai => ../p_google_genai
+retract [v0.0.0, v0.6.2]

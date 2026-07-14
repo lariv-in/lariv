@@ -157,3 +157,4 @@ replace github.com/lariv-in/lago/plugins/p_seer_opensky => ../../plugins/p_seer_
 replace github.com/lariv-in/lago/plugins/p_seer_aisstream => ../../plugins/p_seer_aisstream
 
 replace github.com/lariv-in/lago/plugins/p_seer_gdelt => ../../plugins/p_seer_gdelt
+retract [v0.0.0, v0.6.2]

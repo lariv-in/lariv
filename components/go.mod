@@ -33,3 +33,5 @@ require (
 	golang.org/x/text v0.35.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+retract [v0.0.0, v0.6.2]

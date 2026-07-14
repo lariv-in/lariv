@@ -61,3 +61,5 @@ require (
 	gorm.io/gorm v1.31.1 // indirect
 	maragu.dev/gomponents v1.2.0 // indirect
 )
+
+retract [v0.0.0, v0.6.2]

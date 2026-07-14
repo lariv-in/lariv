@@ -118,3 +118,4 @@ require (
 )
 
 replace github.com/lariv-in/lago/plugins/p_totschool_export => ../../plugins/p_totschool_export
+retract [v0.0.0, v0.6.2]

@@ -174,3 +174,5 @@ replace (
 	github.com/lariv-in/lago/registry => ../../registry
 	github.com/lariv-in/lago/views => ../../views
 )
+
+retract [v0.0.0, v0.6.2]

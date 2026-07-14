@@ -31,3 +31,4 @@ require (
 	gorm.io/datatypes v1.2.7 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
 )
+retract [v0.0.0, v0.6.2]

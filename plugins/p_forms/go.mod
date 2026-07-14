@@ -68,3 +68,5 @@ require (
 	gorm.io/driver/postgres v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
+
+retract [v0.0.0, v0.6.2]

@@ -114,3 +114,4 @@ replace github.com/lariv-in/lago/plugins/p_seer_intel => ../../plugins/p_seer_in
 replace github.com/lariv-in/lago/plugins/p_seer_websites => ../p_seer_websites
 
 replace github.com/lariv-in/lago/plugins/p_google_genai => ../p_google_genai
+retract [v0.0.0, v0.6.2]

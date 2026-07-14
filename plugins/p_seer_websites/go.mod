@@ -100,3 +100,5 @@ replace github.com/lariv-in/lago/registry => ../../registry
 replace github.com/lariv-in/lago/views => ../../views
 
 replace github.com/lariv-in/lago/syncmap => ../../syncmap
+
+retract [v0.0.0, v0.6.2]

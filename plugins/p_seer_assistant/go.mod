@@ -111,3 +111,4 @@ require (
 replace github.com/lariv-in/lago/plugins/p_google_genai => ../p_google_genai
 
 replace github.com/lariv-in/lago/plugins/p_seer_websites => ../p_seer_websites
+retract [v0.0.0, v0.6.2]
