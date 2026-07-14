@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/lago"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )

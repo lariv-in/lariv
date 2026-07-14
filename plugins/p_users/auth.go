@@ -15,7 +15,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/google/uuid"
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 	"golang.org/x/crypto/scrypt"
 	"gorm.io/gorm"
 )
@@ -39,12 +40,14 @@ func Authenticate(db *gorm.DB, email, password string) (*User, error) {
 		return nil, errors.New("Could not authenticate user")
 	}
 
-	return new(user), nil
+	return &user, nil
 }
 
 type AuthConfig struct {
-	SigningKey string `toml:"signingKey"`
-	JwtIssuer  string `toml:"jwtIssuer"`
+	SigningKey    string `toml:"signingKey"`
+	JwtIssuer     string `toml:"jwtIssuer"`
+	AdminEmail    string `toml:"adminEmail"`
+	AdminPassword string `toml:"adminPassword"`
 }
 
 var Config = &AuthConfig{}
@@ -61,8 +64,14 @@ func init() {
 	jwtIssuer = make([]byte, 64)
 	_, _ = rand.Read(signingKey)
 	_, _ = rand.Read(jwtIssuer)
+}
 
-	lago.RegistryConfig.Register("p_users", Config)
+func pluginAuthConfigs() lago.PluginFeatures[lago.Config] {
+	return lago.PluginFeatures[lago.Config]{
+		Entries: []registry.Pair[string, lago.Config]{
+			{Key: "p_users", Value: Config},
+		},
+	}
 }
 
 func (c *AuthConfig) PostConfig() {

@@ -9,29 +9,51 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-// FieldManyToMany renders a read-only list of related records for detail views.
-// Use the same Getter and Display getters as InputManyToMany[T] on the matching form.
+// FieldManyToMany represents a read-only layout displaying multiple associated records as tags or chips.
+// It iterates through related records resolved by the Getter, utilizing the Display getter to print labels,
+// and optionally links each chip to its detail resource URL using the Link getter.
 //
-// If Link is set, it is resolved with getters.ContextKeyIn bound to each related
-// record (same as Display), e.g. lago.GetterRoutePath(..., {"id": GetterKey[uint]("$in.ID")}).
+// Use Cases:
+//   - Showing list of taxes levied on an invoice line item.
+//   - Displaying active system user roles or category tags on products.
+//
+// Example:
+//
+//	&components.FieldManyToMany[Tax]{
+//	    Label:   "Applied Taxes",
+//	    Getter:  getters.Key[[]Tax]("$in.Taxes"),
+//	    Display: getters.Key[string]("$in.Name"),
+//	    Link:    taxDetailURLGetter(),
+//	}
 type FieldManyToMany[T any] struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Label     string
-	Getter    getters.Getter[[]T]
-	Display   getters.Getter[string]
-	Link      getters.Getter[string]
-	Classes   string
+	// Label represents the header label text shown above the list of chips.
+	Label string
+	// Getter is the dynamic function retrieving the associated slices of type T.
+	Getter getters.Getter[[]T]
+	// Display is the Getter resolving the text label description string for each individual record.
+	Display getters.Getter[string]
+	// Link is an optional Getter resolving the detail navigation URL for each individual record.
+	Link getters.Getter[string]
+	// Classes represents additional CSS classes applied to the output HTML wrapper.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
+	Classes string
+	// EmptyText is the fallback text message displayed if the Getter returns an empty slice (defaults to "—").
 	EmptyText string
 }
 
+// GetKey returns the unique key identifier for this FieldManyToMany component.
 func (e FieldManyToMany[T]) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this FieldManyToMany.
 func (e FieldManyToMany[T]) GetRoles() []string {
 	return e.Roles
 }
 
+// Build compiles the FieldManyToMany component into an HTML panel rendering related selection chips.
 func (e FieldManyToMany[T]) Build(ctx context.Context) Node {
 	var chipNodes []Node
 	if e.Getter != nil {

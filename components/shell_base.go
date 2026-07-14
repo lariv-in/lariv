@@ -9,16 +9,38 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
+// ShellBase represents the global root HTML document scaffold wrapper component.
+// It compiles the standard HTML skeleton (doctype, head metadata, responsive viewport limits), imports essential CDN dependencies
+// (Tailwind CSS v4, DaisyUI v5, HTMX v2, Alpine.js v3, morph/persist scripts), sets up standard themes (light/dark with toggle functions),
+// handles global error toast notifications, and renders child elements inside the body container.
+//
+// Use Cases:
+//   - Serves as the primary root layout container for all full-page views throughout the application.
+//
+// Example:
+//
+//	&components.ShellBase{
+//	    ExtraHead: []components.PageInterface{
+//	        &components.MapDisplayLibreHead{},
+//	    },
+//	    Children: []components.PageInterface{
+//	        &components.LayoutSidebar{...},
+//	    },
+//	}
 type ShellBase struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Children  []PageInterface
+	// Children represents the slice of main sub-components rendered within the document body.
+	Children []PageInterface
+	// ExtraHead represents the slice of custom header tags (e.g. metadata, script, link nodes) injected in the HTML head.
 	ExtraHead []PageInterface
 }
 
-// RegistryShellHeadNodes allows plugins to contribute additional tags to <head>.
-// Items are rendered in sorted registry key order.
+// RegistryShellHeadNodes allows plugins to contribute custom additional tags directly into the HTML <head> block.
+// Registered items are rendered sequentially in sorted registry key order.
 var RegistryShellHeadNodes = registry.NewRegistry[Node]()
 
+// Body compiles the core page content wrapper inside the parent HTML document shell structure, including global indicators and error toasts.
 func (e ShellBase) Body(ctx context.Context) Node {
 	group := Group{}
 	for _, child := range e.Children {
@@ -45,13 +67,15 @@ func (e ShellBase) Body(ctx context.Context) Node {
 		Attr("hx-boost", "true"),
 		Attr("hx-indicator", "#global-loading-indicator"),
 		Attr("hx-push-url", "true"),
-		Div(ID("global-loading-indicator"), Class("fixed top-0 left-0 w-full z-50"),
+		Div(
+			ID("global-loading-indicator"), Class("fixed top-0 left-0 w-full z-50"),
 			Div(Class("h-0.5 bg-primary animate-pulse")),
 		),
 		group,
 	)
 }
 
+// Build compiles the ShellBase component into a complete Doctype HTML node structure including stylesheet scripts and tags.
 func (e ShellBase) Build(ctx context.Context) Node {
 	registryHeadGroup := Group{}
 	for _, item := range *RegistryShellHeadNodes.AllStable(registry.RegisterOrder[Node]{}) {
@@ -63,95 +87,101 @@ func (e ShellBase) Build(ctx context.Context) Node {
 		extraHeadGroup = append(extraHeadGroup, Render(child, ctx))
 	}
 
-	return Doctype(HTML(
-		Lang("en"),
-		Head(
-			Meta(Charset("UTF-8")),
-			Meta(Name("viewport"), Content("width=device-width, initial-scale=1.0")),
-			Script(Src("https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js")),
-			Script(Src("https://cdn.jsdelivr.net/npm/htmx-ext-ws@2.0.4"), Integrity("sha384-1RwI/nvUSrMRuNj7hX1+27J8XDdCoSLf0EjEyF69nacuWyiJYoQ/j39RT1mSnd2G"), CrossOrigin("anonymous")),
-			Script(Src("https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js")),
-			Script(Src("https://cdn.jsdelivr.net/npm/@alpinejs/morph@3.x.x/dist/cdn.min.js")),
-			Script(Src("https://cdn.jsdelivr.net/npm/apexcharts")),
-			Link(Href("https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap"), Rel("stylesheet")),
-			Link(Href("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap"), Rel("stylesheet")),
-			StyleEl(Raw(
-				`.heroicon {`+
-					`display: inline-block;`+
-					`width: 24px;`+
-					`height: 24px;`+
-					`background-color: currentColor;`+
-					`-webkit-mask-image: var(--heroicon-url);`+
-					`mask-image: var(--heroicon-url);`+
-					`-webkit-mask-repeat: no-repeat;`+
-					`mask-repeat: no-repeat;`+
-					`-webkit-mask-size: 100% 100%;`+
-					`mask-size: 100% 100%;`+
-					`}`+
-					`.heroicon-sm {`+
-					`width: 16px;`+
-					`height: 16px;`+
-					`}`+
-					`.heroicon-lg {`+
-					`width: 32px;`+
-					`height: 32px;`+
-					`}`,
-			)),
-			Script(Raw(`function toggleTheme() { const d = Alpine.$data(document.body); d.theme = d.theme === 'light' ? 'dark' : 'light'; localStorage.setItem('theme', d.theme); }`)),
-			Script(Src("//unpkg.com/alpinejs"), Defer()),
-			Script(Raw(
-				`htmx.config.defaultSwapStyle = 'morph';`+
-					`htmx.config.responseHandling = [`+
-					`{code:"422", swap: true},`+
-					`{code:"204", swap: false},`+
-					`{code:"[23]..", swap: true},`+
-					`{code:"[45]..", swap: false, error: true},`+
-					`{code:"...", swap: false}`+
-					`];`,
-			)),
-			Link(Href("https://cdn.jsdelivr.net/npm/daisyui@5/daisyui.css"), Rel("stylesheet"), Type("text/css")),
-			Script(Src("https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4")),
-			StyleEl(Type("text/tailwindcss"), Raw(
-				`@theme {`+
-					`--font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;`+
-					`--font-mono: "Roboto Mono", monospace;`+
-					`}`+
-					`:root {`+
-					`font-family: var(--font-sans);`+
-					`}`+
-					`[data-theme="dark"] {`+
-					`--color-base-100: oklch(14% 0.014 253);`+
-					`--color-base-200: oklch(24% 0.014 253);`+
-					`--color-base-300: oklch(30% 0.016 252);`+
-					`}`+
-					`#global-loading-indicator {`+
-					`opacity: 0;`+
-					`transition: opacity 200ms ease-in;`+
-					`}`+
-					`#global-loading-indicator.htmx-request {`+
-					`opacity: 1;`+
-					`}`,
-			)),
-			registryHeadGroup,
-			extraHeadGroup,
+	return Doctype(
+		HTML(
+			Lang("en"),
+			Head(
+				Meta(Charset("UTF-8")),
+				Meta(Name("viewport"), Content("width=device-width, initial-scale=1.0")),
+				Script(Src("https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js")),
+				Script(Src("https://cdn.jsdelivr.net/npm/htmx-ext-ws@2.0.4"), Integrity("sha384-1RwI/nvUSrMRuNj7hX1+27J8XDdCoSLf0EjEyF69nacuWyiJYoQ/j39RT1mSnd2G"), CrossOrigin("anonymous")),
+				Script(Src("https://unpkg.com/htmx-ext-alpine-morph@2.0.0/alpine-morph.js")),
+				Script(Src("https://cdn.jsdelivr.net/npm/@alpinejs/morph@3.x.x/dist/cdn.min.js")),
+				Script(Src("https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"), Defer()),
+				Script(Src("https://cdn.jsdelivr.net/npm/apexcharts")),
+				Link(Href("https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap"), Rel("stylesheet")),
+				Link(Href("https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap"), Rel("stylesheet")),
+				StyleEl(Raw(
+					`.heroicon {`+
+						`display: inline-block;`+
+						`width: 24px;`+
+						`height: 24px;`+
+						`background-color: currentColor;`+
+						`-webkit-mask-image: var(--heroicon-url);`+
+						`mask-image: var(--heroicon-url);`+
+						`-webkit-mask-repeat: no-repeat;`+
+						`mask-repeat: no-repeat;`+
+						`-webkit-mask-size: 100% 100%;`+
+						`mask-size: 100% 100%;`+
+						`}`+
+						`.heroicon-sm {`+
+						`width: 16px;`+
+						`height: 16px;`+
+						`}`+
+						`.heroicon-lg {`+
+						`width: 32px;`+
+						`height: 32px;`+
+						`}`,
+				)),
+				Script(Raw(`function toggleTheme() { const d = Alpine.$data(document.body); d.theme = d.theme === 'light' ? 'dark' : 'light'; localStorage.setItem('theme', d.theme); }`)),
+				Script(Src("//unpkg.com/alpinejs"), Defer()),
+				Script(Raw(
+					`htmx.config.defaultSwapStyle = 'morph';`+
+						`htmx.config.responseHandling = [`+
+						`{code:"422", swap: true},`+
+						`{code:"204", swap: false},`+
+						`{code:"[23]..", swap: true},`+
+						`{code:"[45]..", swap: false, error: true},`+
+						`{code:"...", swap: false}`+
+						`];`,
+				)),
+				Link(Href("https://cdn.jsdelivr.net/npm/daisyui@5/daisyui.css"), Rel("stylesheet"), Type("text/css")),
+				Script(Src("https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4")),
+				StyleEl(Type("text/tailwindcss"), Raw(
+					`@theme {`+
+						`--font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;`+
+						`--font-mono: "Roboto Mono", monospace;`+
+						`}`+
+						`:root {`+
+						`font-family: var(--font-sans);`+
+						`}`+
+						`[data-theme="dark"] {`+
+						`--color-base-100: oklch(14% 0.014 253);`+
+						`--color-base-200: oklch(24% 0.014 253);`+
+						`--color-base-300: oklch(30% 0.016 252);`+
+						`}`+
+						`#global-loading-indicator {`+
+						`opacity: 0;`+
+						`transition: opacity 200ms ease-in;`+
+						`}`+
+						`#global-loading-indicator.htmx-request {`+
+						`opacity: 1;`+
+						`}`,
+				)),
+				registryHeadGroup,
+				extraHeadGroup,
+			),
+			e.Body(ctx),
 		),
-		e.Body(ctx),
-	),
 	)
 }
 
+// GetKey returns the unique key identifier for this ShellBase component.
 func (e ShellBase) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this ShellBase.
 func (e ShellBase) GetRoles() []string {
 	return e.Roles
 }
 
+// GetChildren returns the slice of nested sub-components.
 func (e ShellBase) GetChildren() []PageInterface {
 	return e.Children
 }
 
+// SetChildren replaces the slice of nested sub-components.
 func (e *ShellBase) SetChildren(children []PageInterface) {
 	e.Children = children
 }

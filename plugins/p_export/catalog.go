@@ -6,8 +6,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/lariv-in/lago/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -46,7 +45,7 @@ type ExportCatalog struct {
 }
 
 func BuildExportCatalog(db *gorm.DB) (ExportCatalog, error) {
-	models := lago.RegistryModel.AllStable(registry.AlphabeticalByKey[any]{})
+	models := lago.RegistryModel.AllStable()
 	entries := make([]ModelCatalogEntry, 0, len(*models))
 	joinTables := map[string]JoinTableEntry{}
 

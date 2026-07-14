@@ -7,24 +7,41 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
+// target styling constant defining fallback DaisyUI dropdown details panel classes.
 const tableButtonFilterDefaultContentClasses = "card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-2 bg-base-100"
 
-// TableButtonFilter is the default filter dropdown for DataTable.Actions (funnel summary + card panel).
-// Set Child to the filter form or other content. ContentClasses overrides the inner panel classes when non-empty.
+// TableButtonFilter represents a filter dropdown container panel for DataTable.Actions.
+// It displays a funnel icon summary toggle that displays nested child options (typically filter forms) in an absolute details block when clicked.
+//
+// Use Cases:
+//   - Bundling complex search filters, selection dropdown checklists, or search query parameters inside tables toolbars.
+//
+// Example:
+//
+//	 &components.TableButtonFilter{
+//	     Child: &components.FormComponent[FilterOptions]{...},
+//	 }
 type TableButtonFilter struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
+	// Child represents the nested sub-component (typically a filter form) rendered inside the dropdown panel.
 	Child          PageInterface
+	// ContentClasses represents additional CSS classes applied to the output HTML wrapper.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	ContentClasses string
 }
 
+// GetKey returns the unique key identifier for this TableButtonFilter component.
 func (e TableButtonFilter) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this TableButtonFilter.
 func (e TableButtonFilter) GetRoles() []string {
 	return e.Roles
 }
 
+// GetChildren returns the slice of nested sub-components.
 func (e TableButtonFilter) GetChildren() []PageInterface {
 	if e.Child != nil {
 		return []PageInterface{e.Child}
@@ -32,6 +49,7 @@ func (e TableButtonFilter) GetChildren() []PageInterface {
 	return nil
 }
 
+// SetChildren replaces the slice of nested sub-components.
 func (e *TableButtonFilter) SetChildren(children []PageInterface) {
 	if len(children) > 0 {
 		e.Child = children[0]
@@ -40,6 +58,7 @@ func (e *TableButtonFilter) SetChildren(children []PageInterface) {
 	}
 }
 
+// Build compiles the TableButtonFilter component into a details HTML block wrapping dropdown items.
 func (e TableButtonFilter) Build(ctx context.Context) Node {
 	contentClass := e.ContentClasses
 	if contentClass == "" {

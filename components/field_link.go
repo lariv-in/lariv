@@ -9,22 +9,44 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-// FieldLink renders a plain text link: href from Href; visible text from Label when set, otherwise the href.
+// FieldLink represents a read-only hyperlink field.
+// It renders an HTML anchor <a> tag with href and display label resolved dynamically from context.
+// If Href evaluates to an empty string, the component falls back to rendering a plain text <div>.
+//
+// Use Cases:
+//   - Linking to entity detail pages from lists or summaries (e.g., clicking on a customer's name to view their profile).
+//   - Displaying clickable reference URLs or external links.
+//
+// Example:
+//
+//	&components.FieldLink{
+//	    Href:    lago.RoutePath("users.UserDetail", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.UserID"))}),
+//	    Label:   getters.Key[string]("$in.User.Name"),
+//	    Classes: "link link-primary",
+//	}
 type FieldLink struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Href    getters.Getter[string]
-	Label   getters.Getter[string]
+	// Href is a Getter resolving to the target URL for the anchor link.
+	Href getters.Getter[string]
+	// Label is an optional Getter resolving to the display text. If empty or not set, the resolved Href value is used.
+	Label getters.Getter[string]
+	// Classes represents additional CSS classes applied to the output HTML element.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	Classes string
 }
 
+// GetKey returns the unique key identifier for this FieldLink component.
 func (e FieldLink) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this FieldLink.
 func (e FieldLink) GetRoles() []string {
 	return e.Roles
 }
 
+// Build compiles the FieldLink component into an anchor Node, or a text Div if the URL is empty.
 func (e FieldLink) Build(ctx context.Context) Node {
 	href := ""
 	if e.Href != nil {

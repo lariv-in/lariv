@@ -10,30 +10,32 @@ import (
 	"gorm.io/gorm"
 )
 
-// LayerSingleton manages a single-row table of type T (e.g. site-wide
-// settings). It combines the roles of detail-loading and updating in one
-// layer because there is no URL primary key — the record is always
-// obtained via FirstOrCreate.
+// LayerSingleton manages single-row settings database tables of type T (e.g. system configurations, site-wide parameters).
+// It combines the functions of detail loading and updating because there is no primary key parameter passed via URLs.
+// Instead, it operates on the single record returned from FirstOrCreate.
 //
-// On GET (or any non-POST method) it loads or creates the singleton and places
-// its fields into the context as getters.ContextKeyIn so form components can
-// pre-fill values. Then it calls next.
+// On non-POST triggers (e.g. GET), it loads or creates the singleton row, storing its fields map in the request context
+// under [getters.ContextKeyIn] to pre-fill template form input values.
+// On POST triggers, it parses form parameters, runs GORM Updates inside a transaction, syncs association values, and handles redirects.
 //
-// On POST it parses the view's form, then within a transaction loads the
-// singleton, updates its columns from the submitted values, and replaces any
-// many-to-many associations.
+// Use Cases:
+//   - Managing global system settings, administrator configs, or general app configuration forms.
 //
-// If SuccessURL is set, a successful update redirects to the resolved URL.
-// If SuccessURL is nil, next is called so a downstream handler can decide the
-// response.
+// Example:
 //
-// All errors (form parsing, validation, DB) are placed into
-// getters.ContextKeyError ("_form" for form/field errors) and next is called,
-// so the page can re-render with error feedback.
+//	views.View{
+//	    Layers: []views.Layer{
+//	        views.LayerSingleton[SystemConfig]{
+//	            SuccessURL: lago.RoutePath("admin.Dashboard", nil),
+//	        },
+//	    },
+//	}
 type LayerSingleton[T any] struct {
+	// SuccessURL represents the dynamic Getter resolving to the redirection target URL upon successful singleton updates.
 	SuccessURL getters.Getter[string]
 }
 
+// Next wraps the downstream HTTP request handlers executing singleton loading or updates.
 func (m LayerSingleton[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

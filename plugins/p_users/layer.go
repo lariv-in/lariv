@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/views"
 	"gorm.io/gorm"
 )
@@ -26,9 +26,10 @@ func resolveAuth(r *http.Request) context.Context {
 		return nil
 	}
 
-	token, err := jwt.Parse(authCookie.Value, func(token *jwt.Token) (any, error) {
-		return signingKey, nil
-	}, jwt.WithAllAudiences("lariv-"+base64.StdEncoding.EncodeToString(jwtIssuer)),
+	token, err := jwt.Parse(
+		authCookie.Value, func(token *jwt.Token) (any, error) {
+			return signingKey, nil
+		}, jwt.WithAllAudiences("lariv-"+base64.StdEncoding.EncodeToString(jwtIssuer)),
 		jwt.WithExpirationRequired(),
 		jwt.WithIssuer("lariv"),
 		jwt.WithNotBeforeRequired(),
@@ -94,8 +95,8 @@ func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := resolveAuth(r)
 		if ctx == nil {
-			unauthenticatedRoute, _ := lago.RegistryRoute.Get("users.UnauthenticatedRoute")
-			views.HtmxRedirect(w, r, unauthenticatedRoute.Path, http.StatusMovedPermanently)
+			unauthenticatedRoute, _ := lago.RegistryRoute.Get("p_users.UnauthenticatedRoute")
+			views.HtmxRedirect(w, r, unauthenticatedRoute.Path, http.StatusSeeOther)
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))

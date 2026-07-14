@@ -14,23 +14,40 @@ import (
 	ghtml "maragu.dev/gomponents/html"
 )
 
-// MarkdownParserExtensions matches [FieldMarkdown] / [RenderMarkdown] parsing.
+// MarkdownParserExtensions specifies the common parser extensions used for markdown parsing, including auto heading IDs.
 const MarkdownParserExtensions = parser.CommonExtensions | parser.AutoHeadingIDs
 
-// ParseMarkdownAST parses markdown with the same extensions as [RenderMarkdown].
+// ParseMarkdownAST parses a raw markdown string into a Markdown Abstract Syntax Tree (AST) using [MarkdownParserExtensions].
 func ParseMarkdownAST(md string) ast.Node {
 	return parser.NewWithExtensions(MarkdownParserExtensions).Parse([]byte(md))
 }
 
+// FieldMarkdown represents a read-only field that parses a markdown string and renders it as formatted HTML.
+// It formats markdown headers, paragraphs, and list elements to match DaisyUI/Tailwind typography by default.
+//
+// Use Cases:
+//   - Rendering rich-text body content, system descriptions, user posts, or comments stored as markdown.
+//
+// Example:
+//
+//	&components.FieldMarkdown{
+//	    Getter:  getters.Key[string]("$in.ArticleContent"),
+//	    Classes: "prose",
+//	}
 type FieldMarkdown struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Getter  getters.Getter[string]
+	// Getter is the dynamic function retrieving the raw markdown string to render.
+	Getter getters.Getter[string]
+	// Classes represents additional CSS classes applied to the output HTML div wrapper.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	Classes string
-	// RenderHooks is optional. When non-nil, called with request context and the markdown
-	// string from Getter; returned hooks run outermost-first (before built-in styling hooks).
+	// RenderHooks is an optional function returning custom AST walk hooks.
+	// Render hooks run outermost-first before the default styling hooks.
 	RenderHooks func(context.Context, string) ([]html.RenderNodeFunc, error)
 }
 
+// appendOrAssign is a helper that adds CSS classes to an ast.Attribute object, initializing it if nil.
 func appendOrAssign(attr *ast.Attribute, values ...string) *ast.Attribute {
 	attribute := attr
 	if attr == nil {
@@ -46,6 +63,8 @@ func appendOrAssign(attr *ast.Attribute, values ...string) *ast.Attribute {
 	return attribute
 }
 
+// customRenderHook intercepts markdown nodes (headings, horizontal rules, lists, paragraphs)
+// and appends styling class attributes (e.g. text sizes, margins, bullet styles) to render them in standard style.
 func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
 	if !entering {
 		return ast.GoToNext, false
@@ -80,6 +99,7 @@ func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus
 	return ast.GoToNext, false
 }
 
+// RenderMarkdown parses and renders a raw markdown string into formatted HTML markup, applying the custom rendering hooks.
 func RenderMarkdown(md string, hooks ...html.RenderNodeFunc) string {
 	doc := ParseMarkdownAST(md)
 	opts := html.RendererOptions{Flags: html.CommonFlags}
@@ -99,14 +119,17 @@ func RenderMarkdown(md string, hooks ...html.RenderNodeFunc) string {
 	return string(markdown.Render(doc, renderer))
 }
 
+// GetKey returns the unique key identifier for this FieldMarkdown component.
 func (e FieldMarkdown) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this FieldMarkdown.
 func (e FieldMarkdown) GetRoles() []string {
 	return e.Roles
 }
 
+// Build compiles the FieldMarkdown component into a Div Node containing the raw rendered Markdown HTML.
 func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 	if e.Getter == nil {
 		return ghtml.Div()

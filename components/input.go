@@ -5,19 +5,26 @@ import (
 	"mime/multipart"
 )
 
+// InputInterface defines the standard behavior for all user input fields within a form.
+// It supports retrieving the input field name identifier and parsing raw POST request values.
 type InputInterface interface {
 	PageInterface
-	Parse(any, context.Context) (any, error)
+	// Parse cleans and parses the input values from a form request, returning the parsed value or validation error.
+	Parse(value any, ctx context.Context) (any, error)
+	// GetName returns the HTML form element's name attribute (e.g., "email" or "username").
 	GetName() string
 }
 
-// MultipartInputInterface allows an input to receive uploaded file parts from a
-// multipart form instead of only text values.
+// MultipartInputInterface extends InputInterface to allow file-upload inputs to retrieve and process
+// file headers from multipart form request contexts.
 type MultipartInputInterface interface {
 	InputInterface
-	ParseMultipart([]*multipart.FileHeader, context.Context) (any, error)
+	// ParseMultipart parses uploaded file headers from a multipart form, returning a parsed result or error.
+	ParseMultipart(headers []*multipart.FileHeader, ctx context.Context) (any, error)
 }
 
+// FindInputs performs a recursive post-order traversal through a parent component's children
+// to locate and return all nested components that implement the [InputInterface].
 func FindInputs(p ParentInterface) []InputInterface {
 	inputs := []InputInterface{}
 	for _, child := range p.GetChildren() {

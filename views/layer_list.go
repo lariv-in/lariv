@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
@@ -16,32 +17,50 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-// LayerList is the sole owner of paginated list queries for type T. It
-// builds a filtered, sorted, paginated query from URL query parameters, executes
-// it, and stores the resulting components.ObjectList[T] in the context under Key.
+type schemaCacheEntry struct {
+	rootSchema   *schema.Schema
+	fieldByParam map[string]*schema.Field
+}
+
+var (
+	schemaCache   = make(map[reflect.Type]*schemaCacheEntry)
+	schemaCacheMu sync.RWMutex
+)
+
+// LayerList manages paginated database queries and column sorting/filtering operations for collections of type T.
+// It parses whitelisted URL query parameters matching model fields, builds dynamic GORM queries,
+// loads paged results inside [components.ObjectList], and stores them in the request context under Key.
 //
-// Filtering: query parameters whose names match a struct field name or DB column
-// of T are applied automatically — ILIKE for strings, equality for everything
-// else. Unknown parameters are silently ignored. The "sort" parameter applies
-// ORDER BY clauses, and "page" selects the page number.
+// Automatically applies ILIKE containing checks for string fields, equality matches for other types,
+// and resolves ordering clauses depending on the "sort" parameters.
 //
-// The parsed query parameters (with form-coerced types where a filter form
-// exists on the page) are also stored under "$get" in the context for use by
-// templates.
+// Use Cases:
+//   - Displaying search/filter list views (e.g. users directories, transaction histories).
+//   - Supporting table widgets with numeric page toggles or filter panels.
 //
-// PageSize defaults to 12 and can be overridden via the PageSize getter.
-// QueryPatchers are applied after built-in filtering, allowing callers to add
-// scopes, joins, or tenant filters.
+// Example:
 //
-// On query errors the layer sets a "_global" error in
-// getters.ContextKeyError and calls next instead of writing an HTTP response
-// directly.
+//	views.View{
+//	    Layers: []views.Layer{
+//	        views.LayerList[User]{
+//	            Key:      getters.Static("$usersList"),
+//	            PageSize: getters.Static(uint(15)),
+//	            QueryPatchers: views.QueryPatchers{
+//	                views.QueryPatcherPreload[User]("Profile"),
+//	            },
+//	        },
+//	    },
+//	}
 type LayerList[T any] struct {
-	Key           getters.Getter[string]
-	PageSize      getters.Getter[uint]
+	// Key represents the context key string under which the loaded components.ObjectList is stored.
+	Key getters.Getter[string]
+	// PageSize represents the dynamic Getter returning the number of records per page (defaults to 12).
+	PageSize getters.Getter[uint]
+	// QueryPatchers represents the slice of query modifiers applied to GORM before retrieving the list.
 	QueryPatchers QueryPatchers[T]
 }
 
+// Next wraps the downstream HTTP request handlers executing paginated queries.
 func (m LayerList[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -56,20 +75,38 @@ func (m LayerList[T]) Next(view View, next http.Handler) http.Handler {
 		}
 		var query gorm.ChainInterface[T] = gorm.G[T](db).Scopes()
 
-		var rootSchema *schema.Schema
-		fieldByParam := map[string]*schema.Field{}
-		if stmt := (&gorm.Statement{DB: db}); stmt.Parse(new(T)) == nil && stmt.Schema != nil {
-			rootSchema = stmt.Schema
-			for _, f := range stmt.Schema.Fields {
-				if f.DBName == "" {
-					continue
+		tType := reflect.TypeOf((*T)(nil)).Elem()
+		schemaCacheMu.RLock()
+		cache, ok := schemaCache[tType]
+		schemaCacheMu.RUnlock()
+		if !ok {
+			schemaCacheMu.Lock()
+			cache, ok = schemaCache[tType]
+			if !ok {
+				var rootSchema *schema.Schema
+				fieldByParam := map[string]*schema.Field{}
+				if stmt := (&gorm.Statement{DB: db}); stmt.Parse(new(T)) == nil && stmt.Schema != nil {
+					rootSchema = stmt.Schema
+					for _, f := range stmt.Schema.Fields {
+						if f.DBName == "" {
+							continue
+						}
+						keyName := strings.ToLower(f.Name)
+						keyDB := strings.ToLower(f.DBName)
+						fieldByParam[keyName] = f
+						fieldByParam[keyDB] = f
+					}
 				}
-				keyName := strings.ToLower(f.Name)
-				keyDB := strings.ToLower(f.DBName)
-				fieldByParam[keyName] = f
-				fieldByParam[keyDB] = f
+				cache = &schemaCacheEntry{
+					rootSchema:   rootSchema,
+					fieldByParam: fieldByParam,
+				}
+				schemaCache[tType] = cache
 			}
+			schemaCacheMu.Unlock()
 		}
+		rootSchema := cache.rootSchema
+		fieldByParam := cache.fieldByParam
 		pageStr := r.URL.Query().Get("page")
 		pageNum := uint(1)
 		if pageStr != "" {
@@ -154,11 +191,11 @@ func (m LayerList[T]) Next(view View, next http.Handler) http.Handler {
 				continue
 			}
 			col := f.DBName
-			if f.FieldType.Kind() == reflect.String {
-				// Case-insensitive "contains" match for strings.
+			if f.FieldType.Kind() == reflect.String && f.FieldType.Name() == "string" {
+				// Case-insensitive "contains" match for plain strings only.
+				// Named string types (e.g. Postgres enums) use equality below.
 				query = query.Where(col+" ILIKE ?", "%"+values[0]+"%")
 			} else {
-				// Equality match for non-string types.
 				query = query.Where(col+" = ?", values[0])
 			}
 		}

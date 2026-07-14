@@ -1,3 +1,8 @@
+// Package registry provides a mechanism to store and modify objects.
+//
+// It allows storing base objects (as unpatched items) and patches to those
+// objects separately, so that the base objects can be customized or modified
+// using the registered patches before they are built and retrieved.
 package registry
 
 import (
@@ -15,6 +20,72 @@ import (
 	"github.com/lariv-in/lago/getters"
 )
 
+// ImmutableRegistry stores a static set of registry items.
+//
+// Unlike [Registry], which supports lazy building and patches, an ImmutableRegistry
+// is designed to be constructed once and assigned, without any subsequent modification.
+// At most one entry is kept per key; if the constructor receives duplicate keys,
+// the last entry survives.
+type ImmutableRegistry[T any] struct {
+	itemsMap  map[string]RegistryItem[T]
+	itemsList []Pair[string, T]
+}
+
+func NewImmutableRegistry[T any](entries []Pair[string, T]) ImmutableRegistry[T] {
+	itemsMap := make(map[string]RegistryItem[T], len(entries))
+	for i, v := range entries {
+		itemsMap[v.Key] = RegistryItem[T]{
+			Order: i,
+			Item:  v.Value,
+		}
+	}
+
+	itemsList := make([]Pair[string, T], 0, len(entries))
+	presentSet := make(map[string]bool)
+
+	for _, v := range slices.Backward(entries) {
+		if !presentSet[v.Key] {
+			itemsList = append(itemsList, v)
+			presentSet[v.Key] = true
+		}
+	}
+	slices.Reverse(itemsList)
+
+	return ImmutableRegistry[T]{
+		itemsList: itemsList,
+		itemsMap:  itemsMap,
+	}
+}
+
+// Get retrieves the value associated with the given name. It returns a copy
+// of the stored value, and a boolean indicating whether the key was found.
+func (r *ImmutableRegistry[T]) Get(name string) (T, bool) {
+	var zero T
+	item, ok := r.itemsMap[name]
+	if !ok {
+		return zero, false
+	}
+	return item.Item, true
+}
+
+// AllStable returns a pointer to the slice of all items in the registry.
+// The slice contains deduplicated elements in the same order as the entries
+// supplied when constructing the registry.
+func (r *ImmutableRegistry[T]) AllStable() *[]Pair[string, T] {
+	return &r.itemsList
+}
+
+// All returns a new map containing all items in the registry. The returned map
+// is a clone of the registry's internal state and can be safely mutated.
+func (r *ImmutableRegistry[T]) All() map[string]T {
+	items := make(map[string]T, len(r.itemsList))
+	for _, item := range r.itemsList {
+		items[item.Key] = item.Value
+	}
+	return items
+}
+
+// NewRegistry initializes and returns a new, empty Registry.
 func NewRegistry[T any]() *Registry[T] {
 	return &Registry[T]{
 		unpatchedItems: map[string]RegistryItem[T]{},
@@ -28,6 +99,12 @@ func NewRegistry[T any]() *Registry[T] {
 type Pair[K comparable, V any] struct {
 	Key   K
 	Value V
+}
+
+func NewPair[K comparable, V any](k K, v V) Pair[K, V] {
+	return Pair[K, V]{
+		Key: k, Value: v,
+	}
 }
 
 // PairsFromMap converts a map into a stable slice of pairs sorted by key.
@@ -85,37 +162,42 @@ func KeysFromPairs[K comparable, V any](pairs []Pair[K, V]) []K {
 	return out
 }
 
-// PairValueFromKey maps a stored string key to its value using [PairFromPairs].
-// Empty key returns "". Unknown keys return the key unchanged (same fallback as form selects in Caveats).
-func PairValueFromKey(keyGetter getters.Getter[string], pairs []Pair[string, string]) getters.Getter[string] {
+// PairValueFromKey maps a stored key to its display label using [PairFromPairs].
+// Zero key returns "". Unknown keys return fmt.Sprint(key) (same fallback as form selects in Caveats).
+func PairValueFromKey[K comparable](keyGetter getters.Getter[K], pairs []Pair[K, string]) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
-		s, err := keyGetter(ctx)
+		key, err := keyGetter(ctx)
 		if err != nil {
 			return "", err
 		}
-		if s == "" {
+		var zero K
+		if key == zero {
 			return "", nil
 		}
-		if p, ok := PairFromPairs(s, pairs); ok {
+		if p, ok := PairFromPairs(key, pairs); ok {
 			return p.Value, nil
 		}
-		return s, nil
+		return fmt.Sprint(key), nil
 	}
 }
 
 // PairFromGetter returns a getter for components.InputSelect current value: a
-// Pair with Key = stored value and Value = label. Empty key returns a zero pair.
-// Unknown keys return {Key: s, Value: s}, matching plugin-local *PairGetter helpers.
-func PairFromGetter(keyGetter getters.Getter[string], pairs []Pair[string, string]) getters.Getter[Pair[string, string]] {
-	return func(ctx context.Context) (Pair[string, string], error) {
-		s, err := keyGetter(ctx)
-		if err != nil || s == "" {
-			return Pair[string, string]{}, nil
+// Pair with Key = stored value and Value = label. Zero key returns a zero pair.
+// Unknown keys return {Key: key, Value: fmt.Sprint(key)}, matching plugin-local *PairGetter helpers.
+func PairFromGetter[K comparable](keyGetter getters.Getter[K], pairs []Pair[K, string]) getters.Getter[Pair[K, string]] {
+	return func(ctx context.Context) (Pair[K, string], error) {
+		key, err := keyGetter(ctx)
+		if err != nil {
+			return Pair[K, string]{}, err
 		}
-		if p, ok := PairFromPairs(s, pairs); ok {
+		var zero K
+		if key == zero {
+			return Pair[K, string]{}, nil
+		}
+		if p, ok := PairFromPairs(key, pairs); ok {
 			return p, nil
 		}
-		return Pair[string, string]{Key: s, Value: s}, nil
+		return Pair[K, string]{Key: key, Value: fmt.Sprint(key)}, nil
 	}
 }
 
@@ -188,6 +270,11 @@ func (r *Registry[T]) Register(name string, unpatchedItem T) error {
 	return nil
 }
 
+// Patch registers a new patcher function for the registry item with the given name.
+//
+// Patches are applied to the base item in the order they were registered.
+// It is important that the patcher function is idempotent, as it may be called
+// any number of times (e.g., during rebuilds).
 func (r *Registry[T]) Patch(name string, patcher func(T) T) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -265,6 +352,12 @@ func (r *Registry[T]) buildLocked() {
 	r.isBuilt = true
 }
 
+// Get retrieves the value associated with the given name, building the registry
+// if it is not already built.
+//
+// If a build is currently in progress, this method will immediately return the zero value
+// and false to avoid recursion deadlocks (for example, if patchers or getters re-enter
+// the same registry during building).
 func (r *Registry[T]) Get(name string) (T, bool) {
 	var zero T
 
@@ -354,7 +447,7 @@ func (r *Registry[T]) AllStable(sorter RegistrySorter[T]) *[]Pair[string, T] {
 	} else {
 		if r.isBuilding {
 			r.mu.RUnlock()
-			return new([]Pair[string, T]{})
+			return new([]Pair[string, T])
 		}
 		r.mu.RUnlock()
 		r.mu.Lock()
@@ -365,7 +458,7 @@ func (r *Registry[T]) AllStable(sorter RegistrySorter[T]) *[]Pair[string, T] {
 	}
 
 	if !r.isBuilt {
-		return new([]Pair[string, T]{})
+		return new([]Pair[string, T])
 	}
 	ent := r.itemsList[sorter]
 	if ent == nil {

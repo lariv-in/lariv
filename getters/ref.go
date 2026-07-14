@@ -10,6 +10,6 @@ func Ref[T any](g Getter[T]) Getter[*T] {
 		if err != nil {
 			return nil, err
 		}
-		return new(value), nil
+		return &value, nil
 	}
 }

@@ -47,7 +47,8 @@ func (e InputVNode) Build(ctx context.Context) Node {
 
 	var fileInfo Node
 	if currentFile != nil {
-		fileInfo = Div(Class("flex items-center gap-2 text-sm my-1"),
+		fileInfo = Div(
+			Class("flex items-center gap-2 text-sm my-1"),
 			components.Render(components.Icon{Name: "document"}, ctx),
 			Span(Text(currentFile.Name)),
 			Span(Class("opacity-50"), Text(fmt.Sprintf("(%s)", currentFile.FileSizeDisplay()))),

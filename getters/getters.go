@@ -1,3 +1,8 @@
+// Package getters defines the core Getter type and a suite of utility functions
+// for fetching, transforming, and composing dynamic values.
+//
+// The central type is [Getter], which represents a deferred or dynamic value
+// that can be resolved given a [context.Context].
 package getters
 
 import (

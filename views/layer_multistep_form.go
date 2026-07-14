@@ -8,8 +8,23 @@ import (
 	"github.com/lariv-in/lago/components"
 )
 
+// MultiStepFormLayer coordinates stage transitions, input validations, error caching, and HTMX swaps for multi-stage wizards.
+// It intercepts HTTP POST operations targeting [components.MultiStepForm] page wrappers, increments or decrements the request context "$stage" index,
+// merges carried validation errors, and enforces HTTP StatusUnprocessableEntity (422) redirects to swap out form stages.
+//
+// Use Cases:
+//   - Driving multi-stage checkout forms, step-by-step registration processes, or linear onboarding flows.
+//
+// Example:
+//
+//	views.View{
+//	    Layers: []views.Layer{
+//	        views.MultiStepFormLayer{},
+//	    },
+//	}
 type MultiStepFormLayer struct{}
 
+// Next wraps the downstream HTTP request handlers routing multi-stage form transitions.
 func (m MultiStepFormLayer) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		form, ok := viewMultiStepForm(view)
@@ -65,6 +80,7 @@ func (m MultiStepFormLayer) Next(view View, next http.Handler) http.Handler {
 	})
 }
 
+// mergeMultiStepFormErrors merges cached errors with newly occurred validation errors while purging expired errors belonging to the current step.
 func mergeMultiStepFormErrors(carriedErrors map[string]error, stageFields map[string]struct{}, freshErrors map[string]error) map[string]error {
 	merged := map[string]error{}
 	for key, err := range carriedErrors {
@@ -86,17 +102,21 @@ func mergeMultiStepFormErrors(carriedErrors map[string]error, stageFields map[st
 	return merged
 }
 
+// multiStepRenderRequest clones the incoming request changing the HTTP method to GET to execute safe view refreshes.
 func multiStepRenderRequest(r *http.Request) *http.Request {
 	clone := r.Clone(r.Context())
 	clone.Method = http.MethodGet
 	return clone
 }
 
+// multiStepSwapResponseWriter enforces StatusUnprocessableEntity (422) for successful intermediate transitions,
+// triggering HTMX swap logic rather than browser document reloads.
 type multiStepSwapResponseWriter struct {
 	http.ResponseWriter
 	wroteHeader bool
 }
 
+// WriteHeader writes the custom 422 HTTP status header when receiving 2xx statuses.
 func (w *multiStepSwapResponseWriter) WriteHeader(statusCode int) {
 	w.wroteHeader = true
 	if statusCode >= 200 && statusCode < 300 {
@@ -106,6 +126,7 @@ func (w *multiStepSwapResponseWriter) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
 }
 
+// Write writes data payloads to the client stream enforcing WriteHeader.
 func (w *multiStepSwapResponseWriter) Write(b []byte) (int, error) {
 	if !w.wroteHeader {
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -113,6 +134,7 @@ func (w *multiStepSwapResponseWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
+// viewMultiStepForm scans the View page hierarchy returning the target MultiStepForm structure instance.
 func viewMultiStepForm(view View) (components.MultiStepForm, bool) {
 	page, ok := view.GetPage()
 	if !ok {

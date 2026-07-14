@@ -8,24 +8,34 @@ import (
 	"maragu.dev/gomponents/html"
 )
 
+// ButtonLink represents an anchor link styled as a button.
+// It supports dynamic or static labels (via getters) and targets.
 type ButtonLink struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Label       string
-	GetterLabel getters.Getter[string]
-	Link        getters.Getter[string]
-	Icon        string
+	// Label is a Getter resolving to the button's display text.
+	Label getters.Getter[string]
+	// Link is a Getter that resolves to the destination URL (href) of the link.
+	Link getters.Getter[string]
+	// Icon is the name of an optional icon to display alongside the text.
+	Icon string
+	// IconClasses represents additional CSS classes applied to the Icon.
 	IconClasses string
-	Classes     string
+	// Classes represents additional CSS classes for the button container.
+	Classes string
 }
 
+// GetKey returns the unique key identifier for this ButtonLink component.
 func (e ButtonLink) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this ButtonLink.
 func (e ButtonLink) GetRoles() []string {
 	return e.Roles
 }
 
+// Build compiles the ButtonLink component into a gomponents Node representing an HTML <a> element.
 func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 	link := ""
 	if e.Link != nil {
@@ -33,9 +43,9 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 			link = v
 		}
 	}
-	label := e.Label
-	if e.GetterLabel != nil {
-		if v, err := e.GetterLabel(ctx); err == nil {
+	label := ""
+	if e.Label != nil {
+		if v, err := e.Label(ctx); err == nil {
 			label = v
 		}
 	}

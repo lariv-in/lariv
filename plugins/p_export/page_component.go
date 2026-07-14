@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/lago"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -54,7 +54,8 @@ func (e exportPickerPage) Build(ctx context.Context) Node {
 			description = entry.ModelName + " | " + description
 		}
 
-		rows = append(rows,
+		rows = append(
+			rows,
 			Div(
 				Class("card bg-base-100 border border-base-300 shadow-sm"),
 				Div(
@@ -87,7 +88,8 @@ func (e exportPickerPage) Build(ctx context.Context) Node {
 	}
 
 	if len(catalog.Entries) == 0 {
-		rows = append(rows,
+		rows = append(
+			rows,
 			Div(
 				Class("alert"),
 				Text("No registered models available in this deployment."),

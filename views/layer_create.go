@@ -11,26 +11,40 @@ import (
 	"gorm.io/gorm"
 )
 
-// LayerCreate handles row creation for type T on POST requests.
-// On non-POST methods it passes through to next unchanged.
+// LayerCreate handles database record insertion transactions for type T on incoming POST requests.
+// On non-POST requests, it passes execution to the next handler downstream.
 //
-// On POST it parses the view's form, applies FormPatchers, then within a
-// transaction populates a new T from the regular (non-association) values,
-// inserts it, and replaces any many-to-many associations. On success the
-// newly created record's ID is stored in the context as "$id".
+// On a POST request, it parses the view's form parameters, executes registered [FormPatchers],
+// populates a new record instance of type T with the non-association values, inserts it inside a transaction,
+// and syncs many-to-many associations. Upon successful creation, the new primary key is stored as "$id" on the request context.
+// If SuccessURL is set, a successful operation redirects the browser to the resolved path.
+// Otherwise, it passes execution downstream with the enriched context.
 //
-// If SuccessURL is set, a successful create redirects to the resolved URL.
-// If SuccessURL is nil, next is called with the enriched context, allowing a
-// downstream handler to decide the response.
+// Use Cases:
+//   - Handling model creation form submissions (e.g. creating users, items, or configurations).
+//   - Triggering background jobs or side-effects upon record creation using transaction commit hooks.
 //
-// All errors (form parsing, validation, DB) are placed into
-// getters.ContextKeyError ("_form" for form/field errors) and next is called,
-// so the page can re-render with error feedback.
+// Example:
+//
+//	views.View{
+//	    Layers: []views.Layer{
+//	        &views.PathLayer{Names: []string{"id"}},
+//	        views.LayerCreate[User]{
+//	            SuccessURL: lago.RoutePath("users.List", nil),
+//	            FormPatchers: views.FormPatchers{
+//	                registry.NewPair("author", AuthorPatcher{}),
+//	            },
+//	        },
+//	    },
+//	}
 type LayerCreate[T any] struct {
-	SuccessURL   getters.Getter[string]
+	// SuccessURL represents the dynamic Getter resolving to the redirection target URL upon successful record creation.
+	SuccessURL getters.Getter[string]
+	// FormPatchers represents the collection of patch middleware rules to apply to form maps before database insertion.
 	FormPatchers FormPatchers
 }
 
+// Next wraps the downstream HTTP request handlers executing row creation on POST triggers.
 func (m LayerCreate[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

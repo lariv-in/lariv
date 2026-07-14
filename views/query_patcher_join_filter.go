@@ -3,13 +3,33 @@ package views
 import (
 	"log/slog"
 	"net/http"
+	"reflect"
+	"sync"
 
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
 	"gorm.io/gorm"
 )
 
+var (
+	joinFilterCache   = make(map[reflect.Type]map[string]string)
+	joinFilterCacheMu sync.RWMutex
+)
+
 func joinFilterFieldDBName[T any](db *gorm.DB, fieldName string) (string, bool) {
+	tType := reflect.TypeOf((*T)(nil)).Elem()
+	joinFilterCacheMu.RLock()
+	m, ok := joinFilterCache[tType]
+	var dbName string
+	var present bool
+	if ok {
+		dbName, present = m[fieldName]
+	}
+	joinFilterCacheMu.RUnlock()
+	if present {
+		return dbName, true
+	}
+
 	stmt := &gorm.Statement{DB: db}
 	if err := stmt.Parse(new(T)); err != nil {
 		slog.Error("QueryPatcherJoinFilter schema parse failed", "field", fieldName, "error", err)
@@ -24,6 +44,16 @@ func joinFilterFieldDBName[T any](db *gorm.DB, fieldName string) (string, bool) 
 		slog.Error("QueryPatcherJoinFilter field missing", "field", fieldName)
 		return "", false
 	}
+
+	joinFilterCacheMu.Lock()
+	m, ok = joinFilterCache[tType]
+	if !ok {
+		m = make(map[string]string)
+		joinFilterCache[tType] = m
+	}
+	m[fieldName] = field.DBName
+	joinFilterCacheMu.Unlock()
+
 	return field.DBName, true
 }
 
@@ -43,15 +73,37 @@ func joinFilterIDs(raw any) []uint {
 	}
 }
 
-// QueryPatcherJoinFilter filters the current model by a related ID set through a join model.
-// Param is the filter form field name stored under $get. OwnerField and RelatedField are
-// join-model struct field names, for example "CourseID" and "TeacherID".
+// QueryPatcherJoinFilter filters rows of model type T based on association IDs of another entity, resolved via a many-to-many join model TJoin.
+// It extracts selected IDs from the query parameter map, resolves the struct field names to database columns using schema reflection, and appends a subquery filter.
+//
+// Use Cases:
+//   - Filtering a list of records by many-to-many associations (e.g., filtering courses matching a set of teacher IDs via a CourseTeacher join table).
+//
+// Example:
+//
+//	views.View{
+//	    Layers: []views.Layer{
+//	        views.LayerList[Course]{
+//	            QueryPatchers: views.QueryPatchers{
+//	                views.NewPair("filter_teachers", views.QueryPatcherJoinFilter[Course, CourseTeacher]{
+//	                    Param:        "teacher_ids",
+//	                    OwnerField:   "CourseID",
+//	                    RelatedField: "TeacherID",
+//	                }),
+//	            },
+//	        },
+//	    },
+//	}
 type QueryPatcherJoinFilter[T any, TJoin any] struct {
-	Param        string
-	OwnerField   string
+	// Param represents the key in the request parameter map ($get) containing the selected IDs.
+	Param string
+	// OwnerField represents the struct field name of the foreign key to model T inside the join model TJoin (e.g., "CourseID").
+	OwnerField string
+	// RelatedField represents the struct field name of the foreign key to the associated entity inside the join model TJoin (e.g., "TeacherID").
 	RelatedField string
 }
 
+// Patch applies the subquery filters to the GORM query chain.
 func (p QueryPatcherJoinFilter[T, TJoin]) Patch(_ View, r *http.Request, db gorm.ChainInterface[T]) gorm.ChainInterface[T] {
 	getMap, ok := r.Context().Value("$get").(map[string]any)
 	if !ok {

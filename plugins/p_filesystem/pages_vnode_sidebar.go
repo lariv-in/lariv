@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/lago"
 )
 
 func filesystemSidebar() []components.PageInterface {

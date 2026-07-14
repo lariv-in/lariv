@@ -15,6 +15,8 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// PopulateFromMap decodes a map of parameters and inputs into a struct pointer of type T.
+// It wraps mapstructure decoding config parameters, enabling weakly typed conversions, deep decodes, and struct squashing.
 func PopulateFromMap[T any](v *T, values map[string]any) error {
 	decodeConfig := mapstructure.DecoderConfig{Result: v, Deep: true, Squash: true, WeaklyTypedInput: true}
 	decoder, err := mapstructure.NewDecoder(&decodeConfig)
@@ -80,7 +82,7 @@ func applyAssociationReplacements[T any](db *gorm.DB, record *T, associations ma
 			continue
 		}
 
-		replaceValue, err := buildAssociationReplaceValue(relationship, associationValue.IDs)
+		replaceValue, err := buildAssociationReplaceValue(db, relationship, associationValue.IDs)
 		if err != nil {
 			return err
 		}
@@ -92,43 +94,25 @@ func applyAssociationReplacements[T any](db *gorm.DB, record *T, associations ma
 	return nil
 }
 
-func buildAssociationReplaceValue(relationship *schema.Relationship, ids []uint) (any, error) {
+func buildAssociationReplaceValue(db *gorm.DB, relationship *schema.Relationship, ids []uint) (any, error) {
 	sliceType := relationship.Field.FieldType
 	if sliceType.Kind() != reflect.Slice {
 		return nil, fmt.Errorf("field %q is not a slice association", relationship.Field.Name)
 	}
-
-	elemType := sliceType.Elem()
-	elemIsPointer := elemType.Kind() == reflect.Pointer
-	baseType := elemType
-	if elemIsPointer {
-		baseType = elemType.Elem()
+	if len(ids) == 0 {
+		return reflect.MakeSlice(sliceType, 0, 0).Interface(), nil
 	}
 
-	sliceValue := reflect.MakeSlice(sliceType, 0, len(ids))
-	for _, id := range ids {
-		itemPtr := reflect.New(baseType)
-		idField := itemPtr.Elem().FieldByName("ID")
-		if !idField.IsValid() || !idField.CanSet() {
-			return nil, fmt.Errorf("association %q element type %s does not have a settable ID field", relationship.Field.Name, baseType)
-		}
-		switch idField.Kind() {
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			idField.SetUint(uint64(id))
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			idField.SetInt(int64(id))
-		default:
-			return nil, fmt.Errorf("association %q element ID field has unsupported kind %s", relationship.Field.Name, idField.Kind())
-		}
-
-		if elemIsPointer {
-			sliceValue = reflect.Append(sliceValue, itemPtr)
-		} else {
-			sliceValue = reflect.Append(sliceValue, itemPtr.Elem())
-		}
+	slicePtr := reflect.New(sliceType)
+	model := reflect.New(relationship.FieldSchema.ModelType).Interface()
+	if err := db.Model(model).Where("id IN ?", ids).Find(slicePtr.Interface()).Error; err != nil {
+		return nil, err
+	}
+	if slicePtr.Elem().Len() != len(ids) {
+		return nil, fmt.Errorf("association %q: one or more selected records were not found", relationship.Field.Name)
 	}
 
-	return sliceValue.Interface(), nil
+	return slicePtr.Elem().Interface(), nil
 }
 
 func modelPrimaryKeyValue(record any) (any, error) {

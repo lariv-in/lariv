@@ -35,3 +35,38 @@ func Select[T, D comparable](name string, valueGetter Getter[T], displayGetter G
 		return js, nil
 	}
 }
+
+// SelectNamed is like [Select] but resolves the fk input name at render time from nameGetter
+// (for example [Getter][string]("$get.target_input") when the picker URL includes target_input).
+func SelectNamed[T, D comparable](nameGetter Getter[string], valueGetter Getter[T], displayGetter Getter[D]) Getter[string] {
+	var zeroT T
+	var zeroD D
+	return func(ctx context.Context) (string, error) {
+		name, err := IfOr(nameGetter, ctx, "")
+		if err != nil {
+			return "", err
+		}
+		if name == "" {
+			return "", fmt.Errorf("getters.SelectNamed: empty name")
+		}
+		value, err := IfOr(valueGetter, ctx, zeroT)
+		if err != nil {
+			return "", err
+		}
+		display, err := IfOr(displayGetter, ctx, zeroD)
+		if err != nil {
+			return "", err
+		}
+
+		detail, err := json.Marshal(map[string]any{
+			"name":    name,
+			"value":   value,
+			"display": display,
+		})
+		if err != nil {
+			return "", err
+		}
+		js := fmt.Sprintf("$dispatch('fk-select', %s); $event.currentTarget.closest('dialog.modal')?.remove()", detail)
+		return js, nil
+	}
+}

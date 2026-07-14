@@ -10,14 +10,32 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-// Detail binds an object from context to its descendants under "$in".
-// Child fields can then resolve their values via GetterKey("$in.FieldName").
+// Detail binds a generic model object of type T resolved from the context to its child components under the context key "$in".
+// Child components (e.g., fields) can then resolve their values using getters relative to "$in" (e.g., getters.Key("$in.FieldName")).
+//
+// Use Cases:
+//   - Displaying read-only fields of a database entity (e.g., User profiles, Invoice details, Product descriptions).
+//   - Scoping complex sub-components to specific nested data models.
+//
+// Example:
+//
+//	&components.Detail[User]{
+//	    Getter: getters.Key[User]("active_user"),
+//	    Children: []components.PageInterface{
+//	        &components.FieldText{Getter: getters.Key[string]("$in.Name")},
+//	        &components.FieldText{Getter: getters.Key[string]("$in.Email")},
+//	    },
+//	}
 type Detail[T any] struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Getter   getters.Getter[T]
+	// Getter is the dynamic function retrieving the entity/object of type T.
+	Getter getters.Getter[T]
+	// Children represents the components nested inside the detail layout scope.
 	Children []PageInterface
 }
 
+// Build compiles the Detail component, binding the model object to context and rendering its children.
 func (e Detail[T]) Build(ctx context.Context) Node {
 	childCtx := ctx
 	if e.Getter != nil {
@@ -39,18 +57,22 @@ func (e Detail[T]) Build(ctx context.Context) Node {
 	return Div(Group(childNodes))
 }
 
+// GetKey returns the unique key identifier for this Detail component.
 func (e Detail[T]) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this Detail.
 func (e Detail[T]) GetRoles() []string {
 	return e.Roles
 }
 
+// GetChildren returns the slice of child components nested inside the detail layout scope.
 func (e Detail[T]) GetChildren() []PageInterface {
 	return e.Children
 }
 
+// SetChildren overwrites the child components nested inside the detail layout scope.
 func (e *Detail[T]) SetChildren(children []PageInterface) {
 	e.Children = children
 }

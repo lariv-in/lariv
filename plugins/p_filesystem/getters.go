@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/lago"
 )
 
 func currentVNodeTitle() getters.Getter[string] {
@@ -115,12 +115,14 @@ func selectionRowClickGetter(defaultName, modalID, childRoute string, multi, sel
 		}
 
 		if multi {
-			return getters.SelectMulti(getters.Static(targetName),
+			return getters.SelectMulti(
+				getters.Static(targetName),
 				getters.Key[uint]("$row.ID"),
 				getters.Key[string]("$row.Name"),
 			)(ctx)
 		}
-		return getters.Select(targetName,
+		return getters.Select(
+			targetName,
 			getters.Key[uint]("$row.ID"),
 			getters.Key[string]("$row.Name"),
 		)(ctx)

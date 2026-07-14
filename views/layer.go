@@ -6,11 +6,31 @@ import (
 	"time"
 )
 
+// Layer defines a view-specific middleware execution layer.
+// It wraps an HTTP handler chain to inspect, modify, or intercept HTTP requests.
+//
+// Use Cases:
+//   - Parsing view-specific parameters (e.g. path values) or checking custom access policies.
+//   - Injecting telemetry hooks or headers targeting individual views.
+//
+// Example:
+//
+//	type HeaderInjectorLayer struct{}
+//
+//	func (l HeaderInjectorLayer) Next(view views.View, next http.Handler) http.Handler {
+//		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//			w.Header().Set("X-Custom-View-Header", "Lago")
+//			next.ServeHTTP(w, r)
+//		})
+//	}
 type Layer interface {
+	// Next wraps the next handler in the view request execution chain.
 	Next(View, http.Handler) http.Handler
 }
 
+// GlobalLayer defines a global HTTP middleware layer that wraps the base server route multiplexer.
 type GlobalLayer interface {
+	// Next wraps the global HTTP handler.
 	Next(http.Handler) http.Handler
 }
 
@@ -24,12 +44,12 @@ func requestQueryMap(r *http.Request) map[string]any {
 	return queryMap
 }
 
-// AttachRequestLayer puts the *http.Request in context as "$request", the raw
-// query params as "$get", and the current time as int64 Unix microseconds as
-// "$timestamp". It is registered on the global HTTP stack in lago.StartServer
-// (core.AttachRequestLayer); do not attach "$request" manually in view handlers.
+// AttachRequestLayer injects the *http.Request context as "$request", the raw query parameter map as "$get",
+// and the current Unix microseconds timestamp as "$timestamp".
+// It is registered globally inside lago.StartServer.
 type AttachRequestLayer struct{}
 
+// Next executes the request wrapping functionality injecting standard context values.
 func (AttachRequestLayer) Next(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), "$request", r)
@@ -39,12 +59,14 @@ func (AttachRequestLayer) Next(next http.Handler) http.Handler {
 	})
 }
 
-// PathLayer returns layer that reads PathValue for each name and stores the
-// results in map[string]any under "$path" on the request context.
+// PathLayer extracts URL path parameter variables (PathValue) and stores them in a map[string]any
+// under the "$path" context key.
 type PathLayer struct {
+	// Names represents the slice of URL path parameter keys to extract.
 	Names []string
 }
 
+// Next executes the extraction layer, mapping parameters and invoking the next handler.
 func (m PathLayer) Next(_ View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values := make(map[string]any, len(m.Names))
@@ -56,11 +78,16 @@ func (m PathLayer) Next(_ View, next http.Handler) http.Handler {
 	})
 }
 
+// MethodLayer routes incoming requests matching a specific HTTP Method string
+// directly to a custom sub-handler function, bypassing subsequent middleware chains.
 type MethodLayer struct {
-	Method  string
+	// Method represents the target HTTP verb (e.g., "GET", "POST").
+	Method string
+	// Handler represents the routing sub-handler builder function.
 	Handler func(*View) http.Handler
 }
 
+// Next inspects the request method, routing to the Method handler if matched.
 func (m MethodLayer) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == m.Method {

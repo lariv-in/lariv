@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/lariv-in/lago/getters"
@@ -13,22 +12,53 @@ import (
 	"maragu.dev/gomponents/html"
 )
 
-type FormComponent[T any] struct {
-	Page
-	Getter         getters.Getter[T]
-	ChildrenInput  []PageInterface
-	ChildrenAction []PageInterface
-	Classes        string
-	Title          string
-	Subtitle       string
-	Attr           getters.Getter[gomponents.Node]
-}
-
+// FormInterface defines the behavior of a component that acts as a form, supplying form parameters parser.
 type FormInterface interface {
 	PageInterface
+	// ParseForm parses request data, returning a map of validated values, a map of field errors, or a system error.
 	ParseForm(r *http.Request) (map[string]any, map[string]error, error)
 }
 
+// FormComponent represents a generic form wrapper component containing input fields and action buttons.
+// It integrates automatically with input field value binding (via the Getter mapping values into context under "$in"),
+// multipart/form-data detection (via MultipartInputInterface), and field/global error displays (via the error context).
+//
+// Use Cases:
+//   - Standard data entry workflows (e.g. signup forms, login screens, user settings edits, record creation panels).
+//
+// Example:
+//
+//	&components.FormComponent[User]{
+//	    Title:    "Update Profile",
+//	    Getter:   currentUserGetter,
+//	    ChildrenInput: []components.PageInterface{
+//	        &components.InputText{Label: "Display Name", Name: "display_name"},
+//	    },
+//	    ChildrenAction: []components.PageInterface{
+//	        &components.ButtonSubmit{Label: "Save Changes"},
+//	    },
+//	}
+type FormComponent[T any] struct {
+	// Page embeds common component properties like Key and Roles.
+	Page
+	// Getter is the dynamic function retrieving the object of type T used to bind default values inside inputs.
+	Getter getters.Getter[T]
+	// ChildrenInput represents the input components rendered inside the form container.
+	ChildrenInput []PageInterface
+	// ChildrenAction represents the actions/buttons rendered at the bottom of the form.
+	ChildrenAction []PageInterface
+	// Classes represents additional CSS classes applied to the output HTML form wrapper.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
+	Classes string
+	// Title is the header title text displayed at the top of the form.
+	Title string
+	// Subtitle is the descriptive subheading displayed beneath the form Title.
+	Subtitle string
+	// Attr is an optional Getter yielding additional HTML/HTMX attributes (Node) to apply to the form element.
+	Attr getters.Getter[gomponents.Node]
+}
+
+// Build compiles the FormComponent into an HTML form Node, rendering headings, inputs, validation errors, and actions.
 func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	// If a Getter is set, resolve the object and pass it to children via $in
 	childCtx := ctx
@@ -38,15 +68,13 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 			slog.Error("FormComponent getter failed", "error", err, "key", e.Key)
 			return ContainerError{Error: getters.Static(err)}.Build(ctx)
 		}
-		if v := reflect.ValueOf(value); v.IsValid() && !v.IsZero() {
-			objMap := getters.MapFromStruct(value)
-			if currentValues, ok := ctx.Value(getters.ContextKeyIn).(map[string]any); ok && len(currentValues) > 0 {
-				for key, value := range currentValues {
-					objMap[key] = value
-				}
+		objMap := getters.MapFromStruct(value)
+		if currentValues, ok := ctx.Value(getters.ContextKeyIn).(map[string]any); ok && len(currentValues) > 0 {
+			for key, value := range currentValues {
+				objMap[key] = value
 			}
-			childCtx = context.WithValue(ctx, getters.ContextKeyIn, objMap)
 		}
+		childCtx = context.WithValue(ctx, getters.ContextKeyIn, objMap)
 	}
 
 	inputGroup := gomponents.Group{}
@@ -104,7 +132,8 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 		formNodes = append(formNodes, gomponents.Attr("enctype", enctype))
 	}
 
-	formNodes = append(formNodes,
+	formNodes = append(
+		formNodes,
 		html.Div(headerNodes...),
 		html.Div(inputGroup...),
 		formErrorNode,
@@ -113,18 +142,22 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 	return html.Form(formNodes...)
 }
 
+// GetKey returns the unique key identifier for this FormComponent.
 func (e FormComponent[T]) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this FormComponent.
 func (e FormComponent[T]) GetRoles() []string {
 	return e.Roles
 }
 
+// GetChildren returns the combined slice of input and action child components.
 func (e FormComponent[T]) GetChildren() []PageInterface {
 	return append(e.ChildrenInput, e.ChildrenAction...)
 }
 
+// SetChildren overwrites the input and action child components.
 func (e *FormComponent[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	nInput := len(e.ChildrenInput)
@@ -143,7 +176,8 @@ func (e *FormComponent[T]) SetChildren(children []PageInterface) {
 	}
 }
 
-// Calls ParseMultipartForm or ParseForm based on Content-Type and for each Child under it that implements InputIterface, calls its clean method and stores that value in the map, and stores the error in the error map
+// ParseForm parses form parameters from the incoming http.Request, traversing children to validate and clean fields.
+// Automatically differentiates between standard post values and multipart values.
 func (e FormComponent[T]) ParseForm(r *http.Request) (map[string]any, map[string]error, error) {
 	var err error
 	isMultipart := false

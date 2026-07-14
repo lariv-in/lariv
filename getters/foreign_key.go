@@ -16,6 +16,7 @@ import (
 func ForeignKey[T any, K comparable, V any](foreignKeyGetter Getter[K], fieldPath string) Getter[V] {
 	var zeroK K
 	var zeroV V
+	parts := strings.Split(fieldPath, ".")
 	return func(ctx context.Context) (V, error) {
 		fkValue, err := IfOr(foreignKeyGetter, ctx, zeroK)
 		if err != nil {
@@ -34,7 +35,6 @@ func ForeignKey[T any, K comparable, V any](foreignKeyGetter Getter[K], fieldPat
 
 		// Convert to map and walk the field path
 		m := MapFromStruct(&instance)
-		parts := strings.Split(fieldPath, ".")
 		var value any = m
 		for _, part := range parts {
 			mp, ok := value.(map[string]any)

@@ -2,6 +2,7 @@ package p_google_genai
 
 import (
 	"context"
+	"log/slog"
 	"reflect"
 	"strings"
 	"time"
@@ -10,6 +11,12 @@ import (
 )
 
 func NewClient(ctx context.Context) (*genai.Client, error) {
+	if GoogleGenAIConfig.APIKey == "" {
+		// No apiKey in the TOML: fall back to the genai SDK's ambient
+		// environment credentials (GOOGLE_API_KEY / GEMINI_API_KEY). Warn so it
+		// is obvious that a local key is being used instead of configured one.
+		slog.Warn("p_google_genai: no apiKey configured in [Plugins.p_google_genai]; falling back to local environment API key (GOOGLE_API_KEY / GEMINI_API_KEY)")
+	}
 	return genai.NewClient(ctx, &genai.ClientConfig{
 		APIKey: GoogleGenAIConfig.APIKey,
 	})
@@ -33,8 +40,9 @@ func NewSchema[T any]() *genai.Schema {
 				Type:   genai.TypeString,
 				Format: "date-time",
 			}
+			trueVal := true
 			if nullable {
-				schema.Nullable = new(true)
+				schema.Nullable = &trueVal
 			}
 			return schema
 		}
@@ -46,9 +54,10 @@ func NewSchema[T any]() *genai.Schema {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			schema = &genai.Schema{Type: genai.TypeInteger}
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			zeroFloat := float64(0)
 			schema = &genai.Schema{
 				Type:    genai.TypeInteger,
-				Minimum: new(float64(0)),
+				Minimum: &zeroFloat,
 			}
 		case reflect.Float32:
 			schema = &genai.Schema{
@@ -84,7 +93,8 @@ func NewSchema[T any]() *genai.Schema {
 		}
 
 		if nullable {
-			schema.Nullable = new(true)
+			trueVal := true
+			schema.Nullable = &trueVal
 		}
 
 		return schema

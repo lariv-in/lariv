@@ -18,31 +18,65 @@ import (
 
 // AssociationIDs marks a parsed many-to-many form value so CRUD handlers can
 // persist it through GORM association APIs instead of treating it as a column.
+// AssociationIDs carries a slice of relationship record IDs that represents a GORM many-to-many association update.
+// This structure communicates to CRUD patches that these keys must be synced using GORM association APIs rather than plain columns.
 type AssociationIDs struct {
+	// Field represents the target GORM association field name.
 	Field string
-	IDs   []uint
+	// IDs is the slice of related entity primary keys.
+	IDs []uint
 }
 
+// InputManyToMany represents a multiple relationship selector form input component.
+// It displays selected elements as responsive inline tags or chips. Clicking the input wrapper triggers an HTMX modal
+// popup from Url containing a list of options. It manages selected items via Alpine.js, dynamically injecting hidden input values.
+// During form submissions, Parse validates the existence of the database records and returns an [AssociationIDs] payload.
+//
+// Use Cases:
+//   - Associating multiple tags, labels, category items, or system roles to an entity (e.g., selecting taxes for an invoice line).
+//
+// Example:
+//
+//	&components.InputManyToMany[Tax]{
+//	    Label:       "Applicable Taxes",
+//	    Name:        "taxes",
+//	    Getter:      getters.Key[[]Tax]("$in.Taxes"),
+//	    Display:     getters.Key[string]("$in.Name"),
+//	    Url:         lago.RoutePath("taxes.SelectModal", nil),
+//	}
 type InputManyToMany[T any] struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Label       string
-	Name        string
-	Getter      getters.Getter[[]T]
-	Display     getters.Getter[string]
+	// Label represents the header label text displayed above the selector container.
+	Label string
+	// Name represents the HTML form parameter name attribute.
+	Name string
+	// Getter is the dynamic function retrieving the slice of currently selected models of type T.
+	Getter getters.Getter[[]T]
+	// Display is the Getter resolving the display text label from each individual model context.
+	Display getters.Getter[string]
+	// Placeholder represents the default text shown when no elements are selected (defaults to "Select...").
 	Placeholder string
-	Url         getters.Getter[string]
-	Required    bool
-	Classes     string
+	// Url is a Getter resolving the AJAX endpoint of the multi-selection modal.
+	Url getters.Getter[string]
+	// Required is a boolean indicating if selecting at least one value is mandatory.
+	Required bool
+	// Classes represents additional CSS classes applied to the output HTML wrapper.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
+	Classes string
 }
 
+// GetKey returns the unique key identifier for this InputManyToMany component.
 func (e InputManyToMany[T]) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this InputManyToMany.
 func (e InputManyToMany[T]) GetRoles() []string {
 	return e.Roles
 }
 
+// Build compiles the InputManyToMany component into a Div Node with Alpine.js list synchronizations.
 func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	items := e.initialSelections(ctx)
 	if items == nil {
@@ -126,7 +160,8 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 		Attr("x-data", alpineData),
 		Attr("x-init", "syncStore()"),
 		Attr("@fk-multi-select.window", eventHandler),
-		Div(Class("flex flex-col items-start gap-1"),
+		Div(
+			Class("flex flex-col items-start gap-1"),
 			If(e.Label != "", Label(Class("label text-sm font-bold"), Text(e.Label))),
 			Div(
 				Class("input input-bordered w-full min-h-12 h-auto flex flex-wrap items-center gap-2 cursor-pointer"),
@@ -161,6 +196,7 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	)
 }
 
+// Parse extracts the GORM primary key ID slice from parameters, queries GORM to verify databases presence, and yields an AssociationIDs payload.
 func (e InputManyToMany[T]) Parse(v any, ctx context.Context) (any, error) {
 	vals, _ := v.([]string)
 	ids := make([]uint, 0, len(vals))
@@ -204,10 +240,12 @@ func (e InputManyToMany[T]) Parse(v any, ctx context.Context) (any, error) {
 	return AssociationIDs{Field: e.Name, IDs: ids}, nil
 }
 
+// GetName returns the HTML form element's name attribute value.
 func (e InputManyToMany[T]) GetName() string {
 	return e.Name
 }
 
+// initialSelections evaluates default selections either from the input context values or via the Getter.
 func (e InputManyToMany[T]) initialSelections(ctx context.Context) []registry.Pair[string, string] {
 	if items, ok := e.selectionsFromContext(ctx); ok {
 		return items
@@ -233,6 +271,7 @@ func (e InputManyToMany[T]) initialSelections(ctx context.Context) []registry.Pa
 	return items
 }
 
+// selectionsFromContext extracts selected key-value item pairs from input map context.
 func (e InputManyToMany[T]) selectionsFromContext(ctx context.Context) ([]registry.Pair[string, string], bool) {
 	inMap, ok := ctx.Value(getters.ContextKeyIn).(map[string]any)
 	if !ok {
@@ -279,6 +318,7 @@ func (e InputManyToMany[T]) selectionsFromContext(ctx context.Context) ([]regist
 	}
 }
 
+// selectionsForIDs queries GORM to retrieve the entity models for the specified IDs and maps them to pair selections.
 func (e InputManyToMany[T]) selectionsForIDs(ctx context.Context, ids []uint) []registry.Pair[string, string] {
 	if len(ids) == 0 {
 		return nil
@@ -319,6 +359,7 @@ func (e InputManyToMany[T]) selectionsForIDs(ctx context.Context, ids []uint) []
 	return items
 }
 
+// selectionForValue extracts display and ID strings from a related entity model.
 func (e InputManyToMany[T]) selectionForValue(ctx context.Context, value T) (registry.Pair[string, string], bool) {
 	return manyToManySelectionPair(ctx, value, e.Display, e.Key)
 }

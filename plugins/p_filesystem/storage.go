@@ -27,7 +27,7 @@ type Filestore interface {
 }
 
 // Store is the active backend; it is set only from FilesystemConfig.PostConfig
-// (see config.go: init and lago.LoadConfigFromFile after TOML decode). It is nil
+// (see config.go: Plugin.Configs PostConfig via lago.LoadConfigFromFile(path, plugins)). It is nil
 // until the first PostConfig run.
 var Store Filestore
 

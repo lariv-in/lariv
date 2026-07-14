@@ -6,7 +6,8 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 	"gorm.io/gorm"
 )
 
@@ -82,7 +83,7 @@ func GenerateUser(db *gorm.DB, roleName string) (*User, error) {
 	if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 		return nil, err
 	}
-	return new(user), nil
+	return &user, nil
 }
 
 // GenerateUserWithoutPassword creates a user with realistic Indian data but no password.
@@ -108,16 +109,25 @@ func GenerateUserWithoutPassword(db *gorm.DB, roleName string) (*User, error) {
 	if err := gorm.G[User](db).Create(context.Background(), &user); err != nil {
 		return nil, err
 	}
-	return new(user), nil
+	return &user, nil
 }
 
-// CreateOverallSuperuser idempotently creates the system superuser (superadmin@lariv.in).
+// CreateOverallSuperuser idempotently creates the system superuser using the configured admin_email and admin_password.
+// If either email or password is not set, it skips superuser generation.
 // Returns the existing user if already present.
 func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
-	existing, err := gorm.G[User](db).Where("email = ?", "superadmin@lariv.in").First(context.Background())
+	adminEmail := Config.AdminEmail
+	adminPassword := Config.AdminPassword
+
+	if adminEmail == "" || adminPassword == "" {
+		fmt.Println("Admin email or password not set, skipping superuser creation")
+		return nil, nil
+	}
+
+	existing, err := gorm.G[User](db).Where("email = ?", adminEmail).First(context.Background())
 	if err == nil {
 		fmt.Println("Overall superuser already exists")
-		return new(existing), nil
+		return &existing, nil
 	}
 
 	role := Role{Name: "superuser"}
@@ -125,8 +135,8 @@ func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
 
 	user := User{
 		Name:        "Super Admin",
-		Email:       "superadmin@lariv.in",
-		Password:    []byte(defaultPassword),
+		Email:       adminEmail,
+		Password:    []byte(adminPassword),
 		IsSuperuser: true,
 		RoleID:      role.ID,
 	}
@@ -134,20 +144,25 @@ func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
 		return nil, err
 	}
 	fmt.Println("Created overall superuser")
-	return new(user), nil
+	return &user, nil
 }
 
-func init() {
-	lago.RegistryGenerator.Register("users.Generator", lago.Generator{
-		Create: func(db *gorm.DB) error {
-			_, err := CreateOverallSuperuser(db)
-			return err
-		},
-		Remove: func(db *gorm.DB) error {
-			if err := db.Unscoped().Where("1=1").Delete(&User{}).Error; err != nil {
-				return err
-			}
-			return nil
-		},
-	})
+func pluginGenerators() lago.PluginFeatures[lago.Generator] {
+	return lago.PluginFeatures[lago.Generator]{
+		Entries: []registry.Pair[string, lago.Generator]{{
+			Key: "p_users.Generator",
+			Value: lago.Generator{
+				Create: func(db *gorm.DB) error {
+					_, err := CreateOverallSuperuser(db)
+					return err
+				},
+				Remove: func(db *gorm.DB) error {
+					if err := db.Unscoped().Where("1=1").Delete(&User{}).Error; err != nil {
+						return err
+					}
+					return nil
+				},
+			},
+		}},
+	}
 }

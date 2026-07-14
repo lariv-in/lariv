@@ -6,9 +6,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
 )
 
@@ -51,18 +52,19 @@ func (m methodGateLayer) Next(_ views.View, next http.Handler) http.Handler {
 	})
 }
 
-func init() {
-	lago.RegistryView.Register("export.PageView",
-		lago.GetPageView("export.Page").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("export.catalog", catalogLayer{}))
-
-	lago.RegistryView.Register("export.DownloadView",
-		lago.GetPageView("export.Page").
-			WithLayer("users.auth", p_users.AuthenticationLayer{}).
-			WithLayer("export.post_only", methodGateLayer{Method: http.MethodPost}).
-			WithLayer("export.download", views.MethodLayer{
-				Method:  http.MethodPost,
-				Handler: downloadHandler,
-			}))
+func pluginViews() lago.PluginFeatures[*views.View] {
+	return lago.PluginFeatures[*views.View]{
+		Entries: []registry.Pair[string, *views.View]{
+			{Key: "export.PageView", Value: lago.GetPageView("export.Page").
+				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				WithLayer("export.catalog", catalogLayer{})},
+			{Key: "export.DownloadView", Value: lago.GetPageView("export.Page").
+				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				WithLayer("export.post_only", methodGateLayer{Method: http.MethodPost}).
+				WithLayer("export.download", views.MethodLayer{
+					Method:  http.MethodPost,
+					Handler: downloadHandler,
+				})},
+		},
+	}
 }

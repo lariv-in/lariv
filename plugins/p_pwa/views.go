@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/registry"
 	"github.com/lariv-in/lago/views"
 	. "maragu.dev/gomponents"
@@ -216,12 +216,18 @@ func assetLinksHandler(_ *views.View) http.Handler {
 	})
 }
 
+func pluginViews() lago.PluginFeatures[*views.View] {
+	return lago.PluginFeatures[*views.View]{
+		Entries: []registry.Pair[string, *views.View]{
+			{Key: manifestViewKey, Value: pwaAssetView(http.MethodGet, manifestHandler)},
+			{Key: serviceWorkerViewKey, Value: pwaAssetView(http.MethodGet, serviceWorkerHandler)},
+			{Key: offlineViewKey, Value: pwaAssetView(http.MethodGet, offlineHandler)},
+			{Key: staticPwaViewKey, Value: pwaAssetView(http.MethodGet, staticPwaHandler)},
+			{Key: assetLinksViewKey, Value: pwaAssetView(http.MethodGet, assetLinksHandler)},
+		},
+	}
+}
+
 func init() {
 	_ = components.RegistryShellHeadNodes.Register("pwa.manifestLink", Link(Rel("manifest"), Href("/app.webmanifest")))
-
-	lago.RegistryView.Register(manifestViewKey, pwaAssetView(http.MethodGet, manifestHandler))
-	lago.RegistryView.Register(serviceWorkerViewKey, pwaAssetView(http.MethodGet, serviceWorkerHandler))
-	lago.RegistryView.Register(offlineViewKey, pwaAssetView(http.MethodGet, offlineHandler))
-	lago.RegistryView.Register(staticPwaViewKey, pwaAssetView(http.MethodGet, staticPwaHandler))
-	lago.RegistryView.Register(assetLinksViewKey, pwaAssetView(http.MethodGet, assetLinksHandler))
 }

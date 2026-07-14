@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago"
 	"gorm.io/gorm"
 )
 
@@ -52,7 +52,7 @@ func GetVNodeByID(db *gorm.DB, id uint) (*VNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	return new(node), nil
+	return &node, nil
 }
 
 func GetVNodeByPath(db *gorm.DB, rawPath string) (*VNode, string, error) {
@@ -376,23 +376,6 @@ func HumanReadableSize(size uint64) string {
 }
 
 func init() {
-	lago.OnDBInit("p_filesystem.models", func(d *gorm.DB) *gorm.DB {
-		lago.RegisterModel[VNode](d)
-		// Replace the earlier index with a partial unique index so soft-deleted
-		// rows do not block re-creating files/folders with the same name.
-		if err := d.Exec(
-			"DROP INDEX IF EXISTS filesystem_nodes_parent_name_dir_uidx",
-		).Error; err != nil {
-			panic(err)
-		}
-		if err := d.Exec(
-			"CREATE UNIQUE INDEX IF NOT EXISTS filesystem_nodes_parent_name_dir_uidx ON filesystem_nodes (COALESCE(parent_id, 0), name, is_directory) WHERE deleted_at IS NULL",
-		).Error; err != nil {
-			panic(err)
-		}
-		return d
-	})
-
 	lago.RegistryAdmin.Register("p_filesystem", lago.AdminPanel[VNode]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "IsDirectory", "ParentID", "UpdatedAt"},

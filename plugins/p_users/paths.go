@@ -1,126 +1,115 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
-func registerRoutes() {
-	err := lago.RegistryRoute.Register("base.HomeRoute", lago.Route{
-		Path:    "/",
-		Handler: lago.NewDynamicView("base.HomeView"),
-	})
-	if err != nil {
-		lago.RegistryRoute.Patch("base.HomePage", func(oldRoute lago.Route) lago.Route {
-			oldRoute.Handler = lago.NewDynamicView("base.HomeView")
-			return oldRoute
-		})
+const (
+	// Trailing slashes so AppUrl+"{…}/" concatenation yields whole wildcard segments for ServeMux.
+	AppUrl  = "/users/"
+	RoleUrl = "/users/roles/"
+	// Routes keyed by DB user ID live under …/u/{id}/… so literals like …/roles/… never match …/{id}/….
+	UserIDRoutePrefix = AppUrl + "u/"
+)
+
+func pluginRoutes() lago.PluginFeatures[lago.Route] {
+	return lago.PluginFeatures[lago.Route]{
+		Patches: []registry.Pair[string, func(lago.Route) lago.Route]{
+			{
+				Key: "core.HomeRoute",
+				Value: func(old lago.Route) lago.Route {
+					old.Path = "/"
+					old.Handler = lago.NewDynamicView("core.HomeView")
+					return old
+				},
+			},
+		},
+		Entries: []registry.Pair[string, lago.Route]{
+			{Key: "p_users.ListRoute", Value: lago.Route{
+				Path:    AppUrl,
+				Handler: lago.NewDynamicView("p_users.ListView"),
+			}},
+			{Key: "p_users.CreateRoute", Value: lago.Route{
+				Path:    AppUrl + "create/",
+				Handler: lago.NewDynamicView("p_users.CreateView"),
+			}},
+			{Key: "p_users.DetailRoute", Value: lago.Route{
+				Path:    UserIDRoutePrefix + "{id}/",
+				Handler: lago.NewDynamicView("p_users.DetailView"),
+			}},
+			{Key: "p_users.UpdateRoute", Value: lago.Route{
+				Path:    UserIDRoutePrefix + "{id}/edit/",
+				Handler: lago.NewDynamicView("p_users.UpdateView"),
+			}},
+			{Key: "p_users.SelfDetailRoute", Value: lago.Route{
+				Path:    AppUrl + "self/",
+				Handler: lago.NewDynamicView("p_users.SelfDetailView"),
+			}},
+			{Key: "p_users.SelfUpdateRoute", Value: lago.Route{
+				Path:    AppUrl + "self/edit/",
+				Handler: lago.NewDynamicView("p_users.SelfUpdateView"),
+			}},
+			{Key: "p_users.SelfChangePasswordRoute", Value: lago.Route{
+				Path:    AppUrl + "self/change-password/",
+				Handler: lago.NewDynamicView("p_users.SelfChangePasswordView"),
+			}},
+			{Key: "p_users.DeleteRoute", Value: lago.Route{
+				Path:    UserIDRoutePrefix + "{id}/delete/",
+				Handler: lago.NewDynamicView("p_users.DeleteView"),
+			}},
+			{Key: "p_users.ChangePasswordRoute", Value: lago.Route{
+				Path:    UserIDRoutePrefix + "{id}/change-password/",
+				Handler: lago.NewDynamicView("p_users.ChangePasswordView"),
+			}},
+			{Key: "p_users.SelectRoute", Value: lago.Route{
+				Path:    AppUrl + "select/",
+				Handler: lago.NewDynamicView("p_users.SelectView"),
+			}},
+			{Key: "p_users.RoleSelectRoute", Value: lago.Route{
+				Path:    RoleUrl + "select/",
+				Handler: lago.NewDynamicView("p_users.RoleSelectView"),
+			}},
+			{Key: "p_users.RoleListRoute", Value: lago.Route{
+				Path:    RoleUrl,
+				Handler: lago.NewDynamicView("p_users.RoleListView"),
+			}},
+			{Key: "p_users.RoleCreateRoute", Value: lago.Route{
+				Path:    RoleUrl + "create/",
+				Handler: lago.NewDynamicView("p_users.RoleCreateView"),
+			}},
+			{Key: "p_users.RoleDetailRoute", Value: lago.Route{
+				Path:    RoleUrl + "{id}/",
+				Handler: lago.NewDynamicView("p_users.RoleDetailView"),
+			}},
+			{Key: "p_users.RoleUpdateRoute", Value: lago.Route{
+				Path:    RoleUrl + "{id}/edit/",
+				Handler: lago.NewDynamicView("p_users.RoleUpdateView"),
+			}},
+			{Key: "p_users.RoleDeleteRoute", Value: lago.Route{
+				Path:    RoleUrl + "{id}/delete/",
+				Handler: lago.NewDynamicView("p_users.RoleDeleteView"),
+			}},
+			{Key: "p_users.LoginRoute", Value: lago.Route{
+				Path:    AppUrl + "login/",
+				Handler: lago.NewDynamicView("p_users.LoginView"),
+			}},
+			{Key: "p_users.SignupRoute", Value: lago.Route{
+				Path:    AppUrl + "signup/",
+				Handler: lago.NewDynamicView("p_users.SignupView"),
+			}},
+			{Key: "p_users.LoginSuccessRoute", Value: lago.Route{
+				Path:    AppUrl + "success/",
+				Handler: lago.NewDynamicView("p_users.LoginSuccessView"),
+			}},
+			{Key: "p_users.UnauthenticatedRoute", Value: lago.Route{
+				Path:    AppUrl + "unauthenticated/",
+				Handler: lago.NewDynamicView("p_users.UnauthenticatedView"),
+			}},
+			{Key: "p_users.LogoutRoute", Value: lago.Route{
+				Path:    AppUrl + "logout/",
+				Handler: lago.NewDynamicView("p_users.LogoutView"),
+			}},
+		},
 	}
-	_ = lago.RegistryRoute.Register("users.ListRoute", lago.Route{
-		Path:    AppUrl,
-		Handler: lago.NewDynamicView("users.ListView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.CreateRoute", lago.Route{
-		Path:    AppUrl + "create/",
-		Handler: lago.NewDynamicView("users.CreateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.DetailRoute", lago.Route{
-		Path:    AppUrl + "{id}/",
-		Handler: lago.NewDynamicView("users.DetailView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.UpdateRoute", lago.Route{
-		Path:    AppUrl + "{id}/edit/",
-		Handler: lago.NewDynamicView("users.UpdateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.SelfDetailRoute", lago.Route{
-		Path:    AppUrl + "self/",
-		Handler: lago.NewDynamicView("users.SelfDetailView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.SelfUpdateRoute", lago.Route{
-		Path:    AppUrl + "self/edit/",
-		Handler: lago.NewDynamicView("users.SelfUpdateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.SelfChangePasswordRoute", lago.Route{
-		Path:    AppUrl + "self/change-password/",
-		Handler: lago.NewDynamicView("users.SelfChangePasswordView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.DeleteRoute", lago.Route{
-		Path:    AppUrl + "{id}/delete/",
-		Handler: lago.NewDynamicView("users.DeleteView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.ChangePasswordRoute", lago.Route{
-		Path:    AppUrl + "{id}/change-password/",
-		Handler: lago.NewDynamicView("users.ChangePasswordView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.SelectRoute", lago.Route{
-		Path:    AppUrl + "select/",
-		Handler: lago.NewDynamicView("users.SelectView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.RoleSelectRoute", lago.Route{
-		Path:    RoleUrl + "select/",
-		Handler: lago.NewDynamicView("users.RoleSelectView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.RoleListRoute", lago.Route{
-		Path:    RoleUrl,
-		Handler: lago.NewDynamicView("users.RoleListView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.RoleCreateRoute", lago.Route{
-		Path:    RoleUrl + "create/",
-		Handler: lago.NewDynamicView("users.RoleCreateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.RoleDetailRoute", lago.Route{
-		Path:    RoleUrl + "{id}/",
-		Handler: lago.NewDynamicView("users.RoleDetailView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.RoleUpdateRoute", lago.Route{
-		Path:    RoleUrl + "{id}/edit/",
-		Handler: lago.NewDynamicView("users.RoleUpdateView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.RoleDeleteRoute", lago.Route{
-		Path:    RoleUrl + "{id}/delete/",
-		Handler: lago.NewDynamicView("users.RoleDeleteView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.LoginRoute", lago.Route{
-		Path:    AppUrl + "login/",
-		Handler: lago.NewDynamicView("users.LoginView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.SignupRoute", lago.Route{
-		Path:    AppUrl + "signup/",
-		Handler: lago.NewDynamicView("users.SignupView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.LoginSuccessRoute", lago.Route{
-		Path:    AppUrl + "success/",
-		Handler: lago.NewDynamicView("users.LoginSuccessView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.UnauthenticatedRoute", lago.Route{
-		Path:    AppUrl + "unauthenticated/",
-		Handler: lago.NewDynamicView("users.UnauthenticatedView"),
-	})
-
-	_ = lago.RegistryRoute.Register("users.LogoutRoute", lago.Route{
-		Path:    AppUrl + "logout/",
-		Handler: lago.NewDynamicView("users.LogoutView"),
-	})
-}
-
-func init() {
-	registerRoutes()
 }

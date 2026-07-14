@@ -1,8 +1,9 @@
 package p_pwa
 
 import (
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
@@ -83,15 +84,16 @@ var Config = &PwaConfig{}
 
 func (c *PwaConfig) PostConfig() {
 	if c.AppName != "" {
-		err := components.RegistryShellHeadNodes.Register("base.title", html.TitleEl(gomponents.Text(c.AppName)))
-		if err != nil {
-			components.RegistryShellHeadNodes.Patch("base.title", func(_ gomponents.Node) gomponents.Node {
-				return html.TitleEl(gomponents.Text(c.AppName))
-			})
-		}
+		components.RegistryShellHeadNodes.Patch("core.Title", func(_ gomponents.Node) gomponents.Node {
+			return html.TitleEl(gomponents.Text(c.AppName))
+		})
 	}
 }
 
-func init() {
-	lago.RegistryConfig.Register("p_pwa", Config)
+func pluginConfigs() lago.PluginFeatures[lago.Config] {
+	return lago.PluginFeatures[lago.Config]{
+		Entries: []registry.Pair[string, lago.Config]{
+			{Key: "p_pwa", Value: Config},
+		},
+	}
 }

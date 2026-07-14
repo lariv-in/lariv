@@ -11,29 +11,39 @@ import (
 	"gorm.io/gorm"
 )
 
-// LayerDetail fetches a single record of type T by its primary key from a URL
-// path parameter and stores it in the request context under Key.
+// LayerDetail loads a single database record of type T by querying its primary key from a URL route path parameter.
+// It acts as the primary data loader, storing the fetched record in the request context under Key for downstream layers or handlers (e.g. LayerUpdate or LayerDelete).
 //
-// This layer is the sole owner of "load one record by URL PK" logic. Other
-// layers that need the record (LayerUpdate, LayerDelete) expect it
-// to already be in the context and should be composed after LayerDetail.
+// QueryPatchers are applied to the query before execution, permitting preloading of associations, access control filtering, or tenant scopes.
 //
-// PathParamKey resolves to the name of the URL path parameter that carries the
-// primary key (e.g. "id"). Key resolves to the context key under which the
-// loaded T instance is stored for downstream handlers.
+// Use Cases:
+//   - Fetching detail records for display views (e.g. profile edit pages, product specifications).
+//   - Injecting model contexts for subsequent operations like record updates or deletions.
 //
-// QueryPatchers are applied to the query before executing it, allowing callers
-// to add preloads, scopes, or tenant filters.
+// Example:
 //
-// On any error (bad path param, record not found, getter failure) the layer
-// sets a "_global" error in getters.ContextKeyError and calls next instead of
-// writing an HTTP response directly.
+//	views.View{
+//	    Layers: []views.Layer{
+//	        &views.PathLayer{Names: []string{"userId"}},
+//	        views.LayerDetail[User]{
+//	            PathParamKey: getters.Static("userId"),
+//	            Key:          getters.Static("$user"),
+//	            QueryPatchers: views.QueryPatchers{
+//	                views.QueryPatcherPreload[User]("Profile"),
+//	            },
+//	        },
+//	    },
+//	}
 type LayerDetail[T any] struct {
+	// Key represents the context key string under which the loaded record instance is stored.
+	// PathParamKey represents the URL path parameter name carrying the primary key (e.g., "id").
 	Key, PathParamKey getters.Getter[string]
 
+	// QueryPatchers represents the slice of query modifiers applied to GORM before retrieving the row.
 	QueryPatchers QueryPatchers[T]
 }
 
+// Next wraps the downstream HTTP request handlers executing record loading.
 func (m LayerDetail[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {

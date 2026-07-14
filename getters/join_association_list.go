@@ -3,8 +3,15 @@ package getters
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"sync"
 
 	"gorm.io/gorm"
+)
+
+var (
+	schemaFieldCache   = make(map[reflect.Type]map[string]string)
+	schemaFieldCacheMu sync.RWMutex
 )
 
 // JoinAssociationList fetches related records through a join model.
@@ -104,6 +111,19 @@ func uintFromMapField(m map[string]any, fieldName string) (uint, bool) {
 }
 
 func schemaFieldDBName[T any](db *gorm.DB, fieldName string) (string, error) {
+	tType := reflect.TypeOf((*T)(nil)).Elem()
+	schemaFieldCacheMu.RLock()
+	m, ok := schemaFieldCache[tType]
+	var dbName string
+	var present bool
+	if ok {
+		dbName, present = m[fieldName]
+	}
+	schemaFieldCacheMu.RUnlock()
+	if present {
+		return dbName, nil
+	}
+
 	stmt := &gorm.Statement{DB: db}
 	if err := stmt.Parse(new(T)); err != nil {
 		return "", err
@@ -115,5 +135,15 @@ func schemaFieldDBName[T any](db *gorm.DB, fieldName string) (string, error) {
 	if field == nil {
 		return "", fmt.Errorf("field %q not found for %T", fieldName, new(T))
 	}
+
+	schemaFieldCacheMu.Lock()
+	m, ok = schemaFieldCache[tType]
+	if !ok {
+		m = make(map[string]string)
+		schemaFieldCache[tType] = m
+	}
+	m[fieldName] = field.DBName
+	schemaFieldCacheMu.Unlock()
+
 	return field.DBName, nil
 }

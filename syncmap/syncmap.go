@@ -1,3 +1,12 @@
+// Package syncmap provides a generic, thread-safe map implementation.
+//
+// Go's built-in map[K]V is not thread-safe and cannot be used concurrently
+// without external synchronization. Additionally, the standard library's [sync.Map]
+// is not generic and requires type assertions for every access, compromising type safety.
+//
+// This package addresses these limitations by providing [SyncMap], a generic
+// map wrapper protected by a [sync.RWMutex]. It has the same method names and
+// signatures as [sync.Map], but with type safety enforced at compile time.
 package syncmap
 
 import "sync"

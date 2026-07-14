@@ -29,9 +29,39 @@ func TestInputImplementations(t *testing.T) {
 	var _ InputInterface = InputPassword{}
 	var _ InputInterface = InputPhone{}
 	var _ InputInterface = InputText{}
+	var _ InputInterface = InputNullableText{}
 	var _ InputInterface = InputDuration{}
 	var _ InputInterface = InputSelect[string]{}
 	var _ InputInterface = InputStringList{}
+}
+
+func TestInputNullableTextParse(t *testing.T) {
+	input := InputNullableText{Name: "URL"}
+
+	v, err := input.Parse([]string{"  https://example.com  "}, context.Background())
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	s, ok := v.(*string)
+	if !ok || s == nil || *s != "https://example.com" {
+		t.Fatalf("expected trimmed URL pointer, got %#v", v)
+	}
+
+	empty, err := input.Parse([]string{""}, context.Background())
+	if err != nil {
+		t.Fatalf("Parse empty: %v", err)
+	}
+	if s, ok := empty.(*string); !ok || s != nil {
+		t.Fatalf("expected nil *string for empty input, got %#v", empty)
+	}
+
+	missing, err := input.Parse([]string{}, context.Background())
+	if err != nil {
+		t.Fatalf("Parse missing: %v", err)
+	}
+	if s, ok := missing.(*string); !ok || s != nil {
+		t.Fatalf("expected nil *string for missing input, got %#v", missing)
+	}
 }
 
 func TestInputStringListParse(t *testing.T) {

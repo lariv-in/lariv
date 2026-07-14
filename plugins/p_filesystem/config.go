@@ -4,7 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
 type StorageBackend string
@@ -48,7 +49,10 @@ func (c *FilesystemConfig) PostConfig() {
 	}
 }
 
-func init() {
-	lago.RegistryConfig.Register("p_filesystem", Config)
-	Config.PostConfig()
+func pluginConfigs() lago.PluginFeatures[lago.Config] {
+	return lago.PluginFeatures[lago.Config]{
+		Entries: []registry.Pair[string, lago.Config]{
+			{Key: "p_filesystem", Value: Config},
+		},
+	}
 }

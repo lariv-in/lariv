@@ -10,32 +10,39 @@ import (
 	"gorm.io/gorm"
 )
 
-// LayerUpdate handles row updates for type T on POST requests.
-// On non-POST methods it passes through to next unchanged.
+// LayerUpdate handles database row updates for type T on incoming POST requests.
+// It expects the target record to already reside inside the context under Key (typically loaded by a preceding [LayerDetail] layer).
 //
-// It expects the record to already be in the context under Key, typically
-// placed there by a preceding LayerDetail. On POST it parses the view's
-// form, applies FormPatchers, then within a transaction updates the record's
-// columns and replaces any many-to-many associations.
+// On intercepting a POST action, it parses form values, runs registered [FormPatchers],
+// updates columns recursively inside a GORM transaction, syncs association properties, and handles redirection links.
 //
-// QueryPatchers are applied to the UPDATE query, allowing callers to add
-// tenant filters or scopes.
+// Use Cases:
+//   - Driving resource edit/update views (e.g., editing user profiles, updating product information).
+//   - Triggering background jobs or side-effects upon record update using transaction commit hooks.
 //
-// If SuccessURL is set, a successful update redirects to the resolved URL.
-// If SuccessURL is nil, next is called so a downstream handler can decide
-// the response.
+// Example:
 //
-// Form and field errors go into getters.ContextKeyError under "_form" or the
-// field name. Internal errors (missing context record, getter failures) go
-// under "_global". In all error cases next is called, never a raw HTTP
-// response.
+//	views.View{
+//	    Layers: []views.Layer{
+//	        views.LayerDetail[User]{Key: getters.Static("$record")},
+//	        views.LayerUpdate[User]{
+//	            Key:        getters.Static("$record"),
+//	            SuccessURL: lago.RoutePath("users.List", nil),
+//	        },
+//	    },
+//	}
 type LayerUpdate[T any] struct {
-	Key           getters.Getter[string]
-	SuccessURL    getters.Getter[string]
-	FormPatchers  FormPatchers
+	// Key represents the context key pointing to the target loaded record to update.
+	Key getters.Getter[string]
+	// SuccessURL represents the dynamic Getter resolving to the redirection target URL upon successful updates.
+	SuccessURL getters.Getter[string]
+	// FormPatchers represents the collection of patch middleware rules to apply to form maps before updates.
+	FormPatchers FormPatchers
+	// QueryPatchers represents the slice of query modifications to restrict update scopes.
 	QueryPatchers QueryPatchers[T]
 }
 
+// Next wraps the downstream HTTP request handlers executing row updates.
 func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -103,10 +110,7 @@ func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 					stmt.Model = &record
 				}).Where("id = ?", id)
 				updateQuery = m.QueryPatchers.Apply(view, r, updateQuery)
-				_, err := updateQuery.Updates(ctx, record)
-				if err != nil {
-					return err
-				}
+				updateQuery.Updates(ctx, record)
 			}
 
 			return applyAssociationReplacements(tx, &record, associationValues)

@@ -21,8 +21,8 @@ func contextMapStep[V any](m map[string]V, part string) any {
 // Returns the zero value of T when key is not found, with an error
 func Key[T any](key string) Getter[T] {
 	var zero T
+	parts := strings.Split(key, ".")
 	return func(ctx context.Context) (T, error) {
-		parts := strings.Split(key, ".")
 		value := ctx.Value(parts[0])
 		for _, part := range parts[1:] {
 			if value == nil {
@@ -39,11 +39,31 @@ func Key[T any](key string) Getter[T] {
 					v = reflect.ValueOf(value)
 				}
 				if v.Kind() == reflect.Pointer {
+					if v.IsNil() {
+						value = nil
+						break
+					}
 					v = v.Elem()
 				}
-				flat := MapFromStruct(v)
-				if v, exists := flat[part]; exists {
-					value = v
+				if v.IsValid() && v.Kind() == reflect.Struct {
+					fVal := v.FieldByName(part)
+					if fVal.IsValid() {
+						value = fVal.Interface()
+					} else {
+						flat := MapFromStruct(v)
+						if val, exists := flat[part]; exists {
+							value = val
+						} else {
+							value = nil
+						}
+					}
+				} else if v.IsValid() {
+					flat := MapFromStruct(v)
+					if val, exists := flat[part]; exists {
+						value = val
+					} else {
+						value = nil
+					}
 				} else {
 					value = nil
 				}

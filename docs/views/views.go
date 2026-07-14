@@ -1,0 +1,55 @@
+// Package views contains explanations and code examples for view controllers in Lago.
+//
+// # View Controllers (views.go)
+//
+// Views coordinate middleware handler layers (views.Layer) and page layouts (components.PageInterface).
+//
+// # Custom View Implementations (Warning)
+//
+// Implementing a custom View struct or overriding ServeHTTP manually is almost never recommended.
+// Instead, compose standard views.View structs with custom middleware handler layers.
+//
+// # View and Layers Composition Example
+//
+//	package myplugin
+//
+//	import (
+//		"github.com/lariv-in/lago/registry"
+//		"github.com/lariv-in/lago/views"
+//	)
+//
+//	func pluginViews() lago.PluginFeatures[*views.View] {
+//		return lago.PluginFeatures[*views.View]{
+//			Entries: []registry.Pair[string, *views.View]{
+//				{
+//					Key: "blog.PostDetail",
+//					Value: &views.View{
+//						PageName:   "blog.detail",
+//						PageLookup: pluginPageResolver,
+//						Layers: []registry.Pair[string, views.Layer]{
+//							// 1. PathLayer parses paths variables (e.g. {id}) to context
+//							{
+//								Key: "path_id",
+//								Value: views.PathLayer{
+//									Names: []string{"id"},
+//								},
+//							},
+//							// 2. DetailLayer preloads database rows
+//							{
+//								Key: "db_detail",
+//								Value: views.LayerDetail[BlogPost]{
+//									PathParamKey: getters.Static("id"),
+//									Key:          getters.Static("$post"),
+//								},
+//							},
+//						},
+//					},
+//				},
+//			},
+//		}
+//	}
+//
+// # Views Package Reference
+//
+// For transactional view rendering pipelines, refer to the [github.com/lariv-in/lago/views] package documentation.
+package views

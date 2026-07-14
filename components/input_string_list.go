@@ -14,24 +14,45 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-// InputStringList edits a JSON array of strings (posted as one hidden field).
-// It follows the same submit pattern as InputKeyValue: Alpine state + JSON on form submit.
+// InputStringList represents a dynamic list of text values input form field component.
+// It renders an interactive list where users can dynamically add/remove text inputs (using Alpine.js).
+// On form submission, a JavaScript capture hook serializes these values into a JSON array of strings, storing the output in a hidden input.
+//
+// Use Cases:
+//   - Editing lists of keyword tags, domain whitelists, email recipient CCs, or array settings.
+//
+// Example:
+//
+//	&components.InputStringList{
+//	    Label:  "Keywords",
+//	    Name:   "keywords",
+//	    Getter: getters.Key[datatypes.JSON]("$in.Keywords"),
+//	}
 type InputStringList struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Label   string
-	Name    string
-	Getter  getters.Getter[datatypes.JSON]
+	// Label represents the header label text displayed above the options list.
+	Label string
+	// Name represents the HTML form parameter name attribute.
+	Name string
+	// Getter is the dynamic function retrieving the default/current datatypes.JSON array values.
+	Getter getters.Getter[datatypes.JSON]
+	// Classes represents additional CSS classes applied to the output HTML wrapper.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	Classes string
 }
 
+// GetKey returns the unique key identifier for this InputStringList component.
 func (e InputStringList) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this InputStringList.
 func (e InputStringList) GetRoles() []string {
 	return e.Roles
 }
 
+// Build compiles the InputStringList component into an interactive Alpine-driven list of inputs.
 func (e InputStringList) Build(ctx context.Context) Node {
 	var items []string
 	if e.Getter != nil {
@@ -72,8 +93,10 @@ $el.closest('form').addEventListener('submit', (e) => {
 `, strconv.Quote(e.Name))
 
 	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
-	return Div(Class(wrapClass),
-		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
+	return Div(
+		Class(wrapClass),
+		Label(
+			Class("label text-sm font-bold flex flex-col items-start gap-1"),
 			Text(e.Label),
 			Div(
 				Attr("x-data", alpineData),
@@ -109,6 +132,7 @@ $el.closest('form').addEventListener('submit', (e) => {
 	)
 }
 
+// Parse extracts the serialized JSON string list, validating that it matches a valid string array.
 func (e InputStringList) Parse(v any, _ context.Context) (any, error) {
 	vals, _ := v.([]string)
 	if len(vals) == 0 || strings.TrimSpace(vals[0]) == "" {
@@ -122,6 +146,7 @@ func (e InputStringList) Parse(v any, _ context.Context) (any, error) {
 	return raw, nil
 }
 
+// GetName returns the HTML form element's name attribute value.
 func (e InputStringList) GetName() string {
 	return e.Name
 }

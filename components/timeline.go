@@ -10,18 +10,44 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
+// Timeline represents an interactive vertical event timeline listing component.
+// It displays a chronological list of activities, messages, or changes mapped from dynamic Getter payloads,
+// featuring item onClick navigations, optional filter menus, create action triggers, and vertical connector lines.
+//
+// Use Cases:
+//   - Showing transactional histories, audit trials, message feeds, or workflow timeline charts.
+//
+// Example:
+//
+//	&components.Timeline[Event]{
+//	    Title:     "Activity Log",
+//	    Data:      eventDataGetter,
+//	    OnClick:   getters.RowAttrNavigate(lago.RoutePath("events.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+//	    CreateUrl: lago.RoutePath("events.CreateRoute", nil),
+//	}
 type Timeline[T any] struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	UID             string
-	Title           string
-	Classes         string
-	Data            getters.Getter[ObjectList[T]] // list of items
-	OnClick         getters.Getter[string]        // per-item URL (GetterNavigate)
-	FilterComponent PageInterface                 // optional filter form
-	CreateUrl       getters.Getter[string]
-	Children        []PageInterface // card content template
+	// UID represents the unique HTML element wrapper ID (defaults to "timeline-container").
+	UID string
+	// Title represents the heading label text displayed above the timeline.
+	Title string
+	// Classes represents additional CSS classes applied to the output HTML wrapper.
+	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
+	Classes string
+	// Data represents the dynamic Getter retrieving the paginated ObjectList timeline payload.
+	Data getters.Getter[ObjectList[T]]
+	// OnClick represents the dynamic getter returning target navigation URLs on item clicks.
+	OnClick getters.Getter[string]
+	// FilterComponent represents an optional filter dropdown menu component.
+	FilterComponent PageInterface
+	// CreateUrl is the dynamic function retrieving the creation button target path.
+	CreateUrl getters.Getter[string]
+	// Children represents the slice of sub-components rendering inside individual timeline card nodes.
+	Children []PageInterface
 }
 
+// Build compiles the Timeline component into chronological cards lists, side guidelines and pagination panels.
 func (e Timeline[T]) Build(ctx context.Context) Node {
 	var data []T
 	if e.Data != nil {
@@ -54,7 +80,8 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 	if e.Title != "" || e.FilterComponent != nil || createNode != nil {
 		var filterNode Node
 		if e.FilterComponent != nil {
-			filterNode = El("details",
+			filterNode = El(
+				"details",
 				Class("dropdown dropdown-end"),
 				Attr("@click.outside", "$el.removeAttribute('open')"),
 				El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"), Render(Icon{Name: "funnel"}, ctx)),
@@ -74,7 +101,8 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 			actionsRow = Div(Class("flex items-center gap-2"), actions)
 		}
 
-		headerNode = Div(Class("flex justify-between items-center mb-4"),
+		headerNode = Div(
+			Class("flex justify-between items-center mb-4"),
 			If(e.Title != "", Div(Class("text-xl font-semibold"), Text(e.Title))),
 			actionsRow,
 		)
@@ -95,11 +123,14 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 
 			var clickableClasses string
 
-			timelineContent := Div(Class("timeline-item relative flex items-center gap-4"),
-				Div(Class("timeline-indicator relative z-10 flex items-center"),
+			timelineContent := Div(
+				Class("timeline-item relative flex items-center gap-4"),
+				Div(
+					Class("timeline-indicator relative z-10 flex items-center"),
 					Div(Class("w-3 h-3 rounded-full bg-primary")),
 				),
-				Div(Class(fmt.Sprintf("timeline-card flex-1 p-2 m-1 rounded-box border border-base-300 %s", clickableClasses)),
+				Div(
+					Class(fmt.Sprintf("timeline-card flex-1 p-2 m-1 rounded-box border border-base-300 %s", clickableClasses)),
 					childrenNodes,
 				),
 			)
@@ -114,7 +145,8 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 				}
 			}
 
-			cardsGroup = append(cardsGroup,
+			cardsGroup = append(
+				cardsGroup,
 				timelineContent,
 			)
 		}
@@ -125,9 +157,11 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 		verticalLine = Div(Class("absolute left-[5px] top-0 bottom-0 w-0.5 bg-primary opacity-30"))
 	}
 
-	return Div(ID(uid), Class(fmt.Sprintf("timeline-container %s", e.Classes)),
+	return Div(
+		ID(uid), Class(fmt.Sprintf("timeline-container %s", e.Classes)),
 		headerNode,
-		Div(Class("timeline-scroll relative"),
+		Div(
+			Class("timeline-scroll relative"),
 			verticalLine,
 			cardsGroup,
 		),
@@ -135,14 +169,17 @@ func (e Timeline[T]) Build(ctx context.Context) Node {
 	)
 }
 
+// GetKey returns the unique key identifier for this Timeline.
 func (e Timeline[T]) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this Timeline.
 func (e Timeline[T]) GetRoles() []string {
 	return e.Roles
 }
 
+// GetChildren returns the slice of nested sub-components.
 func (e Timeline[T]) GetChildren() []PageInterface {
 	var children []PageInterface
 	if e.FilterComponent != nil {
@@ -152,6 +189,7 @@ func (e Timeline[T]) GetChildren() []PageInterface {
 	return children
 }
 
+// SetChildren replaces the slice of nested sub-components.
 func (e *Timeline[T]) SetChildren(children []PageInterface) {
 	offset := 0
 	if e.FilterComponent != nil && len(children) > 0 {

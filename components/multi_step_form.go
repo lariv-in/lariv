@@ -22,18 +22,43 @@ var multiStepFormActionAttr = regexp.MustCompile(`\saction="[^"]*"`)
 
 const multiStepFormErrorFieldPrefix = "$error."
 
+// MultiStepForm represents a sequential wizard or multi-stage form container component.
+// It bundles multiple standard [FormInterface] stages together, displaying one active stage at a time and automatically
+// carrying values and validation errors from inactive stages inside hidden inputs.
+// It automatically renders a navigation ribbon tracking steps, highlighting stages that contain validation errors.
+//
+// Use Cases:
+//   - Constructing user onboarding funnels, multi-page checkout flows, or complex configuration wizards.
+//
+// Example:
+//
+//	&components.MultiStepForm{
+//	    Stages: []components.FormInterface{
+//	        &components.FormComponent[PersonalInfo]{...},
+//	        &components.FormComponent[PaymentDetails]{...},
+//	    },
+//	    Stage: getters.Static(0),
+//	}
 type MultiStepForm struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Stages        []FormInterface
-	Stage         getters.Getter[int]
-	Values        getters.Getter[map[string]any]
+	// Stages represents the slice of FormInterface sub-forms representing individual steps.
+	Stages []FormInterface
+	// Stage is the dynamic function retrieving the index of the currently active form step.
+	Stage getters.Getter[int]
+	// Values is the dynamic function retrieving parameters submitted in previous form steps.
+	Values getters.Getter[map[string]any]
+	// MultiStageURL is the dynamic function retrieving the form endpoint target URL (action attribute).
 	MultiStageURL getters.Getter[string]
 }
 
-var _ FormInterface = MultiStepForm{}
-var _ ParentInterface = MultiStepForm{}
-var _ MutableParentInterface = (*MultiStepForm)(nil)
+var (
+	_ FormInterface          = MultiStepForm{}
+	_ ParentInterface        = MultiStepForm{}
+	_ MutableParentInterface = (*MultiStepForm)(nil)
+)
 
+// Build compiles the active Form stage page layout, injecting hidden values and progress step ribbons.
 func (e MultiStepForm) Build(ctx context.Context) Node {
 	if len(e.Stages) == 0 {
 		return ContainerError{Error: getters.Static(fmt.Errorf("MultiStepForm: no stages configured"))}.Build(ctx)
@@ -71,6 +96,7 @@ func (e MultiStepForm) Build(ctx context.Context) Node {
 	return Raw(html)
 }
 
+// ParseForm parses submitted form parameters for the active stage using multipart/url encoding.
 func (e MultiStepForm) ParseForm(r *http.Request) (map[string]any, map[string]error, error) {
 	var err error
 	isMultipart := false
@@ -118,14 +144,17 @@ func (e MultiStepForm) ParseForm(r *http.Request) (map[string]any, map[string]er
 	return values, fieldErrors, nil
 }
 
+// GetKey returns the unique key identifier for this MultiStepForm.
 func (e MultiStepForm) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this MultiStepForm.
 func (e MultiStepForm) GetRoles() []string {
 	return e.Roles
 }
 
+// GetChildren returns sub-forms representing individual stages.
 func (e MultiStepForm) GetChildren() []PageInterface {
 	children := make([]PageInterface, 0, len(e.Stages))
 	for _, stage := range e.Stages {
@@ -134,6 +163,7 @@ func (e MultiStepForm) GetChildren() []PageInterface {
 	return children
 }
 
+// SetChildren replaces individual wizard stages from page children interfaces.
 func (e *MultiStepForm) SetChildren(children []PageInterface) {
 	stages := make([]FormInterface, 0, len(children))
 	for _, child := range children {
@@ -147,14 +177,17 @@ func (e *MultiStepForm) SetChildren(children []PageInterface) {
 	e.Stages = stages
 }
 
+// StageCount returns the total number of wizard steps.
 func (e MultiStepForm) StageCount() int {
 	return len(e.Stages)
 }
 
+// ParseStage extracts the current stage index parameter from incoming request values.
 func (e MultiStepForm) ParseStage(r *http.Request) int {
 	return e.requestStage(r)
 }
 
+// ParseTargetStage extracts the desired next target stage index parameter from submitted parameters.
 func (e MultiStepForm) ParseTargetStage(r *http.Request, currentStage int) int {
 	target := currentStage
 	raw := ""
@@ -431,6 +464,7 @@ func (e MultiStepForm) stageInputNames(stageIdx int) map[string]struct{} {
 	return names
 }
 
+// StageInputNames returns the set of input field parameter names registered in a given step index.
 func (e MultiStepForm) StageInputNames(stageIdx int) map[string]struct{} {
 	return cloneStringSet(e.stageInputNames(stageIdx))
 }
@@ -460,6 +494,7 @@ func requestFieldNames(r *http.Request, isMultipart bool) map[string]struct{} {
 	return names
 }
 
+// ParseMultiStepErrors parses validation errors encoded with multiStepFormErrorFieldPrefix from the request payload.
 func ParseMultiStepErrors(r *http.Request) map[string]error {
 	errors := map[string]error{}
 	appendErrors := func(values map[string][]string) {

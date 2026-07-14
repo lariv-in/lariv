@@ -10,26 +10,37 @@ import (
 	"gorm.io/gorm"
 )
 
-// LayerDelete handles row deletion for type T on DELETE requests.
-// On non-DELETE methods it passes through to next unchanged.
+// LayerDelete handles database row removal operations for type T on DELETE/POST request actions.
+// It expects the target record to already reside inside the context under Key (typically placed by a preceding [LayerDetail] layer).
 //
-// It expects the record to already be in the context under Key, typically
-// placed there by a preceding LayerDetail. On DELETE it extracts the
-// record's ID and issues a DELETE query with any QueryPatchers applied.
+// Upon intercepting a delete trigger, it extracts the record's primary ID, runs GORM deletions through any configured [QueryPatchers],
+// and handles redirections or downstream handler execution depending on SuccessURL mappings.
 //
-// If SuccessURL is set, a successful delete redirects to the resolved URL.
-// If SuccessURL is nil, next is called so a downstream handler can decide
-// the response.
+// Use Cases:
+//   - Supporting resource deletion handlers (e.g. deleting users, clearing obsolete transactions).
+//   - Applying scope-based delete queries (e.g., confirming record ownership before issuing DB delete commands).
 //
-// All errors (missing context record, DB failures, getter failures) are placed
-// into getters.ContextKeyError under "_global" and next is called, never a raw
-// HTTP response.
+// Example:
+//
+//	views.View{
+//	    Layers: []views.Layer{
+//	        views.LayerDetail[User]{Key: getters.Static("$record")},
+//	        views.LayerDelete[User]{
+//	            Key:        getters.Static("$record"),
+//	            SuccessURL: lago.RoutePath("users.List", nil),
+//	        },
+//	    },
+//	}
 type LayerDelete[T any] struct {
-	Key           getters.Getter[string]
-	SuccessURL    getters.Getter[string]
+	// Key is the Getter function returning the context key pointing to the target record to delete.
+	Key getters.Getter[string]
+	// SuccessURL represents the dynamic Getter resolving to the redirection target URL upon successful deletion.
+	SuccessURL getters.Getter[string]
+	// QueryPatchers represents the slice of query modifications to restrict deletion scopes.
 	QueryPatchers QueryPatchers[T]
 }
 
+// Next wraps the downstream HTTP request handlers executing row deletions.
 func (m LayerDelete[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

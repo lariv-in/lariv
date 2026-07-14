@@ -10,25 +10,33 @@ import (
 	"gorm.io/gorm"
 )
 
-// LayerJsonImport handles bulk creation of type T from a JSON file upload
-// on POST requests. On non-POST methods it passes through to next unchanged.
+// LayerJsonImport handles bulk creation of database records of type T from a JSON file upload on incoming POST requests.
+// On non-POST requests, it passes through downstream.
 //
-// On POST it parses the view's form, validates and extracts the uploaded file
-// from the field named FileField, decodes it as a JSON array of T, and inserts
-// all records in batches of 100 within a single transaction. On success the
-// number of imported records is stored in the context as "$count".
+// On a POST trigger, it extracts the uploaded file from FileField, decodes it as a JSON array of type T,
+// and runs batch creations of 100 records inside a transaction. Upon successful completion, the imported count is saved as "$count" on the request context.
 //
-// If SuccessURL is set, a successful import redirects to the resolved URL.
-// If SuccessURL is nil, next is called with the enriched context.
+// Use Cases:
+//   - Importing bulk data sets from structured JSON files (e.g. uploading user spreadsheets or importing inventories).
 //
-// All errors (form parsing, file validation, JSON decoding, DB) are placed
-// into getters.ContextKeyError under "_form" and next is called, so the page
-// can re-render with error feedback.
+// Example:
+//
+//	views.View{
+//	    Layers: []views.Layer{
+//	        views.LayerJsonImport[Product]{
+//	            FileField:  "import_file",
+//	            SuccessURL: lago.RoutePath("products.List", nil),
+//	        },
+//	    },
+//	}
 type LayerJsonImport[T any] struct {
-	FileField  string
+	// FileField represents the form parameter key name representing the uploaded JSON file.
+	FileField string
+	// SuccessURL represents the dynamic Getter resolving to the redirection target URL upon successful bulk imports.
 	SuccessURL getters.Getter[string]
 }
 
+// Next wraps the downstream HTTP request handlers executing bulk JSON file imports.
 func (m LayerJsonImport[T]) Next(view View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

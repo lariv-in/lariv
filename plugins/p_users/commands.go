@@ -6,16 +6,21 @@ import (
 	"log/slog"
 	"net/mail"
 
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lago/registry"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
 
-func init() {
-	lago.RegistryCommand.Register("p_users.createsuperuser", createSuperuserCommand)
-	lago.RegistryCommand.Register("p_users.changepassword", changePasswordCommand)
-	lago.RegistryCommand.Register("p_users.revalidate_users", revalidateUsersCommand)
+func pluginCommandFactories() lago.PluginFeatures[lago.CommandFactory] {
+	return lago.PluginFeatures[lago.CommandFactory]{
+		Entries: []registry.Pair[string, lago.CommandFactory]{
+			{Key: "p_users.createsuperuser", Value: createSuperuserCommand},
+			{Key: "p_users.changepassword", Value: changePasswordCommand},
+			{Key: "p_users.revalidate_users", Value: revalidateUsersCommand},
+		},
+	}
 }
 
 func createSuperuserCommand(config lago.LagoConfig) *cobra.Command {
@@ -23,7 +28,7 @@ func createSuperuserCommand(config lago.LagoConfig) *cobra.Command {
 		Use:   "createsuperuser",
 		Short: "Create a superuser account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := lago.InitDB(config)
+			db, err := lago.GetDbConn(config)
 			if err != nil {
 				return err
 			}
@@ -73,7 +78,7 @@ func changePasswordCommand(config lago.LagoConfig) *cobra.Command {
 		Use:   "changepassword",
 		Short: "Change a user's password by email",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := lago.InitDB(config)
+			db, err := lago.GetDbConn(config)
 			if err != nil {
 				return err
 			}
@@ -109,7 +114,7 @@ func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
 		Use:   "revalidate_users",
 		Short: "Re-parse and normalize all user email and phone fields",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := lago.InitDB(config)
+			db, err := lago.GetDbConn(config)
 			if err != nil {
 				return err
 			}
@@ -133,7 +138,8 @@ func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
 				if originalEmail != "" {
 					addr, err := mail.ParseAddress(originalEmail)
 					if err != nil {
-						slog.Warn("Failed to parse user email during revalidation",
+						slog.Warn(
+							"Failed to parse user email during revalidation",
 							"user_id", user.ID,
 							"email", originalEmail,
 							"name", user.Name,
@@ -149,7 +155,8 @@ func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
 				if originalPhone != "" {
 					num, err := phonenumbers.Parse(originalPhone, "IN")
 					if err != nil {
-						slog.Warn("Failed to parse user phone during revalidation",
+						slog.Warn(
+							"Failed to parse user phone during revalidation",
 							"user_id", user.ID,
 							"phone", originalPhone,
 							"name", user.Name,
@@ -162,7 +169,8 @@ func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
 				}
 
 				if err := db.Save(&user).Error; err != nil {
-					slog.Warn("Failed to save user during revalidation",
+					slog.Warn(
+						"Failed to save user during revalidation",
 						"user_id", user.ID,
 						"name", user.Name,
 						"err", err,

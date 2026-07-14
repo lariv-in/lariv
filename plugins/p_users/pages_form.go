@@ -1,9 +1,10 @@
 package p_users
 
 import (
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/lago"
+	"github.com/lariv-in/lago/registry"
 )
 
 func userFormFields() components.ContainerColumn {
@@ -33,13 +34,13 @@ func userFormFields() components.ContainerColumn {
 				},
 			},
 			&components.ContainerError{
-				Page:  components.Page{Key: "users.RoleField"},
+				Page:  components.Page{Key: "p_users.RoleField"},
 				Error: getters.Key[error]("$error.RoleID"),
 				Children: []components.PageInterface{
 					&components.InputForeignKey[Role]{
 						Label:       "Role",
 						Name:        "RoleID",
-						Url:         lago.RoutePath("users.RoleSelectRoute", nil),
+						Url:         lago.RoutePath("p_users.RoleSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Name"),
 						Placeholder: "Select a role...",
 						Required:    true,
@@ -53,78 +54,77 @@ func userFormFields() components.ContainerColumn {
 
 func selfFormFields() components.ContainerColumn {
 	fields := userFormFields()
-	// Remove the Role field — users should not edit their own role
-	components.RemoveChild[*components.ContainerError](&fields, "users.RoleField")
+	components.RemoveChild[*components.ContainerError](&fields, "p_users.RoleField")
 	return fields
 }
 
-func registerFormPages() {
-	lago.RegistryPage.Register("users.UserFormFields", userFormFields())
+func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
+	return []registry.Pair[string, components.PageInterface]{
+		{Key: "p_users.UserFormFields", Value: userFormFields()},
+		{Key: "p_users.UserCreateForm", Value: &components.Modal{
+			Page: components.Page{
+				Key: "p_users.UserCreateModal",
+			},
+			UID: "user-create-modal",
+			Children: []components.PageInterface{
+				&components.FormComponent[User]{
+					Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 
-	lago.RegistryPage.Register("users.UserCreateForm", &components.Modal{
-		Page: components.Page{
-			Key: "users.UserCreateModal",
-		},
-		UID: "user-create-modal",
-		Children: []components.PageInterface{
-			&components.FormComponent[User]{
-				Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
-
-				Title:    "Create User",
-				Subtitle: "Create a new user",
-				Classes:  "@container",
-				ChildrenInput: []components.PageInterface{
-					userFormFields(),
-				},
-				ChildrenAction: []components.PageInterface{
-					&components.ContainerRow{
-						Classes: "flex justify-end gap-2 mt-2",
-						Children: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Save User", Classes: "btn-primary"},
+					Title:    "Create User",
+					Subtitle: "Create a new user",
+					Classes:  "@container",
+					ChildrenInput: []components.PageInterface{
+						userFormFields(),
+					},
+					ChildrenAction: []components.PageInterface{
+						&components.ContainerRow{
+							Classes: "flex justify-end gap-2 mt-2",
+							Children: []components.PageInterface{
+								&components.ButtonSubmit{Label: "Save User", Classes: "btn-primary"},
+							},
 						},
 					},
 				},
 			},
-		},
-	})
+		}},
+		{Key: "p_users.UserUpdateForm", Value: &components.ShellScaffold{
+			Sidebar: []components.PageInterface{
+				lago.DynamicPage{Name: "p_users.UserDetailMenu"},
+			},
+			Children: []components.PageInterface{
+				&components.FormListenBoostedPost{
+					Name: getters.Static("p_users.UserUpdateForm"),
+					ActionURL: lago.RoutePath("p_users.UpdateRoute", map[string]getters.Getter[any]{
+						"id": getters.Any(getters.Key[uint]("user.ID")),
+					}),
+					Children: []components.PageInterface{
+						&components.FormComponent[User]{
+							Getter: getters.Key[User]("user"),
+							Attr:   getters.FormBubbling(getters.Static("p_users.UserUpdateForm")),
 
-	lago.RegistryPage.Register("users.UserUpdateForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserDetailMenu"},
-		},
-		Children: []components.PageInterface{
-			&components.FormListenBoostedPost{
-				Name: getters.Static("users.UserUpdateForm"),
-				ActionURL: lago.RoutePath("users.UpdateRoute", map[string]getters.Getter[any]{
-					"id": getters.Any(getters.Key[uint]("user.ID")),
-				}),
-				Children: []components.PageInterface{
-					&components.FormComponent[User]{
-						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(getters.Static("users.UserUpdateForm")),
-
-						Title:    "Edit User",
-						Subtitle: "Update user details",
-						Classes:  "@container",
-						ChildrenInput: []components.PageInterface{
-							userFormFields(),
-						},
-						ChildrenAction: []components.PageInterface{
-							&components.ContainerRow{
-								Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
-								Children: []components.PageInterface{
-									&components.ContainerRow{
-										Classes: "flex justify-end gap-2",
-										Children: []components.PageInterface{
-											&components.ButtonSubmit{Label: "Save User"},
-											&components.ButtonModalForm{
-												Label:       "Delete",
-												Icon:        "trash",
-												Name:        getters.Static("users.UserDeleteForm"),
-												Url:         lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
-												FormPostURL: lago.RoutePath("users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
-												ModalUID:    "user-delete-modal",
-												Classes:     "btn-error",
+							Title:    "Edit User",
+							Subtitle: "Update user details",
+							Classes:  "@container",
+							ChildrenInput: []components.PageInterface{
+								userFormFields(),
+							},
+							ChildrenAction: []components.PageInterface{
+								&components.ContainerRow{
+									Classes: "flex flex-wrap justify-between gap-2 mt-2 items-center",
+									Children: []components.PageInterface{
+										&components.ContainerRow{
+											Classes: "flex justify-end gap-2",
+											Children: []components.PageInterface{
+												&components.ButtonSubmit{Label: "Save User"},
+												&components.ButtonModalForm{
+													Label:       "Delete",
+													Icon:        "trash",
+													Name:        getters.Static("p_users.UserDeleteForm"),
+													Url:         lago.RoutePath("p_users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
+													FormPostURL: lago.RoutePath("p_users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
+													ModalUID:    "user-delete-modal",
+													Classes:     "btn-error",
+												},
 											},
 										},
 									},
@@ -134,112 +134,107 @@ func registerFormPages() {
 					},
 				},
 			},
-		},
-	})
+		}},
+		{Key: "p_users.SelfUpdateForm", Value: &components.ShellScaffold{
+			Sidebar: []components.PageInterface{
+				lago.DynamicPage{Name: "p_users.UserSelfMenu"},
+			},
+			Children: []components.PageInterface{
+				&components.FormListenBoostedPost{
+					Name:      getters.Static("p_users.SelfUpdateForm"),
+					ActionURL: lago.RoutePath("p_users.SelfUpdateRoute", nil),
+					Children: []components.PageInterface{
+						&components.FormComponent[User]{
+							Getter: getters.Key[User]("user"),
+							Attr:   getters.FormBubbling(getters.Static("p_users.SelfUpdateForm")),
 
-	lago.RegistryPage.Register("users.SelfUpdateForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserSelfMenu"},
-		},
-		Children: []components.PageInterface{
-			&components.FormListenBoostedPost{
-				Name:      getters.Static("users.SelfUpdateForm"),
-				ActionURL: lago.RoutePath("users.SelfUpdateRoute", nil),
-				Children: []components.PageInterface{
-					&components.FormComponent[User]{
-						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(getters.Static("users.SelfUpdateForm")),
-
-						Title:    "Edit My Profile",
-						Subtitle: "Update your account details",
-						Classes:  "@container",
-						ChildrenInput: []components.PageInterface{
-							selfFormFields(),
-						},
-						ChildrenAction: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Save Profile"},
+							Title:    "Edit My Profile",
+							Subtitle: "Update your account details",
+							Classes:  "@container",
+							ChildrenInput: []components.PageInterface{
+								selfFormFields(),
+							},
+							ChildrenAction: []components.PageInterface{
+								&components.ButtonSubmit{Label: "Save Profile"},
+							},
 						},
 					},
 				},
 			},
-		},
-	})
+		}},
+		{Key: "p_users.SelfChangePasswordForm", Value: &components.ShellScaffold{
+			Sidebar: []components.PageInterface{
+				lago.DynamicPage{Name: "p_users.UserSelfMenu"},
+			},
+			Children: []components.PageInterface{
+				&components.FormListenBoostedPost{
+					Name:      getters.Static("p_users.SelfChangePasswordForm"),
+					ActionURL: lago.RoutePath("p_users.SelfChangePasswordRoute", nil),
+					Children: []components.PageInterface{
+						&components.FormComponent[User]{
+							Getter: getters.Key[User]("user"),
+							Attr:   getters.FormBubbling(getters.Static("p_users.SelfChangePasswordForm")),
 
-	lago.RegistryPage.Register("users.SelfChangePasswordForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserSelfMenu"},
-		},
-		Children: []components.PageInterface{
-			&components.FormListenBoostedPost{
-				Name:      getters.Static("users.SelfChangePasswordForm"),
-				ActionURL: lago.RoutePath("users.SelfChangePasswordRoute", nil),
-				Children: []components.PageInterface{
-					&components.FormComponent[User]{
-						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(getters.Static("users.SelfChangePasswordForm")),
-
-						Title:    "Change Password",
-						Subtitle: "Update your password",
-						ChildrenInput: []components.PageInterface{
-							&components.ContainerError{
-								Error: getters.Key[error]("$error.new_password"),
-								Children: []components.PageInterface{
-									&components.InputPassword{Name: "new_password", Label: "New Password", Required: true},
+							Title:    "Change Password",
+							Subtitle: "Update your password",
+							ChildrenInput: []components.PageInterface{
+								&components.ContainerError{
+									Error: getters.Key[error]("$error.new_password"),
+									Children: []components.PageInterface{
+										&components.InputPassword{Name: "new_password", Label: "New Password", Required: true},
+									},
+								},
+								&components.ContainerError{
+									Error: getters.Key[error]("$error.confirm_password"),
+									Children: []components.PageInterface{
+										&components.InputPassword{Name: "confirm_password", Label: "Confirm New Password", Required: true},
+									},
 								},
 							},
-							&components.ContainerError{
-								Error: getters.Key[error]("$error.confirm_password"),
-								Children: []components.PageInterface{
-									&components.InputPassword{Name: "confirm_password", Label: "Confirm New Password", Required: true},
-								},
+							ChildrenAction: []components.PageInterface{
+								&components.ButtonSubmit{Label: "Change Password"},
 							},
-						},
-						ChildrenAction: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Change Password"},
 						},
 					},
 				},
 			},
-		},
-	})
+		}},
+		{Key: "p_users.ChangePasswordForm", Value: &components.ShellScaffold{
+			Sidebar: []components.PageInterface{
+				lago.DynamicPage{Name: "p_users.UserDetailMenu"},
+			},
+			Children: []components.PageInterface{
+				&components.FormListenBoostedPost{
+					Name:      getters.Static("p_users.ChangePasswordForm"),
+					ActionURL: lago.RoutePath("p_users.ChangePasswordRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
+					Children: []components.PageInterface{
+						&components.FormComponent[User]{
+							Getter: getters.Key[User]("user"),
+							Attr:   getters.FormBubbling(getters.Static("p_users.ChangePasswordForm")),
 
-	lago.RegistryPage.Register("users.ChangePasswordForm", &components.ShellScaffold{
-		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "users.UserDetailMenu"},
-		},
-		Children: []components.PageInterface{
-			&components.FormListenBoostedPost{
-				Name:      getters.Static("users.ChangePasswordForm"),
-				ActionURL: lago.RoutePath("users.ChangePasswordRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
-				Children: []components.PageInterface{
-					&components.FormComponent[User]{
-						Getter: getters.Key[User]("user"),
-						Attr:   getters.FormBubbling(getters.Static("users.ChangePasswordForm")),
-
-						Title:    "Change Password",
-						Subtitle: "Update user password",
-						ChildrenInput: []components.PageInterface{
-							&components.ContainerError{
-								Error: getters.Key[error]("$error.new_password"),
-								Children: []components.PageInterface{
-									&components.InputPassword{Name: "new_password", Label: "New Password", Required: true},
+							Title:    "Change Password",
+							Subtitle: "Update user password",
+							ChildrenInput: []components.PageInterface{
+								&components.ContainerError{
+									Error: getters.Key[error]("$error.new_password"),
+									Children: []components.PageInterface{
+										&components.InputPassword{Name: "new_password", Label: "New Password", Required: true},
+									},
+								},
+								&components.ContainerError{
+									Error: getters.Key[error]("$error.confirm_password"),
+									Children: []components.PageInterface{
+										&components.InputPassword{Name: "confirm_password", Label: "Confirm New Password", Required: true},
+									},
 								},
 							},
-							&components.ContainerError{
-								Error: getters.Key[error]("$error.confirm_password"),
-								Children: []components.PageInterface{
-									&components.InputPassword{Name: "confirm_password", Label: "Confirm New Password", Required: true},
-								},
+							ChildrenAction: []components.PageInterface{
+								&components.ButtonSubmit{Label: "Change Password"},
 							},
-						},
-						ChildrenAction: []components.PageInterface{
-							&components.ButtonSubmit{Label: "Change Password"},
 						},
 					},
 				},
 			},
-		},
-	})
+		}},
+	}
 }
-
-// --- Tables ---

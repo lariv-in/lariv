@@ -10,19 +10,35 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
+// TablePagination represents the list pagination buttons row component for DataTable widgets.
+// It compiles numeric navigation controls matching current list offset states, rendering them in a DaisyUI join group.
+//
+// Use Cases:
+//   - Appending page navigations (e.g., [1] [2] ... [24]) underneath data grids and tables.
+//
+// Example:
+//
+//	&components.TablePagination[Invoice]{
+//	    Data: invoiceDataGetter,
+//	}
 type TablePagination[T any] struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
+	// Data represents the dynamic Getter retrieving the paginated ObjectList payload.
 	Data getters.Getter[ObjectList[T]]
 }
 
+// GetKey returns the unique key identifier for this TablePagination component.
 func (e TablePagination[T]) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this TablePagination.
 func (e TablePagination[T]) GetRoles() []string {
 	return e.Roles
 }
 
+// Build compiles the TablePagination component into a centered list pagination buttons row.
 func (e TablePagination[T]) Build(ctx context.Context) Node {
 	if e.Data == nil {
 		return nil
@@ -69,13 +85,16 @@ func (e TablePagination[T]) Build(ctx context.Context) Node {
 			e.pageButton(req, np, number == numPages))
 	}
 
-	return Div(Class("flex flex-col justify-center items-center gap-2 p-4"),
-		Div(Class("join"),
+	return Div(
+		Class("flex flex-col justify-center items-center gap-2 p-4"),
+		Div(
+			Class("join"),
 			Group(pages),
 		),
 	)
 }
 
+// pageButton constructs a single navigation button Node linked to page index p.
 func (e TablePagination[T]) pageButton(req *http.Request, p int, active bool) Node {
 	u := *req.URL
 	q := u.Query()

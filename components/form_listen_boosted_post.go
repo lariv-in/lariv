@@ -10,33 +10,59 @@ import (
 	. "maragu.dev/gomponents/html"
 )
 
-// FormListenBoostedPost is a parent wrapper for forms that use [getters.FormBubbling] on [FormComponent].Attr.
-// It listens for the bubbling "lago-form-submit" event and POSTs via htmx.ajax with HX-Boosted (body,
-// outerHTML swap). Use for full-page flows. While a POST is in flight, further submits for the same form
-// are ignored so rapid clicks do not create duplicate records.
+// FormListenBoostedPost represents a parent container that listens for bubbled form submission events and posts them via HTMX.
+// It intercepts "lago-form-submit" Alpine.js custom events from child components (specifically those configured with [getters.FormBubbling] on [FormComponent].Attr).
+// When triggered, it initiates a POST request using `htmx.ajax` with `HX-Boosted: true`, swapping the entire body `outerHTML` for full-page flows.
+// It features double-submit protection by ignoring new click events while a POST request is in flight.
+//
+// Use Cases:
+//   - Safely handling full-page form submissions without standard full page reload flickers.
+//   - Disabling submit buttons automatically until the server responds, avoiding duplicate record creations.
+//
+// Example:
+//
+//	&components.FormListenBoostedPost{
+//	    Name:      getters.Static("createUserForm"),
+//	    ActionURL: lago.RoutePath("admin.UserCreate", nil),
+//	    Children: []components.PageInterface{
+//	        &components.FormComponent[User]{
+//	            Attr: getters.FormBubbling(),
+//	            // ... inputs and submit buttons ...
+//	        },
+//	    },
+//	}
 type FormListenBoostedPost struct {
+	// Page embeds common component properties like Key and Roles.
 	Page
-	Name      getters.Getter[string]
+	// Name is a Getter resolving to the unique name identifier of the child form it should intercept.
+	Name getters.Getter[string]
+	// ActionURL is a Getter resolving to the target URL endpoint for the AJAX POST request.
 	ActionURL getters.Getter[string]
-	Children  []PageInterface
+	// Children represents the form components nested inside the listener scope.
+	Children []PageInterface
 }
 
+// GetKey returns the unique key identifier for this FormListenBoostedPost component.
 func (e FormListenBoostedPost) GetKey() string {
 	return e.Key
 }
 
+// GetRoles returns the authorized roles required to view this FormListenBoostedPost.
 func (e FormListenBoostedPost) GetRoles() []string {
 	return e.Roles
 }
 
+// GetChildren returns the slice of child components inside this listener scope.
 func (e FormListenBoostedPost) GetChildren() []PageInterface {
 	return e.Children
 }
 
+// SetChildren overwrites the child components inside this listener scope.
 func (e *FormListenBoostedPost) SetChildren(children []PageInterface) {
 	e.Children = children
 }
 
+// Build compiles the FormListenBoostedPost component into a Div Node listening for the Alpine.js form submission event.
 func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 	if e.Name == nil {
 		return ContainerError{Error: getters.Static(fmt.Errorf("FormListenBoostedPost: Name is nil"))}.Build(ctx)
@@ -60,7 +86,8 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 	if err != nil {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
-	expr := fmt.Sprintf(`(function(evt){
+	expr := fmt.Sprintf(
+		`(function(evt){
   var d = evt.detail || {};
   if (d.name !== %s) return;
   var f = d.form;
@@ -105,7 +132,8 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 	for _, child := range e.Children {
 		childNodes = append(childNodes, Render(child, ctx))
 	}
-	return Div(Class("contents"),
+	return Div(
+		Class("contents"),
 		gomponents.Attr("@lago-form-submit", expr),
 		gomponents.Group(childNodes),
 	)

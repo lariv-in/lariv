@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/lariv-in/lago"
 	"github.com/lariv-in/lago/components"
 	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/lago"
 	"github.com/lariv-in/lago/plugins/p_users"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
@@ -49,7 +49,7 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		),
 	}
 	if userOK {
-		selfDetailHref, err := getters.IfOr(lago.RoutePath("users.SelfDetailRoute", nil), ctx, "")
+		selfDetailHref, err := getters.IfOr(lago.RoutePath("p_users.SelfDetailRoute", nil), ctx, "")
 		if err != nil {
 			slog.Error("user dropdown: resolve self detail route", "error", err)
 		}
@@ -63,16 +63,18 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 			components.Render(components.ButtonPost{
 				Label:   "Logout",
 				Icon:    "arrow-right-start-on-rectangle",
-				URL:     lago.RoutePath("users.LogoutRoute", nil),
+				URL:     lago.RoutePath("p_users.LogoutRoute", nil),
 				Classes: "btn btn-error justify-start w-full",
 			}, ctx),
 		))
 	}
 
-	return gomponents.El("details",
+	return gomponents.El(
+		"details",
 		html.Class("dropdown dropdown-end"),
 		gomponents.Attr("@click.outside", "$el.removeAttribute('open')"),
-		gomponents.El("summary",
+		gomponents.El(
+			"summary",
 			html.Class("btn btn-sm btn-circle avatar placeholder"),
 			html.Div(
 				html.Class("rounded-full w-10"),
