@@ -1,13 +1,13 @@
-// Package pages contains explanations and code examples for pages in Lago.
+// Package pages contains explanations and code examples for pages in Lariv.
 //
 // # Plugin Pages (pages.go)
 //
-// Pages in Lago represent frontend screens, navigation views, or widgets.
+// Pages in Lariv represent frontend screens, navigation views, or widgets.
 // They must satisfy the components.PageInterface and return a gomponents.Node from Build().
 //
 // # 1. Creating a Page using Existing Components
 //
-// You can build pages entirely in Go code using standard layouts and fields provided by lago/components:
+// You can build pages entirely in Go code using standard layouts and fields provided by lariv/components:
 //
 //	type DashboardPage struct {
 //		components.Page

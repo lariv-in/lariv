@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 
@@ -95,7 +95,7 @@ func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := resolveAuth(r)
 		if ctx == nil {
-			unauthenticatedRoute, _ := lago.RegistryRoute.Get("p_users.UnauthenticatedRoute")
+			unauthenticatedRoute, _ := lariv.RegistryRoute.Get("p_users.UnauthenticatedRoute")
 			views.HtmxRedirect(w, r, unauthenticatedRoute.Path, http.StatusSeeOther)
 			return
 		}

@@ -10,7 +10,7 @@ import (
 )
 
 // ModalRefreshList returns a Getter suitable for [components.ButtonModal] / [components.ButtonModalForm].Attr. It emits an
-// x-init handler that registers a single document listener for "lago:modal-closed" (dispatched when
+// x-init handler that registers a single document listener for "lariv:modal-closed" (dispatched when
 // [components.ButtonModalForm] closes the dialog after a successful POST). On each event, it GETs listURL and swaps innerHTML into the first element
 // matching tableSelector (typically "#your-table-uid"). The response is parsed with DOMParser and
 // only that element’s innerHTML is copied, so a full-page GET (including a nested <dialog.modal>)
@@ -61,7 +61,7 @@ func ModalRefreshList(listURL, tableSelector Getter[string]) Getter[gomponents.N
 		}
 
 		script := fmt.Sprintf(
-			"(function(){var u=%s;var s=%s;var k='lago:mr:'+u+'|'+s;if(!window.__lagoModalRefreshKeys)window.__lagoModalRefreshKeys=new Set();if(window.__lagoModalRefreshKeys.has(k))return;window.__lagoModalRefreshKeys.add(k);document.addEventListener('lago:modal-closed',function(){var url=u||window.location.pathname+window.location.search;fetch(url,{credentials:'same-origin',headers:{'HX-Request':'true','HX-Boosted':'true','Accept':'text/html'}}).then(function(r){if(!r.ok)return null;return r.text()}).then(function(h){if(h==null)return;var el=document.querySelector(s);if(!el)return;var doc=new DOMParser().parseFromString(h,'text/html');var fresh=doc.querySelector(s);if(fresh){el.innerHTML=fresh.innerHTML;return;}el.innerHTML=h;});});})()",
+			"(function(){var u=%s;var s=%s;var k='lariv:mr:'+u+'|'+s;if(!window.__larivModalRefreshKeys)window.__larivModalRefreshKeys=new Set();if(window.__larivModalRefreshKeys.has(k))return;window.__larivModalRefreshKeys.add(k);document.addEventListener('lariv:modal-closed',function(){var url=u||window.location.pathname+window.location.search;fetch(url,{credentials:'same-origin',headers:{'HX-Request':'true','HX-Boosted':'true','Accept':'text/html'}}).then(function(r){if(!r.ok)return null;return r.text()}).then(function(h){if(h==null)return;var el=document.querySelector(s);if(!el)return;var doc=new DOMParser().parseFromString(h,'text/html');var fresh=doc.querySelector(s);if(fresh){el.innerHTML=fresh.innerHTML;return;}el.innerHTML=h;});});})()",
 			uLit,
 			sLit,
 		)

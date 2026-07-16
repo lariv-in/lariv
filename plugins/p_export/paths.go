@@ -1,20 +1,20 @@
 package p_export
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
-func pluginRoutes() lago.PluginFeatures[lago.Route] {
-	return lago.PluginFeatures[lago.Route]{
-		Entries: []registry.Pair[string, lago.Route]{
-			{Key: "export.PageRoute", Value: lago.Route{
+func pluginRoutes() lariv.PluginFeatures[lariv.Route] {
+	return lariv.PluginFeatures[lariv.Route]{
+		Entries: []registry.Pair[string, lariv.Route]{
+			{Key: "export.PageRoute", Value: lariv.Route{
 				Path:    AppUrl,
-				Handler: lago.NewDynamicView("export.PageView"),
+				Handler: lariv.NewDynamicView("export.PageView"),
 			}},
-			{Key: "export.DownloadRoute", Value: lago.Route{
+			{Key: "export.DownloadRoute", Value: lariv.Route{
 				Path:    AppUrl + "download/",
-				Handler: lago.NewDynamicView("export.DownloadView"),
+				Handler: lariv.NewDynamicView("export.DownloadView"),
 			}},
 		},
 	}

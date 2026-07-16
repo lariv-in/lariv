@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesDetail() []registry.Pair[string, components.PageInterface] {
@@ -36,7 +36,7 @@ func pageEntriesDetail() []registry.Pair[string, components.PageInterface] {
 									return !isDirectory, nil
 								}),
 								Children: []components.PageInterface{
-									&components.ButtonDownload{Label: "Download", Link: lago.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
+									&components.ButtonDownload{Label: "Download", Link: lariv.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
 										"id": getters.Any(getters.Key[uint]("$in.ID")),
 									}), Icon: "arrow-down-tray", Classes: "btn-primary mt-4"},
 								},

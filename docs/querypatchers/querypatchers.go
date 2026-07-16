@@ -1,4 +1,4 @@
-// Package querypatchers contains explanations and code examples for database query patchers in Lago.
+// Package querypatchers contains explanations and code examples for database query patchers in Lariv.
 //
 // # Database Query Patchers (querypatchers.go)
 //
@@ -19,7 +19,7 @@
 //
 //	import (
 //		"net/http"
-//		"github.com/lariv-in/lago/views"
+//		"github.com/lariv-in/lariv/views"
 //		"gorm.io/gorm"
 //	)
 //

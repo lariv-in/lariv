@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"github.com/nyaruka/phonenumbers"
 
 	. "maragu.dev/gomponents"

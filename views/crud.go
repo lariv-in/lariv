@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-viper/mapstructure/v2"
-	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lariv/components"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )

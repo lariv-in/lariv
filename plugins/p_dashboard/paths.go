@@ -1,18 +1,18 @@
 package p_dashboard
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // pluginRoutes serves the apps grid at [AppUrl]. Registry key matches
-// [lago.RoutePath]("dashboard.AppsPage", …) used across menu and redirects.
-func pluginRoutes() lago.PluginFeatures[lago.Route] {
-	return lago.PluginFeatures[lago.Route]{
-		Entries: []registry.Pair[string, lago.Route]{
-			{Key: "dashboard.AppsPage", Value: lago.Route{
+// [lariv.RoutePath]("dashboard.AppsPage", …) used across menu and redirects.
+func pluginRoutes() lariv.PluginFeatures[lariv.Route] {
+	return lariv.PluginFeatures[lariv.Route]{
+		Entries: []registry.Pair[string, lariv.Route]{
+			{Key: "dashboard.AppsPage", Value: lariv.Route{
 				Path:    AppUrl,
-				Handler: lago.NewDynamicView("dashboard.AppsView"),
+				Handler: lariv.NewDynamicView("dashboard.AppsView"),
 			}},
 		},
 	}

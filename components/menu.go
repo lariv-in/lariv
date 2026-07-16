@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -19,7 +19,7 @@ import (
 //
 //	&components.SidebarMenuItem{
 //	    Title:  getters.Static("Audit Log"),
-//	    Url:    lago.RoutePath("admin.AuditLogs", nil),
+//	    Url:    lariv.RoutePath("admin.AuditLogs", nil),
 //	    Icon:   "document-text",
 //	    Active: true,
 //	}
@@ -99,7 +99,7 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 //	    Children: []components.PageInterface{
 //	        &components.SidebarMenuItem{
 //	            Title: getters.Static("Settings"),
-//	            Url:   lago.RoutePath("admin.Settings", nil),
+//	            Url:   lariv.RoutePath("admin.Settings", nil),
 //	            Icon:  "cog",
 //	        },
 //	    },

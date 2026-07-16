@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	g_html "maragu.dev/gomponents/html"
 )
@@ -22,7 +22,7 @@ import (
 //	&components.TableListContent[User]{
 //	    Columns: userCols,
 //	    Data:    userDataGetter,
-//	    RowAttr: getters.RowAttrNavigate(lago.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+//	    RowAttr: getters.RowAttrNavigate(lariv.RoutePath("users.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 //	}
 type TableListContent[T any] struct {
 	// Page embeds common component properties like Key and Roles.

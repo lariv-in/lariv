@@ -1,17 +1,17 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesDetail() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "p_users.UserDetail", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.UserDetailMenu"},
+				lariv.DynamicPage{Name: "p_users.UserDetailMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.Detail[User]{
@@ -51,7 +51,7 @@ func pageEntriesDetail() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.SelfDetail", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.UserSelfMenu"},
+				lariv.DynamicPage{Name: "p_users.UserSelfMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.Detail[User]{

@@ -3,8 +3,8 @@ package p_google_genai
 import (
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
 type Config struct {
@@ -20,9 +20,9 @@ func (c *Config) PostConfig() {
 	c.APIKey = strings.TrimSpace(c.APIKey)
 }
 
-func pluginConfigs() lago.PluginFeatures[lago.Config] {
-	return lago.PluginFeatures[lago.Config]{
-		Entries: []registry.Pair[string, lago.Config]{
+func pluginConfigs() lariv.PluginFeatures[lariv.Config] {
+	return lariv.PluginFeatures[lariv.Config]{
+		Entries: []registry.Pair[string, lariv.Config]{
 			{Key: "p_google_genai", Value: GoogleGenAIConfig},
 		},
 	}

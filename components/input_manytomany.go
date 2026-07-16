@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -42,7 +42,7 @@ type AssociationIDs struct {
 //	    Name:        "taxes",
 //	    Getter:      getters.Key[[]Tax]("$in.Taxes"),
 //	    Display:     getters.Key[string]("$in.Name"),
-//	    Url:         lago.RoutePath("taxes.SelectModal", nil),
+//	    Url:         lariv.RoutePath("taxes.SelectModal", nil),
 //	}
 type InputManyToMany[T any] struct {
 	// Page embeds common component properties like Key and Roles.

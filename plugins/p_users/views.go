@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +19,7 @@ func redirectToRoute(w http.ResponseWriter, r *http.Request, routeKey string, ar
 	if len(args) > 0 {
 		routeArgs = args[0]
 	}
-	url, err := getters.IfOr(lago.RoutePath(routeKey, routeArgs), r.Context(), "")
+	url, err := getters.IfOr(lariv.RoutePath(routeKey, routeArgs), r.Context(), "")
 	if err != nil || url == "" {
 		http.NotFound(w, r)
 		return false
@@ -268,31 +268,31 @@ func selfChangePasswordHandler(v *views.View) http.Handler {
 	})
 }
 
-func pluginViews() lago.PluginFeatures[*views.View] {
-	return lago.PluginFeatures[*views.View]{
+func pluginViews() lariv.PluginFeatures[*views.View] {
+	return lariv.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
-			{Key: "p_users.ListView", Value: lago.GetPageView("p_users.UserTable").
+			{Key: "p_users.ListView", Value: lariv.GetPageView("p_users.UserTable").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.list", views.LayerList[User]{
 					Key: getters.Static("users"),
 				})},
-			{Key: "p_users.DetailView", Value: lago.GetPageView("p_users.UserDetail").
+			{Key: "p_users.DetailView", Value: lariv.GetPageView("p_users.UserDetail").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.detail", views.LayerDetail[User]{
 					Key:          getters.Static("user"),
 					PathParamKey: getters.Static("id"),
 				})},
-			{Key: "p_users.CreateView", Value: lago.GetPageView("p_users.UserCreateForm").
+			{Key: "p_users.CreateView", Value: lariv.GetPageView("p_users.UserCreateForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.create", views.LayerCreate[User]{
-					SuccessURL: lago.RoutePath("p_users.DetailRoute", map[string]getters.Getter[any]{
+					SuccessURL: lariv.RoutePath("p_users.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$id")),
 					}),
 				})},
-			{Key: "p_users.UpdateView", Value: lago.GetPageView("p_users.UserUpdateForm").
+			{Key: "p_users.UpdateView", Value: lariv.GetPageView("p_users.UserUpdateForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.detail", views.LayerDetail[User]{
@@ -301,28 +301,28 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 				}).
 				WithLayer("p_users.update", views.LayerUpdate[User]{
 					Key: getters.Static("user"),
-					SuccessURL: lago.RoutePath("p_users.DetailRoute", map[string]getters.Getter[any]{
+					SuccessURL: lariv.RoutePath("p_users.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("user.ID")),
 					}),
 				})},
-			{Key: "p_users.SelfDetailView", Value: lago.GetPageView("p_users.SelfDetail").
+			{Key: "p_users.SelfDetailView", Value: lariv.GetPageView("p_users.SelfDetail").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.self_detail", authenticatedUserDetailLayer{})},
-			{Key: "p_users.SelfUpdateView", Value: lago.GetPageView("p_users.SelfUpdateForm").
+			{Key: "p_users.SelfUpdateView", Value: lariv.GetPageView("p_users.SelfUpdateForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.self_detail", authenticatedUserDetailLayer{}).
 				WithLayer("p_users.self_update", views.LayerUpdate[User]{
 					Key:        getters.Static("user"),
-					SuccessURL: lago.RoutePath("p_users.SelfDetailRoute", nil),
+					SuccessURL: lariv.RoutePath("p_users.SelfDetailRoute", nil),
 				})},
-			{Key: "p_users.SelfChangePasswordView", Value: lago.GetPageView("p_users.SelfChangePasswordForm").
+			{Key: "p_users.SelfChangePasswordView", Value: lariv.GetPageView("p_users.SelfChangePasswordForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.self_detail", authenticatedUserDetailLayer{}).
 				WithLayer("p_users.self_change_password", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: selfChangePasswordHandler,
 				})},
-			{Key: "p_users.DeleteView", Value: lago.GetPageView("p_users.UserDeleteForm").
+			{Key: "p_users.DeleteView", Value: lariv.GetPageView("p_users.UserDeleteForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.detail", views.LayerDetail[User]{
@@ -331,9 +331,9 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 				}).
 				WithLayer("p_users.delete", views.LayerDelete[User]{
 					Key:        getters.Static("user"),
-					SuccessURL: lago.RoutePath("p_users.ListRoute", nil),
+					SuccessURL: lariv.RoutePath("p_users.ListRoute", nil),
 				})},
-			{Key: "p_users.ChangePasswordView", Value: lago.GetPageView("p_users.ChangePasswordForm").
+			{Key: "p_users.ChangePasswordView", Value: lariv.GetPageView("p_users.ChangePasswordForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.detail", views.LayerDetail[User]{
@@ -344,40 +344,40 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 					Method:  http.MethodPost,
 					Handler: changePasswordHandler,
 				})},
-			{Key: "p_users.SelectView", Value: lago.GetPageView("p_users.UserSelectionTable").
+			{Key: "p_users.SelectView", Value: lariv.GetPageView("p_users.UserSelectionTable").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.select", views.LayerList[User]{
 					Key: getters.Static("users"),
 				})},
-			{Key: "p_users.RoleSelectView", Value: lago.GetPageView("p_users.RoleSelectionTable").
+			{Key: "p_users.RoleSelectView", Value: lariv.GetPageView("p_users.RoleSelectionTable").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.role_select", views.LayerList[Role]{
 					Key: getters.Static("roles"),
 				})},
-			{Key: "p_users.RoleListView", Value: lago.GetPageView("p_users.RoleTable").
+			{Key: "p_users.RoleListView", Value: lariv.GetPageView("p_users.RoleTable").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.role_list", views.LayerList[Role]{
 					Key: getters.Static("roles"),
 				})},
-			{Key: "p_users.RoleDetailView", Value: lago.GetPageView("p_users.RoleDetail").
+			{Key: "p_users.RoleDetailView", Value: lariv.GetPageView("p_users.RoleDetail").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.role_detail", views.LayerDetail[Role]{
 					Key:          getters.Static("role"),
 					PathParamKey: getters.Static("id"),
 				})},
-			{Key: "p_users.RoleCreateView", Value: lago.GetPageView("p_users.RoleCreateForm").
+			{Key: "p_users.RoleCreateView", Value: lariv.GetPageView("p_users.RoleCreateForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.role_create", views.LayerCreate[Role]{
-					SuccessURL: lago.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{
+					SuccessURL: lariv.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$id")),
 					}),
 				})},
-			{Key: "p_users.RoleUpdateView", Value: lago.GetPageView("p_users.RoleUpdateForm").
+			{Key: "p_users.RoleUpdateView", Value: lariv.GetPageView("p_users.RoleUpdateForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.role_detail", views.LayerDetail[Role]{
@@ -386,11 +386,11 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 				}).
 				WithLayer("p_users.role_update", views.LayerUpdate[Role]{
 					Key: getters.Static("role"),
-					SuccessURL: lago.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{
+					SuccessURL: lariv.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("role.ID")),
 					}),
 				})},
-			{Key: "p_users.RoleDeleteView", Value: lago.GetPageView("p_users.RoleDeleteForm").
+			{Key: "p_users.RoleDeleteView", Value: lariv.GetPageView("p_users.RoleDeleteForm").
 				WithLayer("p_users.auth", AuthenticationLayer{}).
 				WithLayer("p_users.role", RoleAuthorizationLayer{Roles: []string{""}}).
 				WithLayer("p_users.role_detail", views.LayerDetail[Role]{
@@ -399,9 +399,9 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 				}).
 				WithLayer("p_users.role_delete", views.LayerDelete[Role]{
 					Key:        getters.Static("role"),
-					SuccessURL: lago.RoutePath("p_users.RoleListRoute", nil),
+					SuccessURL: lariv.RoutePath("p_users.RoleListRoute", nil),
 				})},
-			{Key: "p_users.LogoutView", Value: lago.GetPageView("p_users.UnauthenticatedPage").
+			{Key: "p_users.LogoutView", Value: lariv.GetPageView("p_users.UnauthenticatedPage").
 				WithLayer("p_users.logout_post", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: logoutHandler,
@@ -410,20 +410,20 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 					Method:  http.MethodGet,
 					Handler: logoutHandler,
 				})},
-			{Key: "p_users.LoginView", Value: lago.GetPageView("p_users.LoginPage").
+			{Key: "p_users.LoginView", Value: lariv.GetPageView("p_users.LoginPage").
 				WithLayer("p_users.login", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: loginHandler,
 				})},
-			{Key: "p_users.SignupView", Value: lago.GetPageView("p_users.SignupPage").
+			{Key: "p_users.SignupView", Value: lariv.GetPageView("p_users.SignupPage").
 				WithLayer("p_users.signup", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: signupHandler,
 				})},
 			// Post-login/signup landing; dashboards often patch this to a concrete home (e.g. apps list).
 			// Default avoids sending an authenticated session back to the login form.
-			{Key: "p_users.LoginSuccessView", Value: lago.RedirectView(lago.RoutePath("core.HomeRoute", nil))},
-			{Key: "p_users.UnauthenticatedView", Value: lago.GetPageView("p_users.UnauthenticatedPage")},
+			{Key: "p_users.LoginSuccessView", Value: lariv.RedirectView(lariv.RoutePath("core.HomeRoute", nil))},
+			{Key: "p_users.UnauthenticatedView", Value: lariv.GetPageView("p_users.UnauthenticatedPage")},
 		},
 	}
 }

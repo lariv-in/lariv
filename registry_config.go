@@ -1,7 +1,7 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // Config defines the interface implemented by plugin config structs to receive and validate parsed settings from TOML files.
@@ -26,9 +26,9 @@ import (
 //
 //	var DashboardConfigPtr = &DashboardConfig{}
 //
-//	// Register the config instance inside your lago.Plugin configuration:
-//	lago.Plugin{
-//		Configs: lago.PluginStages(func() PluginFeatures[Config] {
+//	// Register the config instance inside your lariv.Plugin configuration:
+//	lariv.Plugin{
+//		Configs: lariv.PluginStages(func() PluginFeatures[Config] {
 //			return PluginFeatures[Config]{
 //				Entries: []registry.Pair[string, Config]{
 //					registry.NewPair("dashboard", DashboardConfigPtr),
@@ -40,8 +40,8 @@ import (
 // Example Patch:
 //
 //	// Register a patch to modify config settings from another plugin:
-//	lago.Plugin{
-//		Configs: lago.PluginStages(func() PluginFeatures[Config] {
+//	lariv.Plugin{
+//		Configs: lariv.PluginStages(func() PluginFeatures[Config] {
 //			return PluginFeatures[Config]{
 //				Patches: []registry.Pair[string, func(Config) Config]{
 //					registry.NewPair("dashboard", func(existing Config) Config {

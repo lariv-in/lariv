@@ -3,7 +3,7 @@ package views
 import (
 	"net/http"
 
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 

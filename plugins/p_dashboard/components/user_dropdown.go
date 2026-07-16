@@ -4,10 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_users"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
@@ -49,7 +49,7 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		),
 	}
 	if userOK {
-		selfDetailHref, err := getters.IfOr(lago.RoutePath("p_users.SelfDetailRoute", nil), ctx, "")
+		selfDetailHref, err := getters.IfOr(lariv.RoutePath("p_users.SelfDetailRoute", nil), ctx, "")
 		if err != nil {
 			slog.Error("user dropdown: resolve self detail route", "error", err)
 		}
@@ -63,7 +63,7 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 			components.Render(components.ButtonPost{
 				Label:   "Logout",
 				Icon:    "arrow-right-start-on-rectangle",
-				URL:     lago.RoutePath("p_users.LogoutRoute", nil),
+				URL:     lariv.RoutePath("p_users.LogoutRoute", nil),
 				Classes: "btn btn-error justify-start w-full",
 			}, ctx),
 		))

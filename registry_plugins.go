@@ -1,17 +1,17 @@
-package lago
+package lariv
 
 import (
 	"net/http"
 	"net/url"
 	"slices"
 
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 
-// PluginType represents the classification of a Lago plugin.
+// PluginType represents the classification of a Lariv plugin.
 type PluginType int
 
 const (
@@ -66,11 +66,11 @@ func (f PluginFeatures[T]) Merge(others ...PluginFeatures[T]) PluginFeatures[T] 
 //
 // Example Definition:
 //
-//	var DashboardPlugin = lago.Plugin{
-//		Type:        lago.PluginTypeApp,
+//	var DashboardPlugin = lariv.Plugin{
+//		Type:        lariv.PluginTypeApp,
 //		VerboseName: "Dashboard",
-//		Pages: lago.PluginStages(func() lago.PluginFeatures[components.PageInterface] {
-//			return lago.PluginFeatures[components.PageInterface]{
+//		Pages: lariv.PluginStages(func() lariv.PluginFeatures[components.PageInterface] {
+//			return lariv.PluginFeatures[components.PageInterface]{
 //				Entries: []registry.Pair[string, components.PageInterface]{
 //					registry.NewPair("dashboard.home", DashboardHome{}),
 //				},
@@ -121,7 +121,7 @@ var RegistryPlugin *registry.ImmutableRegistry[Plugin] = &registry.ImmutableRegi
 // CorePlugin creates the framework core plugin configuration.
 // It registers standard global middleware layers (e.g. database attachments, logging, caching controls, environment mappings)
 // and hooks up default routing and landing page views.
-func CorePlugin(db *gorm.DB, config LagoConfig) registry.Pair[string, Plugin] {
+func CorePlugin(db *gorm.DB, config LarivConfig) registry.Pair[string, Plugin] {
 	layers := PluginFeatures[views.GlobalLayer]{}
 	layers.Entries = append(layers.Entries, registry.Pair[string, views.GlobalLayer]{Key: "core.AttachRequestLayer", Value: views.AttachRequestLayer{}})
 	layers.Entries = append(layers.Entries, registry.Pair[string, views.GlobalLayer]{Key: "core.DbLayer", Value: DBLayer{DB: db}})

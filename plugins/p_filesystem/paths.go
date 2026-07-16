@@ -3,82 +3,82 @@ package p_filesystem
 import (
 	"net/http"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
-func pluginRoutes() lago.PluginFeatures[lago.Route] {
-	return lago.PluginFeatures[lago.Route]{
-		Entries: []registry.Pair[string, lago.Route]{
-			{Key: "filesystem.ListRoute", Value: lago.Route{
+func pluginRoutes() lariv.PluginFeatures[lariv.Route] {
+	return lariv.PluginFeatures[lariv.Route]{
+		Entries: []registry.Pair[string, lariv.Route]{
+			{Key: "filesystem.ListRoute", Value: lariv.Route{
 				Path:    AppUrl,
-				Handler: lago.NewDynamicView("filesystem.ListView"),
+				Handler: lariv.NewDynamicView("filesystem.ListView"),
 			}},
-			{Key: "filesystem.BrowseRoute", Value: lago.Route{
+			{Key: "filesystem.BrowseRoute", Value: lariv.Route{
 				Path:    AppUrl + "browse/in/{parent_id}/",
-				Handler: lago.NewDynamicView("filesystem.BrowseView"),
+				Handler: lariv.NewDynamicView("filesystem.BrowseView"),
 			}},
-			{Key: "filesystem.SelectRoute", Value: lago.Route{
+			{Key: "filesystem.SelectRoute", Value: lariv.Route{
 				Path:    AppUrl + "select/",
-				Handler: lago.NewDynamicView("filesystem.SelectView"),
+				Handler: lariv.NewDynamicView("filesystem.SelectView"),
 			}},
-			{Key: "filesystem.SelectChildRoute", Value: lago.Route{
+			{Key: "filesystem.SelectChildRoute", Value: lariv.Route{
 				Path:    AppUrl + "select/in/{parent_id}/",
-				Handler: lago.NewDynamicView("filesystem.SelectChildView"),
+				Handler: lariv.NewDynamicView("filesystem.SelectChildView"),
 			}},
-			{Key: "filesystem.MultiSelectRoute", Value: lago.Route{
+			{Key: "filesystem.MultiSelectRoute", Value: lariv.Route{
 				Path:    AppUrl + "multi-select/",
-				Handler: lago.NewDynamicView("filesystem.MultiSelectView"),
+				Handler: lariv.NewDynamicView("filesystem.MultiSelectView"),
 			}},
-			{Key: "filesystem.MultiSelectChildRoute", Value: lago.Route{
+			{Key: "filesystem.MultiSelectChildRoute", Value: lariv.Route{
 				Path:    AppUrl + "multi-select/in/{parent_id}/",
-				Handler: lago.NewDynamicView("filesystem.MultiSelectChildView"),
+				Handler: lariv.NewDynamicView("filesystem.MultiSelectChildView"),
 			}},
-			{Key: "filesystem.MoveSelectRoute", Value: lago.Route{
+			{Key: "filesystem.MoveSelectRoute", Value: lariv.Route{
 				Path:    AppUrl + "move-select/",
-				Handler: lago.NewDynamicView("filesystem.MoveSelectView"),
+				Handler: lariv.NewDynamicView("filesystem.MoveSelectView"),
 			}},
-			{Key: "filesystem.MoveSelectChildRoute", Value: lago.Route{
+			{Key: "filesystem.MoveSelectChildRoute", Value: lariv.Route{
 				Path:    AppUrl + "move-select/in/{parent_id}/",
-				Handler: lago.NewDynamicView("filesystem.MoveSelectChildView"),
+				Handler: lariv.NewDynamicView("filesystem.MoveSelectChildView"),
 			}},
-			{Key: "filesystem.CreateRoute", Value: lago.Route{
+			{Key: "filesystem.CreateRoute", Value: lariv.Route{
 				Path:    AppUrl + "create/",
-				Handler: lago.NewDynamicView("filesystem.CreateView"),
+				Handler: lariv.NewDynamicView("filesystem.CreateView"),
 			}},
-			{Key: "filesystem.CreateChildRoute", Value: lago.Route{
+			{Key: "filesystem.CreateChildRoute", Value: lariv.Route{
 				Path:    AppUrl + "create/in/{parent_id}/",
-				Handler: lago.NewDynamicView("filesystem.CreateChildView"),
+				Handler: lariv.NewDynamicView("filesystem.CreateChildView"),
 			}},
-			{Key: "filesystem.MultiUploadRoute", Value: lago.Route{
+			{Key: "filesystem.MultiUploadRoute", Value: lariv.Route{
 				Path:    AppUrl + "upload/",
-				Handler: lago.NewDynamicView("filesystem.MultiUploadView"),
+				Handler: lariv.NewDynamicView("filesystem.MultiUploadView"),
 			}},
-			{Key: "filesystem.MultiUploadChildRoute", Value: lago.Route{
+			{Key: "filesystem.MultiUploadChildRoute", Value: lariv.Route{
 				Path:    AppUrl + "upload/in/{parent_id}/",
-				Handler: lago.NewDynamicView("filesystem.MultiUploadChildView"),
+				Handler: lariv.NewDynamicView("filesystem.MultiUploadChildView"),
 			}},
-			{Key: "filesystem.DetailRoute", Value: lago.Route{
+			{Key: "filesystem.DetailRoute", Value: lariv.Route{
 				Path:    AppUrl + "{id}/",
-				Handler: lago.NewDynamicView("filesystem.DetailView"),
+				Handler: lariv.NewDynamicView("filesystem.DetailView"),
 			}},
-			{Key: "filesystem.DownloadRoute", Value: lago.Route{
+			{Key: "filesystem.DownloadRoute", Value: lariv.Route{
 				Path:    AppUrl + "{id}/download/",
-				Handler: lago.NewDynamicView("filesystem.DownloadView"),
+				Handler: lariv.NewDynamicView("filesystem.DownloadView"),
 			}},
-			{Key: "filesystem.UpdateRoute", Value: lago.Route{
+			{Key: "filesystem.UpdateRoute", Value: lariv.Route{
 				Path:    AppUrl + "{id}/edit/",
-				Handler: lago.NewDynamicView("filesystem.UpdateView"),
+				Handler: lariv.NewDynamicView("filesystem.UpdateView"),
 			}},
-			{Key: "filesystem.DeleteRoute", Value: lago.Route{
+			{Key: "filesystem.DeleteRoute", Value: lariv.Route{
 				Path:    AppUrl + "{id}/delete/",
-				Handler: lago.NewDynamicView("filesystem.DeleteView"),
+				Handler: lariv.NewDynamicView("filesystem.DeleteView"),
 			}},
-			{Key: "filesystem.MoveRoute", Value: lago.Route{
+			{Key: "filesystem.MoveRoute", Value: lariv.Route{
 				Path:    AppUrl + "{id}/move/",
-				Handler: lago.NewDynamicView("filesystem.MoveView"),
+				Handler: lariv.NewDynamicView("filesystem.MoveView"),
 			}},
-			{Key: "filesystem.ChatUploadRoute", Value: lago.Route{
+			{Key: "filesystem.ChatUploadRoute", Value: lariv.Route{
 				Path:    AppUrl + "chat-upload/",
 				Handler: http.HandlerFunc(chatUploadHandler),
 			}},

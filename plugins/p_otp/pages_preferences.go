@@ -1,10 +1,10 @@
 package p_otp
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesOtpPreferences() []registry.Pair[string, components.PageInterface] {
@@ -13,12 +13,12 @@ func pageEntriesOtpPreferences() []registry.Pair[string, components.PageInterfac
 			Title: getters.Static("OTP Preferences"),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to Home"),
-				Url:   lago.RoutePath("dashboard.AppsPage", nil),
+				Url:   lariv.RoutePath("dashboard.AppsPage", nil),
 			},
 			Children: []components.PageInterface{
 				components.SidebarMenuItem{
 					Title: getters.Static("Preferences"),
-					Url:   lago.RoutePath("otp.OTPPreferencesRoute", nil),
+					Url:   lariv.RoutePath("otp.OTPPreferencesRoute", nil),
 				},
 			},
 		}},
@@ -26,12 +26,12 @@ func pageEntriesOtpPreferences() []registry.Pair[string, components.PageInterfac
 		{Key: "otp.OTPPreferencesForm", Value: components.ShellScaffold{
 			Page: components.Page{Roles: []string{"superuser"}},
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "otp.OTPPreferencesMenu"},
+				lariv.DynamicPage{Name: "otp.OTPPreferencesMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      getters.Static("otp.OTPPreferencesForm"),
-					ActionURL: lago.RoutePath("otp.OTPPreferencesRoute", nil),
+					ActionURL: lariv.RoutePath("otp.OTPPreferencesRoute", nil),
 					Children: []components.PageInterface{
 						components.FormComponent[OTPPreferences]{
 							Attr: getters.FormBubbling(getters.Static("otp.OTPPreferencesForm")),

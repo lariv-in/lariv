@@ -1,4 +1,4 @@
-// Package views contains explanations and code examples for view controllers in Lago.
+// Package views contains explanations and code examples for view controllers in Lariv.
 //
 // # View Controllers (views.go)
 //
@@ -14,12 +14,12 @@
 //	package myplugin
 //
 //	import (
-//		"github.com/lariv-in/lago/registry"
-//		"github.com/lariv-in/lago/views"
+//		"github.com/lariv-in/lariv/registry"
+//		"github.com/lariv-in/lariv/views"
 //	)
 //
-//	func pluginViews() lago.PluginFeatures[*views.View] {
-//		return lago.PluginFeatures[*views.View]{
+//	func pluginViews() lariv.PluginFeatures[*views.View] {
+//		return lariv.PluginFeatures[*views.View]{
 //			Entries: []registry.Pair[string, *views.View]{
 //				{
 //					Key: "blog.PostDetail",
@@ -51,5 +51,5 @@
 //
 // # Views Package Reference
 //
-// For transactional view rendering pipelines, refer to the [github.com/lariv-in/lago/views] package documentation.
+// For transactional view rendering pipelines, refer to the [github.com/lariv-in/lariv/views] package documentation.
 package views

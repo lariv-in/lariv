@@ -1,4 +1,4 @@
-package lago
+package lariv
 
 import (
 	"database/sql/driver"
@@ -16,7 +16,7 @@ import (
 //
 //	type ClientApp struct {
 //		gorm.Model
-//		Homepage lago.PageURL
+//		Homepage lariv.PageURL
 //	}
 type PageURL struct {
 	// URL embeds standard url.URL structures.
@@ -67,7 +67,7 @@ func (p *PageURL) Scan(value any) error {
 	case []byte:
 		s = string(v)
 	default:
-		return fmt.Errorf("lago: PageURL Scan: unexpected %T", value)
+		return fmt.Errorf("lariv: PageURL Scan: unexpected %T", value)
 	}
 	if s == "" {
 		*p = PageURL{}

@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_users"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_users"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -24,11 +24,11 @@ func init() {
 	}
 
 	registerPluginView("llm_assistant.ChatView",
-		lago.GetPageView("llm_assistant.ChatPage").
+		lariv.GetPageView("llm_assistant.ChatPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 
 	registerPluginView("llm_assistant.HistoryView",
-		lago.GetPageView("llm_assistant.HistoryPage").
+		lariv.GetPageView("llm_assistant.HistoryPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("llm_assistant.session.list", views.LayerList[LlmAssistantSession]{
 				Key:           getters.Static("assistantSessions"),
@@ -36,7 +36,7 @@ func init() {
 			}))
 
 	registerPluginView("llm_assistant.ChatSessionView",
-		lago.GetPageView("llm_assistant.ChatPage").
+		lariv.GetPageView("llm_assistant.ChatPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("llm_assistant.session.detail", views.LayerDetail[LlmAssistantSession]{
 				Key:           getters.Static("assistantSession"),
@@ -59,23 +59,23 @@ func init() {
 		})
 
 	registerPluginView("llm_assistant.SkillsListView",
-		lago.GetPageView("llm_assistant.SkillsListPage").
+		lariv.GetPageView("llm_assistant.SkillsListPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("llm_assistant.skills.list", views.LayerList[Skill]{
 				Key: getters.Static("skills"),
 			}))
 
 	registerPluginView("llm_assistant.SkillsCreateView",
-		lago.GetPageView("llm_assistant.SkillsCreatePage").
+		lariv.GetPageView("llm_assistant.SkillsCreatePage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("llm_assistant.skills.create", views.LayerCreate[Skill]{
-				SuccessURL: lago.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lariv.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("$id")),
 				}),
 			}))
 
 	registerPluginView("llm_assistant.SkillsDetailView",
-		lago.GetPageView("llm_assistant.SkillsDetailPage").
+		lariv.GetPageView("llm_assistant.SkillsDetailPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("llm_assistant.skills.detail", views.LayerDetail[Skill]{
 				Key:          getters.Static("skill"),
@@ -86,7 +86,7 @@ func init() {
 			}))
 
 	registerPluginView("llm_assistant.SkillsUpdateView",
-		lago.GetPageView("llm_assistant.SkillsUpdatePage").
+		lariv.GetPageView("llm_assistant.SkillsUpdatePage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("llm_assistant.skills.detail", views.LayerDetail[Skill]{
 				Key:          getters.Static("skill"),
@@ -97,13 +97,13 @@ func init() {
 			}).
 			WithLayer("llm_assistant.skills.update", views.LayerUpdate[Skill]{
 				Key: getters.Static("skill"),
-				SuccessURL: lago.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
+				SuccessURL: lariv.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("skill.ID")),
 				}),
 			}))
 
 	registerPluginView("llm_assistant.SkillsDeleteView",
-		lago.GetPageView("llm_assistant.SkillsDeletePage").
+		lariv.GetPageView("llm_assistant.SkillsDeletePage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 			WithLayer("llm_assistant.skills.detail", views.LayerDetail[Skill]{
 				Key:          getters.Static("skill"),
@@ -111,11 +111,11 @@ func init() {
 			}).
 			WithLayer("llm_assistant.skills.delete", views.LayerDelete[Skill]{
 				Key:        getters.Static("skill"),
-				SuccessURL: lago.RoutePath("llm_assistant.SkillsListRoute", nil),
+				SuccessURL: lariv.RoutePath("llm_assistant.SkillsListRoute", nil),
 			}))
 
 	registerPluginView("llm_assistant.SkillsImportView",
-		lago.GetPageView("llm_assistant.SkillsImportPage").
+		lariv.GetPageView("llm_assistant.SkillsImportPage").
 			WithLayer("p_users.auth", p_users.AuthenticationLayer{}))
 }
 

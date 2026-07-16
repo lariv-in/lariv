@@ -3,7 +3,7 @@ package components
 import (
 	"context"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"maragu.dev/gomponents"
 )
 
@@ -24,7 +24,7 @@ const (
 // Example:
 //
 //	&components.TableButtonCreate{
-//	    Link:  lago.RoutePath("admin.UserCreate", nil),
+//	    Link:  lariv.RoutePath("admin.UserCreate", nil),
 //	    Label: "Create Account",
 //	}
 type TableButtonCreate struct {

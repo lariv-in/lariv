@@ -1,10 +1,10 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesSelection() []registry.Pair[string, components.PageInterface] {
@@ -18,11 +18,11 @@ func pageEntriesSelection() []registry.Pair[string, components.PageInterface] {
 					Data:    getters.Key[components.ObjectList[User]]("users"),
 					RowAttr: getters.RowAttrSelect("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "p_users.UserSelectionFilter"}},
+						&components.TableButtonFilter{Child: lariv.DynamicPage{Name: "p_users.UserSelectionFilter"}},
 						&components.ButtonModalForm{
 							Name:        getters.Static("p_users.UserCreateForm"),
-							Url:         lago.RoutePath("p_users.CreateRoute", nil),
-							FormPostURL: lago.RoutePath("p_users.CreateRoute", nil),
+							Url:         lariv.RoutePath("p_users.CreateRoute", nil),
+							FormPostURL: lariv.RoutePath("p_users.CreateRoute", nil),
 							ModalUID:    "user-create-modal",
 							Icon:        "plus",
 							Classes:     "btn-square btn-outline btn-sm",
@@ -52,11 +52,11 @@ func pageEntriesSelection() []registry.Pair[string, components.PageInterface] {
 					Data:    getters.Key[components.ObjectList[Role]]("roles"),
 					RowAttr: getters.RowAttrSelect("RoleID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "p_users.RoleSelectionFilter"}},
+						&components.TableButtonFilter{Child: lariv.DynamicPage{Name: "p_users.RoleSelectionFilter"}},
 						&components.ButtonModalForm{
 							Name:        getters.Static("p_users.RoleCreateForm"),
-							Url:         lago.RoutePath("p_users.RoleCreateRoute", nil),
-							FormPostURL: lago.RoutePath("p_users.RoleCreateRoute", nil),
+							Url:         lariv.RoutePath("p_users.RoleCreateRoute", nil),
+							FormPostURL: lariv.RoutePath("p_users.RoleCreateRoute", nil),
 							ModalUID:    "role-create-modal",
 							Icon:        "plus",
 							Classes:     "btn-square btn-outline btn-sm",

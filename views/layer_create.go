@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +30,7 @@ import (
 //	    Layers: []views.Layer{
 //	        &views.PathLayer{Names: []string{"id"}},
 //	        views.LayerCreate[User]{
-//	            SuccessURL: lago.RoutePath("users.List", nil),
+//	            SuccessURL: lariv.RoutePath("users.List", nil),
 //	            FormPatchers: views.FormPatchers{
 //	                registry.NewPair("author", AuthorPatcher{}),
 //	            },

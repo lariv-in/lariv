@@ -1,4 +1,4 @@
-// Package components contains explanations and code examples for UI page components in Lago.
+// Package components contains explanations and code examples for UI page components in Lariv.
 //
 // # UI Page Components (components.go)
 //
@@ -30,7 +30,7 @@
 //	import (
 //		"context"
 //		"io"
-//		"github.com/lariv-in/lago/components"
+//		"github.com/lariv-in/lariv/components"
 //		"maragu.dev/gomponents"
 //		html "maragu.dev/gomponents/html"
 //	)

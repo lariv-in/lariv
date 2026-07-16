@@ -1,46 +1,46 @@
 package p_otp
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
-func pluginRoutes() lago.PluginFeatures[lago.Route] {
-	return lago.PluginFeatures[lago.Route]{
-		Entries: []registry.Pair[string, lago.Route]{
+func pluginRoutes() lariv.PluginFeatures[lariv.Route] {
+	return lariv.PluginFeatures[lariv.Route]{
+		Entries: []registry.Pair[string, lariv.Route]{
 			{
 				Key: "otp.ForgotPasswordRoute",
-				Value: lago.Route{
+				Value: lariv.Route{
 					Path:    "/otp/forgot-password/",
-					Handler: lago.NewDynamicView("otp.ForgotPasswordView"),
+					Handler: lariv.NewDynamicView("otp.ForgotPasswordView"),
 				},
 			},
 			{
 				Key: "otp.PhoneOtpRequestRoute",
-				Value: lago.Route{
+				Value: lariv.Route{
 					Path:    "/otp/login/sms/",
-					Handler: lago.NewDynamicView("otp.PhoneOtpRequestView"),
+					Handler: lariv.NewDynamicView("otp.PhoneOtpRequestView"),
 				},
 			},
 			{
 				Key: "otp.EmailOtpRequestRoute",
-				Value: lago.Route{
+				Value: lariv.Route{
 					Path:    "/otp/login/email/",
-					Handler: lago.NewDynamicView("otp.EmailOtpRequestView"),
+					Handler: lariv.NewDynamicView("otp.EmailOtpRequestView"),
 				},
 			},
 			{
 				Key: "otp.OtpVerifyRoute",
-				Value: lago.Route{
+				Value: lariv.Route{
 					Path:    "/otp/verify/",
-					Handler: lago.NewDynamicView("otp.OtpVerifyView"),
+					Handler: lariv.NewDynamicView("otp.OtpVerifyView"),
 				},
 			},
 			{
 				Key: "otp.OTPPreferencesRoute",
-				Value: lago.Route{
+				Value: lariv.Route{
 					Path:    "/otp/preferences/",
-					Handler: lago.NewDynamicView("otp.OTPPreferencesView"),
+					Handler: lariv.NewDynamicView("otp.OTPPreferencesView"),
 				},
 			},
 		},

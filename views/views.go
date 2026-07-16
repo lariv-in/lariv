@@ -11,9 +11,9 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // View represents the core page controller coordinating middleware layers and page template rendering pipelines.

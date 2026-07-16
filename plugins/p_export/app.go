@@ -4,24 +4,24 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
 const AppUrl = "/export/"
 
 // GetPlugin returns the registry contributions for this plugin (views, pages, routes) for
-// [lago.BuildAllRegistries]. Callers that assemble the full plugin list should include
+// [lariv.BuildAllRegistries]. Callers that assemble the full plugin list should include
 // a pair with key "p_export" and this value.
-func GetPlugin() registry.Pair[string, lago.Plugin] {
+func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppUrl)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	return registry.Pair[string, lago.Plugin]{
-		Key: "p_export", Value: lago.Plugin{
-			Type:        lago.PluginTypeApp,
+	return registry.Pair[string, lariv.Plugin]{
+		Key: "p_export", Value: lariv.Plugin{
+			Type:        lariv.PluginTypeApp,
 			Icon:        "arrow-down-tray",
 			URL:         u,
 			VerboseName: "Export",

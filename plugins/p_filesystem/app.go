@@ -4,23 +4,23 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
 const AppUrl = "/filesystem/"
 
-// GetPlugin returns the registry contributions for this plugin for [lago.BuildAllRegistries].
+// GetPlugin returns the registry contributions for this plugin for [lariv.BuildAllRegistries].
 // Callers assembling the full plugin list should include a pair with key "p_filesystem" and this value.
-func GetPlugin() registry.Pair[string, lago.Plugin] {
+func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppUrl)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	return registry.Pair[string, lago.Plugin]{
-		Key: "p_filesystem", Value: lago.Plugin{
-			Type:        lago.PluginTypeApp,
+	return registry.Pair[string, lariv.Plugin]{
+		Key: "p_filesystem", Value: lariv.Plugin{
+			Type:        lariv.PluginTypeApp,
 			Icon:        "folder",
 			URL:         u,
 			VerboseName: "Filesystem",

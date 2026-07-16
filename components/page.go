@@ -7,7 +7,7 @@ import (
 	"maragu.dev/gomponents"
 )
 
-// PageInterface represents the standard component interface within the Lago UI framework.
+// PageInterface represents the standard component interface within the Lariv UI framework.
 // Every custom page layout or interactive component must satisfy this interface.
 type PageInterface interface {
 	// Build compiles the component using context values and returns a gomponents HTML node structure.

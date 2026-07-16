@@ -1,4 +1,4 @@
-package lago
+package lariv
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -33,9 +33,9 @@ import (
 //
 // Example Registration:
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//		DBInitHooks: lago.PluginStages(func() PluginFeatures[DBInitHook] {
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//		DBInitHooks: lariv.PluginStages(func() PluginFeatures[DBInitHook] {
 //			return PluginFeatures[DBInitHook]{
 //				Entries: []registry.Pair[string, DBInitHook]{
 //					registry.NewPair("conn_pool", ConnPoolHook),
@@ -47,8 +47,8 @@ import (
 // Example Patch:
 //
 //	// Register a patch to chain or decorate existing DBInitHooks from another plugin:
-//	lago.Plugin{
-//		DBInitHooks: lago.PluginStages(func() PluginFeatures[DBInitHook] {
+//	lariv.Plugin{
+//		DBInitHooks: lariv.PluginStages(func() PluginFeatures[DBInitHook] {
 //			return PluginFeatures[DBInitHook]{
 //				Patches: []registry.Pair[string, func(DBInitHook) DBInitHook]{
 //					registry.NewPair("conn_pool", func(existing DBInitHook) DBInitHook {
@@ -73,7 +73,7 @@ var RegistryDBInit *registry.ImmutableRegistry[DBInitHook] = &registry.Immutable
 
 // GetDbConn opens and configures a GORM connection using the provided database configurations.
 // It overrides default delete callbacks to enforce hard deletes (disabling soft deletes).
-func GetDbConn(config LagoConfig) (*gorm.DB, error) {
+func GetDbConn(config LarivConfig) (*gorm.DB, error) {
 	var dialector gorm.Dialector
 
 	switch config.DBType {
@@ -102,7 +102,7 @@ func GetDbConn(config LagoConfig) (*gorm.DB, error) {
 	}
 
 	// Configure hard delete - skip soft delete and actually remove rows
-	db.Callback().Delete().Before("gorm:delete").Register("lago:hard_delete", func(db *gorm.DB) {
+	db.Callback().Delete().Before("gorm:delete").Register("lariv:hard_delete", func(db *gorm.DB) {
 		// Set Unscoped to true to force hard delete instead of soft delete
 		db.Statement.Unscoped = true
 	})
@@ -110,7 +110,7 @@ func GetDbConn(config LagoConfig) (*gorm.DB, error) {
 }
 
 // InitDB executes pending schema migrations and invokes registered database initialization hooks sequentially.
-func InitDB(db *gorm.DB, config LagoConfig) error {
+func InitDB(db *gorm.DB, config LarivConfig) error {
 	sqlDB, err := db.DB()
 	if err != nil {
 		return fmt.Errorf("gorm.DB().DB(): %w", err)

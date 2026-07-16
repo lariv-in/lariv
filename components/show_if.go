@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -23,7 +23,7 @@ import (
 //	        return user.IsAdmin, nil
 //	    },
 //	    Children: []components.PageInterface{
-//	        &components.ButtonLink{Label: getters.Static("Admin console"), Link: lago.RoutePath("admin.Console", nil)},
+//	        &components.ButtonLink{Label: getters.Static("Admin console"), Link: lariv.RoutePath("admin.Console", nil)},
 //	    },
 //	}
 type ShowIf struct {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
@@ -26,7 +26,7 @@ type SidebarItem struct {
 var RegistryRightSidebar = registry.NewRegistry[SidebarItem]()
 
 // LayoutTopbar represents a responsive page shell featuring a top navigation bar and a collapsible, resizable right sidebar drawer.
-// Layout components are special structural nodes in Lago establishing page wrappers. LayoutTopbar populates its navbar navigation items
+// Layout components are special structural nodes in Lariv establishing page wrappers. LayoutTopbar populates its navbar navigation items
 // dynamically from RegistryTopbar, and populates right utility drawers dynamically from RegistryRightSidebar.
 // The right sidebar features Alpine.js-driven click resizing, tab switching, and localStorage layout width persistence.
 //

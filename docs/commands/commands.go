@@ -1,4 +1,4 @@
-// Package commands contains explanations and code examples for plugin-specific CLI commands in Lago.
+// Package commands contains explanations and code examples for plugin-specific CLI commands in Lariv.
 //
 // # CLI Commands (commands.go)
 //
@@ -11,12 +11,12 @@
 //
 //	import (
 //		"fmt"
-//		"github.com/lariv-in/lago"
-//		"github.com/lariv-in/lago/registry"
+//		"github.com/lariv-in/lariv"
+//		"github.com/lariv-in/lariv/registry"
 //		"github.com/spf13/cobra"
 //	)
 //
-//	func createGreetCommand(config lago.LagoConfig) *cobra.Command {
+//	func createGreetCommand(config lariv.LarivConfig) *cobra.Command {
 //		cmd := &cobra.Command{
 //			Use:   "greet",
 //			Short: "Greet a developer",
@@ -29,17 +29,17 @@
 //		return cmd
 //	}
 //
-//	func pluginCommands() lago.PluginFeatures[lago.CommandFactory] {
-//		return lago.PluginFeatures[lago.CommandFactory]{
-//			Entries: []registry.Pair[string, lago.CommandFactory]{
+//	func pluginCommands() lariv.PluginFeatures[lariv.CommandFactory] {
+//		return lariv.PluginFeatures[lariv.CommandFactory]{
+//			Entries: []registry.Pair[string, lariv.CommandFactory]{
 //				{Key: "myplugin.greet", Value: createGreetCommand},
 //			},
 //		}
 //	}
 //
-//	// Registering inside lago.Plugin
-//	lago.Plugin{
-//		CommandFactories: lago.PluginStages(pluginCommands),
+//	// Registering inside lariv.Plugin
+//	lariv.Plugin{
+//		CommandFactories: lariv.PluginStages(pluginCommands),
 //	}
 //
 // # Cobra Reference

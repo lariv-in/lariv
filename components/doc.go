@@ -1,5 +1,5 @@
 // Package components provides reusable and interactive UI layout components, fields, inputs, and page scaffolds
-// for the Lago application framework, constructed using maragu.dev/gomponents.
+// for the Lariv application framework, constructed using maragu.dev/gomponents.
 //
 // The package revolves around several core interfaces that define components, nested structures, document shells, and forms.
 //
@@ -27,7 +27,7 @@
 //		components.InsertChildAfter(parent, "save-button-key", func(existing *components.ButtonSubmit) components.PageInterface {
 //			return &components.ButtonLink{
 //				Label: getters.Static("Cancel"),
-//				Link:  lago.RoutePath("admin.Dashboard", nil),
+//				Link:  lariv.RoutePath("admin.Dashboard", nil),
 //			}
 //		})
 //	}
@@ -46,7 +46,7 @@
 // Defines components representing web forms that wrap parameters inputs, handle validations, and parse submitted values. They are used to create database editing wizards, credentials forms, or query filters.
 //
 //	var UserForm components.FormInterface = &components.FormComponent[User]{
-//		ActionURL: lago.RoutePath("users.Create", nil),
+//		ActionURL: lariv.RoutePath("users.Create", nil),
 //		Children:  []components.PageInterface{EmailInput, RoleSelector},
 //	}
 package components

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 

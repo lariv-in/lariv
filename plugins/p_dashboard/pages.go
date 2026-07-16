@@ -1,16 +1,16 @@
 package p_dashboard
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	pcomps "github.com/lariv-in/lago/plugins/p_dashboard/components"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	pcomps "github.com/lariv-in/lariv/plugins/p_dashboard/components"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func init() {
 	components.RegistryTopbar.Register("dashboard.appsPageButton", components.ButtonLink{
 		Icon:    "squares-2x2",
-		Link:    lago.RoutePath("dashboard.AppsPage", nil),
+		Link:    lariv.RoutePath("dashboard.AppsPage", nil),
 		Classes: "btn-sm btn-square btn-neutral",
 	})
 	components.RegistryTopbar.Register("dashboard.themeButton", pcomps.ThemeButton{
@@ -19,8 +19,8 @@ func init() {
 	components.RegistryTopbar.Register("dashboard.userDropdown", pcomps.UserDropdown{})
 }
 
-func pluginPages() lago.PluginFeatures[components.PageInterface] {
-	return lago.PluginFeatures[components.PageInterface]{
+func pluginPages() lariv.PluginFeatures[components.PageInterface] {
+	return lariv.PluginFeatures[components.PageInterface]{
 		Entries: []registry.Pair[string, components.PageInterface]{
 			{Key: "dashboard.HomeRedirectStub", Value: &components.ContainerColumn{
 				Page:     components.Page{Key: "dashboard.HomeRedirectStub"},

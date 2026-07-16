@@ -1,7 +1,7 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // RegistryMigrations represents the global immutable registry tracking database migrations filesystems of type [UsefulFilesystem].
@@ -15,9 +15,9 @@ import (
 //	//go:embed migrations/*.sql
 //	var MigrationFS embed.FS
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//		Migrations: lago.PluginStages(func() PluginFeatures[UsefulFilesystem] {
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//		Migrations: lariv.PluginStages(func() PluginFeatures[UsefulFilesystem] {
 //			return PluginFeatures[UsefulFilesystem]{
 //				Entries: []registry.Pair[string, UsefulFilesystem]{
 //					registry.NewPair("my_plugin_migrations", MigrationFS),
@@ -29,8 +29,8 @@ import (
 // Example Patch:
 //
 //	// Register a patch to modify migration filesystems from another plugin:
-//	lago.Plugin{
-//		Migrations: lago.PluginStages(func() PluginFeatures[UsefulFilesystem] {
+//	lariv.Plugin{
+//		Migrations: lariv.PluginStages(func() PluginFeatures[UsefulFilesystem] {
 //			return PluginFeatures[UsefulFilesystem]{
 //				Patches: []registry.Pair[string, func(UsefulFilesystem) UsefulFilesystem]{
 //					registry.NewPair("my_plugin_migrations", func(existing UsefulFilesystem) UsefulFilesystem {

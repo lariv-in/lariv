@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 
@@ -84,11 +84,11 @@ func GeneratePhotoFile(db *gorm.DB) (*VNode, error) {
 	return &picked, nil
 }
 
-func pluginGenerators() lago.PluginFeatures[lago.Generator] {
-	return lago.PluginFeatures[lago.Generator]{
-		Entries: []registry.Pair[string, lago.Generator]{{
+func pluginGenerators() lariv.PluginFeatures[lariv.Generator] {
+	return lariv.PluginFeatures[lariv.Generator]{
+		Entries: []registry.Pair[string, lariv.Generator]{{
 			Key: "filesystem.Generator",
-			Value: lago.Generator{
+			Value: lariv.Generator{
 				Create: func(db *gorm.DB) error {
 					// 1. Create a root directory "Generated Photos"
 					dir := &VNode{

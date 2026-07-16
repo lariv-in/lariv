@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 )
 
 func TestAttachRequestLayerExposesQueryAsGet(t *testing.T) {

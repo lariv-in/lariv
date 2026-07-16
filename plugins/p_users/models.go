@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"log"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 
@@ -55,8 +55,8 @@ func (u *User) hashPassword() (err error) {
 	return err
 }
 
-func pluginModels() lago.PluginFeatures[any] {
-	return lago.PluginFeatures[any]{
+func pluginModels() lariv.PluginFeatures[any] {
+	return lariv.PluginFeatures[any]{
 		Entries: []registry.Pair[string, any]{
 			{Key: "p_users.Role", Value: Role{}},
 			{Key: "p_users.User", Value: User{}},
@@ -64,9 +64,9 @@ func pluginModels() lago.PluginFeatures[any] {
 	}
 }
 
-func pluginDBInitHooks() lago.PluginFeatures[lago.DBInitHook] {
-	return lago.PluginFeatures[lago.DBInitHook]{
-		Entries: []registry.Pair[string, lago.DBInitHook]{{
+func pluginDBInitHooks() lariv.PluginFeatures[lariv.DBInitHook] {
+	return lariv.PluginFeatures[lariv.DBInitHook]{
+		Entries: []registry.Pair[string, lariv.DBInitHook]{{
 			Key: "p_users.bootstrap",
 			Value: func(d *gorm.DB) *gorm.DB {
 				// Ensure ID 1 is always the safe "Unassigned" fallback role (Attrs applies on insert only).
@@ -79,7 +79,7 @@ func pluginDBInitHooks() lago.PluginFeatures[lago.DBInitHook] {
 }
 
 func init() {
-	lago.RegistryAdmin.Register("p_users", lago.AdminPanel[User]{
+	lariv.RegistryAdmin.Register("p_users", lariv.AdminPanel[User]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "Email", "IsSuperuser", "Role.Name"},
 		Preload:     []string{"Role"},

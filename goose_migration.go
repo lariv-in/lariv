@@ -1,4 +1,4 @@
-package lago
+package lariv
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 //
 // # Database Migrations Structure
 //
-// In Lago, database schema migrations are managed per plugin. To add migrations to a plugin:
+// In Lariv, database schema migrations are managed per plugin. To add migrations to a plugin:
 //
 // 1. Create a `migrations` folder inside your plugin directory structure.
 // 2. Add SQL migration files inside the `migrations` directory following Goose's syntax structure:
@@ -38,11 +38,11 @@ import (
 //	//go:embed migrations/*.sql
 //	var migrationFS embed.FS
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//	    Migrations: lago.PluginStages(func() lago.PluginFeatures[lago.UsefulFilesystem] {
-//	        return lago.PluginFeatures[lago.UsefulFilesystem]{
-//	            Entries: []registry.Pair[string, lago.UsefulFilesystem]{
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//	    Migrations: lariv.PluginStages(func() lariv.PluginFeatures[lariv.UsefulFilesystem] {
+//	        return lariv.PluginFeatures[lariv.UsefulFilesystem]{
+//	            Entries: []registry.Pair[string, lariv.UsefulFilesystem]{
 //	                registry.NewPair("my_plugin", migrationFS),
 //	            },
 //	        }
@@ -89,7 +89,7 @@ func gooseDialect(t DBType) (goose.Dialect, error) {
 
 // gooseUpPluginMigrations cycles through all registered plugin migration folders, loading their target versions
 // from their specific goose table names, and runs the "Up" migrations to update the database schema.
-func gooseUpPluginMigrations(ctx context.Context, sqlDB *sql.DB, config LagoConfig) error {
+func gooseUpPluginMigrations(ctx context.Context, sqlDB *sql.DB, config LarivConfig) error {
 	pairs := *RegistryMigrations.AllStable()
 	if len(pairs) == 0 {
 		return nil

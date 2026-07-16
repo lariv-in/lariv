@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func TestClientTabsBuild(t *testing.T) {

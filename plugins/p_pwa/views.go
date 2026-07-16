@@ -8,10 +8,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -98,8 +98,8 @@ func serviceWorkerHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		w.Write([]byte(`/* lago p_pwa default service worker */
-const CACHE_NAME = "lago-pwa-v1";
+		w.Write([]byte(`/* lariv p_pwa default service worker */
+const CACHE_NAME = "lariv-pwa-v1";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {
@@ -135,7 +135,7 @@ self.addEventListener("fetch", (event) => {
 func offlineHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if Config.OfflineViewName != "" {
-			lago.NewDynamicView(Config.OfflineViewName).ServeHTTP(w, r)
+			lariv.NewDynamicView(Config.OfflineViewName).ServeHTTP(w, r)
 			return
 		}
 
@@ -216,8 +216,8 @@ func assetLinksHandler(_ *views.View) http.Handler {
 	})
 }
 
-func pluginViews() lago.PluginFeatures[*views.View] {
-	return lago.PluginFeatures[*views.View]{
+func pluginViews() lariv.PluginFeatures[*views.View] {
+	return lariv.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{Key: manifestViewKey, Value: pwaAssetView(http.MethodGet, manifestHandler)},
 			{Key: serviceWorkerViewKey, Value: pwaAssetView(http.MethodGet, serviceWorkerHandler)},

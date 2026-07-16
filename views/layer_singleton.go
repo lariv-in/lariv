@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +26,7 @@ import (
 //	views.View{
 //	    Layers: []views.Layer{
 //	        views.LayerSingleton[SystemConfig]{
-//	            SuccessURL: lago.RoutePath("admin.Dashboard", nil),
+//	            SuccessURL: lariv.RoutePath("admin.Dashboard", nil),
 //	        },
 //	    },
 //	}

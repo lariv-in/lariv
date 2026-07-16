@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -22,8 +22,8 @@ import (
 //	&components.Timeline[Event]{
 //	    Title:     "Activity Log",
 //	    Data:      eventDataGetter,
-//	    OnClick:   getters.RowAttrNavigate(lago.RoutePath("events.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
-//	    CreateUrl: lago.RoutePath("events.CreateRoute", nil),
+//	    OnClick:   getters.RowAttrNavigate(lariv.RoutePath("events.DetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+//	    CreateUrl: lariv.RoutePath("events.CreateRoute", nil),
 //	}
 type Timeline[T any] struct {
 	// Page embeds common component properties like Key and Roles.

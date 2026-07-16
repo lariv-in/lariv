@@ -1,7 +1,7 @@
 package p_livereloading
 
 import (
-	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lariv/components"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )

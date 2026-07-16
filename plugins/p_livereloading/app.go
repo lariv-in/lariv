@@ -4,21 +4,21 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
-// GetPlugin returns routes and metadata for [lago.BuildAllRegistries].
+// GetPlugin returns routes and metadata for [lariv.BuildAllRegistries].
 // Shell head snippet registration stays in init() (see pages.go).
-func GetPlugin() registry.Pair[string, lago.Plugin] {
+func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse("/")
 	if err != nil {
 		log.Panic(err)
 	}
-	return registry.Pair[string, lago.Plugin]{
+	return registry.Pair[string, lariv.Plugin]{
 		Key: "p_livereloading",
-		Value: lago.Plugin{
-			Type:        lago.PluginTypeAddon,
+		Value: lariv.Plugin{
+			Type:        lariv.PluginTypeAddon,
 			Icon:        "arrow-path",
 			URL:         u,
 			VerboseName: "Live reload",

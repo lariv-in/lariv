@@ -1,4 +1,4 @@
-package lago
+package lariv
 
 import (
 	"bufio"
@@ -12,7 +12,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"gorm.io/gorm"
 )
 

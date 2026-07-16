@@ -1,8 +1,8 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // RegistryPage represents the global immutable registry tracking page templates of type [components.PageInterface].
@@ -23,9 +23,9 @@ import (
 //
 // Example Registration:
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//		Pages: lago.PluginStages(func() PluginFeatures[components.PageInterface] {
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//		Pages: lariv.PluginStages(func() PluginFeatures[components.PageInterface] {
 //			return PluginFeatures[components.PageInterface]{
 //				Entries: []registry.Pair[string, components.PageInterface]{
 //					registry.NewPair("hello_page", HelloPage{}),
@@ -37,8 +37,8 @@ import (
 // Example Patch:
 //
 //	// Register a patch to decorate or modify pages from another plugin:
-//	lago.Plugin{
-//		Pages: lago.PluginStages(func() PluginFeatures[components.PageInterface] {
+//	lariv.Plugin{
+//		Pages: lariv.PluginStages(func() PluginFeatures[components.PageInterface] {
 //			return PluginFeatures[components.PageInterface]{
 //				Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 //					registry.NewPair("hello_page", func(existing components.PageInterface) components.PageInterface {

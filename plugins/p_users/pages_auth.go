@@ -1,10 +1,10 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesAuth() []registry.Pair[string, components.PageInterface] {
@@ -15,7 +15,7 @@ func pageEntriesAuth() []registry.Pair[string, components.PageInterface] {
 					&components.FieldTitle{Getter: getters.Static("Login")},
 					&components.FormListenBoostedPost{
 						Name:      getters.Static("p_users.LoginPage"),
-						ActionURL: lago.RoutePath("p_users.LoginRoute", nil),
+						ActionURL: lariv.RoutePath("p_users.LoginRoute", nil),
 						Children: []components.PageInterface{
 							&components.FormComponent[User]{
 								Page: components.Page{
@@ -54,7 +54,7 @@ func pageEntriesAuth() []registry.Pair[string, components.PageInterface] {
 									&components.ButtonLink{
 										Page:    components.Page{Key: "p_users.AuthSignupLink"},
 										Label:   getters.Static("Don't have an account? Sign up"),
-										Link:    lago.RoutePath("p_users.SignupRoute", nil),
+										Link:    lariv.RoutePath("p_users.SignupRoute", nil),
 										Classes: "w-full",
 									},
 								},
@@ -70,7 +70,7 @@ func pageEntriesAuth() []registry.Pair[string, components.PageInterface] {
 					components.FieldTitle{Getter: getters.Static("Create an Account")},
 					&components.FormListenBoostedPost{
 						Name:      getters.Static("p_users.SignupPage"),
-						ActionURL: lago.RoutePath("p_users.SignupRoute", nil),
+						ActionURL: lariv.RoutePath("p_users.SignupRoute", nil),
 						Children: []components.PageInterface{
 							&components.FormComponent[User]{
 								Getter: getters.Key[User]("user"),
@@ -115,7 +115,7 @@ func pageEntriesAuth() []registry.Pair[string, components.PageInterface] {
 								},
 								ChildrenAction: []components.PageInterface{
 									&components.ButtonSubmit{Label: "Sign Up", Classes: "w-full"},
-									&components.ButtonLink{Label: getters.Static("Already have an account? Login"), Link: lago.RoutePath("p_users.LoginRoute", nil), Classes: "w-full"},
+									&components.ButtonLink{Label: getters.Static("Already have an account? Login"), Link: lariv.RoutePath("p_users.LoginRoute", nil), Classes: "w-full"},
 								},
 							},
 						},
@@ -129,12 +129,12 @@ func pageEntriesAuth() []registry.Pair[string, components.PageInterface] {
 					&components.FieldTitle{Getter: getters.Static("Welcome")},
 					&components.FieldSubtitle{Getter: getters.Static("Please log in or create an account to continue.")},
 					&components.ContainerColumn{Classes: "w-full mt-4 gap-2", Children: []components.PageInterface{
-						&components.ButtonLink{Label: getters.Static("Login"), Classes: "btn btn-primary text-white w-full", Link: lago.RoutePath("p_users.LoginRoute", nil)},
+						&components.ButtonLink{Label: getters.Static("Login"), Classes: "btn btn-primary text-white w-full", Link: lariv.RoutePath("p_users.LoginRoute", nil)},
 						&components.ButtonLink{
 							Page:    components.Page{Key: "p_users.AuthSignupLink"},
 							Label:   getters.Static("Sign Up"),
 							Classes: "btn btn-outline w-full",
-							Link:    lago.RoutePath("p_users.SignupRoute", nil),
+							Link:    lariv.RoutePath("p_users.SignupRoute", nil),
 						},
 					}},
 				}},

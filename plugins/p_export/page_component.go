@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -39,7 +39,7 @@ func (e exportPickerPage) Build(ctx context.Context) Node {
 	}
 
 	action := "#"
-	if route, ok := lago.RegistryRoute.Get("export.DownloadRoute"); ok {
+	if route, ok := lariv.RegistryRoute.Get("export.DownloadRoute"); ok {
 		action = route.Path
 	}
 

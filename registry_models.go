@@ -1,7 +1,7 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // RegistryModel represents the global immutable registry tracking application database models of type [any].
@@ -19,9 +19,9 @@ import (
 //
 // Example Registration:
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//		Models: lago.PluginStages(func() PluginFeatures[any] {
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//		Models: lariv.PluginStages(func() PluginFeatures[any] {
 //			return PluginFeatures[any]{
 //				Entries: []registry.Pair[string, any]{
 //					registry.NewPair("product_model", Product{}),
@@ -33,8 +33,8 @@ import (
 // Example Patch:
 //
 //	// Register a patch to extend or modify registered models from another plugin:
-//	lago.Plugin{
-//		Models: lago.PluginStages(func() PluginFeatures[any] {
+//	lariv.Plugin{
+//		Models: lariv.PluginStages(func() PluginFeatures[any] {
 //			return PluginFeatures[any]{
 //				Patches: []registry.Pair[string, func(any) any]{
 //					registry.NewPair("product_model", func(existing any) any {

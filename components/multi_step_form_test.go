@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 )
 
 func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {

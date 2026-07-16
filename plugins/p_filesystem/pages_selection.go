@@ -3,10 +3,10 @@ package p_filesystem
 import (
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func selectionTable(name, filterName, childRoute string, multi, selectDirectories bool) *components.Modal {
@@ -36,7 +36,7 @@ func selectionTable(name, filterName, childRoute string, multi, selectDirectorie
 						Subtitle: subtitle,
 						Data:     getters.Key[components.ObjectList[VNode]]("vnodes"),
 						Actions: []components.PageInterface{
-							&components.TableButtonFilter{Child: lago.DynamicPage{Name: filterName}},
+							&components.TableButtonFilter{Child: lariv.DynamicPage{Name: filterName}},
 						},
 						RowAttr: getters.RowAttrClickWithClass(onClick, rowClass),
 						Columns: []components.TableColumn{

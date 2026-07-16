@@ -1,10 +1,10 @@
-package lago
+package lariv
 
 import (
 	"fmt"
 	"log/slog"
 
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 
@@ -29,9 +29,9 @@ var RegistryGenerator *registry.ImmutableRegistry[Generator] = &registry.Immutab
 //
 // Example Registration:
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//		Generators: lago.PluginStages(func() PluginFeatures[Generator] {
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//		Generators: lariv.PluginStages(func() PluginFeatures[Generator] {
 //			return PluginFeatures[Generator]{
 //				Entries: []registry.Pair[string, Generator]{
 //					registry.NewPair("products_seeder", ProductGen),
@@ -43,8 +43,8 @@ var RegistryGenerator *registry.ImmutableRegistry[Generator] = &registry.Immutab
 // Example Patch:
 //
 //	// Register a patch to chain or modify database seeders from another plugin:
-//	lago.Plugin{
-//		Generators: lago.PluginStages(func() PluginFeatures[Generator] {
+//	lariv.Plugin{
+//		Generators: lariv.PluginStages(func() PluginFeatures[Generator] {
 //			return PluginFeatures[Generator]{
 //				Patches: []registry.Pair[string, func(Generator) Generator]{
 //					registry.NewPair("products_seeder", func(existing Generator) Generator {
@@ -77,7 +77,7 @@ type Generator struct {
 // RunGenerators executes all registered seed generators.
 // It runs deletion (Remove) in reverse order of GeneratorOrder to satisfy foreign key constraints,
 // and creation (Create) in forward order of GeneratorOrder so dependent entities are populated correctly.
-func RunGenerators(config LagoConfig) {
+func RunGenerators(config LarivConfig) {
 	db, err := GetDbConn(config)
 	if err != nil {
 		slog.Error("Failed to initialize database for generators", "error", err)

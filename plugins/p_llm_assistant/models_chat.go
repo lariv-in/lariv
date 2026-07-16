@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_filesystem"
+	"github.com/lariv-in/lariv/registry"
 	"google.golang.org/genai"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"

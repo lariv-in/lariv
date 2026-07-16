@@ -1,9 +1,9 @@
 package p_pwa
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/registry"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )
@@ -90,9 +90,9 @@ func (c *PwaConfig) PostConfig() {
 	}
 }
 
-func pluginConfigs() lago.PluginFeatures[lago.Config] {
-	return lago.PluginFeatures[lago.Config]{
-		Entries: []registry.Pair[string, lago.Config]{
+func pluginConfigs() lariv.PluginFeatures[lariv.Config] {
+	return lariv.PluginFeatures[lariv.Config]{
+		Entries: []registry.Pair[string, lariv.Config]{
 			{Key: "p_pwa", Value: Config},
 		},
 	}

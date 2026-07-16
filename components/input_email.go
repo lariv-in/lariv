@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/mail"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )

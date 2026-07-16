@@ -1,10 +1,10 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func userFormFields() components.ContainerColumn {
@@ -40,7 +40,7 @@ func userFormFields() components.ContainerColumn {
 					&components.InputForeignKey[Role]{
 						Label:       "Role",
 						Name:        "RoleID",
-						Url:         lago.RoutePath("p_users.RoleSelectRoute", nil),
+						Url:         lariv.RoutePath("p_users.RoleSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Name"),
 						Placeholder: "Select a role...",
 						Required:    true,
@@ -89,12 +89,12 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.UserUpdateForm", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.UserDetailMenu"},
+				lariv.DynamicPage{Name: "p_users.UserDetailMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: getters.Static("p_users.UserUpdateForm"),
-					ActionURL: lago.RoutePath("p_users.UpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lariv.RoutePath("p_users.UpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("user.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -120,8 +120,8 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 													Label:       "Delete",
 													Icon:        "trash",
 													Name:        getters.Static("p_users.UserDeleteForm"),
-													Url:         lago.RoutePath("p_users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
-													FormPostURL: lago.RoutePath("p_users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
+													Url:         lariv.RoutePath("p_users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
+													FormPostURL: lariv.RoutePath("p_users.DeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
 													ModalUID:    "user-delete-modal",
 													Classes:     "btn-error",
 												},
@@ -137,12 +137,12 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.SelfUpdateForm", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.UserSelfMenu"},
+				lariv.DynamicPage{Name: "p_users.UserSelfMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      getters.Static("p_users.SelfUpdateForm"),
-					ActionURL: lago.RoutePath("p_users.SelfUpdateRoute", nil),
+					ActionURL: lariv.RoutePath("p_users.SelfUpdateRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[User]{
 							Getter: getters.Key[User]("user"),
@@ -164,12 +164,12 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.SelfChangePasswordForm", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.UserSelfMenu"},
+				lariv.DynamicPage{Name: "p_users.UserSelfMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      getters.Static("p_users.SelfChangePasswordForm"),
-					ActionURL: lago.RoutePath("p_users.SelfChangePasswordRoute", nil),
+					ActionURL: lariv.RoutePath("p_users.SelfChangePasswordRoute", nil),
 					Children: []components.PageInterface{
 						&components.FormComponent[User]{
 							Getter: getters.Key[User]("user"),
@@ -201,12 +201,12 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.ChangePasswordForm", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.UserDetailMenu"},
+				lariv.DynamicPage{Name: "p_users.UserDetailMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      getters.Static("p_users.ChangePasswordForm"),
-					ActionURL: lago.RoutePath("p_users.ChangePasswordRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
+					ActionURL: lariv.RoutePath("p_users.ChangePasswordRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("user.ID"))}),
 					Children: []components.PageInterface{
 						&components.FormComponent[User]{
 							Getter: getters.Key[User]("user"),

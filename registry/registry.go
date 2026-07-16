@@ -17,7 +17,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 )
 
 // ImmutableRegistry stores a static set of registry items.

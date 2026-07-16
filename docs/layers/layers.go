@@ -1,4 +1,4 @@
-// Package layers contains explanations and code examples for middleware request-handling layers in Lago.
+// Package layers contains explanations and code examples for middleware request-handling layers in Lariv.
 //
 // # Middleware Layers (layers.go)
 //
@@ -27,7 +27,7 @@
 //	import (
 //		"net/http"
 //		"log/slog"
-//		"github.com/lariv-in/lago/views"
+//		"github.com/lariv-in/lariv/views"
 //	)
 //
 //	type LoggingLayer struct {

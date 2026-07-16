@@ -3,7 +3,7 @@ package components
 import (
 	"context"
 
-	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lariv/components"
 	"maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 )

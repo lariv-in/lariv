@@ -1,8 +1,8 @@
-// Package migrations contains explanations and code examples for database migrations in Lago.
+// Package migrations contains explanations and code examples for database migrations in Lariv.
 //
 // # Database Migrations (migrations.go)
 //
-// Database schema migrations in Lago are managed sequentially using SQL scripts compatible with the goose engine.
+// Database schema migrations in Lariv are managed sequentially using SQL scripts compatible with the goose engine.
 // Migrations are isolated per plugin, embedded using Go's go:embed directive, and registered within the Plugin struct.
 //
 // # Generating SQL Migration Files
@@ -29,16 +29,16 @@
 //
 //	import (
 //		"embed"
-//		"github.com/lariv-in/lago"
-//		"github.com/lariv-in/lago/registry"
+//		"github.com/lariv-in/lariv"
+//		"github.com/lariv-in/lariv/registry"
 //	)
 //
 //	//go:embed migrations
 //	var migrationsFS embed.FS
 //
-//	func pluginMigrations() lago.PluginFeatures[lago.UsefulFilesystem] {
-//		return lago.PluginFeatures[lago.UsefulFilesystem]{
-//			Entries: []registry.Pair[string, lago.UsefulFilesystem]{
+//	func pluginMigrations() lariv.PluginFeatures[lariv.UsefulFilesystem] {
+//		return lariv.PluginFeatures[lariv.UsefulFilesystem]{
+//			Entries: []registry.Pair[string, lariv.UsefulFilesystem]{
 //				{Key: "myplugin.migrations", Value: migrationsFS},
 //			},
 //		}

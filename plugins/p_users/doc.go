@@ -1,4 +1,4 @@
-// Package p_users implements the user administration and authentication system for the Lago framework.
+// Package p_users implements the user administration and authentication system for the Lariv framework.
 // It manages users, roles, password hashes, session authentication, and route authorization.
 //
 // # Registrations and Features Added

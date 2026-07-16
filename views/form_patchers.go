@@ -4,7 +4,7 @@ import (
 	"maps"
 	"net/http"
 
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // FormPatcher defines an interface for components capable of modifying form values and validation errors.

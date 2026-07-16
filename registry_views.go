@@ -1,13 +1,13 @@
-package lago
+package lariv
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 	. "maragu.dev/gomponents"
 )
 
@@ -22,7 +22,7 @@ var RegistryView *registry.ImmutableRegistry[*views.View] = &registry.ImmutableR
 //
 // Example Definition:
 //
-//	var HomeHandler = lago.NewDynamicView("core.HomeView")
+//	var HomeHandler = lariv.NewDynamicView("core.HomeView")
 type DynamicView struct {
 	// Key represents the registered identifier of the view controller in RegistryView (e.g., "core.HomeView").
 	Key string
@@ -91,7 +91,7 @@ func (m RedirectLayer) Next(_ views.View, next http.Handler) http.Handler {
 //
 //	var HomeRoute = Route{
 //		Path:    "/",
-//		Handler: lago.RedirectView(getters.Static("/dashboard/")),
+//		Handler: lariv.RedirectView(getters.Static("/dashboard/")),
 //	}
 func RedirectView(urlGetter getters.Getter[string]) *views.View {
 	return &views.View{

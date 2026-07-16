@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_filesystem"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 
@@ -117,7 +117,7 @@ func handleSkillImportRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Delegate GET to the dynamic view
-	lago.NewDynamicView("llm_assistant.SkillsImportView").ServeHTTP(w, r)
+	lariv.NewDynamicView("llm_assistant.SkillsImportView").ServeHTTP(w, r)
 }
 
 func handleSkillImportPost(w http.ResponseWriter, r *http.Request) {
@@ -260,7 +260,7 @@ func handleSkillImportPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectURLGetter := lago.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
+	redirectURLGetter := lariv.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(skill.ID)),
 	})
 	redirectURL, err := redirectURLGetter(ctx)

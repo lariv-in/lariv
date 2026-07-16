@@ -12,7 +12,7 @@ import (
 )
 
 // FormBubbling returns attributes for [components.FormComponent].Attr: HTTP POST plus Alpine
-// @submit.prevent that stops native submit and dispatches a bubbling CustomEvent "lago-form-submit"
+// @submit.prevent that stops native submit and dispatches a bubbling CustomEvent "lariv-form-submit"
 // from the form with detail { form: <form element>, name: string }. Parents (e.g. [components.ButtonModalForm],
 // or [components.FormListenBoostedPost]) handle the request.
 func FormBubbling(name Getter[string]) Getter[gomponents.Node] {
@@ -32,14 +32,14 @@ func FormBubbling(name Getter[string]) Getter[gomponents.Node] {
 			ghtml.Method("POST"),
 			gomponents.Attr("hx-boost", "false"),
 			gomponents.Attr("@submit.prevent", fmt.Sprintf(
-				`(function(evt){evt.preventDefault();var f=(evt.currentTarget&&evt.currentTarget.tagName==='FORM')?evt.currentTarget:(evt.target&&evt.target.closest&&evt.target.closest('form'));if(!f)return;f.dispatchEvent(new CustomEvent('lago-form-submit',{bubbles:true,detail:{form:f,name:%s}}))})($event)`,
+				`(function(evt){evt.preventDefault();var f=(evt.currentTarget&&evt.currentTarget.tagName==='FORM')?evt.currentTarget:(evt.target&&evt.target.closest&&evt.target.closest('form'));if(!f)return;f.dispatchEvent(new CustomEvent('lariv-form-submit',{bubbles:true,detail:{form:f,name:%s}}))})($event)`,
 				nLit,
 			)),
 		}, nil
 	}
 }
 
-// FormBubblingWithDataPostURL is [FormBubbling] plus data-lago-post-url on the form (merges ?name= into postURLBase) so row-scoped POST targets work when many modal openers share one dialog id.
+// FormBubblingWithDataPostURL is [FormBubbling] plus data-lariv-post-url on the form (merges ?name= into postURLBase) so row-scoped POST targets work when many modal openers share one dialog id.
 func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]) Getter[gomponents.Node] {
 	return func(ctx context.Context) (gomponents.Node, error) {
 		bub, err := FormBubbling(name)(ctx)
@@ -67,7 +67,7 @@ func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]
 			parsed.RawQuery = q.Encode()
 			u = parsed.String()
 		}
-		return gomponents.Group{bub, gomponents.Attr("data-lago-post-url", u)}, nil
+		return gomponents.Group{bub, gomponents.Attr("data-lariv-post-url", u)}, nil
 	}
 }
 

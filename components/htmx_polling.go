@@ -3,7 +3,7 @@ package components
 import (
 	"context"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -19,7 +19,7 @@ import (
 // Example:
 //
 //	&components.HTMXPolling{
-//	    URL: lago.RoutePath("admin.ReportExportStatus", nil),
+//	    URL: lariv.RoutePath("admin.ReportExportStatus", nil),
 //	    Children: []components.PageInterface{
 //	        &components.FieldText{Getter: getters.Static("Document export in progress, please wait...")},
 //	    },

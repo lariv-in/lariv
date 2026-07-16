@@ -2,7 +2,7 @@
 // interfaces, and registries defined in this file (including AdminPanel, AdminPanelInterface,
 // and RegistryAdmin) are unstable and should NOT be used in active application setups.
 
-package lago
+package lariv
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 

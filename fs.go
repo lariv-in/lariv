@@ -1,4 +1,4 @@
-package lago
+package lariv
 
 import "io/fs"
 
@@ -10,7 +10,7 @@ import "io/fs"
 //
 // Example:
 //
-//	func LoadSqlMigrations(filesystem lago.UsefulFilesystem) {
+//	func LoadSqlMigrations(filesystem lariv.UsefulFilesystem) {
 //		entries, err := filesystem.ReadDir("migrations")
 //		// ... parse and run migrations ...
 //	}

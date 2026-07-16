@@ -1,10 +1,10 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesMenus() []registry.Pair[string, components.PageInterface] {
@@ -13,16 +13,16 @@ func pageEntriesMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Static("Users"),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to Home"),
-				Url:   lago.RoutePath("dashboard.AppsPage", nil),
+				Url:   lariv.RoutePath("dashboard.AppsPage", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("All Users"),
-					Url:   lago.RoutePath("p_users.ListRoute", nil),
+					Url:   lariv.RoutePath("p_users.ListRoute", nil),
 				},
 				&components.SidebarMenuItem{
 					Title: getters.Static("Roles"),
-					Url:   lago.RoutePath("p_users.RoleListRoute", nil),
+					Url:   lariv.RoutePath("p_users.RoleListRoute", nil),
 				},
 			},
 		}},
@@ -30,24 +30,24 @@ func pageEntriesMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("User: %s", getters.Any(getters.Key[string]("user.Name"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to All Users"),
-				Url:   lago.RoutePath("p_users.ListRoute", nil),
+				Url:   lariv.RoutePath("p_users.ListRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("User Detail"),
-					Url: lago.RoutePath("p_users.DetailRoute", map[string]getters.Getter[any]{
+					Url: lariv.RoutePath("p_users.DetailRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("user.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Title: getters.Static("Edit User"),
-					Url: lago.RoutePath("p_users.UpdateRoute", map[string]getters.Getter[any]{
+					Url: lariv.RoutePath("p_users.UpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("user.ID")),
 					}),
 				},
 				&components.SidebarMenuItem{
 					Title: getters.Static("Change Password"),
-					Url: lago.RoutePath("p_users.ChangePasswordRoute", map[string]getters.Getter[any]{
+					Url: lariv.RoutePath("p_users.ChangePasswordRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("user.ID")),
 					}),
 				},
@@ -57,20 +57,20 @@ func pageEntriesMenus() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("My account: %s", getters.Any(getters.Key[string]("user.Name"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to Home"),
-				Url:   lago.RoutePath("dashboard.AppsPage", nil),
+				Url:   lariv.RoutePath("dashboard.AppsPage", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("My Profile"),
-					Url:   lago.RoutePath("p_users.SelfDetailRoute", nil),
+					Url:   lariv.RoutePath("p_users.SelfDetailRoute", nil),
 				},
 				&components.SidebarMenuItem{
 					Title: getters.Static("Edit My Profile"),
-					Url:   lago.RoutePath("p_users.SelfUpdateRoute", nil),
+					Url:   lariv.RoutePath("p_users.SelfUpdateRoute", nil),
 				},
 				&components.SidebarMenuItem{
 					Title: getters.Static("Change Password"),
-					Url:   lago.RoutePath("p_users.SelfChangePasswordRoute", nil),
+					Url:   lariv.RoutePath("p_users.SelfChangePasswordRoute", nil),
 				},
 			},
 		}},

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 )
 
 func TestFormListenBoostedPostRendersNameGuard(t *testing.T) {
@@ -30,7 +30,7 @@ func TestFormListenBoostedPostRendersNameGuard(t *testing.T) {
 	if !strings.Contains(html, "root.contains(f)") {
 		t.Fatalf("expected subtree containment guard in boosted-post listener, got %s", html)
 	}
-	if !strings.Contains(html, "lagoPostPending") {
+	if !strings.Contains(html, "larivPostPending") {
 		t.Fatalf("expected in-flight submit guard in boosted-post listener, got %s", html)
 	}
 }
@@ -59,7 +59,7 @@ func TestButtonModalFormThreadsNameIntoGetAndGuard(t *testing.T) {
 	if strings.Index(html, `d.name !==`) > strings.Index(html, `evt.stopPropagation()`) {
 		t.Fatalf("expected stopPropagation after the name guard, got %s", html)
 	}
-	if !strings.Contains(html, "lagoPostPending") {
+	if !strings.Contains(html, "larivPostPending") {
 		t.Fatalf("expected in-flight submit guard in modal form listener, got %s", html)
 	}
 }

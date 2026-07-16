@@ -3,10 +3,10 @@ package p_llm_assistant
 import (
 	"context"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_filesystem"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_filesystem"
 )
 
 func skillFormFields() components.ContainerColumn {
@@ -36,7 +36,7 @@ func skillFormFields() components.ContainerColumn {
 					&components.InputManyToMany[p_filesystem.VNode]{
 						Label:       "Files",
 						Name:        "Files",
-						Url:         lago.RoutePath("filesystem.MultiSelectRoute", nil),
+						Url:         lariv.RoutePath("filesystem.MultiSelectRoute", nil),
 						Display:     getters.Key[string]("$in.Name"),
 						Placeholder: "Select files...",
 						Required:    false,
@@ -54,18 +54,18 @@ func registerSkillsPages() {
 		Title: getters.Format("Skill: %s", getters.Any(getters.Key[string]("skill.Name"))),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Skills"),
-			Url:   lago.RoutePath("llm_assistant.SkillsListRoute", nil),
+			Url:   lariv.RoutePath("llm_assistant.SkillsListRoute", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Skill Details"),
-				Url: lago.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
+				Url: lariv.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("skill.ID")),
 				}),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Edit Skill"),
-				Url: lago.RoutePath("llm_assistant.SkillsUpdateRoute", map[string]getters.Getter[any]{
+				Url: lariv.RoutePath("llm_assistant.SkillsUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("skill.ID")),
 				}),
 			},
@@ -75,7 +75,7 @@ func registerSkillsPages() {
 	// List Page
 	registerPluginPage("llm_assistant.SkillsListPage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "llm_assistant.AssistantMenu"},
+			lariv.DynamicPage{Name: "llm_assistant.AssistantMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[Skill]{
@@ -84,20 +84,20 @@ func registerSkillsPages() {
 				Data:    getters.Key[components.ObjectList[Skill]]("skills"),
 				Actions: []components.PageInterface{
 					&components.ButtonLink{
-						Link:    lago.RoutePath("llm_assistant.SkillsCreateRoute", nil),
+						Link:    lariv.RoutePath("llm_assistant.SkillsCreateRoute", nil),
 						Icon:    "plus",
 						Classes: "btn-square btn-outline btn-sm",
 					},
 					&components.ButtonModalForm{
 						Icon:        "arrow-up-on-square",
 						Name:        getters.Static("llm_assistant.SkillsImportPage"),
-						Url:         lago.RoutePath("llm_assistant.SkillsImportRoute", nil),
-						FormPostURL: lago.RoutePath("llm_assistant.SkillsImportRoute", nil),
+						Url:         lariv.RoutePath("llm_assistant.SkillsImportRoute", nil),
+						FormPostURL: lariv.RoutePath("llm_assistant.SkillsImportRoute", nil),
 						ModalUID:    "skill-import-modal",
 						Classes:     "btn-square btn-outline btn-sm",
 					},
 				},
-				RowAttr: getters.RowAttrNavigate(lago.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+				RowAttr: getters.RowAttrNavigate(lariv.RoutePath("llm_assistant.SkillsDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 				Columns: []components.TableColumn{
 					{Label: "Name", Name: "Name", Children: []components.PageInterface{
 						&components.FieldText{Getter: getters.Key[string]("$row.Name")},
@@ -113,7 +113,7 @@ func registerSkillsPages() {
 	// Detail Page
 	registerPluginPage("llm_assistant.SkillsDetailPage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "llm_assistant.SkillsDetailMenu"},
+			lariv.DynamicPage{Name: "llm_assistant.SkillsDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.Detail[Skill]{
@@ -127,7 +127,7 @@ func registerSkillsPages() {
 							&components.ButtonDownload{
 								Label: "Export Skill",
 								Icon:  "arrow-down-tray",
-								Link: lago.RoutePath("llm_assistant.SkillsExportRoute", map[string]getters.Getter[any]{
+								Link: lariv.RoutePath("llm_assistant.SkillsExportRoute", map[string]getters.Getter[any]{
 									"id": getters.Any(getters.Key[uint]("$in.ID")),
 								}),
 								Classes: "btn-outline btn-sm w-fit mt-2",
@@ -156,12 +156,12 @@ func registerSkillsPages() {
 	// Create Page
 	registerPluginPage("llm_assistant.SkillsCreatePage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "llm_assistant.AssistantMenu"},
+			lariv.DynamicPage{Name: "llm_assistant.AssistantMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      getters.Static("llm_assistant.SkillsCreatePage"),
-				ActionURL: lago.RoutePath("llm_assistant.SkillsCreateRoute", nil),
+				ActionURL: lariv.RoutePath("llm_assistant.SkillsCreateRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[Skill]{
 						Getter:   func(ctx context.Context) (Skill, error) { return Skill{}, nil },
@@ -189,12 +189,12 @@ func registerSkillsPages() {
 	// Update Page
 	registerPluginPage("llm_assistant.SkillsUpdatePage", &components.ShellScaffold{
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "llm_assistant.SkillsDetailMenu"},
+			lariv.DynamicPage{Name: "llm_assistant.SkillsDetailMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name: getters.Static("llm_assistant.SkillsUpdatePage"),
-				ActionURL: lago.RoutePath("llm_assistant.SkillsUpdateRoute", map[string]getters.Getter[any]{
+				ActionURL: lariv.RoutePath("llm_assistant.SkillsUpdateRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Key[uint]("skill.ID")),
 				}),
 				Children: []components.PageInterface{
@@ -219,8 +219,8 @@ func registerSkillsPages() {
 												Label:       "Delete",
 												Icon:        "trash",
 												Name:        getters.Static("llm_assistant.SkillsDeletePage"),
-												Url:         lago.RoutePath("llm_assistant.SkillsDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("skill.ID"))}),
-												FormPostURL: lago.RoutePath("llm_assistant.SkillsDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("skill.ID"))}),
+												Url:         lariv.RoutePath("llm_assistant.SkillsDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("skill.ID"))}),
+												FormPostURL: lariv.RoutePath("llm_assistant.SkillsDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("skill.ID"))}),
 												ModalUID:    "skill-delete-modal",
 												Classes:     "btn-error",
 											},
@@ -253,7 +253,7 @@ func registerSkillsPages() {
 		Children: []components.PageInterface{
 			&components.FormListenBoostedPost{
 				Name:      getters.Static("llm_assistant.SkillsImportPage"),
-				ActionURL: lago.RoutePath("llm_assistant.SkillsImportRoute", nil),
+				ActionURL: lariv.RoutePath("llm_assistant.SkillsImportRoute", nil),
 				Children: []components.PageInterface{
 					&components.FormComponent[any]{
 						Attr:     getters.FormBubbling(getters.Static("llm_assistant.SkillsImportPage")),

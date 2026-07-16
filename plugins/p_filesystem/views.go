@@ -11,12 +11,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_users"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_users"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 
@@ -109,11 +109,11 @@ func optionalNodeFromValue(db *gorm.DB, value any, fallback *VNode) (*VNode, err
 
 func parentRedirect(ctx context.Context, node *VNode) (string, error) {
 	if node != nil && node.ParentID != nil {
-		return lago.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+		return lariv.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
 			"parent_id": getters.Any(getters.Static(*node.ParentID)),
 		})(ctx)
 	}
-	return lago.RoutePath("filesystem.ListRoute", nil)(ctx)
+	return lariv.RoutePath("filesystem.ListRoute", nil)(ctx)
 }
 
 type rootVNodeQueryPatcher struct{}
@@ -241,7 +241,7 @@ func updateHandler(v *views.View) http.Handler {
 			return
 		}
 
-		redirectURL, err := lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+		redirectURL, err := lariv.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(node.ID)),
 		})(r.Context())
 		if err != nil {
@@ -558,96 +558,96 @@ func filesystemLayerListMoveChild() views.Layer {
 	}
 }
 
-func pluginViews() lago.PluginFeatures[*views.View] {
-	return lago.PluginFeatures[*views.View]{
+func pluginViews() lariv.PluginFeatures[*views.View] {
+	return lariv.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
-			{Key: "filesystem.ListView", Value: lago.GetPageView("filesystem.VNodeTable").
+			{Key: "filesystem.ListView", Value: lariv.GetPageView("filesystem.VNodeTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.list", filesystemLayerListRoot()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.BrowseView", Value: lago.GetPageView("filesystem.VNodeTable").
+			{Key: "filesystem.BrowseView", Value: lariv.GetPageView("filesystem.VNodeTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
 				WithLayer("filesystem.list", filesystemLayerListBrowse()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.DetailView", Value: lago.GetPageView("filesystem.VNodeDetail").
+			{Key: "filesystem.DetailView", Value: lariv.GetPageView("filesystem.VNodeDetail").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"})},
-			{Key: "filesystem.CreateView", Value: lago.GetPageView("filesystem.VNodeCreateForm").
+			{Key: "filesystem.CreateView", Value: lariv.GetPageView("filesystem.VNodeCreateForm").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.create", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: createHandler,
 				})},
-			{Key: "filesystem.CreateChildView", Value: lago.GetPageView("filesystem.VNodeCreateForm").
+			{Key: "filesystem.CreateChildView", Value: lariv.GetPageView("filesystem.VNodeCreateForm").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
 				WithLayer("filesystem.create", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: createHandler,
 				})},
-			{Key: "filesystem.UpdateView", Value: lago.GetPageView("filesystem.VNodeUpdateForm").
+			{Key: "filesystem.UpdateView", Value: lariv.GetPageView("filesystem.VNodeUpdateForm").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
 				WithLayer("filesystem.update", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: updateHandler,
 				})},
-			{Key: "filesystem.DeleteView", Value: lago.GetPageView("filesystem.VNodeDeleteForm").
+			{Key: "filesystem.DeleteView", Value: lariv.GetPageView("filesystem.VNodeDeleteForm").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
 				WithLayer("filesystem.delete", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: deleteHandler,
 				})},
-			{Key: "filesystem.MoveView", Value: lago.GetPageView("filesystem.VNodeMoveForm").
+			{Key: "filesystem.MoveView", Value: lariv.GetPageView("filesystem.VNodeMoveForm").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
 				WithLayer("filesystem.move", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: moveHandler,
 				})},
-			{Key: "filesystem.MultiUploadView", Value: lago.GetPageView("filesystem.VNodeMultiUploadForm").
+			{Key: "filesystem.MultiUploadView", Value: lariv.GetPageView("filesystem.VNodeMultiUploadForm").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.multi_upload", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: multiUploadHandler,
 				})},
-			{Key: "filesystem.MultiUploadChildView", Value: lago.GetPageView("filesystem.VNodeMultiUploadForm").
+			{Key: "filesystem.MultiUploadChildView", Value: lariv.GetPageView("filesystem.VNodeMultiUploadForm").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
 				WithLayer("filesystem.multi_upload", views.MethodLayer{
 					Method:  http.MethodPost,
 					Handler: multiUploadHandler,
 				})},
-			{Key: "filesystem.SelectView", Value: lago.GetPageView("filesystem.ParentSelectionTable").
+			{Key: "filesystem.SelectView", Value: lariv.GetPageView("filesystem.ParentSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.list", filesystemLayerListSelectRoot()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.SelectChildView", Value: lago.GetPageView("filesystem.ParentSelectionTable").
+			{Key: "filesystem.SelectChildView", Value: lariv.GetPageView("filesystem.ParentSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
 				WithLayer("filesystem.list", filesystemLayerListSelectChild()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.MultiSelectView", Value: lago.GetPageView("filesystem.MultiSelectionTable").
+			{Key: "filesystem.MultiSelectView", Value: lariv.GetPageView("filesystem.MultiSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.list", filesystemLayerListMultiRoot()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.MultiSelectChildView", Value: lago.GetPageView("filesystem.MultiSelectionTable").
+			{Key: "filesystem.MultiSelectChildView", Value: lariv.GetPageView("filesystem.MultiSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
 				WithLayer("filesystem.list", filesystemLayerListMultiChild()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.MoveSelectView", Value: lago.GetPageView("filesystem.DestinationSelectionTable").
+			{Key: "filesystem.MoveSelectView", Value: lariv.GetPageView("filesystem.DestinationSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.list", filesystemLayerListMoveRoot()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.MoveSelectChildView", Value: lago.GetPageView("filesystem.DestinationSelectionTable").
+			{Key: "filesystem.MoveSelectChildView", Value: lariv.GetPageView("filesystem.DestinationSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
 				WithLayer("filesystem.list", filesystemLayerListMoveChild()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
-			{Key: "filesystem.DownloadView", Value: lago.GetPageView("filesystem.VNodeDetail").
+			{Key: "filesystem.DownloadView", Value: lariv.GetPageView("filesystem.VNodeDetail").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.node", loadVNodeByPathParamLayer{Param: "id"}).
 				WithLayer("filesystem.download", views.MethodLayer{

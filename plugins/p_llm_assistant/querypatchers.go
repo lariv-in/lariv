@@ -3,8 +3,8 @@ package p_llm_assistant
 import (
 	"net/http"
 
-	"github.com/lariv-in/lago/plugins/p_users"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/plugins/p_users"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 

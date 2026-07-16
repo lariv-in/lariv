@@ -1,8 +1,8 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 )
 
 // RegistryLayer represents the global immutable registry tracking global middleware layers of type [views.GlobalLayer].
@@ -24,9 +24,9 @@ import (
 //
 // Example Registration:
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//		Layers: lago.PluginStages(func() PluginFeatures[views.GlobalLayer] {
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//		Layers: lariv.PluginStages(func() PluginFeatures[views.GlobalLayer] {
 //			return PluginFeatures[views.GlobalLayer]{
 //				Entries: []registry.Pair[string, views.GlobalLayer]{
 //					registry.NewPair("cors_layer", CorsLayer{}),
@@ -38,8 +38,8 @@ import (
 // Example Patch:
 //
 //	// Register a patch to replace or modify global layers from another plugin:
-//	lago.Plugin{
-//		Layers: lago.PluginStages(func() PluginFeatures[views.GlobalLayer] {
+//	lariv.Plugin{
+//		Layers: lariv.PluginStages(func() PluginFeatures[views.GlobalLayer] {
 //			return PluginFeatures[views.GlobalLayer]{
 //				Patches: []registry.Pair[string, func(views.GlobalLayer) views.GlobalLayer]{
 //					registry.NewPair("cors_layer", func(existing views.GlobalLayer) views.GlobalLayer {

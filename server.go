@@ -1,4 +1,4 @@
-package lago
+package lariv
 
 import (
 	"log/slog"
@@ -17,10 +17,10 @@ import (
 //
 // Example:
 //
-//	if err := lago.StartServer(config); err != nil {
+//	if err := lariv.StartServer(config); err != nil {
 //		log.Fatal(err)
 //	}
-func StartServer(config LagoConfig) error {
+func StartServer(config LarivConfig) error {
 	// Applying all layers
 	layers := *RegistryLayer.AllStable()
 	var router http.Handler = GetRouter(config)

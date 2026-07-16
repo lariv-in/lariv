@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lariv-in/lago"
+	"github.com/lariv-in/lariv"
 	"gorm.io/gorm"
 )
 
@@ -255,7 +255,7 @@ func (n *VNode) DeleteTree(db *gorm.DB) error {
 			return err
 		}
 	}
-	_, err = gorm.G[VNode](db).Where("id = ?", n.ID).Delete(context.Background())
+	err = db.Delete(n).Error
 	return err
 }
 
@@ -376,7 +376,7 @@ func HumanReadableSize(size uint64) string {
 }
 
 func init() {
-	lago.RegistryAdmin.Register("p_filesystem", lago.AdminPanel[VNode]{
+	lariv.RegistryAdmin.Register("p_filesystem", lariv.AdminPanel[VNode]{
 		SearchField: "Name",
 		ListFields:  []string{"Name", "IsDirectory", "ParentID", "UpdatedAt"},
 	})

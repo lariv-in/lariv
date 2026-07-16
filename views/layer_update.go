@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"gorm.io/gorm"
 )
 
@@ -27,7 +27,7 @@ import (
 //	        views.LayerDetail[User]{Key: getters.Static("$record")},
 //	        views.LayerUpdate[User]{
 //	            Key:        getters.Static("$record"),
-//	            SuccessURL: lago.RoutePath("users.List", nil),
+//	            SuccessURL: lariv.RoutePath("users.List", nil),
 //	        },
 //	    },
 //	}

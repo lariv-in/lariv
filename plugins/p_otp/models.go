@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 
@@ -50,8 +50,8 @@ func LoadPreferences(db *gorm.DB) OTPPreferences {
 	return prefs
 }
 
-func pluginModels() lago.PluginFeatures[any] {
-	return lago.PluginFeatures[any]{
+func pluginModels() lariv.PluginFeatures[any] {
+	return lariv.PluginFeatures[any]{
 		Entries: []registry.Pair[string, any]{
 			{Key: "p_otp.OTPPreferences", Value: OTPPreferences{}},
 		},
@@ -59,5 +59,5 @@ func pluginModels() lago.PluginFeatures[any] {
 }
 
 func init() {
-	lago.RegistryAdmin.Register("p_otp", lago.AdminPanel[OTPPreferences]{SearchField: ""})
+	lariv.RegistryAdmin.Register("p_otp", lariv.AdminPanel[OTPPreferences]{SearchField: ""})
 }

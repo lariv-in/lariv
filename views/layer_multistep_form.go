@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lariv/components"
 )
 
 // MultiStepFormLayer coordinates stage transitions, input validations, error caching, and HTMX swaps for multi-stage wizards.

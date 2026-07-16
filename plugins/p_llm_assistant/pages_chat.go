@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	"maragu.dev/gomponents/html"
 	. "maragu.dev/gomponents/html"
@@ -18,20 +18,20 @@ func registerAssistantMenuPages() {
 		Title: getters.Static("Assistant"),
 		Back: &components.SidebarMenuItem{
 			Title: getters.Static("Back to All Apps"),
-			Url:   lago.RoutePath("dashboard.AppsPage", nil),
+			Url:   lariv.RoutePath("dashboard.AppsPage", nil),
 		},
 		Children: []components.PageInterface{
 			&components.SidebarMenuItem{
 				Title: getters.Static("Chat"),
-				Url:   lago.RoutePath("llm_assistant.DefaultRoute", nil),
+				Url:   lariv.RoutePath("llm_assistant.DefaultRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("History"),
-				Url:   lago.RoutePath("llm_assistant.HistoryRoute", nil),
+				Url:   lariv.RoutePath("llm_assistant.HistoryRoute", nil),
 			},
 			&components.SidebarMenuItem{
 				Title: getters.Static("Skills"),
-				Url:   lago.RoutePath("llm_assistant.SkillsListRoute", nil),
+				Url:   lariv.RoutePath("llm_assistant.SkillsListRoute", nil),
 			},
 		},
 	})
@@ -67,8 +67,8 @@ func (e *assistantChatRoot) Build(ctx context.Context) Node {
 		transcriptClass = "flex flex-col gap-2 flex-1 overflow-y-auto border border-base-300 rounded-lg p-3 bg-base-200/40 min-h-0"
 	}
 
-	multiSelectUrl, _ := lago.RoutePath("filesystem.MultiSelectRoute", nil)(ctx)
-	multiUploadUrl, _ := lago.RoutePath("filesystem.ChatUploadRoute", nil)(ctx)
+	multiSelectUrl, _ := lariv.RoutePath("filesystem.MultiSelectRoute", nil)(ctx)
+	multiUploadUrl, _ := lariv.RoutePath("filesystem.ChatUploadRoute", nil)(ctx)
 
 	return Div(
 		Class(rootClass),
@@ -305,7 +305,7 @@ func registerAssistantChatPage() {
 	registerPluginPage("llm_assistant.ChatPage", &components.ShellScaffold{
 		Page: components.Page{Key: "llm_assistant.ChatPage"},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "llm_assistant.AssistantMenu"},
+			lariv.DynamicPage{Name: "llm_assistant.AssistantMenu"},
 		},
 		Children: []components.PageInterface{
 			&assistantChatRoot{

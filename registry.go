@@ -1,9 +1,9 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 )
 
 // FillRegistry merges feature bundles from plugins, then populates and assigns an immutable registry
@@ -38,7 +38,7 @@ func MapSlice[T any, R any](slice []T, mapper func(T) R) []R {
 //
 // Example:
 //
-//	lago.BuildAllRegistries(allActivePlugins)
+//	lariv.BuildAllRegistries(allActivePlugins)
 func BuildAllRegistries(allPlugins []registry.Pair[string, Plugin]) {
 	FillRegistry(MapSlice(allPlugins, func(pair registry.Pair[string, Plugin]) []func() PluginFeatures[UsefulFilesystem] {
 		return pair.Value.Migrations

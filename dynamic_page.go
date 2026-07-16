@@ -1,10 +1,10 @@
-package lago
+package lariv
 
 import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/lago/components"
+	"github.com/lariv-in/lariv/components"
 	"maragu.dev/gomponents"
 )
 
@@ -16,7 +16,7 @@ import (
 //
 // Example:
 //
-//	&lago.DynamicPage{
+//	&lariv.DynamicPage{
 //	    Name: "admin.Dashboard",
 //	}
 type DynamicPage struct {

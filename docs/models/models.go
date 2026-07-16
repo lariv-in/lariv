@@ -1,8 +1,8 @@
-// Package models contains explanations and code examples for database models in Lago.
+// Package models contains explanations and code examples for database models in Lariv.
 //
 // # Database Models (models.go)
 //
-// Database schemas in Lago are defined as GORM models and auto-migrated on startup.
+// Database schemas in Lariv are defined as GORM models and auto-migrated on startup.
 // Define your database entities as structs and register them inside the plugin.
 //
 // # Model Definition and Registration Example
@@ -11,8 +11,8 @@
 //
 //	import (
 //		"time"
-//		"github.com/lariv-in/lago"
-//		"github.com/lariv-in/lago/registry"
+//		"github.com/lariv-in/lariv"
+//		"github.com/lariv-in/lariv/registry"
 //	)
 //
 //	type BlogPost struct {
@@ -23,17 +23,17 @@
 //		UpdatedAt time.Time
 //	}
 //
-//	func pluginModels() lago.PluginFeatures[any] {
-//		return lago.PluginFeatures[any]{
+//	func pluginModels() lariv.PluginFeatures[any] {
+//		return lariv.PluginFeatures[any]{
 //			Entries: []registry.Pair[string, any]{
 //				{Key: "blog.post", Value: &BlogPost{}},
 //			},
 //		}
 //	}
 //
-//	// Registering inside lago.Plugin
-//	lago.Plugin{
-//		Models: lago.PluginStages(pluginModels),
+//	// Registering inside lariv.Plugin
+//	lariv.Plugin{
+//		Models: lariv.PluginStages(pluginModels),
 //	}
 //
 // # GORM Reference

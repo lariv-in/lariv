@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_google_genai"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_google_genai"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )
 
-const assistantSystemPrompt = `You are LLM Assistant inside the Lago app. You help operators search the public web via Google Programmable Search.
+const assistantSystemPrompt = `You are LLM Assistant inside the Lariv app. You help operators search the public web via Google Programmable Search.
 
 You are a multimodal assistant. You can see, analyze, and process any files, documents, or images attached by the user.
 

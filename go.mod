@@ -1,4 +1,4 @@
-module github.com/lariv-in/lago
+module github.com/lariv-in/lariv
 
 go 1.25.9
 

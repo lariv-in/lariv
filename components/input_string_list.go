@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"gorm.io/datatypes"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -80,7 +80,7 @@ func (e InputStringList) Build(ctx context.Context) Node {
 	}`, itemsJSON)
 
 	// Capture phase so this runs before Alpine @submit.prevent on the form dispatches
-	// "lago-form-submit" (e.g. FormListenBoostedPost), which reads the form via htmx.values
+	// "lariv-form-submit" (e.g. FormListenBoostedPost), which reads the form via htmx.values
 	// before bubble-phase submit handlers run.
 	initJS := fmt.Sprintf(`
 $el.closest('form').addEventListener('submit', (e) => {

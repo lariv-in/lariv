@@ -12,6 +12,6 @@
 //
 // # Routes
 //
-//   - "livereloading.ws" -> lago.Route
+//   - "livereloading.ws" -> lariv.Route
 //     Maps the "/_livereload" endpoint path to execute WebSocket handler handshakes.
 package p_livereloading

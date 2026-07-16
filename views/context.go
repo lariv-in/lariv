@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 )
 
 // ContextWithMap updates a map inside a context under the specified key.

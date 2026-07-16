@@ -1,16 +1,16 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesFilters() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "p_users.UserFilter", Value: &components.FormComponent[User]{
-			Attr: getters.FormBoostedGet(lago.RoutePath("p_users.ListRoute", nil)),
+			Attr: getters.FormBoostedGet(lariv.RoutePath("p_users.ListRoute", nil)),
 
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -25,7 +25,7 @@ func pageEntriesFilters() []registry.Pair[string, components.PageInterface] {
 			},
 		}},
 		{Key: "p_users.UserSelectionFilter", Value: &components.FormComponent[User]{
-			Attr: getters.FormBoostedGet(lago.RoutePath("p_users.SelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lariv.RoutePath("p_users.SelectRoute", nil)),
 
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -39,7 +39,7 @@ func pageEntriesFilters() []registry.Pair[string, components.PageInterface] {
 			},
 		}},
 		{Key: "p_users.RoleSelectionFilter", Value: &components.FormComponent[Role]{
-			Attr: getters.FormBoostedGet(lago.RoutePath("p_users.SelectRoute", nil)),
+			Attr: getters.FormBoostedGet(lariv.RoutePath("p_users.SelectRoute", nil)),
 
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},

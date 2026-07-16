@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/getters"
 )
 
 func currentVNodeTitle() getters.Getter[string] {
@@ -27,12 +27,12 @@ func currentVNodeBackRoute() getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		n, _ := getters.Key[VNode]("vnode")(ctx)
 		if n.ID == 0 {
-			return lago.RoutePath("filesystem.ListRoute", nil)(ctx)
+			return lariv.RoutePath("filesystem.ListRoute", nil)(ctx)
 		}
 		if n.ParentID == nil {
-			return lago.RoutePath("filesystem.ListRoute", nil)(ctx)
+			return lariv.RoutePath("filesystem.ListRoute", nil)(ctx)
 		}
-		return lago.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+		return lariv.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
 			"parent_id": getters.Any(getters.Static(*n.ParentID)),
 		})(ctx)
 	}
@@ -42,9 +42,9 @@ func listOrBrowseRoute(listRoute, browseRoute string) getters.Getter[string] {
 	return func(ctx context.Context) (string, error) {
 		n, _ := getters.Key[VNode]("vnode")(ctx)
 		if n.ID == 0 {
-			return lago.RoutePath(listRoute, nil)(ctx)
+			return lariv.RoutePath(listRoute, nil)(ctx)
 		}
-		return lago.RoutePath(browseRoute, map[string]getters.Getter[any]{
+		return lariv.RoutePath(browseRoute, map[string]getters.Getter[any]{
 			"parent_id": getters.Any(getters.Static(n.ID)),
 		})(ctx)
 	}
@@ -89,7 +89,7 @@ func selectionTargetInput(defaultName string) getters.Getter[string] {
 }
 
 func selectionBrowseRouteGetter(childRoute string) getters.Getter[string] {
-	return withSelectionTarget(lago.RoutePath(childRoute, map[string]getters.Getter[any]{
+	return withSelectionTarget(lariv.RoutePath(childRoute, map[string]getters.Getter[any]{
 		"parent_id": getters.Any(getters.Key[uint]("$row.ID")),
 	}))
 }
@@ -171,11 +171,11 @@ func rowOpenRoute() getters.Getter[string] {
 			return "", err
 		}
 		if isDirectory {
-			return lago.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+			return lariv.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
 				"parent_id": getters.Any(getters.Static(id)),
 			})(ctx)
 		}
-		return lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+		return lariv.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 			"id": getters.Any(getters.Static(id)),
 		})(ctx)
 	}

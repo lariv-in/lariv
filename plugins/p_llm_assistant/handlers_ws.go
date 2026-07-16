@@ -14,12 +14,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/plugins/p_google_genai"
-	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_filesystem"
+	"github.com/lariv-in/lariv/plugins/p_google_genai"
+	"github.com/lariv-in/lariv/plugins/p_users"
 	"golang.org/x/net/websocket"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
@@ -753,7 +753,7 @@ func assistantInlineBlobHTML(ctx context.Context, blob *genai.Blob) string {
 		if db, err := getters.DBFromContext(ctx); err == nil {
 			var vnode p_filesystem.VNode
 			if db.WithContext(ctx).Where("name = ?", blob.DisplayName).First(&vnode).Error == nil {
-				detailURLGetter := lago.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
+				detailURLGetter := lariv.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
 					"id": getters.Any(getters.Static(vnode.ID)),
 				})
 				detailURL, _ := detailURLGetter(ctx)

@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -71,7 +71,7 @@ func mapDisplayIDSuffix(pageKey string) string {
 // Example:
 //
 //	&components.MapDisplay{
-//	    DataURL: lago.RoutePath("vehicles.LiveCoordinates", nil),
+//	    DataURL: lariv.RoutePath("vehicles.LiveCoordinates", nil),
 //	    Classes: "w-full h-[600px]",
 //	}
 type MapDisplay struct {

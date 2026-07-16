@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -40,7 +40,7 @@ func (e FieldPhoto) Build(ctx context.Context) Node {
 		return nil
 	}
 
-	downloadURL, err := lago.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
+	downloadURL, err := lariv.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
 		"id": getters.Any(getters.Static(v.ID)),
 	})(ctx)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +25,7 @@ import (
 //	    Layers: []views.Layer{
 //	        views.LayerJsonImport[Product]{
 //	            FileField:  "import_file",
-//	            SuccessURL: lago.RoutePath("products.List", nil),
+//	            SuccessURL: lariv.RoutePath("products.List", nil),
 //	        },
 //	    },
 //	}

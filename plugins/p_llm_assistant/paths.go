@@ -3,75 +3,75 @@ package p_llm_assistant
 import (
 	"net/http"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/plugins/p_users"
 	"golang.org/x/net/websocket"
 )
 
 func init() {
-	registerPluginRoute("llm_assistant.DefaultRoute", lago.Route{
+	registerPluginRoute("llm_assistant.DefaultRoute", lariv.Route{
 		Path:    AppUrl,
-		Handler: lago.NewDynamicView("llm_assistant.ChatView"),
+		Handler: lariv.NewDynamicView("llm_assistant.ChatView"),
 	})
 
-	registerPluginRoute("llm_assistant.HistoryRoute", lago.Route{
+	registerPluginRoute("llm_assistant.HistoryRoute", lariv.Route{
 		Path:    AppUrl + "history/",
-		Handler: lago.NewDynamicView("llm_assistant.HistoryView"),
+		Handler: lariv.NewDynamicView("llm_assistant.HistoryView"),
 	})
 
-	registerPluginRoute("llm_assistant.ChatSessionRoute", lago.Route{
+	registerPluginRoute("llm_assistant.ChatSessionRoute", lariv.Route{
 		Path:    AppUrl + "c/{id}/",
-		Handler: lago.NewDynamicView("llm_assistant.ChatSessionView"),
+		Handler: lariv.NewDynamicView("llm_assistant.ChatSessionView"),
 	})
 
-	registerPluginRoute("llm_assistant.SidebarChatRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SidebarChatRoute", lariv.Route{
 		Path:    AppUrl + "sidebar-chat/{id}/",
-		Handler: lago.NewDynamicView("llm_assistant.SidebarChatView"),
+		Handler: lariv.NewDynamicView("llm_assistant.SidebarChatView"),
 	})
 
-	registerPluginRoute("llm_assistant.NewSessionRoute", lago.Route{
+	registerPluginRoute("llm_assistant.NewSessionRoute", lariv.Route{
 		Path:    AppUrl + "new-session/",
 		Handler: p_users.RequireAuth(http.HandlerFunc(handleNewSession)),
 	})
 
-	registerPluginRoute("llm_assistant.WSRoute", lago.Route{
+	registerPluginRoute("llm_assistant.WSRoute", lariv.Route{
 		Path: AppUrl + "ws/",
 		Handler: p_users.RequireAuth(websocket.Server{
 			Handler: assistantWebSocketConn,
 		}),
 	})
 
-	registerPluginRoute("llm_assistant.SkillsListRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SkillsListRoute", lariv.Route{
 		Path:    AppUrl + "skills/",
-		Handler: lago.NewDynamicView("llm_assistant.SkillsListView"),
+		Handler: lariv.NewDynamicView("llm_assistant.SkillsListView"),
 	})
 
-	registerPluginRoute("llm_assistant.SkillsCreateRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SkillsCreateRoute", lariv.Route{
 		Path:    AppUrl + "skills/create/",
-		Handler: lago.NewDynamicView("llm_assistant.SkillsCreateView"),
+		Handler: lariv.NewDynamicView("llm_assistant.SkillsCreateView"),
 	})
 
-	registerPluginRoute("llm_assistant.SkillsDetailRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SkillsDetailRoute", lariv.Route{
 		Path:    AppUrl + "skills/{id}/",
-		Handler: lago.NewDynamicView("llm_assistant.SkillsDetailView"),
+		Handler: lariv.NewDynamicView("llm_assistant.SkillsDetailView"),
 	})
 
-	registerPluginRoute("llm_assistant.SkillsUpdateRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SkillsUpdateRoute", lariv.Route{
 		Path:    AppUrl + "skills/{id}/update/",
-		Handler: lago.NewDynamicView("llm_assistant.SkillsUpdateView"),
+		Handler: lariv.NewDynamicView("llm_assistant.SkillsUpdateView"),
 	})
 
-	registerPluginRoute("llm_assistant.SkillsDeleteRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SkillsDeleteRoute", lariv.Route{
 		Path:    AppUrl + "skills/{id}/delete/",
-		Handler: lago.NewDynamicView("llm_assistant.SkillsDeleteView"),
+		Handler: lariv.NewDynamicView("llm_assistant.SkillsDeleteView"),
 	})
 
-	registerPluginRoute("llm_assistant.SkillsExportRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SkillsExportRoute", lariv.Route{
 		Path:    AppUrl + "skills/{id}/export/",
 		Handler: p_users.RequireAuth(http.HandlerFunc(handleSkillExport)),
 	})
 
-	registerPluginRoute("llm_assistant.SkillsImportRoute", lago.Route{
+	registerPluginRoute("llm_assistant.SkillsImportRoute", lariv.Route{
 		Path:    AppUrl + "skills/import/",
 		Handler: p_users.RequireAuth(http.HandlerFunc(handleSkillImportRoute)),
 	})

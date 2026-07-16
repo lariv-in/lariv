@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/fs"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 )
 

@@ -6,16 +6,16 @@ import (
 	"log/slog"
 	"net/mail"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
 
-func pluginCommandFactories() lago.PluginFeatures[lago.CommandFactory] {
-	return lago.PluginFeatures[lago.CommandFactory]{
-		Entries: []registry.Pair[string, lago.CommandFactory]{
+func pluginCommandFactories() lariv.PluginFeatures[lariv.CommandFactory] {
+	return lariv.PluginFeatures[lariv.CommandFactory]{
+		Entries: []registry.Pair[string, lariv.CommandFactory]{
 			{Key: "p_users.createsuperuser", Value: createSuperuserCommand},
 			{Key: "p_users.changepassword", Value: changePasswordCommand},
 			{Key: "p_users.revalidate_users", Value: revalidateUsersCommand},
@@ -23,12 +23,12 @@ func pluginCommandFactories() lago.PluginFeatures[lago.CommandFactory] {
 	}
 }
 
-func createSuperuserCommand(config lago.LagoConfig) *cobra.Command {
+func createSuperuserCommand(config lariv.LarivConfig) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "createsuperuser",
 		Short: "Create a superuser account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := lago.GetDbConn(config)
+			db, err := lariv.GetDbConn(config)
 			if err != nil {
 				return err
 			}
@@ -73,12 +73,12 @@ func createSuperuserCommand(config lago.LagoConfig) *cobra.Command {
 	return cmd
 }
 
-func changePasswordCommand(config lago.LagoConfig) *cobra.Command {
+func changePasswordCommand(config lariv.LarivConfig) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "changepassword",
 		Short: "Change a user's password by email",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := lago.GetDbConn(config)
+			db, err := lariv.GetDbConn(config)
 			if err != nil {
 				return err
 			}
@@ -109,12 +109,12 @@ func changePasswordCommand(config lago.LagoConfig) *cobra.Command {
 	return cmd
 }
 
-func revalidateUsersCommand(config lago.LagoConfig) *cobra.Command {
+func revalidateUsersCommand(config lariv.LarivConfig) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revalidate_users",
 		Short: "Re-parse and normalize all user email and phone fields",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			db, err := lago.GetDbConn(config)
+			db, err := lariv.GetDbConn(config)
 			if err != nil {
 				return err
 			}

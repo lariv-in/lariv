@@ -8,11 +8,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_users"
-	"github.com/lariv-in/lago/registry"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_users"
+	"github.com/lariv-in/lariv/registry"
+	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +21,7 @@ func redirectToRoute(w http.ResponseWriter, r *http.Request, routeKey string, ar
 	if len(args) > 0 {
 		routeArgs = args[0]
 	}
-	urlValue, err := getters.IfOr(lago.RoutePath(routeKey, routeArgs), r.Context(), "")
+	urlValue, err := getters.IfOr(lariv.RoutePath(routeKey, routeArgs), r.Context(), "")
 	if err != nil || urlValue == "" {
 		http.NotFound(w, r)
 		return false
@@ -69,7 +69,7 @@ func phoneOtpRequestHandler(v *views.View) http.Handler {
 			} else if count == 0 {
 				fieldErrors["Identifier"] = fmt.Errorf("no user found with this phone number")
 			} else if SendSmsOtp(db, identifier) {
-				verifyPath, _ := getters.IfOr(lago.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
+				verifyPath, _ := getters.IfOr(lariv.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 				views.HtmxRedirect(w, r, verifyPath+"?identifier="+url.QueryEscape(identifier), http.StatusMovedPermanently)
 				return
 			} else {
@@ -122,7 +122,7 @@ func emailOtpRequestHandler(v *views.View) http.Handler {
 			} else if count == 0 {
 				fieldErrors["Identifier"] = fmt.Errorf("no user found with this email")
 			} else if SendEmailOtp(db, identifier) {
-				verifyPath, _ := getters.IfOr(lago.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
+				verifyPath, _ := getters.IfOr(lariv.RoutePath("otp.OtpVerifyRoute", nil), r.Context(), "")
 				views.HtmxRedirect(w, r, verifyPath+"?identifier="+url.QueryEscape(identifier), http.StatusMovedPermanently)
 				return
 			} else {
@@ -233,16 +233,16 @@ func otpVerifyHandler(v *views.View) http.Handler {
 	})
 }
 
-func pluginViews() lago.PluginFeatures[*views.View] {
-	return lago.PluginFeatures[*views.View]{
+func pluginViews() lariv.PluginFeatures[*views.View] {
+	return lariv.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
 			{
 				Key:   "otp.ForgotPasswordView",
-				Value: lago.GetPageView("otp.ForgotPasswordPage"),
+				Value: lariv.GetPageView("otp.ForgotPasswordPage"),
 			},
 			{
 				Key: "otp.PhoneOtpRequestView",
-				Value: lago.GetPageView("otp.PhoneOtpRequestForm").
+				Value: lariv.GetPageView("otp.PhoneOtpRequestForm").
 					WithLayer("p_users.optional_auth", p_users.OptionalAuthLayer{}).
 					WithLayer("otp.phone_get", views.MethodLayer{
 						Method:  http.MethodGet,
@@ -255,7 +255,7 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "otp.EmailOtpRequestView",
-				Value: lago.GetPageView("otp.EmailOtpRequestForm").
+				Value: lariv.GetPageView("otp.EmailOtpRequestForm").
 					WithLayer("p_users.optional_auth", p_users.OptionalAuthLayer{}).
 					WithLayer("otp.email_get", views.MethodLayer{
 						Method:  http.MethodGet,
@@ -268,7 +268,7 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "otp.OtpVerifyView",
-				Value: lago.GetPageView("otp.OtpVerifyForm").
+				Value: lariv.GetPageView("otp.OtpVerifyForm").
 					WithLayer("p_users.optional_auth", p_users.OptionalAuthLayer{}).
 					WithLayer("otp.verify_get", views.MethodLayer{
 						Method:  http.MethodGet,
@@ -281,11 +281,11 @@ func pluginViews() lago.PluginFeatures[*views.View] {
 			},
 			{
 				Key: "otp.OTPPreferencesView",
-				Value: lago.GetPageView("otp.OTPPreferencesForm").
+				Value: lariv.GetPageView("otp.OTPPreferencesForm").
 					WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 					WithLayer("p_users.role", p_users.RoleAuthorizationLayer{Roles: []string{"superuser"}}).
 					WithLayer("otp.preferences", views.LayerSingleton[OTPPreferences]{
-						SuccessURL: lago.RoutePath("otp.OTPPreferencesRoute", nil),
+						SuccessURL: lariv.RoutePath("otp.OTPPreferencesRoute", nil),
 					}),
 			},
 		},

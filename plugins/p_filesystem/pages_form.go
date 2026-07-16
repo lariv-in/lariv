@@ -3,10 +3,10 @@ package p_filesystem
 import (
 	"context"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
@@ -36,7 +36,7 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: getters.Static("filesystem.VNodeUpdateForm"),
-					ActionURL: lago.RoutePath("filesystem.UpdateRoute", map[string]getters.Getter[any]{
+					ActionURL: lariv.RoutePath("filesystem.UpdateRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("vnode.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -83,10 +83,10 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 													Label: "Delete",
 													Icon:  "trash",
 													Name:  getters.Static("filesystem.VNodeDeleteForm"),
-													Url: lago.RoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
+													Url: lariv.RoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("vnode.ID")),
 													}),
-													FormPostURL: lago.RoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
+													FormPostURL: lariv.RoutePath("filesystem.DeleteRoute", map[string]getters.Getter[any]{
 														"id": getters.Any(getters.Key[uint]("vnode.ID")),
 													}),
 													ModalUID: "filesystem-vnode-delete-modal",
@@ -107,7 +107,7 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name: getters.Static("filesystem.VNodeMoveForm"),
-					ActionURL: lago.RoutePath("filesystem.MoveRoute", map[string]getters.Getter[any]{
+					ActionURL: lariv.RoutePath("filesystem.MoveRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("vnode.ID")),
 					}),
 					Children: []components.PageInterface{
@@ -125,7 +125,7 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 											Label:       "Destination Directory",
 											Name:        "DestinationID",
 											Getter:      parentOfCurrentVNodeGetter(),
-											Url:         lago.RoutePath("filesystem.MoveSelectRoute", nil),
+											Url:         lariv.RoutePath("filesystem.MoveSelectRoute", nil),
 											Display:     getters.Key[string]("$in.Name"),
 											Placeholder: "Root (move to top level)",
 										},

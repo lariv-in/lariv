@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
 )
 
 // LayerTableToggleColumns parses a URL query parameter carrying a list of active columns,

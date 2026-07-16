@@ -4,27 +4,27 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
 const AppUrl = "/llm-assistant/"
 
-func GetPlugin() registry.Pair[string, lago.Plugin] {
+func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppUrl)
 	if err != nil {
 		log.Panic(err)
 	}
-	p := lago.Plugin{
-		Type:        lago.PluginTypeApp,
+	p := lariv.Plugin{
+		Type:        lariv.PluginTypeApp,
 		Icon:        "sparkles",
 		URL:         u,
 		VerboseName: "Assistant",
-		Pages:       lago.PluginStages(pluginPages),
-		Views:       lago.PluginStages(pluginViews),
-		Routes:      lago.PluginStages(pluginRoutes),
-		Configs:     lago.PluginStages(pluginConfigs),
-		DBInitHooks: lago.PluginStages(pluginDBInitHooks),
+		Pages:       lariv.PluginStages(pluginPages),
+		Views:       lariv.PluginStages(pluginViews),
+		Routes:      lariv.PluginStages(pluginRoutes),
+		Configs:     lariv.PluginStages(pluginConfigs),
+		DBInitHooks: lariv.PluginStages(pluginDBInitHooks),
 	}
-	return registry.Pair[string, lago.Plugin]{Key: "p_llm_assistant", Value: p}
+	return registry.Pair[string, lariv.Plugin]{Key: "p_llm_assistant", Value: p}
 }

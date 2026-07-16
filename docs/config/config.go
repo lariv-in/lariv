@@ -1,17 +1,17 @@
-// Package config contains explanations and code examples for plugin configurations in Lago.
+// Package config contains explanations and code examples for plugin configurations in Lariv.
 //
 // # Plugin Configurations (config.go)
 //
 // Plugins can define their own configuration structs that map directly from settings in the main config.toml file.
-// The configuration struct must implement the lago.Config interface.
+// The configuration struct must implement the lariv.Config interface.
 //
 // # Example Config Definition
 //
 //	package myplugin
 //
 //	import (
-//		"github.com/lariv-in/lago"
-//		"github.com/lariv-in/lago/registry"
+//		"github.com/lariv-in/lariv"
+//		"github.com/lariv-in/lariv/registry"
 //	)
 //
 //	type MyPluginConfig struct {
@@ -29,16 +29,16 @@
 //
 //	var PluginConfig = &MyPluginConfig{}
 //
-//	func pluginConfigs() lago.PluginFeatures[lago.Config] {
-//		return lago.PluginFeatures[lago.Config]{
-//			Entries: []registry.Pair[string, lago.Config]{
+//	func pluginConfigs() lariv.PluginFeatures[lariv.Config] {
+//		return lariv.PluginFeatures[lariv.Config]{
+//			Entries: []registry.Pair[string, lariv.Config]{
 //				{Key: "myplugin", Value: PluginConfig},
 //			},
 //		}
 //	}
 //
-//	// Registering inside lago.Plugin
-//	lago.Plugin{
-//		Configs: lago.PluginStages(pluginConfigs),
+//	// Registering inside lariv.Plugin
+//	lariv.Plugin{
+//		Configs: lariv.PluginStages(pluginConfigs),
 //	}
 package config

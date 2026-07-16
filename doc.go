@@ -1,4 +1,4 @@
-// Package lago is the application kernel: configuration loading, HTTP server wiring,
+// Package lariv is the application kernel: configuration loading, HTTP server wiring,
 // and aggregated plugin registries (pages, views, routes, models, migrations, etc.).
 //
 // # Core Plugin Registrations
@@ -41,20 +41,20 @@
 //
 // Registered under:
 //
-//   - "core.HomeRoute" -> lago.Route
+//   - "core.HomeRoute" -> lariv.Route
 //     Maps the root path ("/") to render standard text content or the home page view.
 //
 // # Bundled Plugins
 //
 // The framework includes a collection of bundled plugins supporting standard app capabilities:
 //
-//   - Users & Auth: See [github.com/lariv-in/lago/plugins/p_users] for user management and role controls.
-//   - Dashboard: See [github.com/lariv-in/lago/plugins/p_dashboard] for the centralized launchpad portal.
-//   - XLSX Export: See [github.com/lariv-in/lago/plugins/p_export] for spreadsheet export features.
-//   - Filesystem: See [github.com/lariv-in/lago/plugins/p_filesystem] for local/GCS virtual filesystem drives.
-//   - Google GenAI: See [github.com/lariv-in/lago/plugins/p_google_genai] for Gemini AI client loaders.
-//   - Live Reload: See [github.com/lariv-in/lago/plugins/p_livereloading] for hot browser refreshes.
-//   - LLM Assistant: See [github.com/lariv-in/lago/plugins/p_llm_assistant] for interactive AI chat prompts.
-//   - OTP Recovery: See [github.com/lariv-in/lago/plugins/p_otp] for SMS/email one-time password recovery.
-//   - PWA Support: See [github.com/lariv-in/lago/plugins/p_pwa] for Progressive Web App capabilities.
-package lago
+//   - Users & Auth: See [github.com/lariv-in/lariv/plugins/p_users] for user management and role controls.
+//   - Dashboard: See [github.com/lariv-in/lariv/plugins/p_dashboard] for the centralized launchpad portal.
+//   - XLSX Export: See [github.com/lariv-in/lariv/plugins/p_export] for spreadsheet export features.
+//   - Filesystem: See [github.com/lariv-in/lariv/plugins/p_filesystem] for local/GCS virtual filesystem drives.
+//   - Google GenAI: See [github.com/lariv-in/lariv/plugins/p_google_genai] for Gemini AI client loaders.
+//   - Live Reload: See [github.com/lariv-in/lariv/plugins/p_livereloading] for hot browser refreshes.
+//   - LLM Assistant: See [github.com/lariv-in/lariv/plugins/p_llm_assistant] for interactive AI chat prompts.
+//   - OTP Recovery: See [github.com/lariv-in/lariv/plugins/p_otp] for SMS/email one-time password recovery.
+//   - PWA Support: See [github.com/lariv-in/lariv/plugins/p_pwa] for Progressive Web App capabilities.
+package lariv

@@ -1,14 +1,14 @@
 // WARNING: This file is currently a Work in Progress (WIP). The structures, helper functions,
 // and methods defined in this file are unstable and should NOT be used in active application setups.
 
-package lago
+package lariv
 
 import (
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"

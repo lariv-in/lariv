@@ -12,9 +12,9 @@
 //
 // # Routes
 //
-//   - "export.PageRoute" -> lago.Route
+//   - "export.PageRoute" -> lariv.Route
 //     Maps "/export/" to resolve catalog loading and selection rendering.
-//   - "export.DownloadRoute" -> lago.Route
+//   - "export.DownloadRoute" -> lariv.Route
 //     Maps "/export/download/" to process dynamic download actions.
 //
 // # Views

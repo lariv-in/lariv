@@ -6,16 +6,16 @@ import (
 	"fmt"
 	neturl "net/url"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 // ButtonModalForm is like [ButtonModal] but registers a local listener for bubbling
-// "lago-form-submit" from [getters.FormBubbling]. Only events whose form sits in
+// "lariv-form-submit" from [getters.FormBubbling]. Only events whose form sits in
 // dialog.modal with id [ModalUID] are handled. The form is POSTed to [FormPostURL].
 // On HTTP redirect (see [views.HtmxRedirect] without HX-Request: normal 3xx + Location),
-// the dialog is removed, "lago:modal-closed" is dispatched, and the browser navigates.
+// the dialog is removed, "lariv:modal-closed" is dispatched, and the browser navigates.
 // On 2xx success without redirect, the dialog is closed. On other statuses (e.g. 422),
 // the dialog is replaced by the response body HTML.
 // The POST URL always carries a "name" query param (same as Name) so the request URL query
@@ -92,7 +92,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		return ContainerError{Error: getters.Static(err)}.Build(ctx)
 	}
 
-	// Alpine @lago-form-submit: POST the bubbling form via htmx.ajax, then close or swap the dialog.
+	// Alpine @lariv-form-submit: POST the bubbling form via htmx.ajax, then close or swap the dialog.
 	// %s/%s are JSON string literals for modal id and POST URL (see json.Marshal above).
 	script := fmt.Sprintf(
 		`(function(evt){
@@ -102,18 +102,18 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
   var m = f.closest('dialog.modal');
   if (!m || m.id !== %s) return;
   evt.stopPropagation();
-  if (f.dataset.lagoPostPending) return;
-  f.dataset.lagoPostPending = '1';
-  var u = (f.getAttribute('data-lago-post-url')||'').trim();
+  if (f.dataset.larivPostPending) return;
+  f.dataset.larivPostPending = '1';
+  var u = (f.getAttribute('data-lariv-post-url')||'').trim();
   if (!u) { u = %s; }
   var body = document.body;
   function closeModal(x) {
-    document.dispatchEvent(new CustomEvent('lago:modal-closed', { bubbles: true, detail: Object.assign({ dialog: m }, x) }));
+    document.dispatchEvent(new CustomEvent('lariv:modal-closed', { bubbles: true, detail: Object.assign({ dialog: m }, x) }));
     m.remove();
   }
   var cleanup = function () {
     body.removeEventListener('htmx:beforeSwap', onBeforeSwap);
-    delete f.dataset.lagoPostPending;
+    delete f.dataset.larivPostPending;
   };
   var onBeforeSwap = function (e) {
     var detail = e.detail || {};
@@ -183,7 +183,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 
 	return Div(
 		Class("fk-modal-host"),
-		Attr("@lago-form-submit.window.stop", script),
+		Attr("@lariv-form-submit.window.stop", script),
 		Button(Group(buttonAttrs)),
 	)
 }

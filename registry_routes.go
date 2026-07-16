@@ -1,14 +1,15 @@
-package lago
+package lariv
 
 import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/http/pprof"
+	pprof_http "net/http/pprof"
+	"runtime/pprof"
 	"strings"
 
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 // RegistryRoute represents the global immutable registry tracking route mappings.
@@ -37,9 +38,9 @@ var RegistryRoute *registry.ImmutableRegistry[Route] = &registry.ImmutableRegist
 //
 // Example Registration:
 //
-//	// In your lago.Plugin setup:
-//	lago.Plugin{
-//		Routes: lago.PluginStages(func() PluginFeatures[Route] {
+//	// In your lariv.Plugin setup:
+//	lariv.Plugin{
+//		Routes: lariv.PluginStages(func() PluginFeatures[Route] {
 //			return PluginFeatures[Route]{
 //				Entries: []registry.Pair[string, Route]{
 //					registry.NewPair("user.profile", ProfileRoute),
@@ -51,8 +52,8 @@ var RegistryRoute *registry.ImmutableRegistry[Route] = &registry.ImmutableRegist
 // Example Patch:
 //
 //	// Register a patch to prefix or redirect routes from another plugin:
-//	lago.Plugin{
-//		Routes: lago.PluginStages(func() PluginFeatures[Route] {
+//	lariv.Plugin{
+//		Routes: lariv.PluginStages(func() PluginFeatures[Route] {
 //			return PluginFeatures[Route]{
 //				Patches: []registry.Pair[string, func(Route) Route]{
 //					registry.NewPair("user.profile", func(existing Route) Route {
@@ -78,10 +79,25 @@ type Route struct {
 
 // GetRouter initializes and returns the ServeMux router populated with all registered routes.
 // It maps path endings to specific ServeMux rules and registers pprof handlers under debug environments.
-func GetRouter(config LagoConfig) *http.ServeMux {
+func GetRouter(config LarivConfig) *http.ServeMux {
 	baseRouter := http.NewServeMux()
 	if config.Debug {
-		baseRouter.Handle("/pprof/", pprof.Handler("heap"))
+		baseRouter.HandleFunc("/pprof/", pprof_http.Index)
+		fmt.Printf("Added debug route for profile index at /pprof/\n")
+		baseRouter.HandleFunc("/pprof/cmdline/", pprof_http.Cmdline)
+		fmt.Printf("Added debug route for profile cmdline index at /pprof/cmdline/\n")
+		baseRouter.HandleFunc("/pprof/profile/", pprof_http.Profile)
+		fmt.Printf("Added debug route for profile 'profile' index at /pprof/profile/\n")
+		baseRouter.HandleFunc("/pprof/symbol/", pprof_http.Symbol)
+		fmt.Printf("Added debug route for profile symbol index at /pprof/symbol/\n")
+		baseRouter.HandleFunc("/pprof/trace/", pprof_http.Trace)
+		fmt.Printf("Added debug route for profile trace index at /pprof/trace/\n")
+		for _, profile := range pprof.Profiles() {
+			profile_name := profile.Name()
+			profile_route := fmt.Sprintf("/pprof/%s/", profile_name)
+			baseRouter.Handle(profile_route, pprof_http.Handler(profile.Name()))
+			fmt.Printf("Added debug route for profile %s at %s\n", profile_name, profile_route)
+		}
 	}
 	routes := RegistryRoute.All()
 	for _, route := range routes {

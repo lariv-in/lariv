@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
 )
 
 func assistantHistoryRowLabel(ctx context.Context) (string, error) {
@@ -32,7 +32,7 @@ func registerAssistantHistoryPage() {
 	registerPluginPage("llm_assistant.HistoryPage", &components.ShellScaffold{
 		Page: components.Page{Key: "llm_assistant.HistoryPage"},
 		Sidebar: []components.PageInterface{
-			lago.DynamicPage{Name: "llm_assistant.AssistantMenu"},
+			lariv.DynamicPage{Name: "llm_assistant.AssistantMenu"},
 		},
 		Children: []components.PageInterface{
 			&components.DataTable[LlmAssistantSession]{
@@ -41,7 +41,7 @@ func registerAssistantHistoryPage() {
 				Classes: "w-full",
 				Data:    getters.Key[components.ObjectList[LlmAssistantSession]]("assistantSessions"),
 				RowAttr: getters.RowAttrNavigate(
-					lago.RoutePath("llm_assistant.ChatSessionRoute", map[string]getters.Getter[any]{
+					lariv.RoutePath("llm_assistant.ChatSessionRoute", map[string]getters.Getter[any]{
 						"id": getters.Any(getters.Key[uint]("$row.ID")),
 					}),
 				),

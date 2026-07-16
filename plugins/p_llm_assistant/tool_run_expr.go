@@ -8,9 +8,9 @@ import (
 
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/builtin"
-	"github.com/lariv-in/lago/plugins/p_filesystem"
-	"github.com/lariv-in/lago/plugins/p_google_genai"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/plugins/p_filesystem"
+	"github.com/lariv-in/lariv/plugins/p_google_genai"
+	"github.com/lariv-in/lariv/registry"
 	"google.golang.org/genai"
 	"gorm.io/gorm"
 )

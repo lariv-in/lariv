@@ -1,12 +1,12 @@
 package p_filesystem
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/registry"
 )
 
-func pluginPages() lago.PluginFeatures[components.PageInterface] {
+func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 	var entries []registry.Pair[string, components.PageInterface]
 	entries = append(entries, pageEntriesMenus()...)
 	entries = append(entries, pageEntriesFilters()...)
@@ -14,5 +14,5 @@ func pluginPages() lago.PluginFeatures[components.PageInterface] {
 	entries = append(entries, pageEntriesDetail()...)
 	entries = append(entries, pageEntriesForms()...)
 	entries = append(entries, pageEntriesSelection()...)
-	return lago.PluginFeatures[components.PageInterface]{Entries: entries}
+	return lariv.PluginFeatures[components.PageInterface]{Entries: entries}
 }

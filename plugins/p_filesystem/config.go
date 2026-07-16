@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
 type StorageBackend string
@@ -22,7 +22,7 @@ type FilesystemConfig struct {
 	GCSBucket string `toml:"gcsBucket"`
 	// GCS: path to service account JSON key file. Empty uses Application Default Credentials.
 	GCSCredentialsFile string `toml:"gcsCredentialsFile"`
-	// GCS: object key prefix (default "lago/"). Normalized to end with "/".
+	// GCS: object key prefix (default "lariv/"). Normalized to end with "/".
 	GCSPrefix string `toml:"gcsPrefix"`
 }
 
@@ -49,9 +49,9 @@ func (c *FilesystemConfig) PostConfig() {
 	}
 }
 
-func pluginConfigs() lago.PluginFeatures[lago.Config] {
-	return lago.PluginFeatures[lago.Config]{
-		Entries: []registry.Pair[string, lago.Config]{
+func pluginConfigs() lariv.PluginFeatures[lariv.Config] {
+	return lariv.PluginFeatures[lariv.Config]{
+		Entries: []registry.Pair[string, lariv.Config]{
 			{Key: "p_filesystem", Value: Config},
 		},
 	}

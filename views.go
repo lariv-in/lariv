@@ -1,8 +1,8 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/views"
 )
 
 // GetPageView initializes and returns a standard view controller wrapper [views.View] that resolves and renders page layouts from the global [RegistryPage].
@@ -12,7 +12,7 @@ import (
 //
 // Example:
 //
-//	var DashboardHomeView = lago.GetPageView("dashboard.home")
+//	var DashboardHomeView = lariv.GetPageView("dashboard.home")
 func GetPageView(pageName string) *views.View {
 	return &views.View{
 		PageName: pageName,

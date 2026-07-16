@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )

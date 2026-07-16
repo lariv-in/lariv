@@ -3,16 +3,16 @@ package p_users
 import (
 	"embed"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 )
 
 //go:embed migrations
 var migrationsFS embed.FS
 
-func pluginMigrations() lago.PluginFeatures[lago.UsefulFilesystem] {
-	return lago.PluginFeatures[lago.UsefulFilesystem]{
-		Entries: []registry.Pair[string, lago.UsefulFilesystem]{
+func pluginMigrations() lariv.PluginFeatures[lariv.UsefulFilesystem] {
+	return lariv.PluginFeatures[lariv.UsefulFilesystem]{
+		Entries: []registry.Pair[string, lariv.UsefulFilesystem]{
 			{Key: "p_users.migrations", Value: migrationsFS},
 		},
 	}

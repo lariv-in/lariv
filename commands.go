@@ -1,11 +1,11 @@
-package lago
+package lariv
 
 import (
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 	"github.com/spf13/cobra"
 )
 
-// Start initializes and executes the Cobra CLI application, acting as the main entrypoint for any Lago application.
+// Start initializes and executes the Cobra CLI application, acting as the main entrypoint for any Lariv application.
 //
 // CLI Command Scopes:
 //   - Root Command: Starts the HTTP web server via [StartServer].
@@ -21,22 +21,22 @@ import (
 // Example:
 //
 //	func main() {
-//		config := lago.LagoConfig{
-//			DBType:  lago.DBTypePostgres,
+//		config := lariv.LarivConfig{
+//			DBType:  lariv.DBTypePostgres,
 //			Address: ":8080",
 //		}
-//		plugins := []registry.Pair[string, lago.Plugin]{
+//		plugins := []registry.Pair[string, lariv.Plugin]{
 //			p_dashboard.GetPlugin(),
 //		}
-//		if err := lago.Start(config, plugins); err != nil {
+//		if err := lariv.Start(config, plugins); err != nil {
 //			log.Fatal(err)
 //		}
 //	}
-func Start(config LagoConfig, plugins []registry.Pair[string, Plugin]) error {
+func Start(config LarivConfig, plugins []registry.Pair[string, Plugin]) error {
 	_ = plugins
 	rootCmd := &cobra.Command{
-		Use:   "lago",
-		Short: "Lago web framework",
+		Use:   "lariv",
+		Short: "Lariv web framework",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return StartServer(config)
 		},

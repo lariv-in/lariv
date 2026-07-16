@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
@@ -20,7 +20,7 @@ import (
 // Example:
 //
 //	&components.FieldLink{
-//	    Href:    lago.RoutePath("users.UserDetail", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.UserID"))}),
+//	    Href:    lariv.RoutePath("users.UserDetail", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$in.UserID"))}),
 //	    Label:   getters.Key[string]("$in.User.Name"),
 //	    Classes: "link link-primary",
 //	}

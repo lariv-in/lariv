@@ -1,11 +1,11 @@
 package p_otp
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_users"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_users"
+	"github.com/lariv-in/lariv/registry"
 )
 
 const otpForgotPasswordLoginLinkKey = "otp.LoginForgotPasswordLink"
@@ -35,7 +35,7 @@ func patchUsersLoginPageWithOtpForgotLink(page components.PageInterface) compone
 	forgot := &components.ButtonLink{
 		Page:  components.Page{Key: otpForgotPasswordLoginLinkKey},
 		Label: getters.Static("Forgot password?"),
-		Link:  lago.RoutePath("otp.ForgotPasswordRoute", nil),
+		Link:  lariv.RoutePath("otp.ForgotPasswordRoute", nil),
 	}
 
 	newPost := *formPost
@@ -60,14 +60,14 @@ func otpForgotPasswordLinkPresent(root components.ParentInterface) bool {
 	return false
 }
 
-func pluginPages() lago.PluginFeatures[components.PageInterface] {
+func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 	auth := pageEntriesOtpAuth()
 	prefs := pageEntriesOtpPreferences()
 	entries := make([]registry.Pair[string, components.PageInterface], 0, len(auth)+len(prefs))
 	entries = append(entries, auth...)
 	entries = append(entries, prefs...)
 
-	return lago.PluginFeatures[components.PageInterface]{
+	return lariv.PluginFeatures[components.PageInterface]{
 		Entries: entries,
 		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
 			{Key: "p_users.LoginPage", Value: patchUsersLoginPageWithOtpForgotLink},

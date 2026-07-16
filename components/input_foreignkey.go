@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"gorm.io/gorm"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
@@ -31,7 +31,7 @@ import (
 //	    Name:        "department_id",
 //	    Getter:      getters.Key[Department]("$in.Department"),
 //	    Display:     getters.Key[string]("$in.Name"),
-//	    Url:         lago.RoutePath("departments.SelectModal", nil),
+//	    Url:         lariv.RoutePath("departments.SelectModal", nil),
 //	}
 type InputForeignKey[T any] struct {
 	// Page embeds common component properties like Key and Roles.

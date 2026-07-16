@@ -1,7 +1,7 @@
 package p_export
 
-import "github.com/lariv-in/lago"
+import "github.com/lariv-in/lariv"
 
-func pluginStages[T any](stage func() lago.PluginFeatures[T]) []func() lago.PluginFeatures[T] {
-	return []func() lago.PluginFeatures[T]{stage}
+func pluginStages[T any](stage func() lariv.PluginFeatures[T]) []func() lariv.PluginFeatures[T] {
+	return []func() lariv.PluginFeatures[T]{stage}
 }

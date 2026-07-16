@@ -8,7 +8,7 @@ import (
 )
 
 // LayoutCard represents a page layout wrapper component designed to center its children inside a standalone card element.
-// Layout components are special structural nodes in Lago; they establish the main page-level grid or shell wrapper,
+// Layout components are special structural nodes in Lariv; they establish the main page-level grid or shell wrapper,
 // framing child page components inside clean canvas containers (in this case, a centered card overlay on base-200 background).
 // It also integrates a global loading progress indicator (#global-loading-indicator) pinned at the top.
 //

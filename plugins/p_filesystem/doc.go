@@ -1,4 +1,4 @@
-// Package p_filesystem implements a virtual node (VNode) database filesystem for the Lago framework.
+// Package p_filesystem implements a virtual node (VNode) database filesystem for the Lariv framework.
 // It integrates abstract storage backends (local directory storage or Google Cloud Storage) with database VNode entities
 // to handle file uploads, downloads, folders hierarchies, and image displays.
 //

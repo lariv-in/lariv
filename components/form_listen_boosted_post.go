@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv/getters"
 	"maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 // FormListenBoostedPost represents a parent container that listens for bubbled form submission events and posts them via HTMX.
-// It intercepts "lago-form-submit" Alpine.js custom events from child components (specifically those configured with [getters.FormBubbling] on [FormComponent].Attr).
+// It intercepts "lariv-form-submit" Alpine.js custom events from child components (specifically those configured with [getters.FormBubbling] on [FormComponent].Attr).
 // When triggered, it initiates a POST request using `htmx.ajax` with `HX-Boosted: true`, swapping the entire body `outerHTML` for full-page flows.
 // It features double-submit protection by ignoring new click events while a POST request is in flight.
 //
@@ -23,7 +23,7 @@ import (
 //
 //	&components.FormListenBoostedPost{
 //	    Name:      getters.Static("createUserForm"),
-//	    ActionURL: lago.RoutePath("admin.UserCreate", nil),
+//	    ActionURL: lariv.RoutePath("admin.UserCreate", nil),
 //	    Children: []components.PageInterface{
 //	        &components.FormComponent[User]{
 //	            Attr: getters.FormBubbling(),
@@ -113,8 +113,8 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
   }
   if (targetPath !== '' && formPath !== '' && targetPath !== formPath) return;
   evt.stopPropagation();
-  if (f.dataset.lagoPostPending) return;
-  f.dataset.lagoPostPending = '1';
+  if (f.dataset.larivPostPending) return;
+  f.dataset.larivPostPending = '1';
   htmx.ajax('POST', u, {
     source: f,
     target: 'body',
@@ -122,7 +122,7 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
     values: htmx.values(f),
     headers: { 'HX-Boosted': 'true' },
   }).finally(function () {
-    delete f.dataset.lagoPostPending;
+    delete f.dataset.larivPostPending;
   });
 })($event)`,
 		nameLit,
@@ -134,7 +134,7 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 	}
 	return Div(
 		Class("contents"),
-		gomponents.Attr("@lago-form-submit", expr),
+		gomponents.Attr("@lariv-form-submit", expr),
 		gomponents.Group(childNodes),
 	)
 }

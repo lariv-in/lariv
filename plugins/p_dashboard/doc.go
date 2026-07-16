@@ -1,4 +1,4 @@
-// Package p_dashboard implements the central launchpad, top bar navigation buttons, and theme toggling for the Lago application portal.
+// Package p_dashboard implements the central launchpad, top bar navigation buttons, and theme toggling for the Lariv application portal.
 //
 // # Registrations and Features Added
 //
@@ -22,7 +22,7 @@
 //
 // # Routes
 //
-//   - "dashboard.AppsPage" -> lago.Route
+//   - "dashboard.AppsPage" -> lariv.Route
 //     Maps the "/dashboard/" path to resolve dashboard view layout actions.
 //
 // # Views

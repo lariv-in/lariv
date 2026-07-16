@@ -53,7 +53,7 @@ func NewGCSFilestore(ctx context.Context, bucketName, credentialsFile, prefix st
 func normalizeGCSPrefix(p string) string {
 	p = strings.TrimSpace(p)
 	if p == "" {
-		return "lago/"
+		return "lariv/"
 	}
 	p = strings.TrimPrefix(p, "/")
 	if !strings.HasSuffix(p, "/") {

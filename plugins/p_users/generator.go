@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 
@@ -147,11 +147,11 @@ func CreateOverallSuperuser(db *gorm.DB) (*User, error) {
 	return &user, nil
 }
 
-func pluginGenerators() lago.PluginFeatures[lago.Generator] {
-	return lago.PluginFeatures[lago.Generator]{
-		Entries: []registry.Pair[string, lago.Generator]{{
+func pluginGenerators() lariv.PluginFeatures[lariv.Generator] {
+	return lariv.PluginFeatures[lariv.Generator]{
+		Entries: []registry.Pair[string, lariv.Generator]{{
 			Key: "p_users.Generator",
-			Value: lago.Generator{
+			Value: lariv.Generator{
 				Create: func(db *gorm.DB) error {
 					_, err := CreateOverallSuperuser(db)
 					return err

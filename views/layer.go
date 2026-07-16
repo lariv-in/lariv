@@ -19,7 +19,7 @@ import (
 //
 //	func (l HeaderInjectorLayer) Next(view views.View, next http.Handler) http.Handler {
 //		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//			w.Header().Set("X-Custom-View-Header", "Lago")
+//			w.Header().Set("X-Custom-View-Header", "Lariv")
 //			next.ServeHTTP(w, r)
 //		})
 //	}
@@ -46,7 +46,7 @@ func requestQueryMap(r *http.Request) map[string]any {
 
 // AttachRequestLayer injects the *http.Request context as "$request", the raw query parameter map as "$get",
 // and the current Unix microseconds timestamp as "$timestamp".
-// It is registered globally inside lago.StartServer.
+// It is registered globally inside lariv.StartServer.
 type AttachRequestLayer struct{}
 
 // Next executes the request wrapping functionality injecting standard context values.

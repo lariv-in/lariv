@@ -6,17 +6,17 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/plugins/p_users"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/plugins/p_users"
 	. "maragu.dev/gomponents"
 	. "maragu.dev/gomponents/html"
 )
 
 type AppsGrid struct {
 	components.Page
-	Apps getters.Getter[[]lago.Plugin]
+	Apps getters.Getter[[]lariv.Plugin]
 }
 
 func (e AppsGrid) GetKey() string {
@@ -28,7 +28,7 @@ func (e AppsGrid) GetRoles() []string {
 }
 
 func (e AppsGrid) Build(ctx context.Context) Node {
-	var apps []lago.Plugin
+	var apps []lariv.Plugin
 	if e.Apps != nil {
 		if appsVal, err := e.Apps(ctx); err == nil {
 			apps = appsVal
@@ -36,11 +36,11 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 	}
 
 	if len(apps) == 0 {
-		pluginsMap := lago.RegistryPlugin.AllStable()
+		pluginsMap := lariv.RegistryPlugin.AllStable()
 		roleName := p_users.RoleFromContext(ctx, "dashboard.AppsGrid")
 		for _, pluginItem := range *pluginsMap {
 			plugin := pluginItem.Value
-			if plugin.Type == lago.PluginTypeApp {
+			if plugin.Type == lariv.PluginTypeApp {
 				if roleName != "superuser" && len(plugin.Roles) > 0 {
 					if !slices.Contains(plugin.Roles, roleName) {
 						continue

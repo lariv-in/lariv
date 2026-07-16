@@ -1,10 +1,10 @@
 package p_otp
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
@@ -16,7 +16,7 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 						components.FieldTitle{Getter: getters.Static("Login via SMS")},
 						&components.FormListenBoostedPost{
 							Name:      getters.Static("otp.PhoneOtpRequestForm"),
-							ActionURL: lago.RoutePath("otp.PhoneOtpRequestRoute", nil),
+							ActionURL: lariv.RoutePath("otp.PhoneOtpRequestRoute", nil),
 							Children: []components.PageInterface{
 								components.FormComponent[map[string]string]{
 									Attr: getters.FormBubbling(getters.Static("otp.PhoneOtpRequestForm")),
@@ -47,7 +47,7 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 							Children: []components.PageInterface{
 								components.ButtonLink{
 									Label: getters.Static("Back to Login"),
-									Link:  lago.RoutePath("p_users.LoginRoute", nil),
+									Link:  lariv.RoutePath("p_users.LoginRoute", nil),
 								},
 							},
 						},
@@ -64,7 +64,7 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 						components.FieldTitle{Getter: getters.Static("Login via Email")},
 						&components.FormListenBoostedPost{
 							Name:      getters.Static("otp.EmailOtpRequestForm"),
-							ActionURL: lago.RoutePath("otp.EmailOtpRequestRoute", nil),
+							ActionURL: lariv.RoutePath("otp.EmailOtpRequestRoute", nil),
 							Children: []components.PageInterface{
 								components.FormComponent[map[string]string]{
 									Attr: getters.FormBubbling(getters.Static("otp.EmailOtpRequestForm")),
@@ -95,7 +95,7 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 							Children: []components.PageInterface{
 								components.ButtonLink{
 									Label: getters.Static("Back to Login"),
-									Link:  lago.RoutePath("p_users.LoginRoute", nil),
+									Link:  lariv.RoutePath("p_users.LoginRoute", nil),
 								},
 							},
 						},
@@ -116,7 +116,7 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 						},
 						&components.FormListenBoostedPost{
 							Name:      getters.Static("otp.OtpVerifyForm"),
-							ActionURL: getters.Format("%v?identifier=%v", getters.Any(lago.RoutePath("otp.OtpVerifyRoute", nil)), getters.Any(getters.QueryEscape(getters.Key[string]("$in.Identifier")))),
+							ActionURL: getters.Format("%v?identifier=%v", getters.Any(lariv.RoutePath("otp.OtpVerifyRoute", nil)), getters.Any(getters.QueryEscape(getters.Key[string]("$in.Identifier")))),
 							Children: []components.PageInterface{
 								components.FormComponent[map[string]string]{
 									Attr: getters.FormBubbling(getters.Static("otp.OtpVerifyForm")),
@@ -169,7 +169,7 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 							Children: []components.PageInterface{
 								components.ButtonLink{
 									Label: getters.Static("Cancel"),
-									Link:  lago.RoutePath("p_users.LoginRoute", nil),
+									Link:  lariv.RoutePath("p_users.LoginRoute", nil),
 								},
 							},
 						},
@@ -188,7 +188,7 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 							Children: []components.PageInterface{
 								components.ButtonLink{
 									Icon:    "arrow-left",
-									Link:    lago.RoutePath("p_users.LoginRoute", nil),
+									Link:    lariv.RoutePath("p_users.LoginRoute", nil),
 									Classes: "btn-ghost btn-square",
 								},
 								components.FieldTitle{
@@ -206,12 +206,12 @@ func pageEntriesOtpAuth() []registry.Pair[string, components.PageInterface] {
 							Children: []components.PageInterface{
 								components.ButtonLink{
 									Label:   getters.Static("Reset password with email"),
-									Link:    lago.RoutePath("otp.EmailOtpRequestRoute", nil),
+									Link:    lariv.RoutePath("otp.EmailOtpRequestRoute", nil),
 									Classes: "w-full",
 								},
 								components.ButtonLink{
 									Label:   getters.Static("Reset password with phone number"),
-									Link:    lago.RoutePath("otp.PhoneOtpRequestRoute", nil),
+									Link:    lariv.RoutePath("otp.PhoneOtpRequestRoute", nil),
 									Classes: "w-full",
 								},
 							},

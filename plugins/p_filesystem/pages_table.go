@@ -3,10 +3,10 @@ package p_filesystem
 import (
 	"time"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesTables() []registry.Pair[string, components.PageInterface] {
@@ -20,7 +20,7 @@ func pageEntriesTables() []registry.Pair[string, components.PageInterface] {
 					Title:    "Filesystem",
 					Subtitle: "Files and folders",
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "filesystem.VNodeFilter"}},
+						&components.TableButtonFilter{Child: lariv.DynamicPage{Name: "filesystem.VNodeFilter"}},
 						&components.TableButtonCreate{Link: listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute")},
 					},
 					RowAttr: getters.RowAttrNavigate(rowOpenRoute()),

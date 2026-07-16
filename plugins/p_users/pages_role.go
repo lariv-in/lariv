@@ -1,10 +1,10 @@
 package p_users
 
 import (
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func pageEntriesRole() []registry.Pair[string, components.PageInterface] {
@@ -13,21 +13,21 @@ func pageEntriesRole() []registry.Pair[string, components.PageInterface] {
 			Title: getters.Format("Role: %s", getters.Any(getters.Key[string]("role.Name"))),
 			Back: &components.SidebarMenuItem{
 				Title: getters.Static("Back to All Roles"),
-				Url:   lago.RoutePath("p_users.RoleListRoute", nil),
+				Url:   lariv.RoutePath("p_users.RoleListRoute", nil),
 			},
 			Children: []components.PageInterface{
 				&components.SidebarMenuItem{
 					Title: getters.Static("Role Detail"),
-					Url:   lago.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
+					Url:   lariv.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 				},
 				&components.SidebarMenuItem{
 					Title: getters.Static("Edit Role"),
-					Url:   lago.RoutePath("p_users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
+					Url:   lariv.RoutePath("p_users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 				},
 			},
 		}},
 		{Key: "p_users.RoleFilter", Value: &components.FormComponent[Role]{
-			Attr: getters.FormBoostedGet(lago.RoutePath("p_users.RoleListRoute", nil)),
+			Attr: getters.FormBoostedGet(lariv.RoutePath("p_users.RoleListRoute", nil)),
 
 			ChildrenInput: []components.PageInterface{
 				&components.InputText{Label: "Name", Name: "Name", Getter: getters.Key[string]("$get.Name")},
@@ -41,7 +41,7 @@ func pageEntriesRole() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.RoleTable", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.UserMenu"},
+				lariv.DynamicPage{Name: "p_users.UserMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.DataTable[Role]{
@@ -49,17 +49,17 @@ func pageEntriesRole() []registry.Pair[string, components.PageInterface] {
 					Classes: "w-full",
 					Data:    getters.Key[components.ObjectList[Role]]("roles"),
 					Actions: []components.PageInterface{
-						&components.TableButtonFilter{Child: lago.DynamicPage{Name: "p_users.RoleFilter"}},
+						&components.TableButtonFilter{Child: lariv.DynamicPage{Name: "p_users.RoleFilter"}},
 						&components.ButtonModalForm{
 							Name:        getters.Static("p_users.RoleCreateForm"),
-							Url:         lago.RoutePath("p_users.RoleCreateRoute", nil),
-							FormPostURL: lago.RoutePath("p_users.RoleCreateRoute", nil),
+							Url:         lariv.RoutePath("p_users.RoleCreateRoute", nil),
+							FormPostURL: lariv.RoutePath("p_users.RoleCreateRoute", nil),
 							ModalUID:    "role-create-modal",
 							Icon:        "plus",
 							Classes:     "btn-square btn-outline btn-sm",
 						},
 					},
-					RowAttr: getters.RowAttrNavigate(lago.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
+					RowAttr: getters.RowAttrNavigate(lariv.RoutePath("p_users.RoleDetailRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("$row.ID"))})),
 					Columns: []components.TableColumn{
 						{Label: "Name", Name: "Name", Children: []components.PageInterface{
 							&components.FieldText{Getter: getters.Key[string]("$row.Name")},
@@ -100,12 +100,12 @@ func pageEntriesRole() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.RoleUpdateForm", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.RoleDetailMenu"},
+				lariv.DynamicPage{Name: "p_users.RoleDetailMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.FormListenBoostedPost{
 					Name:      getters.Static("p_users.RoleUpdateForm"),
-					ActionURL: lago.RoutePath("p_users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
+					ActionURL: lariv.RoutePath("p_users.RoleUpdateRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 					Children: []components.PageInterface{
 						&components.FormComponent[Role]{
 							Getter: getters.Key[Role]("role"),
@@ -133,8 +133,8 @@ func pageEntriesRole() []registry.Pair[string, components.PageInterface] {
 													Label:       "Delete",
 													Icon:        "trash",
 													Name:        getters.Static("p_users.RoleDeleteForm"),
-													Url:         lago.RoutePath("p_users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
-													FormPostURL: lago.RoutePath("p_users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
+													Url:         lariv.RoutePath("p_users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
+													FormPostURL: lariv.RoutePath("p_users.RoleDeleteRoute", map[string]getters.Getter[any]{"id": getters.Any(getters.Key[uint]("role.ID"))}),
 													ModalUID:    "role-delete-modal",
 													Classes:     "btn-error",
 												},
@@ -150,7 +150,7 @@ func pageEntriesRole() []registry.Pair[string, components.PageInterface] {
 		}},
 		{Key: "p_users.RoleDetail", Value: &components.ShellScaffold{
 			Sidebar: []components.PageInterface{
-				lago.DynamicPage{Name: "p_users.RoleDetailMenu"},
+				lariv.DynamicPage{Name: "p_users.RoleDetailMenu"},
 			},
 			Children: []components.PageInterface{
 				&components.Detail[Role]{

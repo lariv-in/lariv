@@ -15,8 +15,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/google/uuid"
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"golang.org/x/crypto/scrypt"
 	"gorm.io/gorm"
 )
@@ -66,9 +66,9 @@ func init() {
 	_, _ = rand.Read(jwtIssuer)
 }
 
-func pluginAuthConfigs() lago.PluginFeatures[lago.Config] {
-	return lago.PluginFeatures[lago.Config]{
-		Entries: []registry.Pair[string, lago.Config]{
+func pluginAuthConfigs() lariv.PluginFeatures[lariv.Config] {
+	return lariv.PluginFeatures[lariv.Config]{
+		Entries: []registry.Pair[string, lariv.Config]{
 			{Key: "p_users", Value: Config},
 		},
 	}

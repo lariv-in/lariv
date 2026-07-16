@@ -1,4 +1,4 @@
-package lago
+package lariv
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-	"github.com/lariv-in/lago/registry"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 )
 
-// LagoConfig represents the top-level configuration structure mapped from TOML files.
+// LarivConfig represents the top-level configuration structure mapped from TOML files.
 // It carries connection details, database setups, UDS paths, CORS trusted origins, and plugin parameters.
-type LagoConfig struct {
+type LarivConfig struct {
 	// Debug enables verbose debug level outputs and diagnostics.
 	Debug bool
 	// DBType specifies the database driver engine type (e.g. Postgres, Sqlite).
@@ -53,12 +53,12 @@ const (
 //
 // Example:
 //
-//	config, err := lago.LoadConfigFromFile("config.toml", plugins)
+//	config, err := lariv.LoadConfigFromFile("config.toml", plugins)
 //	if err != nil {
 //		log.Fatal(err)
 //	}
-func LoadConfigFromFile(path string, plugins []registry.Pair[string, Plugin]) (LagoConfig, error) {
-	var config LagoConfig
+func LoadConfigFromFile(path string, plugins []registry.Pair[string, Plugin]) (LarivConfig, error) {
+	var config LarivConfig
 
 	if path == "" {
 		return config, fmt.Errorf("config path is empty")

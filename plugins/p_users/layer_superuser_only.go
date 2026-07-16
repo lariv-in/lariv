@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/lariv-in/lago/views"
+	"github.com/lariv-in/lariv/views"
 )
 
 // A view layer that only allows superuser authenticated users to continue.

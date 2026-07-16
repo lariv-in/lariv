@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lariv-in/lago"
-	"github.com/lariv-in/lago/components"
-	"github.com/lariv-in/lago/getters"
+	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/components"
+	"github.com/lariv-in/lariv/getters"
 )
 
 func filesystemSidebar() []components.PageInterface {
@@ -16,7 +16,7 @@ func filesystemSidebar() []components.PageInterface {
 				return n.ID != 0, nil
 			}),
 			Children: []components.PageInterface{
-				lago.DynamicPage{Name: "filesystem.VNodeMenu"},
+				lariv.DynamicPage{Name: "filesystem.VNodeMenu"},
 			},
 		},
 		&components.ShowIf{
@@ -24,7 +24,7 @@ func filesystemSidebar() []components.PageInterface {
 				return n.ID == 0, nil
 			}),
 			Children: []components.PageInterface{
-				lago.DynamicPage{Name: "filesystem.MainMenu"},
+				lariv.DynamicPage{Name: "filesystem.MainMenu"},
 			},
 		},
 	}
