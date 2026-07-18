@@ -55,6 +55,7 @@ func selectionTable(name, filterName, childRoute string, multi, selectDirectorie
 func pageEntriesSelection() []registry.Pair[string, components.PageInterface] {
 	return []registry.Pair[string, components.PageInterface]{
 		{Key: "filesystem.ParentSelectionTable", Value: selectionTable("ParentID", "filesystem.ParentSelectionFilter", "filesystem.SelectChildRoute", false, true)},
+		{Key: "filesystem.FileSelectionTable", Value: selectionTable("FileID", "filesystem.ParentSelectionFilter", "filesystem.FileSelectChildRoute", false, false)},
 		{Key: "filesystem.MultiSelectionTable", Value: selectionTable("ParentID", "filesystem.ParentSelectionFilter", "filesystem.MultiSelectChildRoute", true, false)},
 		{Key: "filesystem.DestinationSelectionTable", Value: selectionTable("DestinationID", "filesystem.DestinationSelectionFilter", "filesystem.MoveSelectChildRoute", false, true)},
 		{Key: "filesystem.VNodeDeleteForm", Value: &components.Modal{

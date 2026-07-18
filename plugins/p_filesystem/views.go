@@ -1,13 +1,16 @@
 package p_filesystem
 
 import (
+	"archive/zip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -462,11 +465,116 @@ func (vNodeListEnrichLayer) Next(_ views.View, next http.Handler) http.Handler {
 	})
 }
 
+func addVNodeToZip(db *gorm.DB, archive *zip.Writer, node VNode, relativePath string) error {
+	if node.IsDirectory {
+		// Ensure directory path ends with a slash in ZIP
+		dirPath := relativePath
+		if dirPath != "" && !strings.HasSuffix(dirPath, "/") {
+			dirPath += "/"
+		}
+		if dirPath != "" {
+			header := &zip.FileHeader{
+				Name:     dirPath,
+				Method:   zip.Store,
+				Modified: node.UpdatedAt,
+			}
+			_, err := archive.CreateHeader(header)
+			if err != nil {
+				return err
+			}
+		}
+
+		var children []VNode
+		var query *gorm.DB
+		if node.ID != 0 {
+			query = db.Where("parent_id = ?", node.ID)
+		} else {
+			query = db.Where("parent_id IS NULL")
+		}
+		if err := query.Find(&children).Error; err != nil {
+			return err
+		}
+		for i := range children {
+			childPath := filepath.Join(relativePath, children[i].Name)
+			// archive/zip paths must always use forward slashes, even on Windows
+			childPath = strings.ReplaceAll(childPath, "\\", "/")
+			if err := addVNodeToZip(db, archive, children[i], childPath); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	download, err := node.OpenDownload()
+	if err != nil {
+		return err
+	}
+	defer download.Reader.Close()
+
+	header := &zip.FileHeader{
+		Name:     relativePath,
+		Method:   zip.Deflate,
+		Modified: node.UpdatedAt,
+	}
+	writer, err := archive.CreateHeader(header)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(writer, download.Reader); err != nil {
+		return err
+	}
+	return nil
+}
+
+func downloadRootHandler(_ *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db, err := filesystemDB(r)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/zip")
+		w.Header().Set("Content-Disposition", `attachment; filename="root.zip"`)
+
+		archive := zip.NewWriter(w)
+		defer archive.Close()
+
+		rootNode := VNode{
+			Name:        "root",
+			IsDirectory: true,
+		}
+
+		if err := addVNodeToZip(db, archive, rootNode, ""); err != nil {
+			slog.Error("filesystem: failed zipping root directory", "error", err)
+		}
+	})
+}
+
 func downloadHandler(_ *views.View) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		node, err := vnodeFromContext(r)
 		if err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		db, err := filesystemDB(r)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		if node.IsDirectory {
+			w.Header().Set("Content-Type", "application/zip")
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", node.Name+".zip"))
+
+			archive := zip.NewWriter(w)
+			defer archive.Close()
+
+			if err := addVNodeToZip(db, archive, *node, ""); err != nil {
+				slog.Error("filesystem: failed zipping directory", "id", node.ID, "error", err)
+			}
 			return
 		}
 
@@ -620,6 +728,19 @@ func pluginViews() lariv.PluginFeatures[*views.View] {
 					Method:  http.MethodPost,
 					Handler: multiUploadHandler,
 				})},
+			{Key: "filesystem.ZipUploadView", Value: lariv.GetPageView("filesystem.VNodeZipUploadForm").
+				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				WithLayer("filesystem.zip_upload", views.MethodLayer{
+					Method:  http.MethodPost,
+					Handler: zipUploadHandler,
+				})},
+			{Key: "filesystem.ZipUploadChildView", Value: lariv.GetPageView("filesystem.VNodeZipUploadForm").
+				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+				WithLayer("filesystem.zip_upload", views.MethodLayer{
+					Method:  http.MethodPost,
+					Handler: zipUploadHandler,
+				})},
 			{Key: "filesystem.SelectView", Value: lariv.GetPageView("filesystem.ParentSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.list", filesystemLayerListSelectRoot()).
@@ -628,6 +749,15 @@ func pluginViews() lariv.PluginFeatures[*views.View] {
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
 				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
 				WithLayer("filesystem.list", filesystemLayerListSelectChild()).
+				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
+			{Key: "filesystem.FileSelectView", Value: lariv.GetPageView("filesystem.FileSelectionTable").
+				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				WithLayer("filesystem.list", filesystemLayerListMultiRoot()).
+				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
+			{Key: "filesystem.FileSelectChildView", Value: lariv.GetPageView("filesystem.FileSelectionTable").
+				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				WithLayer("filesystem.parent", loadVNodeByPathParamLayer{Param: "parent_id"}).
+				WithLayer("filesystem.list", filesystemLayerListMultiChild()).
 				WithLayer("filesystem.list-enrich", vNodeListEnrichLayer{})},
 			{Key: "filesystem.MultiSelectView", Value: lariv.GetPageView("filesystem.MultiSelectionTable").
 				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
@@ -653,6 +783,12 @@ func pluginViews() lariv.PluginFeatures[*views.View] {
 				WithLayer("filesystem.download", views.MethodLayer{
 					Method:  http.MethodGet,
 					Handler: downloadHandler,
+				})},
+			{Key: "filesystem.DownloadRootView", Value: lariv.GetPageView("filesystem.VNodeTable").
+				WithLayer("p_users.auth", p_users.AuthenticationLayer{}).
+				WithLayer("filesystem.download_root", views.MethodLayer{
+					Method:  http.MethodGet,
+					Handler: downloadRootHandler,
 				})},
 		},
 	}
@@ -692,4 +828,206 @@ func chatUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
+}
+
+func zipUploadHandler(v *views.View) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		db, err := filesystemDB(r)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		values, fieldErrors, err := v.ParseForm(w, r)
+		if err != nil {
+			return
+		}
+
+		zipFileHeader, _ := values["ZipFile"].(*multipart.FileHeader)
+		if zipFileHeader == nil {
+			fieldErrors["ZipFile"] = fmt.Errorf("zip file is required")
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+
+		// Verify it is actually a zip file
+		if !strings.HasSuffix(strings.ToLower(zipFileHeader.Filename), ".zip") {
+			fieldErrors["ZipFile"] = fmt.Errorf("uploaded file is not a zip archive")
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+
+		var fallbackParent *VNode
+		if node, ok := r.Context().Value("vnode").(VNode); ok {
+			fallbackParent = &node
+		}
+		parent, err := optionalNodeFromValue(db, values["ParentID"], fallbackParent)
+		if err != nil {
+			fieldErrors["ParentID"] = err
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+		if parent != nil && !parent.IsDirectory {
+			fieldErrors["ParentID"] = fmt.Errorf("target must be a directory")
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+
+		src, err := zipFileHeader.Open()
+		if err != nil {
+			fieldErrors["ZipFile"] = fmt.Errorf("failed to open uploaded zip file: %w", err)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+		defer src.Close()
+
+		zipReader, err := zip.NewReader(src, zipFileHeader.Size)
+		if err != nil {
+			fieldErrors["ZipFile"] = fmt.Errorf("failed to parse zip file: %w", err)
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+
+		var createdFiles []string
+		txErr := db.Transaction(func(tx *gorm.DB) error {
+			// Delete direct children recursively
+			var children []VNode
+			var query *gorm.DB
+			if parent != nil {
+				query = tx.Where("parent_id = ?", parent.ID)
+			} else {
+				query = tx.Where("parent_id IS NULL")
+			}
+			if err := query.Find(&children).Error; err != nil {
+				return fmt.Errorf("failed to list old contents: %w", err)
+			}
+			for i := range children {
+				if err := children[i].DeleteTree(tx); err != nil {
+					return fmt.Errorf("failed to delete old item %q: %w", children[i].Name, err)
+				}
+			}
+
+			// Extract ZIP entries
+			for _, f := range zipReader.File {
+				cleanPath := filepath.Clean(f.Name)
+				if strings.HasPrefix(cleanPath, "../") || strings.Contains(cleanPath, "..") || strings.HasPrefix(cleanPath, "/") {
+					continue
+				}
+				cleanPath = strings.ReplaceAll(cleanPath, "\\", "/")
+				parts := strings.Split(strings.Trim(cleanPath, "/"), "/")
+				if len(parts) == 0 || (len(parts) == 1 && parts[0] == "") {
+					continue
+				}
+
+				currentParent := parent
+				var dirParts []string
+				if f.FileInfo().IsDir() {
+					dirParts = parts
+				} else {
+					dirParts = parts[:len(parts)-1]
+				}
+
+				for _, dirName := range dirParts {
+					dirName = sanitizeNodeName(dirName)
+					if dirName == "" {
+						continue
+					}
+					var existing VNode
+					var q *gorm.DB
+					if currentParent != nil {
+						q = tx.Where("parent_id = ? AND name = ?", currentParent.ID, dirName)
+					} else {
+						q = tx.Where("parent_id IS NULL AND name = ?", dirName)
+					}
+					err := q.First(&existing).Error
+					if err != nil {
+						if errors.Is(err, gorm.ErrRecordNotFound) {
+							newDir := &VNode{
+								Name:        dirName,
+								IsDirectory: true,
+							}
+							if currentParent != nil {
+								newDir.ParentID = &currentParent.ID
+							}
+							if err := gorm.G[VNode](tx).Create(context.Background(), newDir); err != nil {
+								return fmt.Errorf("failed to create directory %q: %w", dirName, err)
+							}
+							currentParent = newDir
+						} else {
+							return fmt.Errorf("failed to check existing directory %q: %w", dirName, err)
+						}
+					} else {
+						if !existing.IsDirectory {
+							return fmt.Errorf("path conflict: %q exists but is not a directory", dirName)
+						}
+						currentParent = &existing
+					}
+				}
+
+				if !f.FileInfo().IsDir() {
+					fileName := sanitizeNodeName(parts[len(parts)-1])
+					if fileName == "" {
+						continue
+					}
+					rc, err := f.Open()
+					if err != nil {
+						return fmt.Errorf("failed to open file in zip: %w", err)
+					}
+					ext := filepath.Ext(fileName)
+					storedPath, err := Store.SaveFromReader(rc, ext)
+					rc.Close()
+					if err != nil {
+						return fmt.Errorf("failed to save stored file %q: %w", fileName, err)
+					}
+					createdFiles = append(createdFiles, storedPath)
+
+					node := &VNode{
+						Name:        fileName,
+						IsDirectory: false,
+						FilePath:    storedPath,
+					}
+					if currentParent != nil {
+						node.ParentID = &currentParent.ID
+					}
+					if err := gorm.G[VNode](tx).Create(context.Background(), node); err != nil {
+						return fmt.Errorf("failed to create database file node %q: %w", fileName, err)
+					}
+				}
+			}
+			return nil
+		})
+
+		if txErr != nil {
+			slog.Error("zipUploadHandler: transaction failed, cleaning up stored files", "error", txErr)
+			for _, fPath := range createdFiles {
+				if delErr := Store.Delete(fPath); delErr != nil {
+					slog.Error("zipUploadHandler: failed to clean up physical file", "path", fPath, "error", delErr)
+				}
+			}
+			fieldErrors["_form"] = txErr
+			ctx := views.ContextWithErrorsAndValues(r.Context(), values, fieldErrors)
+			v.RenderPage(w, r.WithContext(ctx))
+			return
+		}
+
+		var redirectURL string
+		if parent != nil {
+			redirectURL, err = lariv.RoutePath("filesystem.BrowseRoute", map[string]getters.Getter[any]{
+				"parent_id": getters.Any(getters.Static(parent.ID)),
+			})(r.Context())
+		} else {
+			redirectURL, err = lariv.RoutePath("filesystem.ListRoute", nil)(r.Context())
+		}
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		views.HtmxRedirect(w, r, redirectURL, http.StatusSeeOther)
+	})
 }

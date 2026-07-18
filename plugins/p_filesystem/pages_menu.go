@@ -19,6 +19,7 @@ func pageEntriesMenus() []registry.Pair[string, components.PageInterface] {
 				&components.SidebarMenuItem{Title: getters.Static("All Files"), Url: lariv.RoutePath("filesystem.ListRoute", nil), Icon: "folder-open"},
 				&components.SidebarMenuItem{Title: getters.Static("Create Item"), Url: lariv.RoutePath("filesystem.CreateRoute", nil), Icon: "plus"},
 				&components.SidebarMenuItem{Title: getters.Static("Bulk Upload"), Url: lariv.RoutePath("filesystem.MultiUploadRoute", nil), Icon: "arrow-up-tray"},
+				&components.SidebarMenuItem{Title: getters.Static("Upload Zip"), Url: lariv.RoutePath("filesystem.ZipUploadRoute", nil), Icon: "archive-box"},
 			},
 		}},
 		{Key: "filesystem.VNodeMenu", Value: &components.SidebarMenu{
@@ -49,6 +50,9 @@ func pageEntriesMenus() []registry.Pair[string, components.PageInterface] {
 						&components.SidebarMenuItem{Title: getters.Static("Bulk Upload"), Url: lariv.RoutePath("filesystem.MultiUploadChildRoute", map[string]getters.Getter[any]{
 							"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
 						}), Icon: "arrow-up-tray"},
+						&components.SidebarMenuItem{Title: getters.Static("Upload Zip"), Url: lariv.RoutePath("filesystem.ZipUploadChildRoute", map[string]getters.Getter[any]{
+							"parent_id": getters.Any(getters.Key[uint]("vnode.ID")),
+						}), Icon: "archive-box"},
 					},
 				},
 			},

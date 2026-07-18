@@ -72,6 +72,15 @@ func Key[T any](key string) Getter[T] {
 		if value == nil {
 			return zero, nil
 		}
+		rv := reflect.ValueOf(value)
+		if rv.Kind() == reflect.Pointer {
+			if rv.IsNil() {
+				return zero, nil
+			}
+			if reflect.TypeOf(zero).Kind() != reflect.Pointer {
+				value = rv.Elem().Interface()
+			}
+		}
 		v, ok := value.(T)
 		if !ok {
 			if coerced, ok2 := coerceKeyValue[T](value); ok2 {

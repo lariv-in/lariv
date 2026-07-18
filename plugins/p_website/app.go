@@ -21,12 +21,15 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 		Key: "p_website",
 		Value: lariv.Plugin{
 			Type:        lariv.PluginTypeApp,
-			Icon:        "globe",
+			Icon:        "globe-alt",
 			URL:         u,
 			VerboseName: "Website",
 			Roles:       []string{"superuser", "admin"},
 			Migrations:  pluginStages(pluginMigrations),
 			Models:      pluginStages(pluginModels),
+			Views:       pluginStages(pluginViews),
+			Pages:       pluginStages(pluginPages),
+			Routes:      pluginStages(pluginRoutes),
 		},
 	}
 }

@@ -111,7 +111,7 @@ func selectionRowClickGetter(defaultName, modalID, childRoute string, multi, sel
 			if err != nil {
 				return "", err
 			}
-			return fmt.Sprintf("htmx.ajax('GET', '%v', {target: '#%s', swap: 'outerHTML'})", browseURL, modalID), nil
+			return fmt.Sprintf("htmx.ajax('GET', '%v', {target: '#%s', swap: 'outerHTML', source: $event.currentTarget})", browseURL, modalID), nil
 		}
 
 		if multi {
@@ -204,5 +204,17 @@ func parentOfCurrentVNodeGetter() getters.Getter[VNode] {
 			return VNode{}, fmt.Errorf("no parent directory")
 		}
 		return p, nil
+	}
+}
+
+func currentDirectoryDownloadLink() getters.Getter[string] {
+	return func(ctx context.Context) (string, error) {
+		n, err := getters.Key[VNode]("vnode")(ctx)
+		if err != nil || n.ID == 0 {
+			return lariv.RoutePath("filesystem.DownloadRootRoute", nil)(ctx)
+		}
+		return lariv.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
+			"id": getters.Any(getters.Static(n.ID)),
+		})(ctx)
 	}
 }

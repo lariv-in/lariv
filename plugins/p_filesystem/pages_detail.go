@@ -1,7 +1,6 @@
 package p_filesystem
 
 import (
-	"context"
 	"time"
 
 	"github.com/lariv-in/lariv"
@@ -27,20 +26,9 @@ func pageEntriesDetail() []registry.Pair[string, components.PageInterface] {
 							&components.LabelInline{Title: "Items", Children: []components.PageInterface{&components.FieldText{Getter: getters.Key[string]("$in.ListChildrenCount")}}},
 							&components.LabelInline{Title: "Created At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.CreatedAt")}}},
 							&components.LabelInline{Title: "Modified At", Children: []components.PageInterface{&components.FieldDatetime{Getter: getters.Key[time.Time]("$in.UpdatedAt")}}},
-							&components.ShowIf{
-								Getter: getters.Any(func(ctx context.Context) (bool, error) {
-									isDirectory, err := getters.Key[bool]("$in.IsDirectory")(ctx)
-									if err != nil {
-										return false, err
-									}
-									return !isDirectory, nil
-								}),
-								Children: []components.PageInterface{
-									&components.ButtonDownload{Label: "Download", Link: lariv.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
-										"id": getters.Any(getters.Key[uint]("$in.ID")),
-									}), Icon: "arrow-down-tray", Classes: "btn-primary mt-4"},
-								},
-							},
+							&components.ButtonDownload{Label: "Download", Link: lariv.RoutePath("filesystem.DownloadRoute", map[string]getters.Getter[any]{
+								"id": getters.Any(getters.Key[uint]("$in.ID")),
+							}), Icon: "arrow-down-tray", Classes: "btn-primary mt-4"},
 						}},
 					},
 				},

@@ -88,7 +88,7 @@ func FormBoostedGet(path Getter[string]) Getter[gomponents.Node] {
 		return gomponents.Group{
 			ghtml.Method("GET"),
 			gomponents.Attr("@submit.prevent", fmt.Sprintf(
-				`(function(evt){var t=evt&&evt.target;var f=t&&t.closest&&t.closest('form');if(!f)return;var m=f.closest('dialog.modal');var o={source:f,swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}};o.target=m||'body';htmx.ajax('GET',%s,o)})($event)`,
+				`(function(evt){var t=evt&&evt.target;var f=t&&t.closest&&t.closest('form');if(!f)return;var m=f.closest('dialog.modal');var o={source:f,swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}};o.target=m||'body';o.pushUrl=!m;htmx.ajax('GET',%s,o)})($event)`,
 				urlLit,
 			)),
 		}, nil

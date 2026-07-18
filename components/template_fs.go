@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"path/filepath"
 
 	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
@@ -25,6 +26,8 @@ type TemplateFSComponent struct {
 	Filesystem fs.FS
 	// TemplateContext returns the context that will be available inside of the template
 	TemplateContext getters.Getter[any]
+	// Funcs specifies custom template helper functions
+	Funcs template.FuncMap
 }
 
 // GetKey returns the unique key identifier for this EscapedString component.
@@ -38,11 +41,20 @@ func (e TemplateFSComponent) GetRoles() []string {
 }
 
 func (e *TemplateFSComponent) CompileTemplate() error {
-	template, err := template.ParseFS(e.Filesystem, e.TemplatePatterns...)
+	var t *template.Template
+	if len(e.TemplatePatterns) > 0 {
+		t = template.New(filepath.Base(e.TemplatePatterns[0]))
+	} else {
+		t = template.New("")
+	}
+	if e.Funcs != nil {
+		t = t.Funcs(e.Funcs)
+	}
+	tpl, err := t.ParseFS(e.Filesystem, e.TemplatePatterns...)
 	if err != nil {
 		return err
 	}
-	e.template = template
+	e.template = tpl
 	return nil
 }
 

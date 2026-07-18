@@ -169,5 +169,46 @@ func pageEntriesForms() []registry.Pair[string, components.PageInterface] {
 				},
 			},
 		}},
+		{Key: "filesystem.VNodeZipUploadForm", Value: &components.ShellScaffold{
+			Sidebar: filesystemSidebar(),
+			Children: []components.PageInterface{
+				&components.FormListenBoostedPost{
+					Name:      getters.Static("filesystem.VNodeZipUploadForm"),
+					ActionURL: listOrBrowseRoute("filesystem.ZipUploadRoute", "filesystem.ZipUploadChildRoute"),
+					Children: []components.PageInterface{
+						&components.FormComponent[VNode]{
+							Attr: getters.FormBubbling(getters.Static("filesystem.VNodeZipUploadForm")),
+
+							Title:    "Upload Zip Archive",
+							Subtitle: "Upload a zip archive to extract its contents and replace the selected directory's contents",
+							ChildrenInput: []components.PageInterface{
+								&components.ContainerError{
+									Error: getters.Key[error]("$error.ParentID"),
+									Children: []components.PageInterface{
+										&components.InputForeignKey[VNode]{
+											Label:       "Target Directory",
+											Name:        "ParentID",
+											Getter:      currentLocationGetter(),
+											Url:         listOrBrowseRoute("filesystem.SelectRoute", "filesystem.SelectChildRoute"),
+											Display:     getters.Key[string]("$in.Name"),
+											Placeholder: "Root (no parent)",
+										},
+									},
+								},
+								&components.ContainerError{
+									Error: getters.Key[error]("$error.ZipFile"),
+									Children: []components.PageInterface{
+										&components.InputFile{Label: "Zip File", Name: "ZipFile", Required: true},
+									},
+								},
+							},
+							ChildrenAction: []components.PageInterface{
+								&components.ButtonSubmit{Label: "Extract & Replace"},
+							},
+						},
+					},
+				},
+			},
+		}},
 	}
 }

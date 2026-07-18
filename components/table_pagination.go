@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/lariv-in/lariv/getters"
 	. "maragu.dev/gomponents"
@@ -106,8 +107,17 @@ func (e TablePagination[T]) pageButton(req *http.Request, p int, active bool) No
 		classes += " btn-active"
 	}
 
+	pushURL := "true"
+	if strings.Contains(req.URL.Path, "select") {
+		pushURL = "false"
+	}
+
 	return A(
 		Href(u.String()),
+		Attr("hx-get", u.String()),
+		Attr("hx-target", "closest .data-table-container"),
+		Attr("hx-swap", "outerHTML"),
+		Attr("hx-push-url", pushURL),
 		Class(classes),
 		Text(strconv.Itoa(p)),
 	)

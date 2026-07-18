@@ -21,7 +21,6 @@ type DBRoute struct {
 	PageID    uint               `gorm:"notnull"`
 	Page      p_filesystem.VNode `gorm:"constraint:OnDelete:RESTRICT;foreignKey:PageID;references:ID"`
 	IsActive  bool               `gorm:"notnull;default:true"`
-	Model     *string
 }
 
 func pluginModels() lariv.PluginFeatures[any] {
@@ -35,6 +34,6 @@ func pluginModels() lariv.PluginFeatures[any] {
 func init() {
 	lariv.RegistryAdmin.Register("p_website", lariv.AdminPanel[DBRoute]{
 		SearchField: "Path",
-		ListFields:  []string{"Path", "LTreePath", "PageID", "IsActive", "Model", "UpdatedAt"},
+		ListFields:  []string{"Path", "LTreePath", "PageID", "IsActive", "UpdatedAt"},
 	})
 }

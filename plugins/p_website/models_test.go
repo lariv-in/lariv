@@ -27,8 +27,4 @@ func TestDBRouteFields(t *testing.T) {
 	if !route.IsActive {
 		t.Errorf("expected IsActive to be true")
 	}
-
-	if route.Model != nil {
-		t.Errorf("expected Model to be nil")
-	}
 }

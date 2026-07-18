@@ -22,6 +22,12 @@ func pageEntriesTables() []registry.Pair[string, components.PageInterface] {
 					Actions: []components.PageInterface{
 						&components.TableButtonFilter{Child: lariv.DynamicPage{Name: "filesystem.VNodeFilter"}},
 						&components.TableButtonCreate{Link: listOrBrowseRoute("filesystem.CreateRoute", "filesystem.CreateChildRoute")},
+						&components.ButtonDownload{
+							Label:   "Download Zip",
+							Link:    currentDirectoryDownloadLink(),
+							Icon:    "arrow-down-tray",
+							Classes: "btn-outline btn-sm",
+						},
 					},
 					RowAttr: getters.RowAttrNavigate(rowOpenRoute()),
 					Columns: []components.TableColumn{

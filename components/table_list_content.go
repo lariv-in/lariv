@@ -59,10 +59,18 @@ func (e TableListContent[T]) Build(ctx context.Context) Node {
 		}
 		sortURL := columnSortURL(req, col.Name)
 		ind := sortColumnIndicator(currentSort, col.Name)
+		pushURL := "true"
+		if strings.Contains(req.URL.Path, "select") {
+			pushURL = "false"
+		}
 		ths = append(ths, g_html.Th(
 			g_html.Class("whitespace-nowrap min-w-[100px]"),
 			g_html.A(
 				g_html.Href(sortURL),
+				Attr("hx-get", sortURL),
+				Attr("hx-target", "closest .data-table-container"),
+				Attr("hx-swap", "outerHTML"),
+				Attr("hx-push-url", pushURL),
 				g_html.Class("link link-hover link-neutral no-underline hover:underline cursor-pointer font-inherit text-inherit inline-flex items-center gap-1"),
 				Text(col.Label+ind),
 			),

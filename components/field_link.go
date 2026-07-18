@@ -34,6 +34,8 @@ type FieldLink struct {
 	// Classes represents additional CSS classes applied to the output HTML element.
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	Classes string
+	// Attr is an optional Getter returning additional HTML attributes to apply to the link.
+	Attr getters.Getter[Node]
 }
 
 // GetKey returns the unique key identifier for this FieldLink component.
@@ -66,5 +68,11 @@ func (e FieldLink) Build(ctx context.Context) Node {
 	if href == "" {
 		return Div(Class(e.Classes), Text(label))
 	}
-	return A(Href(href), Class(e.Classes), Text(label))
+	var extra Node = Raw("")
+	if e.Attr != nil {
+		if n, err := e.Attr(ctx); err == nil && n != nil {
+			extra = n
+		}
+	}
+	return A(Href(href), Class(e.Classes), extra, Text(label))
 }
