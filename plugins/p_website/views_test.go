@@ -326,3 +326,45 @@ func TestRoutesCRUDHTTPStatusCodes(t *testing.T) {
 		})
 	}
 }
+
+func TestDynamicWebsiteRoutingWithReferences(t *testing.T) {
+	db := testDBForViews(t)
+	withTempStorageForViews(t)
+
+	headerFile := uploadHeaderForViews(t, "File", "header.html", `{{define "header"}}Header Component{{end}}`)
+	headerVNode, err := p_filesystem.CreateVNode(db, "", false, headerFile, nil)
+	if err != nil {
+		t.Fatalf("failed to create header VNode: %v", err)
+	}
+
+	mainFile := uploadHeaderForViews(t, "File", "main.html", `{{template "header" .}}<div>Main Body</div>`)
+	mainVNode, err := p_filesystem.CreateVNode(db, "", false, mainFile, nil)
+	if err != nil {
+		t.Fatalf("failed to create main VNode: %v", err)
+	}
+
+	route := DBRoute{
+		Path:       "/referenced-page",
+		PageID:     mainVNode.ID,
+		References: []p_filesystem.VNode{*headerVNode},
+		IsActive:   true,
+	}
+	if err := db.Create(&route).Error; err != nil {
+		t.Fatalf("failed to create DBRoute with references: %v", err)
+	}
+
+	handler := buildHandler(t, db)
+
+	req := httptest.NewRequest("GET", "/referenced-page", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	res := rec.Result()
+	body, _ := io.ReadAll(res.Body)
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("expected status 200, got %d. Body: %s", res.StatusCode, string(body))
+	}
+	if !strings.Contains(string(body), "Header Component") || !strings.Contains(string(body), "Main Body") {
+		t.Errorf("expected body to contain referenced header and main body, got: %s", string(body))
+	}
+}

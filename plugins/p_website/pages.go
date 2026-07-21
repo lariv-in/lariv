@@ -22,6 +22,10 @@ import (
 	. "maragu.dev/gomponents"
 )
 
+// DynamicWebsitePage renders database-driven website pages or streams static files.
+//
+// Note: We cannot allow a dynamic view that will serve any arbitrary file under a directory,
+// since it might give arbitrary read access using Go templates and the custom filesystem.
 type DynamicWebsitePage struct {
 	components.Page
 }
@@ -48,7 +52,7 @@ func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 	}
 
 	var dbRoute DBRoute
-	err = db.Preload("Page").Where("path = ? AND is_active = ?", req.URL.Path, true).First(&dbRoute).Error
+	err = db.Preload("Page").Preload("References").Where("path = ? AND is_active = ?", req.URL.Path, true).First(&dbRoute).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return Text("404 Not Found")
@@ -86,12 +90,21 @@ func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 			},
 		}
 
+		patterns := []string{relPath}
+		for _, ref := range dbRoute.References {
+			refPath := ref.GetPath(db)
+			refRelPath := strings.TrimPrefix(refPath, "/")
+			if refRelPath != "" && !slices.Contains(patterns, refRelPath) {
+				patterns = append(patterns, refRelPath)
+			}
+		}
+
 		tmplComp := &components.TemplateFSComponent{
 			Page: components.Page{
 				Key: fmt.Sprintf("db_template_%d", dbRoute.Page.ID),
 			},
 			Filesystem:       dbFS,
-			TemplatePatterns: []string{relPath},
+			TemplatePatterns: patterns,
 			TemplateName:     "",
 			TemplateContext: getters.Getter[any](func(ctx context.Context) (any, error) {
 				return ctx, nil
@@ -155,6 +168,20 @@ func routeFormFields() components.ContainerColumn {
 						Name:     "PageID",
 						Required: true,
 						VNode:    getters.Key[p_filesystem.VNode]("$in.Page"),
+					},
+				},
+			},
+			&components.ContainerError{
+				Error: getters.Key[error]("$error.References"),
+				Children: []components.PageInterface{
+					&components.InputManyToMany[p_filesystem.VNode]{
+						Label:       "Reference Files",
+						Name:        "References",
+						Url:         lariv.RoutePath("filesystem.MultiSelectRoute", nil),
+						Display:     getters.Key[string]("$in.Name"),
+						Placeholder: "Select reference files...",
+						Required:    false,
+						Getter:      getters.Key[[]p_filesystem.VNode]("$in.References"),
 					},
 				},
 			},
@@ -260,6 +287,13 @@ func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 										Classes: "mt-4 block",
 										Children: []components.PageInterface{
 											&p_filesystem.FieldFile{VNode: getters.Key[p_filesystem.VNode]("$in.Page")},
+										},
+									},
+									&components.LabelInline{
+										Title:   "Reference Files",
+										Classes: "mt-4 block",
+										Children: []components.PageInterface{
+											&p_filesystem.FieldManyFile{VNode: getters.Key[[]p_filesystem.VNode]("$in.References")},
 										},
 									},
 									&components.LabelInline{

@@ -19,8 +19,9 @@ type DBRoute struct {
 	Path      string             `gorm:"uniqueIndex;notnull"`
 	LTreePath string             `gorm:"column:ltree_path;type:ltree;->"`
 	PageID    uint               `gorm:"notnull"`
-	Page      p_filesystem.VNode `gorm:"constraint:OnDelete:RESTRICT;foreignKey:PageID;references:ID"`
-	IsActive  bool               `gorm:"notnull;default:true"`
+	Page       p_filesystem.VNode   `gorm:"constraint:OnDelete:RESTRICT;foreignKey:PageID;references:ID"`
+	References []p_filesystem.VNode `gorm:"many2many:p_website_route_references;"`
+	IsActive   bool                 `gorm:"notnull;default:true"`
 }
 
 func pluginModels() lariv.PluginFeatures[any] {

@@ -50,7 +50,7 @@ func pluginViews() lariv.PluginFeatures[*views.View] {
 					WithLayer("p_website.routes.list", views.LayerList[DBRoute]{
 						Key: getters.Static("dbroutes"),
 						QueryPatchers: views.QueryPatchers[DBRoute]{
-							{Key: "p_website.routes.preload", Value: views.QueryPatcherPreload[DBRoute]{Fields: []string{"Page"}}},
+							{Key: "p_website.routes.preload", Value: views.QueryPatcherPreload[DBRoute]{Fields: []string{"Page", "References"}}},
 						},
 					}),
 			},
@@ -70,7 +70,7 @@ func pluginViews() lariv.PluginFeatures[*views.View] {
 						Key:          getters.Static("dbroute"),
 						PathParamKey: getters.Static("id"),
 						QueryPatchers: views.QueryPatchers[DBRoute]{
-							{Key: "p_website.routes.preload", Value: views.QueryPatcherPreload[DBRoute]{Fields: []string{"Page"}}},
+							{Key: "p_website.routes.preload", Value: views.QueryPatcherPreload[DBRoute]{Fields: []string{"Page", "References"}}},
 						},
 					}),
 			},
@@ -82,7 +82,7 @@ func pluginViews() lariv.PluginFeatures[*views.View] {
 						Key:          getters.Static("dbroute"),
 						PathParamKey: getters.Static("id"),
 						QueryPatchers: views.QueryPatchers[DBRoute]{
-							{Key: "p_website.routes.preload", Value: views.QueryPatcherPreload[DBRoute]{Fields: []string{"Page"}}},
+							{Key: "p_website.routes.preload", Value: views.QueryPatcherPreload[DBRoute]{Fields: []string{"Page", "References"}}},
 						},
 					}).
 					WithLayer("p_website.routes.update", views.LayerUpdate[DBRoute]{

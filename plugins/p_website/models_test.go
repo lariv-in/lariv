@@ -2,6 +2,8 @@ package p_website
 
 import (
 	"testing"
+
+	"github.com/lariv-in/lariv/plugins/p_filesystem"
 )
 
 func TestDBRouteFields(t *testing.T) {
@@ -9,7 +11,10 @@ func TestDBRouteFields(t *testing.T) {
 		Path:      "/home",
 		LTreePath: "home",
 		PageID:    1,
-		IsActive:  true,
+		References: []p_filesystem.VNode{
+			{ID: 2, Name: "header.html"},
+		},
+		IsActive: true,
 	}
 
 	if route.Path != "/home" {
@@ -22,6 +27,10 @@ func TestDBRouteFields(t *testing.T) {
 
 	if route.PageID != 1 {
 		t.Errorf("expected PageID to be 1, got %d", route.PageID)
+	}
+
+	if len(route.References) != 1 || route.References[0].ID != 2 {
+		t.Errorf("expected 1 reference with ID 2, got %v", route.References)
 	}
 
 	if !route.IsActive {

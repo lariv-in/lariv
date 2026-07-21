@@ -116,6 +116,11 @@ func InitDB(db *gorm.DB, config LarivConfig) error {
 		return fmt.Errorf("gorm.DB().DB(): %w", err)
 	}
 
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetConnMaxLifetime(1 * time.Hour)
+	sqlDB.SetConnMaxIdleTime(15 * time.Minute)
+
 	if err := gooseUpPluginMigrations(context.Background(), sqlDB, config); err != nil {
 		return fmt.Errorf("goose migrations: %w", err)
 	}
