@@ -10,7 +10,7 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	return registry.Pair[string, lariv.Plugin]{
 		Key: "p_no_signup",
 		Value: lariv.Plugin{
-			Type:        lariv.PluginTypeModule,
+			Type:        lariv.PluginTypeAddon,
 			VerboseName: "No Signup",
 			Pages:       lariv.PluginStages(pluginPages),
 			Routes:      lariv.PluginStages(pluginRoutes),
