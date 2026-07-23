@@ -21,8 +21,7 @@ func (m DynamicRouteLayer) Next(view views.View, next http.Handler) http.Handler
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		var dbRoute DBRoute
-		err = db.Where("path = ? AND is_active = ?", r.URL.Path, true).First(&dbRoute).Error
+		_, err = FindMatchingDBRoute(db, r.URL.Path)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				http.NotFound(w, r)

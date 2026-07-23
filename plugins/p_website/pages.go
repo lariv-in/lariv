@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
@@ -21,6 +22,44 @@ import (
 	"gorm.io/gorm"
 	. "maragu.dev/gomponents"
 )
+
+func formatTimeVal(val any, fmtLayout string) string {
+	if val == nil {
+		return ""
+	}
+	var t time.Time
+	switch v := val.(type) {
+	case time.Time:
+		t = v
+	case *time.Time:
+		if v == nil {
+			return ""
+		}
+		t = *v
+	case string:
+		v = strings.TrimSpace(v)
+		if v == "" {
+			return ""
+		}
+		parsed, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			parsed, err = time.Parse(time.RFC3339Nano, v)
+		}
+		if err != nil {
+			parsed, err = time.Parse("2006-01-02 15:04:05", v)
+		}
+		if err != nil {
+			parsed, err = time.Parse("2006-01-02", v)
+		}
+		if err != nil {
+			return v
+		}
+		t = parsed
+	default:
+		return fmt.Sprintf("%v", val)
+	}
+	return t.Format(fmtLayout)
+}
 
 // DynamicWebsitePage renders database-driven website pages or streams static files.
 //
@@ -38,6 +77,130 @@ func (p DynamicWebsitePage) GetRoles() []string {
 	return p.Roles
 }
 
+func pathToLTree(path string) string {
+	trimmed := strings.Trim(path, "/")
+	if trimmed == "" {
+		return "root"
+	}
+	r := strings.ReplaceAll(trimmed, "/", ".")
+	r = strings.ReplaceAll(r, "-", "_")
+	return r
+}
+
+func pathToLQuery(pattern string) string {
+	trimmed := strings.Trim(pattern, "/")
+	if trimmed == "" {
+		return "root"
+	}
+	r := strings.ReplaceAll(trimmed, "/", ".")
+	r = strings.ReplaceAll(r, "-", "_")
+	return r
+}
+
+func matchGoWildcard(pattern, reqPath string) bool {
+	pattern = strings.Trim(pattern, "/")
+	reqPath = strings.Trim(reqPath, "/")
+
+	if pattern == reqPath || pattern == "*" {
+		return true
+	}
+
+	pParts := strings.Split(pattern, "/")
+	rParts := strings.Split(reqPath, "/")
+
+	if len(pParts) != len(rParts) {
+		if len(pParts) > 0 && (pParts[len(pParts)-1] == "*" || strings.HasPrefix(pParts[len(pParts)-1], "*{")) {
+			if len(rParts) >= len(pParts)-1 {
+				prefixMatched := true
+				for i := 0; i < len(pParts)-1; i++ {
+					if pParts[i] != "*" && pParts[i] != rParts[i] {
+						prefixMatched = false
+						break
+					}
+				}
+				if prefixMatched {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	for i := 0; i < len(pParts); i++ {
+		if pParts[i] != "*" && pParts[i] != rParts[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func FindMatchingDBRoute(db *gorm.DB, reqPath string) (*DBRoute, error) {
+	reqLTree := pathToLTree(reqPath)
+
+	// 1. Exact match on path
+	var route DBRoute
+	err := db.Preload("Page").Preload("References").
+		Where("path = ? AND is_active = ?", reqPath, true).
+		First(&route).Error
+	if err == nil {
+		return &route, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// 2. Exact match on ltree_path
+	err = db.Preload("Page").Preload("References").
+		Where("ltree_path = ?::ltree AND is_active = ?", reqLTree, true).
+		First(&route).Error
+	if err == nil {
+		return &route, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	// 3. Evaluate lquery / ltxtquery / wildcard matches
+	var activeRoutes []DBRoute
+	if err := db.Preload("Page").Preload("References").
+		Where("is_active = ?", true).
+		Find(&activeRoutes).Error; err != nil {
+		return nil, err
+	}
+
+	for _, r := range activeRoutes {
+		lqueryPattern := pathToLQuery(r.Path)
+		var matched bool
+
+		if db.Dialector.Name() == "postgres" {
+			var count int64
+			// Check lquery match: reqLTree ~ lqueryPattern
+			err := db.Raw("SELECT COUNT(*) FROM (SELECT ?::ltree AS t) sub WHERE t ~ ?::lquery", reqLTree, lqueryPattern).Scan(&count).Error
+			if err == nil && count > 0 {
+				matched = true
+			}
+
+			if !matched {
+				// Check reverse lquery match: r.LTreePath ~ reqLTree::lquery
+				err = db.Raw("SELECT COUNT(*) FROM (SELECT ?::ltree AS t) sub WHERE t ~ ?::lquery", r.LTreePath, reqLTree).Scan(&count).Error
+				if err == nil && count > 0 {
+					matched = true
+				}
+			}
+		}
+
+		if !matched {
+			matched = matchGoWildcard(r.Path, reqPath)
+		}
+
+		if matched {
+			return &r, nil
+		}
+	}
+
+	return nil, gorm.ErrRecordNotFound
+}
+
 func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
@@ -51,8 +214,7 @@ func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 		return Text("Internal Server Error")
 	}
 
-	var dbRoute DBRoute
-	err = db.Preload("Page").Preload("References").Where("path = ? AND is_active = ?", req.URL.Path, true).First(&dbRoute).Error
+	dbRoutePtr, err := FindMatchingDBRoute(db, req.URL.Path)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return Text("404 Not Found")
@@ -60,6 +222,7 @@ func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 		slog.Error("DynamicWebsitePage: failed to query DBRoute", "path", req.URL.Path, "error", err)
 		return Text("Internal Server Error")
 	}
+	dbRoute := *dbRoutePtr
 
 	vnodePath := dbRoute.Page.GetPath(db)
 	relPath := strings.TrimPrefix(vnodePath, "/")
@@ -77,16 +240,99 @@ func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 				err := db.Table(tableName).Limit(limit).Offset(offset).Find(&results).Error
 				return results, err
 			},
-			"get": func(tableName string, id any) (map[string]any, error) {
-				var result map[string]any
-				err := db.Table(tableName).Where("id = ?", id).First(&result).Error
-				if err != nil {
-					if errors.Is(err, gorm.ErrRecordNotFound) {
-						return nil, nil
-					}
+			"query_where": func(tableName string, query string, args ...any) ([]map[string]any, error) {
+				var results []map[string]any
+				err := db.Table(tableName).Where(query, args...).Find(&results).Error
+				return results, err
+			},
+			"m2m_list": func(leftTable, m2mTable, rightTable string, id any) ([]map[string]any, error) {
+				leftCol := strings.TrimSuffix(leftTable, "s") + "_id"
+				rightCol := strings.TrimSuffix(rightTable, "s") + "_id"
+				var results []map[string]any
+				err := db.Table(rightTable).
+					Joins(fmt.Sprintf("JOIN %s ON %s.%s = %s.id", m2mTable, m2mTable, rightCol, rightTable)).
+					Where(fmt.Sprintf("%s.%s = ?", m2mTable, leftCol), id).
+					Find(&results).Error
+				return results, err
+			},
+			"m2o": func(leftTable, rightTable string, id any) (map[string]any, error) {
+				var leftRows []map[string]any
+				if err := db.Table(leftTable).Where("id = ?", id).Limit(1).Find(&leftRows).Error; err != nil || len(leftRows) == 0 {
 					return nil, err
 				}
-				return result, nil
+				leftRow := leftRows[0]
+				fkCol := strings.TrimSuffix(rightTable, "s") + "_id"
+				fkVal, ok := leftRow[fkCol]
+				if !ok || fkVal == nil {
+					if val, exists := leftRow["created_by_id"]; exists {
+						fkVal = val
+						ok = true
+					}
+				}
+				if !ok || fkVal == nil {
+					return nil, nil
+				}
+				var rightRows []map[string]any
+				if err := db.Table(rightTable).Where("id = ?", fkVal).Limit(1).Find(&rightRows).Error; err != nil || len(rightRows) == 0 {
+					return nil, err
+				}
+				return rightRows[0], nil
+			},
+			"get": func(tableName string, id any) (map[string]any, error) {
+				var results []map[string]any
+				err := db.Table(tableName).Where("id = ?", id).Limit(1).Find(&results).Error
+				if err != nil || len(results) == 0 {
+					return nil, err
+				}
+				return results[0], nil
+			},
+			"format_datetime": func(val any, layout ...string) string {
+				fmtLayout := "Mon, 02 Jan 2006 15:04:05"
+				if len(layout) > 0 && layout[0] != "" {
+					fmtLayout = layout[0]
+				}
+				return formatTimeVal(val, fmtLayout)
+			},
+			"format_date": func(val any, layout ...string) string {
+				fmtLayout := "02 Jan 2006"
+				if len(layout) > 0 && layout[0] != "" {
+					fmtLayout = layout[0]
+				}
+				return formatTimeVal(val, fmtLayout)
+			},
+			"slug": func() string {
+				if req == nil || req.URL == nil {
+					return ""
+				}
+				return filepath.Base(strings.TrimSuffix(req.URL.Path, "/"))
+			},
+			"path": func() string {
+				if req == nil || req.URL == nil {
+					return ""
+				}
+				return req.URL.Path
+			},
+			"param": func(name string) string {
+				if req == nil || req.URL == nil {
+					return ""
+				}
+				return req.URL.Query().Get(name)
+			},
+			"first": func(slice []map[string]any) map[string]any {
+				if len(slice) == 0 {
+					return nil
+				}
+				return slice[0]
+			},
+			"markdown": func(val any) template.HTML {
+				if val == nil {
+					return ""
+				}
+				s, ok := val.(string)
+				if !ok {
+					s = fmt.Sprintf("%v", val)
+				}
+				return template.HTML(components.RenderMarkdown(s))
 			},
 		}
 
