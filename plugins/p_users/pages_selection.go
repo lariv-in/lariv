@@ -16,7 +16,7 @@ func pageEntriesSelection() []registry.Pair[string, components.PageInterface] {
 					UID:     "user-selection-table",
 					Title:   "Select User",
 					Data:    getters.Key[components.ObjectList[User]]("users"),
-					RowAttr: getters.RowAttrSelect("UserID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+					RowAttr: getters.RowAttrSelectNamed(getters.IfOrElse(getters.Key[string]("$get.target_input"), getters.Static("UserID")), getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 					Actions: []components.PageInterface{
 						&components.TableButtonFilter{Child: lariv.DynamicPage{Name: "p_users.UserSelectionFilter"}},
 						&components.ButtonModalForm{
@@ -50,7 +50,7 @@ func pageEntriesSelection() []registry.Pair[string, components.PageInterface] {
 					UID:     "role-selection-table",
 					Title:   "Select Role",
 					Data:    getters.Key[components.ObjectList[Role]]("roles"),
-					RowAttr: getters.RowAttrSelect("RoleID", getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
+					RowAttr: getters.RowAttrSelectNamed(getters.IfOrElse(getters.Key[string]("$get.target_input"), getters.Static("RoleID")), getters.Key[uint]("$row.ID"), getters.Key[string]("$row.Name")),
 					Actions: []components.PageInterface{
 						&components.TableButtonFilter{Child: lariv.DynamicPage{Name: "p_users.RoleSelectionFilter"}},
 						&components.ButtonModalForm{
