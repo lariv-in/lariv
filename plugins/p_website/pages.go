@@ -332,7 +332,17 @@ func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 				if !ok {
 					s = fmt.Sprintf("%v", val)
 				}
-				return template.HTML(components.RenderMarkdown(s))
+				return template.HTML(components.RenderMarkdownSanitized(s, true))
+			},
+			"markdown_unsafe": func(val any) template.HTML {
+				if val == nil {
+					return ""
+				}
+				s, ok := val.(string)
+				if !ok {
+					s = fmt.Sprintf("%v", val)
+				}
+				return template.HTML(components.RenderMarkdownSanitized(s, false))
 			},
 		}
 

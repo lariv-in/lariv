@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"strings"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
@@ -45,6 +46,8 @@ type FieldMarkdown struct {
 	// RenderHooks is an optional function returning custom AST walk hooks.
 	// Render hooks run outermost-first before the default styling hooks.
 	RenderHooks func(context.Context, string) ([]html.RenderNodeFunc, error)
+	// Sanitize is an optional getter returning whether the rendered markdown HTML should be sanitized.
+	Sanitize getters.Getter[bool]
 }
 
 // appendOrAssign is a helper that adds CSS classes to an ast.Attribute object, initializing it if nil.
@@ -101,9 +104,29 @@ func customRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus
 
 // RenderMarkdown parses and renders a raw markdown string into formatted HTML markup, applying the custom rendering hooks.
 func RenderMarkdown(md string, hooks ...html.RenderNodeFunc) string {
+	return RenderMarkdownSanitized(md, true, hooks...)
+}
+
+// RenderMarkdownSanitized parses and renders a raw markdown string into formatted HTML markup,
+// optionally applying HTML sanitization and custom rendering hooks.
+func RenderMarkdownSanitized(md string, sanitize bool, hooks ...html.RenderNodeFunc) string {
 	doc := ParseMarkdownAST(md)
 	opts := html.RendererOptions{Flags: html.CommonFlags}
-	opts.RenderNodeHook = customRenderHook
+	if sanitize {
+		opts.Flags |= html.SkipHTML | html.NofollowLinks | html.NoopenerLinks | html.NoreferrerLinks
+	}
+	opts.RenderNodeHook = func(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+		if sanitize && entering {
+			if n, ok := node.(*ast.Link); ok {
+				dest := strings.TrimSpace(string(n.Destination))
+				lower := strings.ToLower(dest)
+				if strings.HasPrefix(lower, "javascript:") || strings.HasPrefix(lower, "vbscript:") || strings.HasPrefix(lower, "data:") {
+					n.Destination = []byte("#")
+				}
+			}
+		}
+		return customRenderHook(w, node, entering)
+	}
 	for _, renderNodeFunc := range hooks {
 		currentFunc := opts.RenderNodeHook
 		opts.RenderNodeHook = func(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
@@ -142,6 +165,15 @@ func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 	if s == "" {
 		return ghtml.Div()
 	}
+	sanitize := true
+	if e.Sanitize != nil {
+		var err error
+		sanitize, err = e.Sanitize(ctx)
+		if err != nil {
+			slog.Error("FieldMarkdown Sanitize getter failed", "error", err, "key", e.Key)
+			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		}
+	}
 	var hooks []html.RenderNodeFunc
 	if e.RenderHooks != nil {
 		var err error
@@ -153,6 +185,6 @@ func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 	}
 	return ghtml.Div(
 		ghtml.Class("whitespace-pre-wrap border border-base-300 p-2 rounded-md "+e.Classes),
-		gomponents.Raw(RenderMarkdown(s, hooks...)),
+		gomponents.Raw(RenderMarkdownSanitized(s, sanitize, hooks...)),
 	)
 }
