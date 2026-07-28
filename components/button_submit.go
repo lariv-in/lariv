@@ -2,9 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // ButtonSubmit represents a standard submit button used within forms to post data.
@@ -13,13 +12,13 @@ type ButtonSubmit struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Label is the display text shown on the button.
-	Label       string
+	Label string
 	// Icon is the name of an optional icon to display alongside the text.
-	Icon        string
+	Icon string
 	// IconClasses represents additional CSS classes applied to the Icon.
 	IconClasses string
 	// Classes represents additional CSS classes for the button container.
-	Classes     string
+	Classes string
 }
 
 // GetKey returns the unique key identifier for this ButtonSubmit component.
@@ -32,14 +31,15 @@ func (e ButtonSubmit) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the ButtonSubmit component into a gomponents Node representing a submit button.
-func (e ButtonSubmit) Build(ctx context.Context) Node {
-	content := Group{}
+// Build compiles the ButtonSubmit component into a submit button.
+func (e ButtonSubmit) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	var iconHTML template.HTML
 	if e.Icon != "" {
-		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
-	}
-	if e.Label != "" {
-		content = append(content, Text(e.Label))
+		h, err := RenderHTML(&Icon{Name: e.Icon, Classes: e.IconClasses}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		iconHTML = h
 	}
 
 	classes := "btn btn-primary " + e.Classes
@@ -47,5 +47,9 @@ func (e ButtonSubmit) Build(ctx context.Context) Node {
 		classes += " inline-flex items-center gap-2"
 	}
 
-	return Button(Type("submit"), Class(classes), content)
+	return Execute(w, "button_submit", struct {
+		Classes string
+		Icon    template.HTML
+		Label   string
+	}{Classes: classes, Icon: iconHTML, Label: e.Label})
 }

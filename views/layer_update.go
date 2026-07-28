@@ -43,7 +43,7 @@ type LayerUpdate[T any] struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing row updates.
-func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
+func (m LayerUpdate[T]) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			next.ServeHTTP(w, r)
@@ -59,7 +59,7 @@ func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		values, fieldErrors = m.FormPatchers.Apply(view, r, values, fieldErrors)
+		values, fieldErrors = m.FormPatchers.Apply(*view, r, values, fieldErrors)
 		ctx = r.Context()
 		if len(fieldErrors) != 0 {
 			for fname, ferr := range fieldErrors {
@@ -109,7 +109,7 @@ func (m LayerUpdate[T]) Next(view View, next http.Handler) http.Handler {
 				updateQuery := gorm.G[T](tx).Scopes(func(stmt *gorm.Statement) {
 					stmt.Model = &record
 				}).Where("id = ?", id)
-				updateQuery = m.QueryPatchers.Apply(view, r, updateQuery)
+				updateQuery = m.QueryPatchers.Apply(*view, r, updateQuery)
 				updateQuery.Updates(ctx, record)
 			}
 

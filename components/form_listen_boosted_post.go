@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	"maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FormListenBoostedPost represents a parent container that listens for bubbled form submission events and posts them via HTMX.
@@ -62,29 +62,29 @@ func (e *FormListenBoostedPost) SetChildren(children []PageInterface) {
 	e.Children = children
 }
 
-// Build compiles the FormListenBoostedPost component into a Div Node listening for the Alpine.js form submission event.
-func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
+// Build compiles the FormListenBoostedPost component into a Div listening for the Alpine.js form submission event.
+func (e FormListenBoostedPost) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Name == nil {
-		return ContainerError{Error: getters.Static(fmt.Errorf("FormListenBoostedPost: Name is nil"))}.Build(ctx)
+		return ContainerError{Error: getters.Static(fmt.Errorf("FormListenBoostedPost: Name is nil"))}.Build(cat, ctx, w)
 	}
 	if e.ActionURL == nil {
-		return ContainerError{Error: getters.Static(fmt.Errorf("FormListenBoostedPost: ActionURL is nil"))}.Build(ctx)
+		return ContainerError{Error: getters.Static(fmt.Errorf("FormListenBoostedPost: ActionURL is nil"))}.Build(cat, ctx, w)
 	}
 	name, err := e.Name(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	url, err := e.ActionURL(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	nameLit, err := json.Marshal(name)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	urlLit, err := json.Marshal(url)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	expr := fmt.Sprintf(
 		`(function(evt){
@@ -128,13 +128,12 @@ func (e FormListenBoostedPost) Build(ctx context.Context) gomponents.Node {
 		nameLit,
 		urlLit,
 	)
-	var childNodes []gomponents.Node
-	for _, child := range e.Children {
-		childNodes = append(childNodes, Render(child, ctx))
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-	return Div(
-		Class("contents"),
-		gomponents.Attr("@lariv-form-submit", expr),
-		gomponents.Group(childNodes),
-	)
+	return Execute(w, "form_listen_boosted_post", struct {
+		Expr     string
+		Children template.HTML
+	}{Expr: expr, Children: children})
 }

@@ -1,0 +1,23 @@
+{{define "table_grid_content"}}
+<div class="flex flex-col gap-4, @container">
+	<div class="overflow-x-auto">
+		<div class="grid grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3 @3xl:grid-cols-4 gap-2">
+			{{if .Empty}}
+			<div class="col-span-full text-center opacity-50 py-8">Table is empty</div>
+			{{else}}
+			{{range .Cards}}
+			<div{{attrs .Attrs}}>
+				{{if .Title}}<div class="font-semibold text-md truncate">{{.Title}}</div>{{end}}
+				{{range .Fields}}
+				<div class="text-sm flex gap-2 truncate">
+					{{if .Label}}<span class="font-semibold text-primary">{{.Label}}</span>{{end}}
+					<span>{{.Content}}</span>
+				</div>
+				{{end}}
+			</div>
+			{{end}}
+			{{end}}
+		</div>
+	</div>
+</div>
+{{end}}

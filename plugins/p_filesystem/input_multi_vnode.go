@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 	"mime/multipart"
 	"net/http"
@@ -12,8 +14,6 @@ import (
 
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 type InputMultiVNode struct {
@@ -41,7 +41,7 @@ func (e InputMultiVNode) GetRoles() []string {
 	return e.Roles
 }
 
-func (e InputMultiVNode) Build(ctx context.Context) Node {
+func (e InputMultiVNode) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	var items []multiVNodeItem
 	if e.VNode != nil {
 		nodes, err := e.VNode(ctx)
@@ -78,36 +78,32 @@ func (e InputMultiVNode) Build(ctx context.Context) Node {
 		}
 	}`, itemsJSON)
 
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Attr("x-data", alpineData),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		Template(
-			Attr("x-for", "file in files"),
-			Attr(":key", "file.id"),
-			Div(
-				Class("flex items-center gap-2 text-sm my-1 rounded-lg bg-base-200 px-2 py-1"),
-				Input(Type("hidden"), Name(e.Name), Attr(":value", "file.id")),
-				components.Render(components.Icon{Name: "document"}, ctx),
-				Span(Class("flex-1 min-w-0 truncate"), Attr("x-text", "file.name")),
-				Span(Class("opacity-50 shrink-0"), Attr("x-text", "'(' + file.size + ')'")),
-				Button(
-					Type("button"),
-					Class("btn btn-ghost btn-square btn-xs shrink-0"),
-					Attr("@click.stop", "removeFile(file.id)"),
-					Attr("aria-label", "Remove"),
-					components.Render(components.Icon{Name: "x-mark"}, ctx),
-				),
-			),
-		),
-		Input(
-			Type("file"),
-			Name(e.Name),
-			Class(fmt.Sprintf("file-input file-input-bordered w-full %s", e.Classes)),
-			Multiple(),
-			If(accept != "", Accept(accept)),
-		),
-	)
+	docIcon, err := components.RenderHTML(components.Icon{Name: "document"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	removeIcon, err := components.RenderHTML(components.Icon{Name: "x-mark"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+
+	return executeTemplate(w, "input_multi_vnode", struct {
+		Classes      string
+		AlpineData   string
+		Label        string
+		Name         string
+		DocumentIcon template.HTML
+		RemoveIcon   template.HTML
+		Accept       string
+	}{
+		Classes:      e.Classes,
+		AlpineData:   alpineData,
+		Label:        e.Label,
+		Name:         e.Name,
+		DocumentIcon: docIcon,
+		RemoveIcon:   removeIcon,
+		Accept:       accept,
+	})
 }
 
 func (e InputMultiVNode) ParseMultipart(uploadedFiles []*multipart.FileHeader, ctx context.Context) (any, error) {

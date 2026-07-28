@@ -10,7 +10,7 @@ import (
 
 const AppURL = "/website/"
 
-// GetPlugin returns registry contributions for [lariv.BuildAllRegistries].
+// GetPlugin returns registry contributions for [lariv.AppBuilder].
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppURL)
 	if err != nil {
@@ -25,11 +25,17 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 			URL:         u,
 			VerboseName: "Website",
 			Roles:       []string{"superuser", "admin"},
-			Migrations:  pluginStages(pluginMigrations),
-			Models:      pluginStages(pluginModels),
-			Views:       pluginStages(pluginViews),
-			Pages:       pluginStages(pluginPages),
-			Routes:      pluginStages(pluginRoutes),
+			Migrations:         pluginStages(pluginMigrations),
+			Models:             pluginStages(pluginModels),
+			Views:              pluginStages(pluginViews),
+			Pages:              pluginStages(pluginPages),
+			Routes:             pluginStages(pluginRoutes),
+			GrapesJSBlocks:     pluginStages(pluginGrapesJSBlocks),
+			GrapesJSComponents: pluginStages(pluginGrapesJSComponents),
+			GrapesJSTraits:     pluginStages(pluginGrapesJSTraits),
+			GrapesJSThemes:     pluginStages(pluginGrapesJSThemes),
+			Configs:            pluginStages(pluginConfigs),
+			Admin:              lariv.PluginStages(pluginAdmin),
 		},
 	}
 }

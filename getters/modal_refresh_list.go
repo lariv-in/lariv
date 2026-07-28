@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"maragu.dev/gomponents"
 )
 
 // ModalRefreshList returns a Getter suitable for [components.ButtonModal] / [components.ButtonModalForm].Attr. It emits an
@@ -25,8 +23,8 @@ import (
 // is rendering this button). That is required when the button lives inside a modal: the browser URL
 // is still the parent page, but the list belongs to the modal’s route. If "$request" is absent,
 // the client falls back to window.location.pathname + window.location.search.
-func ModalRefreshList(listURL, tableSelector Getter[string]) Getter[gomponents.Node] {
-	return func(ctx context.Context) (gomponents.Node, error) {
+func ModalRefreshList(listURL, tableSelector Getter[string]) Getter[map[string]string] {
+	return func(ctx context.Context) (map[string]string, error) {
 		if tableSelector == nil {
 			return nil, fmt.Errorf("getters.ModalRefreshList: tableSelector getter is nil")
 		}
@@ -65,6 +63,6 @@ func ModalRefreshList(listURL, tableSelector Getter[string]) Getter[gomponents.N
 			uLit,
 			sLit,
 		)
-		return gomponents.Attr("x-init", script), nil
+		return map[string]string{"x-init": script}, nil
 	}
 }

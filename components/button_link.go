@@ -2,10 +2,10 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	"maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
 )
 
 // ButtonLink represents an anchor link styled as a button.
@@ -35,8 +35,8 @@ func (e ButtonLink) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the ButtonLink component into a gomponents Node representing an HTML <a> element.
-func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
+// Build compiles the ButtonLink component into an HTML <a> element.
+func (e ButtonLink) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	link := ""
 	if e.Link != nil {
 		if v, err := e.Link(ctx); err == nil {
@@ -50,17 +50,23 @@ func (e ButtonLink) Build(ctx context.Context) gomponents.Node {
 		}
 	}
 
-	content := gomponents.Group{}
+	var iconHTML template.HTML
 	if e.Icon != "" {
-		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
-	}
-	if label != "" {
-		content = append(content, gomponents.Text(label))
+		h, err := RenderHTML(&Icon{Name: e.Icon, Classes: e.IconClasses}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		iconHTML = h
 	}
 
 	classes := "btn " + e.Classes
 	if e.Icon != "" && label != "" {
 		classes += " flex items-center gap-2"
 	}
-	return html.A(html.Href(link), html.Class(classes), content)
+	return Execute(w, "button_link", struct {
+		Link    string
+		Classes string
+		Icon    template.HTML
+		Label   string
+	}{Link: link, Classes: classes, Icon: iconHTML, Label: label})
 }

@@ -3,12 +3,11 @@ package components
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"html/template"
+	"io"
 	"sort"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // TableColumn represents a single column header and cell structure layout configuration.
@@ -25,7 +24,7 @@ type TableColumn struct {
 }
 
 // TableDisplayBuilder defines the constructor callback type constructing list view mode components.
-type TableDisplayBuilder[T any] func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[Node]) PageInterface
+type TableDisplayBuilder[T any] func([]TableColumn, getters.Getter[ObjectList[T]], getters.Getter[HTMLAttributes]) PageInterface
 
 // DataTable represents a responsive data grid list viewer component supporting paginated queries.
 // It displays database rows in multiple view modes (e.g. List, Grid) using Alpine.js, handles sorting, pagination controls,
@@ -67,8 +66,8 @@ type DataTable[T any] struct {
 	DefaultView string
 	// Actions represents custom toolbar action buttons rendered next to view switch controls.
 	Actions []PageInterface
-	// RowAttr represents the dynamic getter returning TR/card attribute nodes.
-	RowAttr getters.Getter[Node]
+	// RowAttr represents the dynamic getter returning TR/card HTML attributes.
+	RowAttr getters.Getter[HTMLAttributes]
 	// EnabledColumns represents the dynamic getter returning the visible columns map filter.
 	EnabledColumns getters.Getter[map[string]bool]
 }
@@ -78,14 +77,19 @@ func (e DataTable[T]) TableColumns() []TableColumn {
 	return e.Columns
 }
 
+type dataTableDisplay struct {
+	Name string
+	HTML template.HTML
+}
+
 // Build compiles the DataTable component into table headers, lists, grids, and view switchers.
-func (e DataTable[T]) Build(ctx context.Context) Node {
+func (e DataTable[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Displays == nil {
 		e.Displays = map[string]TableDisplayBuilder[T]{
-			"List": func(cols []TableColumn, data getters.Getter[ObjectList[T]], rowAttr getters.Getter[Node]) PageInterface {
+			"List": func(cols []TableColumn, data getters.Getter[ObjectList[T]], rowAttr getters.Getter[HTMLAttributes]) PageInterface {
 				return TableListContent[T]{Columns: cols, Data: data, RowAttr: rowAttr}
 			},
-			"Grid": func(cols []TableColumn, data getters.Getter[ObjectList[T]], rowAttr getters.Getter[Node]) PageInterface {
+			"Grid": func(cols []TableColumn, data getters.Getter[ObjectList[T]], rowAttr getters.Getter[HTMLAttributes]) PageInterface {
 				return TableGridContent[T]{Columns: cols, Data: data, RowAttr: rowAttr}
 			},
 		}
@@ -95,32 +99,36 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 	if e.EnabledColumns != nil {
 		enabledMap, err := e.EnabledColumns(ctx)
 		if err != nil {
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		if enabledMap != nil {
 			displayCols = FilterTableColumnsByEnabledMap(e.Columns, enabledMap)
 		}
 	}
 
-	displayNodes := Group{}
-	for name, builder := range e.Displays {
-		displayNodes = append(displayNodes, Div(
-			Attr("x-show", fmt.Sprintf("view === '%s'", name)), Render(builder(displayCols, e.Data, e.RowAttr), ctx),
-		))
-	}
-
-	// View Switcher (Simple Select)
-	var options []Node
+	viewOptions := make([]string, 0, len(e.Displays))
 	for name := range e.Displays {
-		options = append(options, Option(Value(name), Text(name)))
+		viewOptions = append(viewOptions, name)
+	}
+	sort.Strings(viewOptions)
+
+	displays := make([]dataTableDisplay, 0, len(e.Displays))
+	for _, name := range viewOptions {
+		html, err := RenderHTML(e.Displays[name](displayCols, e.Data, e.RowAttr), cat, ctx)
+		if err != nil {
+			return err
+		}
+		displays = append(displays, dataTableDisplay{Name: name, HTML: html})
 	}
 
-	var actionBar Group
-	for _, a := range e.Actions {
-		if a == nil {
-			continue
-		}
-		actionBar = append(actionBar, Render(a, ctx))
+	actions, err := RenderChildren(cat, ctx, e.Actions)
+	if err != nil {
+		return err
+	}
+
+	pagination, err := RenderHTML(TablePagination[T]{Data: e.Data}, cat, ctx)
+	if err != nil {
+		return err
 	}
 
 	uid := e.UID
@@ -135,43 +143,33 @@ func (e DataTable[T]) Build(ctx context.Context) Node {
 	if _, ok := e.Displays[initialView]; !ok {
 		if _, ok := e.Displays["List"]; ok {
 			initialView = "List"
-		} else {
-			keys := make([]string, 0, len(e.Displays))
-			for k := range e.Displays {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-			if len(keys) > 0 {
-				initialView = keys[0]
-			}
+		} else if len(viewOptions) > 0 {
+			initialView = viewOptions[0]
 		}
 	}
 	xData, _ := json.Marshal(map[string]string{"view": initialView})
 
-	return Div(
-		ID(uid), Class(fmt.Sprintf("w-full data-table-container %s", e.Classes)),
-		Attr("x-data", string(xData)),
-		Div(
-			Class("flex justify-between items-center my-2"),
-			Div(
-				If(e.Title != "", Div(Class("text-xl font-semibold"), Text(e.Title))),
-				If(e.Subtitle != "", Div(Class("text-sm text-gray-500"), Text(e.Subtitle))),
-			),
-			Div(
-				Class("flex items-center gap-2"),
-				Select(
-					Class("select select-md"),
-					Attr("x-model", "view"),
-					Group(options),
-				),
-				Group(actionBar),
-			),
-		),
-		Div(
-			Class("relative my-2"),
-			displayNodes, Render(TablePagination[T]{Data: e.Data}, ctx),
-		),
-	)
+	return Execute(w, "data_table", struct {
+		UID         string
+		Classes     string
+		XData       string
+		Title       string
+		Subtitle    string
+		ViewOptions []string
+		Actions     template.HTML
+		Displays    []dataTableDisplay
+		Pagination  template.HTML
+	}{
+		UID:         uid,
+		Classes:     e.Classes,
+		XData:       string(xData),
+		Title:       e.Title,
+		Subtitle:    e.Subtitle,
+		ViewOptions: viewOptions,
+		Actions:     actions,
+		Displays:    displays,
+		Pagination:  pagination,
+	})
 }
 
 // GetKey returns the unique key identifier for this DataTable.

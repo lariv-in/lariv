@@ -84,7 +84,7 @@ func resolveAuth(r *http.Request) context.Context {
 // authenticated the request is redirected to the unauthenticated route.
 type AuthenticationLayer struct{}
 
-func (AuthenticationLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (AuthenticationLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return RequireAuth(next)
 }
 
@@ -95,8 +95,13 @@ func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := resolveAuth(r)
 		if ctx == nil {
-			unauthenticatedRoute, _ := lariv.RegistryRoute.Get("p_users.UnauthenticatedRoute")
-			views.HtmxRedirect(w, r, unauthenticatedRoute.Path, http.StatusSeeOther)
+			path := "/login/"
+			if app, ok := lariv.AppFromContext(r.Context()); ok {
+				if unauthenticatedRoute, found := app.Routes.Get("p_users.UnauthenticatedRoute"); found {
+					path = unauthenticatedRoute.Path
+				}
+			}
+			views.HtmxRedirect(w, r, path, http.StatusSeeOther)
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -108,7 +113,7 @@ func RequireAuth(next http.Handler) http.Handler {
 // request continues without those context values.
 type OptionalAuthLayer struct{}
 
-func (OptionalAuthLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (OptionalAuthLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ctx := resolveAuth(r); ctx != nil {
 			r = r.WithContext(ctx)
@@ -121,7 +126,7 @@ type RoleAuthorizationLayer struct {
 	Roles []string
 }
 
-func (m RoleAuthorizationLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (m RoleAuthorizationLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := UserFromContext(r.Context(), "RoleAuthorizationLayer")
 

@@ -17,7 +17,7 @@ const exportCatalogContextKey = "export.catalog"
 
 type catalogLayer struct{}
 
-func (catalogLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (catalogLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		db, err := getters.DBFromContext(r.Context())
 		if err != nil {
@@ -26,7 +26,11 @@ func (catalogLayer) Next(_ views.View, next http.Handler) http.Handler {
 			return
 		}
 
-		catalog, err := BuildExportCatalog(db)
+		var models *[]registry.Pair[string, any]
+		if app, ok := lariv.AppFromContext(r.Context()); ok {
+			models = app.Models.AllStable()
+		}
+		catalog, err := BuildExportCatalogFrom(db, models)
 		if err != nil {
 			slog.Error("export: build catalog", "error", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -42,7 +46,7 @@ type methodGateLayer struct {
 	Method string
 }
 
-func (m methodGateLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (m methodGateLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != m.Method {
 			http.Error(w, fmt.Sprintf("method %s not allowed", r.Method), http.StatusMethodNotAllowed)

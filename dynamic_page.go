@@ -2,25 +2,15 @@ package lariv
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/components"
-	"maragu.dev/gomponents"
 )
 
-// DynamicPage lazily resolves page elements by string identifiers from [RegistryPage] at build/render time.
-// This decouples components registrations, avoiding import-time dependency loops between modular plugins.
-//
-// Use Cases:
-//   - Lazy-loading sub-pages or sections dynamically from registries without establishing direct static dependencies.
-//
-// Example:
-//
-//	&lariv.DynamicPage{
-//	    Name: "admin.Dashboard",
-//	}
+// DynamicPage lazily resolves page elements by string identifiers from the compiled [App] catalog at build/render time.
+// This decouples component registrations, avoiding import-time dependency loops between modular plugins.
 type DynamicPage struct {
-	// Page embeds common component properties like Key and Roles.
 	components.Page
 	// Name represents the registered string identifier of the target page component to fetch (e.g. "admin.Dashboard").
 	Name string
@@ -36,22 +26,18 @@ func (d DynamicPage) GetRoles() []string {
 	return d.Roles
 }
 
-// GetChildren resolves the lazy target page from the registry and returns it in a slice.
+// GetChildren resolves the lazy target page from the catalog and returns it in a slice.
+// Without a catalog argument this returns nil; prefer Build for rendering.
 func (d DynamicPage) GetChildren() []components.PageInterface {
-	page, ok := RegistryPage.Get(d.Name)
-	if !ok {
-		slog.Warn("DynamicPage: page not found in registry", "name", d.Name)
-		return nil
-	}
-	return []components.PageInterface{page}
+	return nil
 }
 
-// Build compiles the dynamic component by rendering the lazy resolved page.
-func (d DynamicPage) Build(ctx context.Context) gomponents.Node {
-	page, ok := RegistryPage.Get(d.Name)
+// Build compiles the dynamic component by rendering the lazy resolved page from cat.
+func (d DynamicPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
+	page, ok := cat.Page(d.Name)
 	if !ok {
-		slog.Warn("DynamicPage: page not found in registry", "name", d.Name)
+		slog.Warn("DynamicPage: page not found in catalog", "name", d.Name)
 		return nil
 	}
-	return components.Render(page, ctx)
+	return components.Render(page, cat, ctx, w)
 }

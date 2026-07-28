@@ -2,10 +2,8 @@ package components
 
 import (
 	"context"
-	"fmt"
-
-	"maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // ContainerColumn layout container stacks its child components vertically.
@@ -31,16 +29,19 @@ type ContainerColumn struct {
 	Children []PageInterface
 	// Classes represents additional CSS classes applied to the wrapping div container.
 	// (Discouraged: Limit custom class overrides to layout utilities like margins or alignment).
-	Classes  string
+	Classes string
 }
 
-// Build compiles the ContainerColumn component into a div Node containing stacked child nodes.
-func (e ContainerColumn) Build(ctx context.Context) gomponents.Node {
-	group := gomponents.Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+// Build compiles the ContainerColumn component into a div containing stacked children.
+func (e ContainerColumn) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-	return html.Div(html.Class(fmt.Sprintf("flex flex-col gap-1 %s", e.Classes)), group)
+	return Execute(w, "container_column", struct {
+		Classes  string
+		Children template.HTML
+	}{Classes: e.Classes, Children: children})
 }
 
 // GetKey returns the unique key identifier for this ContainerColumn component.

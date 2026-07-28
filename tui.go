@@ -50,11 +50,14 @@ type model struct {
 }
 
 // Deprecated: This function is a Work in Progress (WIP) and should NOT be used.
-func initialModel(db *gorm.DB) model {
-	stable := RegistryAdmin.AllStable(registry.AlphabeticalByKey[AdminPanelInterface]{})
+func initialModel(db *gorm.DB, admin *registry.ImmutableRegistry[AdminPanelInterface]) model {
+	var tabs []registry.Pair[string, AdminPanelInterface]
+	if admin != nil {
+		tabs = *admin.AllStable()
+	}
 	m := model{
 		currentTab: 0,
-		tabs:       *stable,
+		tabs:       tabs,
 		db:         db,
 		width:      80,
 		height:     24,

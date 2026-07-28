@@ -2,8 +2,7 @@ package components
 
 import (
 	"context"
-
-	"maragu.dev/gomponents"
+	"io"
 )
 
 // Shell represents the global base page scaffolding interface (e.g. HTML body wrappers).
@@ -11,5 +10,5 @@ import (
 type Shell interface {
 	PageInterface
 	// Body compiles the core page content wrapper inside the parent HTML document shell structure.
-	Body(context.Context) gomponents.Node
+	Body(cat Catalog, ctx context.Context, w io.Writer) error
 }

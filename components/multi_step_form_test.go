@@ -49,7 +49,7 @@ func TestMultiStepFormBuildCarriesPreviousValues(t *testing.T) {
 		},
 	}
 
-	html := renderNode(t, form.Build(ctx))
+	html := renderPage(t, form, ctx)
 	if !strings.Contains(html, `action="/wizard"`) {
 		t.Fatalf("expected multistage action on rendered form, got %s", html)
 	}
@@ -111,7 +111,7 @@ func TestMultiStepFormBuildHighlightsOnlyStagesWithFieldErrors(t *testing.T) {
 		},
 	}
 
-	html := renderNode(t, form.Build(ctx))
+	html := renderPage(t, form, ctx)
 	if got := strings.Count(html, `border-error`); got != 2 {
 		t.Fatalf("expected only error stages highlighted, got %d body=%s", got, html)
 	}

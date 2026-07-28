@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/lariv-in/lariv/registry"
 	"github.com/pressly/goose/v3"
 )
 
@@ -89,8 +90,11 @@ func gooseDialect(t DBType) (goose.Dialect, error) {
 
 // gooseUpPluginMigrations cycles through all registered plugin migration folders, loading their target versions
 // from their specific goose table names, and runs the "Up" migrations to update the database schema.
-func gooseUpPluginMigrations(ctx context.Context, sqlDB *sql.DB, config LarivConfig) error {
-	pairs := *RegistryMigrations.AllStable()
+func gooseUpPluginMigrations(ctx context.Context, sqlDB *sql.DB, config LarivConfig, migrations *registry.ImmutableRegistry[UsefulFilesystem]) error {
+	if migrations == nil {
+		return nil
+	}
+	pairs := *migrations.AllStable()
 	if len(pairs) == 0 {
 		return nil
 	}

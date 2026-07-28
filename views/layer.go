@@ -17,7 +17,7 @@ import (
 //
 //	type HeaderInjectorLayer struct{}
 //
-//	func (l HeaderInjectorLayer) Next(view views.View, next http.Handler) http.Handler {
+//	func (l HeaderInjectorLayer) Next(view *views.View, next http.Handler) http.Handler {
 //		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //			w.Header().Set("X-Custom-View-Header", "Lariv")
 //			next.ServeHTTP(w, r)
@@ -25,7 +25,7 @@ import (
 //	}
 type Layer interface {
 	// Next wraps the next handler in the view request execution chain.
-	Next(View, http.Handler) http.Handler
+	Next(*View, http.Handler) http.Handler
 }
 
 // GlobalLayer defines a global HTTP middleware layer that wraps the base server route multiplexer.
@@ -67,7 +67,7 @@ type PathLayer struct {
 }
 
 // Next executes the extraction layer, mapping parameters and invoking the next handler.
-func (m PathLayer) Next(_ View, next http.Handler) http.Handler {
+func (m PathLayer) Next(_ *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values := make(map[string]any, len(m.Names))
 		for _, name := range m.Names {
@@ -88,10 +88,10 @@ type MethodLayer struct {
 }
 
 // Next inspects the request method, routing to the Method handler if matched.
-func (m MethodLayer) Next(view View, next http.Handler) http.Handler {
+func (m MethodLayer) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == m.Method {
-			m.Handler(&view).ServeHTTP(w, r)
+			m.Handler(view).ServeHTTP(w, r)
 			return
 		}
 		next.ServeHTTP(w, r)

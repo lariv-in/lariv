@@ -1,0 +1,8 @@
+{{define "input_key_value"}}
+<div class="{{.Classes}}">
+	{{.Rows}}
+	{{if .ShowFinal}}
+	<input type="hidden" name="{{.Name}}" x-data x-init="{{.XInit}}">
+	{{end}}
+</div>
+{{end}}

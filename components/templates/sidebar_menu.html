@@ -1,0 +1,7 @@
+{{define "sidebar_menu"}}
+<ul class="menu w-full wrap-anywhere">
+	{{if .HasBack}}<li>{{.Back}}</li>{{end}}
+	{{if .Title}}<li class="menu-title font-semibold opacity-70">{{.Title}}</li>{{end}}
+	{{.Children}}
+</ul>
+{{end}}

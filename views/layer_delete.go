@@ -41,7 +41,7 @@ type LayerDelete[T any] struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing row deletions.
-func (m LayerDelete[T]) Next(view View, next http.Handler) http.Handler {
+func (m LayerDelete[T]) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			next.ServeHTTP(w, r)
@@ -77,7 +77,7 @@ func (m LayerDelete[T]) Next(view View, next http.Handler) http.Handler {
 			return
 		}
 		query := gorm.G[T](db).Where("id = ?", id)
-		query = m.QueryPatchers.Apply(view, r, query)
+		query = m.QueryPatchers.Apply(*view, r, query)
 		_, err = query.Delete(ctx)
 		if err != nil {
 			slog.Error("views: layer delete: delete record", "error", err)

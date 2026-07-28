@@ -1,0 +1,3 @@
+{{define "client_match_if"}}
+{{range .Cases}}<template x-if="{{.Condition}}"><div>{{.Content}}</div></template>{{end}}
+{{end}}

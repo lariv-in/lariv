@@ -1,0 +1,12 @@
+{{define "input_select"}}
+<div class="{{.WrapClass}}">
+	<label class="label text-sm font-bold flex flex-col items-start gap-1">
+		{{.Label}}
+		<select name="{{.Name}}" class="select select-bordered w-full {{.Classes}}"{{if .Required}} required{{end}}{{attrs .Attrs}}>
+			{{range .Options}}
+			<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>
+			{{end}}
+		</select>
+	</label>
+</div>
+{{end}}

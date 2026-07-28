@@ -2,15 +2,12 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
 	"github.com/nyaruka/phonenumbers"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputPhone represents a telephone number input form field component.
@@ -54,7 +51,7 @@ func (e InputPhone) GetRoles() []string {
 }
 
 // Build compiles the InputPhone component into a Div wrapping a telephone Input.
-func (e InputPhone) Build(ctx context.Context) Node {
+func (e InputPhone) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	displayValue := ""
 	if e.Getter != nil {
 		value, err := e.Getter(ctx)
@@ -71,14 +68,19 @@ func (e InputPhone) Build(ctx context.Context) Node {
 			}
 		}
 	}
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Input(Type("tel"), Name(e.Name), Value(displayValue), Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
-		),
-	)
+	return Execute(w, "input_phone", struct {
+		Classes  string
+		Label    string
+		Name     string
+		Value    string
+		Required bool
+	}{
+		Classes:  e.Classes,
+		Label:    e.Label,
+		Name:     e.Name,
+		Value:    displayValue,
+		Required: e.Required,
+	})
 }
 
 // Parse extracts text numbers from parameters and parses/formats them as E.164 phone formats.

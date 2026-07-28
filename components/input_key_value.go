@@ -1,16 +1,17 @@
 package components
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/registry"
 	"gorm.io/datatypes"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputKeyValue represents a dynamic key-value list entry form input component.
@@ -52,7 +53,7 @@ func (e InputKeyValue) GetRoles() []string {
 }
 
 // Build compiles the InputKeyValue component into multiple Input rows and an inline JS submission serialization script.
-func (e InputKeyValue) Build(ctx context.Context) Node {
+func (e InputKeyValue) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	var val []registry.Pair[string, string]
 	if e.Getter != nil {
 		jsonData, err := e.Getter(ctx)
@@ -69,32 +70,45 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
 
 	if e.Keys == nil {
 		slog.Error("InputKeyValue Keys is nil", "key", e.Key)
-		return Div(Class(e.Classes))
+		return Execute(w, "input_key_value", struct {
+			Classes   string
+			Rows      template.HTML
+			ShowFinal bool
+			Name      string
+			XInit     string
+		}{Classes: e.Classes})
 	}
 	keys, err := e.Keys(ctx)
 	if err != nil {
 		slog.Error("InputKeyValue Keys getter failed", "error", err, "key", e.Key)
-		return Div(Class(e.Classes))
+		return Execute(w, "input_key_value", struct {
+			Classes   string
+			Rows      template.HTML
+			ShowFinal bool
+			Name      string
+			XInit     string
+		}{Classes: e.Classes})
 	}
 
-	var nodes []Node
+	var rows bytes.Buffer
 	for i, k := range keys {
 		displayVal := ""
 		if i < len(val) && val[i].Key == k {
 			displayVal = val[i].Value
 		}
-		nodes = append(
-			nodes,
-			InputText{Hidden: true, Name: e.Name + "Key", Getter: getters.Static(k)}.Build(ctx),
-			InputTextarea{Name: e.Name + "Value", Label: k, Getter: getters.Static(displayVal)}.Build(ctx),
-		)
+		hidden, err := RenderHTML(InputText{Hidden: true, Name: e.Name + "Key", Getter: getters.Static(k)}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		ta, err := RenderHTML(InputTextarea{Name: e.Name + "Value", Label: k, Getter: getters.Static(displayVal)}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		rows.WriteString(string(hidden))
+		rows.WriteString(string(ta))
 	}
 
-	finalInput := Input(
-		Type("hidden"),
-		Name(e.Name),
-		Attr("x-data"),
-		Attr("x-init", fmt.Sprintf(`
+	xInit := fmt.Sprintf(`
 	$el.closest('form').addEventListener('submit', (e) => {
 		let form = e.currentTarget;
 		let data = [];
@@ -105,9 +119,21 @@ func (e InputKeyValue) Build(ctx context.Context) Node {
             $el.value = JSON.stringify(data);
             form.querySelectorAll('[name=%sKey], [name=%sValue]').forEach(el => el.disabled = true);
         }, true);
-	`, e.Name, e.Name, e.Name, e.Name)),
-	)
-	return Div(Class(e.Classes), Group(nodes), finalInput)
+	`, e.Name, e.Name, e.Name, e.Name)
+
+	return Execute(w, "input_key_value", struct {
+		Classes   string
+		Rows      template.HTML
+		ShowFinal bool
+		Name      string
+		XInit     string
+	}{
+		Classes:   e.Classes,
+		Rows:      template.HTML(rows.String()),
+		ShowFinal: true,
+		Name:      e.Name,
+		XInit:     xInit,
+	})
 }
 
 // Parse extracts the JSON array value string from parameters and unmarshals it into a datatypes.JSON GORM object.

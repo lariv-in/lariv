@@ -2,12 +2,12 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 	"log/slog"
 	"reflect"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // Detail binds a generic model object of type T resolved from the context to its child components under the context key "$in".
@@ -36,13 +36,13 @@ type Detail[T any] struct {
 }
 
 // Build compiles the Detail component, binding the model object to context and rendering its children.
-func (e Detail[T]) Build(ctx context.Context) Node {
+func (e Detail[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	childCtx := ctx
 	if e.Getter != nil {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("Detail getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		if v := reflect.ValueOf(value); v.IsValid() && !v.IsZero() {
 			objMap := getters.MapFromStruct(value)
@@ -50,11 +50,11 @@ func (e Detail[T]) Build(ctx context.Context) Node {
 		}
 	}
 
-	var childNodes []Node
-	for _, child := range e.Children {
-		childNodes = append(childNodes, Render(child, childCtx))
+	children, err := RenderChildren(cat, childCtx, e.Children)
+	if err != nil {
+		return err
 	}
-	return Div(Group(childNodes))
+	return Execute(w, "detail", struct{ Children template.HTML }{Children: children})
 }
 
 // GetKey returns the unique key identifier for this Detail component.

@@ -4,21 +4,18 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 	"net/http"
 	"reflect"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
-
-var multiStepFormActionAttr = regexp.MustCompile(`\saction="[^"]*"`)
 
 const multiStepFormErrorFieldPrefix = "$error."
 
@@ -26,6 +23,8 @@ const multiStepFormErrorFieldPrefix = "$error."
 // It bundles multiple standard [FormInterface] stages together, displaying one active stage at a time and automatically
 // carrying values and validation errors from inactive stages inside hidden inputs.
 // It automatically renders a navigation ribbon tracking steps, highlighting stages that contain validation errors.
+//
+// Active stages that are [FormComponent] receive action/ribbon/hidden markup via context keys (no HTML string surgery).
 //
 // Use Cases:
 //   - Constructing user onboarding funnels, multi-page checkout flows, or complex configuration wizards.
@@ -58,10 +57,17 @@ var (
 	_ MutableParentInterface = (*MultiStepForm)(nil)
 )
 
+type multiStepRibbonButton struct {
+	Kind    string // "current", "submit", or "disabled"
+	Label   string
+	Value   string
+	Classes string
+}
+
 // Build compiles the active Form stage page layout, injecting hidden values and progress step ribbons.
-func (e MultiStepForm) Build(ctx context.Context) Node {
+func (e MultiStepForm) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if len(e.Stages) == 0 {
-		return ContainerError{Error: getters.Static(fmt.Errorf("MultiStepForm: no stages configured"))}.Build(ctx)
+		return ContainerError{Error: getters.Static(fmt.Errorf("MultiStepForm: no stages configured"))}.Build(cat, ctx, w)
 	}
 
 	stageIdx := e.resolveStage(ctx)
@@ -69,31 +75,26 @@ func (e MultiStepForm) Build(ctx context.Context) Node {
 	errors := e.resolveErrors(ctx)
 	actionURL := e.resolveMultiStageURL(ctx)
 
-	stageHTML, err := renderNodeToString(Render(e.Stages[stageIdx], ctx))
-	if err != nil {
-		slog.Error("MultiStepForm stage render failed", "error", err, "key", e.Key, "stage", stageIdx)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
-	}
-
-	hiddenHTML, err := e.hiddenFieldsHTML(ctx, stageIdx, values, errors)
+	hiddenHTML, err := e.hiddenFieldsHTML(cat, ctx, stageIdx, values, errors)
 	if err != nil {
 		slog.Error("MultiStepForm hidden render failed", "error", err, "key", e.Key, "stage", stageIdx)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
 	ribbonHTML, err := e.ribbonHTML(stageIdx, errors)
 	if err != nil {
 		slog.Error("MultiStepForm ribbon render failed", "error", err, "key", e.Key, "stage", stageIdx)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
-	html, err := injectIntoRenderedForm(stageHTML, actionURL, ribbonHTML, hiddenHTML)
-	if err != nil {
-		slog.Error("MultiStepForm form injection failed", "error", err, "key", e.Key, "stage", stageIdx)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+	stageCtx := ctx
+	if actionURL != "" {
+		stageCtx = context.WithValue(stageCtx, multiStepFormActionKey, actionURL)
 	}
+	stageCtx = context.WithValue(stageCtx, multiStepFormPrefixKey, template.HTML(ribbonHTML))
+	stageCtx = context.WithValue(stageCtx, multiStepFormSuffixKey, template.HTML(hiddenHTML))
 
-	return Raw(html)
+	return Render(e.Stages[stageIdx], cat, stageCtx, w)
 }
 
 // ParseForm parses submitted form parameters for the active stage using multipart/url encoding.
@@ -299,9 +300,10 @@ func (e MultiStepForm) resolveMultiStageURL(ctx context.Context) string {
 	return url
 }
 
-func (e MultiStepForm) hiddenFieldsHTML(ctx context.Context, stageIdx int, values map[string]any, errors map[string]error) (string, error) {
-	nodes := []Node{
-		Input(Type("hidden"), Name("$stage"), Value(strconv.Itoa(stageIdx))),
+func (e MultiStepForm) hiddenFieldsHTML(cat Catalog, ctx context.Context, stageIdx int, values map[string]any, errors map[string]error) (string, error) {
+	var out strings.Builder
+	if err := Execute(&out, "multi_step_form_hidden_stage", strconv.Itoa(stageIdx)); err != nil {
+		return "", err
 	}
 
 	activeNames := e.stageInputNames(stageIdx)
@@ -325,68 +327,51 @@ func (e MultiStepForm) hiddenFieldsHTML(ctx context.Context, stageIdx int, value
 			if !ok || isNilAny(value) {
 				continue
 			}
-			node, renderable := hiddenCarryNode(input, value, ctx)
+			html, renderable := hiddenCarryHTML(input, value, cat, ctx)
 			if !renderable {
 				slog.Error("MultiStepForm hidden carry unsupported", "key", e.Key, "input", name, "type", fmt.Sprintf("%T", value))
 				continue
 			}
-			nodes = append(nodes, node)
+			out.WriteString(string(html))
 			seen[name] = struct{}{}
 		}
 	}
-	nodes = append(nodes, hiddenErrorNodes(errors)...)
-
-	var out strings.Builder
-	for _, node := range nodes {
-		html, err := renderNodeToString(node)
-		if err != nil {
-			return "", err
-		}
-		out.WriteString(html)
+	errHTML, err := hiddenErrorHTML(errors)
+	if err != nil {
+		return "", err
 	}
+	out.WriteString(errHTML)
 	return out.String(), nil
 }
 
 func (e MultiStepForm) ribbonHTML(stageIdx int, errors map[string]error) (string, error) {
-	nodes := []Node{
-		Div(
-			Class("flex flex-wrap items-center gap-2 mb-4"),
-			Group(e.ribbonButtons(stageIdx, e.stageErrors(errors))),
-		),
+	buttons := e.ribbonButtons(stageIdx, e.stageErrors(errors))
+	var out bytes.Buffer
+	if err := Execute(&out, "multi_step_form_ribbon", struct {
+		Buttons []multiStepRibbonButton
+	}{Buttons: buttons}); err != nil {
+		return "", err
 	}
-	return renderNodesToString(nodes)
+	return out.String(), nil
 }
 
-func (e MultiStepForm) ribbonButtons(stageIdx int, stageErrors map[int]struct{}) []Node {
-	nodes := make([]Node, 0, len(e.Stages))
+func (e MultiStepForm) ribbonButtons(stageIdx int, stageErrors map[int]struct{}) []multiStepRibbonButton {
+	buttons := make([]multiStepRibbonButton, 0, len(e.Stages))
 	for i := range e.Stages {
 		label := fmt.Sprintf("Step %d", i+1)
 		classes := e.ribbonButtonClasses(i, stageIdx, stageErrors)
 		switch {
 		case i == stageIdx:
-			nodes = append(nodes, Button(
-				Type("button"),
-				Class(classes),
-				Text(label),
-			))
+			buttons = append(buttons, multiStepRibbonButton{Kind: "current", Label: label, Classes: classes})
 		case i < stageIdx:
-			nodes = append(nodes, Button(
-				Type("submit"),
-				Name("$stage_target"),
-				Value(strconv.Itoa(i)),
-				Class(classes),
-				Text(label),
-			))
+			buttons = append(buttons, multiStepRibbonButton{
+				Kind: "submit", Label: label, Value: strconv.Itoa(i), Classes: classes,
+			})
 		default:
-			nodes = append(nodes, Button(
-				Type("button"),
-				Class(classes),
-				Disabled(),
-				Text(label),
-			))
+			buttons = append(buttons, multiStepRibbonButton{Kind: "disabled", Label: label, Classes: classes})
 		}
 	}
-	return nodes
+	return buttons
 }
 
 func (e MultiStepForm) stageErrors(errors map[string]error) map[int]struct{} {
@@ -519,9 +504,9 @@ func ParseMultiStepErrors(r *http.Request) map[string]error {
 	return errors
 }
 
-func hiddenErrorNodes(errors map[string]error) []Node {
+func hiddenErrorHTML(errors map[string]error) (string, error) {
 	if len(errors) == 0 {
-		return nil
+		return "", nil
 	}
 	keys := make([]string, 0, len(errors))
 	for key, err := range errors {
@@ -531,118 +516,149 @@ func hiddenErrorNodes(errors map[string]error) []Node {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	nodes := make([]Node, 0, len(keys))
+	var out strings.Builder
 	for _, key := range keys {
-		nodes = append(nodes, Input(
-			Type("hidden"),
-			Name(multiStepFormErrorFieldPrefix+key),
-			Value(errors[key].Error()),
-		))
+		if err := Execute(&out, "multi_step_form_hidden_input", struct {
+			Name  string
+			Value string
+		}{Name: multiStepFormErrorFieldPrefix + key, Value: errors[key].Error()}); err != nil {
+			return "", err
+		}
 	}
-	return nodes
+	return out.String(), nil
 }
 
-func hiddenCarryNode(input InputInterface, value any, ctx context.Context) (Node, bool) {
+func hiddenCarryHTML(input InputInterface, value any, cat Catalog, ctx context.Context) (template.HTML, bool) {
 	switch typed := input.(type) {
 	case InputCheckbox:
 		v, ok := value.(bool)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		typed.Hidden = true
 		typed.Getter = getters.Static(v)
-		return typed.Build(ctx), true
+		return pageHTMLFragment(typed, cat, ctx)
 	case *InputCheckbox:
 		v, ok := value.(bool)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		clone := *typed
 		clone.Hidden = true
 		clone.Getter = getters.Static(v)
-		return clone.Build(ctx), true
+		return pageHTMLFragment(clone, cat, ctx)
 	case InputDate:
 		t, ok := timeValue(value)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		typed.Hidden = true
 		typed.Getter = getters.Static(t)
-		return typed.Build(ctx), true
+		return pageHTMLFragment(typed, cat, ctx)
 	case *InputDate:
 		t, ok := timeValue(value)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		clone := *typed
 		clone.Hidden = true
 		clone.Getter = getters.Static(t)
-		return clone.Build(ctx), true
+		return pageHTMLFragment(clone, cat, ctx)
 	case InputTime:
 		t, ok := timeValue(value)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		typed.Hidden = true
 		typed.Getter = getters.Static(t)
-		return typed.Build(ctx), true
+		return pageHTMLFragment(typed, cat, ctx)
 	case *InputTime:
 		t, ok := timeValue(value)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		clone := *typed
 		clone.Hidden = true
 		clone.Getter = getters.Static(t)
-		return clone.Build(ctx), true
+		return pageHTMLFragment(clone, cat, ctx)
 	case InputDatetime:
 		t, ok := timeValue(value)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		typed.Hidden = true
 		typed.Getter = getters.Static(t)
-		return typed.Build(ctx), true
+		return pageHTMLFragment(typed, cat, ctx)
 	case *InputDatetime:
 		t, ok := timeValue(value)
 		if !ok {
-			return nil, false
+			return "", false
 		}
 		clone := *typed
 		clone.Hidden = true
 		clone.Getter = getters.Static(t)
-		return clone.Build(ctx), true
+		return pageHTMLFragment(clone, cat, ctx)
 	default:
-		return genericHiddenCarryNode(input.GetName(), value)
+		return genericHiddenCarryHTML(input.GetName(), value)
 	}
 }
 
-func genericHiddenCarryNode(name string, value any) (Node, bool) {
+func pageHTMLFragment(p PageInterface, cat Catalog, ctx context.Context) (template.HTML, bool) {
+	html, err := RenderHTML(p, cat, ctx)
+	if err != nil {
+		slog.Error("hiddenCarryHTML render failed", "error", err, "key", p.GetKey())
+		return "", false
+	}
+	return html, true
+}
+
+func genericHiddenCarryHTML(name string, value any) (template.HTML, bool) {
+	var out bytes.Buffer
 	switch typed := value.(type) {
 	case AssociationIDs:
-		group := Group{}
+		vals := make([]string, 0, len(typed.IDs))
 		for _, id := range typed.IDs {
-			group = append(group, Input(Type("hidden"), Name(name), Value(strconv.FormatUint(uint64(id), 10))))
+			vals = append(vals, strconv.FormatUint(uint64(id), 10))
 		}
-		return group, true
+		if err := Execute(&out, "multi_step_form_hidden_multi", struct {
+			Name   string
+			Values []string
+		}{Name: name, Values: vals}); err != nil {
+			return "", false
+		}
+		return template.HTML(out.String()), true
 	case []string:
-		group := Group{}
-		for _, item := range typed {
-			group = append(group, Input(Type("hidden"), Name(name), Value(item)))
+		if err := Execute(&out, "multi_step_form_hidden_multi", struct {
+			Name   string
+			Values []string
+		}{Name: name, Values: typed}); err != nil {
+			return "", false
 		}
-		return group, true
+		return template.HTML(out.String()), true
 	case []uint:
-		group := Group{}
+		vals := make([]string, 0, len(typed))
 		for _, item := range typed {
-			group = append(group, Input(Type("hidden"), Name(name), Value(strconv.FormatUint(uint64(item), 10))))
+			vals = append(vals, strconv.FormatUint(uint64(item), 10))
 		}
-		return group, true
+		if err := Execute(&out, "multi_step_form_hidden_multi", struct {
+			Name   string
+			Values []string
+		}{Name: name, Values: vals}); err != nil {
+			return "", false
+		}
+		return template.HTML(out.String()), true
 	default:
 		if scalar, ok := scalarHiddenValue(value); ok {
-			return Input(Type("hidden"), Name(name), Value(scalar)), true
+			if err := Execute(&out, "multi_step_form_hidden_input", struct {
+				Name  string
+				Value string
+			}{Name: name, Value: scalar}); err != nil {
+				return "", false
+			}
+			return template.HTML(out.String()), true
 		}
 	}
-	return nil, false
+	return "", false
 }
 
 func scalarHiddenValue(value any) (string, bool) {
@@ -684,60 +700,6 @@ func timeValue(value any) (time.Time, bool) {
 	default:
 		return time.Time{}, false
 	}
-}
-
-func renderNodeToString(node Node) (string, error) {
-	var out bytes.Buffer
-	if err := node.Render(&out); err != nil {
-		return "", err
-	}
-	return out.String(), nil
-}
-
-func renderNodesToString(nodes []Node) (string, error) {
-	var out strings.Builder
-	for _, node := range nodes {
-		html, err := renderNodeToString(node)
-		if err != nil {
-			return "", err
-		}
-		out.WriteString(html)
-	}
-	return out.String(), nil
-}
-
-func injectIntoRenderedForm(html, actionURL, prefixHTML, hiddenHTML string) (string, error) {
-	formStart := strings.Index(html, "<form")
-	if formStart == -1 {
-		return "", fmt.Errorf("MultiStepForm: rendered stage missing form tag")
-	}
-
-	formTagEndOffset := strings.Index(html[formStart:], ">")
-	if formTagEndOffset == -1 {
-		return "", fmt.Errorf("MultiStepForm: rendered stage has malformed form tag")
-	}
-	formTagEnd := formStart + formTagEndOffset
-
-	if actionURL != "" {
-		formTag := html[formStart : formTagEnd+1]
-		if multiStepFormActionAttr.MatchString(formTag) {
-			formTag = multiStepFormActionAttr.ReplaceAllString(formTag, fmt.Sprintf(` action="%s"`, actionURL))
-		} else {
-			formTag = strings.TrimSuffix(formTag, ">") + fmt.Sprintf(` action="%s">`, actionURL)
-		}
-		html = html[:formStart] + formTag + html[formTagEnd+1:]
-		formTagEndOffset = strings.Index(html[formStart:], ">")
-		if formTagEndOffset == -1 {
-			return "", fmt.Errorf("MultiStepForm: rendered stage has malformed form tag after action injection")
-		}
-		formTagEnd = formStart + formTagEndOffset
-	}
-
-	formEnd := strings.LastIndex(html, "</form>")
-	if formEnd == -1 {
-		return "", fmt.Errorf("MultiStepForm: rendered stage missing closing form tag")
-	}
-	return html[:formTagEnd+1] + prefixHTML + html[formTagEnd+1:formEnd] + hiddenHTML + html[formEnd:], nil
 }
 
 func clampStageIndex(stage, total int) int {

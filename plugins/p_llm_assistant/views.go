@@ -2,16 +2,14 @@ package p_llm_assistant
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
-	"strings"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/plugins/p_users"
 	"github.com/lariv-in/lariv/registry"
 	"github.com/lariv-in/lariv/views"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 func init() {
@@ -143,37 +141,16 @@ func handleNewSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var sessionItems []Node
-	for _, s := range sessions {
-		title := strings.TrimSpace(s.Title)
-		if title == "" {
-			title = fmt.Sprintf("Session #%d", s.ID)
-		}
-		sessionItems = append(sessionItems, Div(
-			Class("p-3 hover:bg-base-300 rounded cursor-pointer transition border-b border-base-300 last:border-b-0 text-sm block no-underline text-base-content"),
-			Attr("hx-get", fmt.Sprintf("/llm-assistant/sidebar-chat/%d/", s.ID)),
-			Attr("hx-target", "#sidebar-chat-container"),
-			Attr("hx-swap", "innerHTML"),
-			Attr("hx-push-url", "false"),
-			Attr("@click", fmt.Sprintf("activeSessionId = %d; showModal = false", s.ID)),
-			Text(title),
-		))
+	items, err := renderSessionItemsHTML(sessions)
+	if err != nil {
+		http.Error(w, "Could not render sessions", http.StatusInternalServerError)
+		return
 	}
-
-	if len(sessionItems) == 0 {
-		sessionItems = []Node{
-			Div(Class("p-4 text-center text-sm opacity-50"), Text("No sessions found")),
-		}
-	}
-
-	oobList := Div(
-		ID("modal-sessions-list"),
-		Attr("hx-swap-oob", "innerHTML"),
-		Group(sessionItems),
-	)
 
 	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"new-session-created": {"id": %d}}`, session.ID))
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	_ = oobList.Render(w)
+	_ = executeTemplate(w, "modal_sessions_oob", struct {
+		Items template.HTML
+	}{Items: items})
 }

@@ -3,12 +3,11 @@ package components
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/registry"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputSelect represents a dropdown select menu input form field component.
@@ -46,8 +45,14 @@ type InputSelect[T comparable] struct {
 	Classes string
 	// Hidden specifies if this select field is rendered as a hidden input element.
 	Hidden bool
-	// Attr is an optional Getter returning additional HTML nodes/attributes to apply to the input.
-	Attr getters.Getter[Node]
+	// Attr is an optional Getter returning additional HTML attributes to apply to the input.
+	Attr getters.Getter[HTMLAttributes]
+}
+
+type inputSelectOption struct {
+	Value    string
+	Label    string
+	Selected bool
 }
 
 // GetKey returns the unique key identifier for this InputSelect component.
@@ -61,7 +66,7 @@ func (e InputSelect[T]) GetRoles() []string {
 }
 
 // Build compiles the InputSelect component into a Div wrapping a dropdown Select element.
-func (e InputSelect[T]) Build(ctx context.Context) Node {
+func (e InputSelect[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	var zero T
 
 	choices := []registry.Pair[T, string]{}
@@ -89,46 +94,49 @@ func (e InputSelect[T]) Build(ctx context.Context) Node {
 		emptyLab = e.EmptyLabel
 	}
 
-	optionNodes := []Node{}
+	options := []inputSelectOption{}
 	if !e.Required {
-		optionNodes = append(
-			optionNodes,
-			Option(Value(""), If(rawSel == "", Attr("selected", "")), Text(emptyLab)),
-		)
+		options = append(options, inputSelectOption{
+			Value:    "",
+			Label:    emptyLab,
+			Selected: rawSel == "",
+		})
 	}
 	for _, opt := range choices {
 		ks := fmt.Sprint(opt.Key)
-		optionNodes = append(
-			optionNodes,
-			Option(Value(ks), If(rawSel == ks, Attr("selected", "")), Text(opt.Value)),
-		)
+		options = append(options, inputSelectOption{
+			Value:    ks,
+			Label:    opt.Value,
+			Selected: rawSel == ks,
+		})
 	}
 
 	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
 	if e.Hidden {
 		wrapClass += " hidden"
 	}
-	return Div(
-		Class(wrapClass),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Select(
-				Name(e.Name),
-				Class(fmt.Sprintf("select select-bordered w-full %s", e.Classes)),
-				Group(optionNodes),
-				If(e.Required, Required()),
-				Iff(e.Attr != nil, func() Node {
-					n, err := e.Attr(ctx)
-					if err != nil {
-						slog.Error("InputSelect Attr getter failed", "error", err, "key", e.Key)
-						return Raw("")
-					}
-					return n
-				}),
-			),
-		),
-	)
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		slog.Error("InputSelect Attr getter failed", "error", err, "key", e.Key)
+		attrs = HTMLAttributes{}
+	}
+	return Execute(w, "input_select", struct {
+		WrapClass string
+		Label     string
+		Name      string
+		Classes   string
+		Required  bool
+		Attrs     HTMLAttributes
+		Options   []inputSelectOption
+	}{
+		WrapClass: wrapClass,
+		Label:     e.Label,
+		Name:      e.Name,
+		Classes:   e.Classes,
+		Required:  e.Required,
+		Attrs:     attrs,
+		Options:   options,
+	})
 }
 
 // Parse extracts and validates the selected value against the list of Choices, returning the key value.

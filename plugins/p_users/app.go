@@ -8,7 +8,7 @@ import (
 	"github.com/lariv-in/lariv/registry"
 )
 
-// GetPlugin returns the registry contributions for this plugin for [lariv.BuildAllRegistries].
+// GetPlugin returns the registry contributions for this plugin for [lariv.AppBuilder].
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppUrl)
 	if err != nil {
@@ -31,6 +31,7 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 			DBInitHooks:      pluginStages(pluginDBInitHooks),
 			Configs:          pluginStages(pluginAuthConfigs),
 			CommandFactories: pluginStages(pluginCommandFactories),
+			Admin:            lariv.PluginStages(pluginAdmin),
 		},
 	}
 }

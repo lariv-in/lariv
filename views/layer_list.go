@@ -61,7 +61,7 @@ type LayerList[T any] struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing paginated queries.
-func (m LayerList[T]) Next(view View, next http.Handler) http.Handler {
+func (m LayerList[T]) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		db, dberr := getters.DBFromContext(ctx)
@@ -200,7 +200,7 @@ func (m LayerList[T]) Next(view View, next http.Handler) http.Handler {
 			}
 		}
 
-		query = m.QueryPatchers.Apply(view, r, query)
+		query = m.QueryPatchers.Apply(*view, r, query)
 
 		// Count assumes sort-driven Joins are BelongsTo/HasOne only (no row duplication);
 		// see applyListViewSorts.

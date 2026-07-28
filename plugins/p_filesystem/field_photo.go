@@ -2,13 +2,12 @@ package p_filesystem
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 type FieldPhoto struct {
@@ -26,7 +25,7 @@ func (e FieldPhoto) GetRoles() []string {
 	return e.Roles
 }
 
-func (e FieldPhoto) Build(ctx context.Context) Node {
+func (e FieldPhoto) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	if e.VNode == nil {
 		return nil
 	}
@@ -53,9 +52,13 @@ func (e FieldPhoto) Build(ctx context.Context) Node {
 		alt = v.Name
 	}
 
-	return Img(
-		Src(downloadURL),
-		Alt(alt),
-		Class(e.Classes),
-	)
+	return executeTemplate(w, "field_photo", struct {
+		Src     string
+		Alt     string
+		Classes string
+	}{
+		Src:     downloadURL,
+		Alt:     alt,
+		Classes: e.Classes,
+	})
 }

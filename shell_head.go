@@ -1,11 +1,18 @@
 package lariv
 
 import (
+	"context"
+	"io"
+
 	"github.com/lariv-in/lariv/components"
-	"maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
 )
 
-func init() {
-	_ = components.RegistryShellHeadNodes.Register("core.Title", html.TitleEl(gomponents.Text("Lariv")))
+type shellHeadTitle struct {
+	components.Page
+	Title string
+}
+
+func (t shellHeadTitle) Build(_ components.Catalog, _ context.Context, w io.Writer) error {
+	_, err := io.WriteString(w, "<title>"+t.Title+"</title>")
+	return err
 }

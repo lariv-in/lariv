@@ -53,6 +53,41 @@ func pluginRoutes() lariv.PluginFeatures[lariv.Route] {
 					Handler: lariv.NewDynamicView("p_website.RoutesDeleteView"),
 				},
 			},
+			{
+				Key: "p_website.RoutesBuilderRoute",
+				Value: lariv.Route{
+					Path:    AppURL + "{id}/builder/",
+					Handler: lariv.NewDynamicView("p_website.RoutesBuilderView"),
+				},
+			},
+			{
+				Key: "p_website.RoutesBuilderProjectRoute",
+				Value: lariv.Route{
+					Path:    AppURL + "{id}/builder/project/",
+					Handler: lariv.NewDynamicView("p_website.RoutesBuilderProjectView"),
+				},
+			},
+			{
+				Key: "p_website.RoutesBuilderThemeRoute",
+				Value: lariv.Route{
+					Path:    AppURL + "{id}/builder/theme/",
+					Handler: lariv.NewDynamicView("p_website.RoutesBuilderThemeView"),
+				},
+			},
+			{
+				Key: "p_website.BuilderAssetUploadRoute",
+				Value: lariv.Route{
+					Path:    AppURL + "builder/assets/",
+					Handler: lariv.NewDynamicView("p_website.BuilderAssetUploadView"),
+				},
+			},
+			{
+				Key: "p_website.PublicAssetRoute",
+				Value: lariv.Route{
+					Path:    "/media/{id}/",
+					Handler: lariv.NewDynamicView("p_website.PublicAssetView"),
+				},
+			},
 		},
 	}
 }

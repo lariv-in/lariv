@@ -1,0 +1,7 @@
+{{define "field_file"}}
+{{if .Href}}
+<a href="{{.Href}}" class="{{.RowClass}} link link-hover">{{.Icon}}<span>{{.Name}}</span><span class="opacity-50">({{.Size}})</span></a>
+{{else}}
+<div class="{{.RowClass}}">{{.Icon}}<span>{{.Name}}</span><span class="opacity-50">({{.Size}})</span></div>
+{{end}}
+{{end}}

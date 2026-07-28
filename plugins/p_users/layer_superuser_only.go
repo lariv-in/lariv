@@ -10,7 +10,7 @@ import (
 // A view layer that only allows superuser authenticated users to continue.
 type SuperuserOnlyLayer struct{}
 
-func (SuperuserOnlyLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (SuperuserOnlyLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := UserFromContext(r.Context(), "finance_taxes.SuperuserOnlyLayer")
 		if !user.IsSuperuser {

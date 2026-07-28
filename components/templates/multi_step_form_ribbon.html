@@ -1,0 +1,13 @@
+{{define "multi_step_form_ribbon"}}
+<div class="flex flex-wrap items-center gap-2 mb-4">
+{{range .Buttons}}
+	{{if eq .Kind "submit"}}
+	<button type="submit" name="$stage_target" value="{{.Value}}" class="{{.Classes}}">{{.Label}}</button>
+	{{else if eq .Kind "disabled"}}
+	<button type="button" class="{{.Classes}}" disabled>{{.Label}}</button>
+	{{else}}
+	<button type="button" class="{{.Classes}}">{{.Label}}</button>
+	{{end}}
+{{end}}
+</div>
+{{end}}

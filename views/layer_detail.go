@@ -44,7 +44,7 @@ type LayerDetail[T any] struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing record loading.
-func (m LayerDetail[T]) Next(view View, next http.Handler) http.Handler {
+func (m LayerDetail[T]) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -77,7 +77,7 @@ func (m LayerDetail[T]) Next(view View, next http.Handler) http.Handler {
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
-			query := m.QueryPatchers.Apply(view, r, gorm.G[T](db).Scopes())
+			query := m.QueryPatchers.Apply(*view, r, gorm.G[T](db).Scopes())
 			instance, err := query.Where("ID = ?", id).First(ctx)
 			if err != nil {
 				slog.Error("views: layer detail: load record", "error", err, "id", id)

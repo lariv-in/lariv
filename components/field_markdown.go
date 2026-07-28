@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"html/template"
 	"io"
 	"log/slog"
 	"strings"
@@ -11,8 +12,6 @@ import (
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/lariv-in/lariv/getters"
-	"maragu.dev/gomponents"
-	ghtml "maragu.dev/gomponents/html"
 )
 
 // MarkdownParserExtensions specifies the common parser extensions used for markdown parsing, including auto heading IDs.
@@ -152,18 +151,24 @@ func (e FieldMarkdown) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldMarkdown component into a Div Node containing the raw rendered Markdown HTML.
-func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
+type fieldMarkdownData struct {
+	HasContent bool
+	Classes    string
+	Content    template.HTML
+}
+
+// Build compiles the FieldMarkdown component into a Div containing the raw rendered Markdown HTML.
+func (e FieldMarkdown) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Getter == nil {
-		return ghtml.Div()
+		return Execute(w, "field_markdown", fieldMarkdownData{})
 	}
 	s, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldMarkdown getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	if s == "" {
-		return ghtml.Div()
+		return Execute(w, "field_markdown", fieldMarkdownData{})
 	}
 	sanitize := true
 	if e.Sanitize != nil {
@@ -171,7 +176,7 @@ func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 		sanitize, err = e.Sanitize(ctx)
 		if err != nil {
 			slog.Error("FieldMarkdown Sanitize getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 	}
 	var hooks []html.RenderNodeFunc
@@ -180,11 +185,12 @@ func (e FieldMarkdown) Build(ctx context.Context) gomponents.Node {
 		hooks, err = e.RenderHooks(ctx, s)
 		if err != nil {
 			slog.Error("FieldMarkdown RenderHooks failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 	}
-	return ghtml.Div(
-		ghtml.Class("whitespace-pre-wrap border border-base-300 p-2 rounded-md "+e.Classes),
-		gomponents.Raw(RenderMarkdownSanitized(s, sanitize, hooks...)),
-	)
+	return Execute(w, "field_markdown", fieldMarkdownData{
+		HasContent: true,
+		Classes:    "whitespace-pre-wrap border border-base-300 p-2 rounded-md " + e.Classes,
+		Content:    template.HTML(RenderMarkdownSanitized(s, sanitize, hooks...)),
+	})
 }

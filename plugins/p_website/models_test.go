@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/lariv-in/lariv/plugins/p_filesystem"
+	"gorm.io/gorm"
 )
 
 func TestDBRouteFields(t *testing.T) {
@@ -12,7 +13,7 @@ func TestDBRouteFields(t *testing.T) {
 		LTreePath: "home",
 		PageID:    1,
 		References: []p_filesystem.VNode{
-			{ID: 2, Name: "header.html"},
+			{Model: gorm.Model{ID: 2}, Name: "header.html"},
 		},
 		IsActive: true,
 	}

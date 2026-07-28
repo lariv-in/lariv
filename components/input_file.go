@@ -2,11 +2,8 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"mime/multipart"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputFile represents a file upload form input component.
@@ -17,27 +14,27 @@ import (
 //
 // Example:
 //
-//	 &components.InputFile{
-//	     Label:  "Attach Resume (PDF)",
-//	     Name:   "resume",
-//	     Accept: ".pdf",
-//	 }
+//	&components.InputFile{
+//	    Label:  "Attach Resume (PDF)",
+//	    Name:   "resume",
+//	    Accept: ".pdf",
+//	}
 type InputFile struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Label represents the header label text displayed above the file input.
-	Label    string
+	Label string
 	// Name represents the HTML form parameter name attribute.
-	Name     string
+	Name string
 	// Required specifies if uploading a file is mandatory.
 	Required bool
 	// Multiple indicates if selecting multiple files is allowed.
 	Multiple bool
 	// Accept specifies file extensions or MIME-types allowed for selection (e.g. ".pdf", "image/*").
-	Accept   string
+	Accept string
 	// Classes represents additional CSS classes applied to the output HTML wrapper.
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
-	Classes  string
+	Classes string
 }
 
 // GetKey returns the unique key identifier for this InputFile component.
@@ -51,21 +48,22 @@ func (e InputFile) GetRoles() []string {
 }
 
 // Build compiles the InputFile component into a Div wrapping a file selection Input.
-func (e InputFile) Build(_ context.Context) Node {
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Input(
-				Type("file"),
-				Name(e.Name),
-				Class(fmt.Sprintf("file-input file-input-bordered w-full %s", e.Classes)),
-				If(e.Required, Required()),
-				If(e.Multiple, Multiple()),
-				If(e.Accept != "", Accept(e.Accept)),
-			),
-		),
-	)
+func (e InputFile) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	return Execute(w, "input_file", struct {
+		Classes  string
+		Label    string
+		Name     string
+		Required bool
+		Multiple bool
+		Accept   string
+	}{
+		Classes:  e.Classes,
+		Label:    e.Label,
+		Name:     e.Name,
+		Required: e.Required,
+		Multiple: e.Multiple,
+		Accept:   e.Accept,
+	})
 }
 
 // Parse processes input parameter interfaces containing slice file headers and returns appropriate items.

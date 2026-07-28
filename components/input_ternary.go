@@ -2,13 +2,11 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log/slog"
 	"strconv"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputTernary represents a three-state (Yes / No / Not Set) select input form field component.
@@ -57,7 +55,7 @@ func (e InputTernary) GetRoles() []string {
 }
 
 // Build compiles the InputTernary component into a Div wrapping a three-state Select element.
-func (e InputTernary) Build(ctx context.Context) Node {
+func (e InputTernary) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	value := false
 	hasValue := false
 	if e.Getter != nil {
@@ -83,30 +81,31 @@ func (e InputTernary) Build(ctx context.Context) Node {
 		noneLabel = "Not Set"
 	}
 
-	noneSelected := ""
-	trueSelected := ""
-	falseSelected := ""
-	if !hasValue {
-		noneSelected = "selected"
-	} else if value {
-		trueSelected = "selected"
-	} else {
-		falseSelected = "selected"
-	}
+	noneSelected := !hasValue
+	trueSelected := hasValue && value
+	falseSelected := hasValue && !value
 
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Select(
-				Name(e.Name), Class("select select-bordered w-full"),
-				Option(Value(""), If(noneSelected != "", Attr("selected", "")), Text(noneLabel)),
-				Option(Value("True"), If(trueSelected != "", Attr("selected", "")), Text(trueLabel)),
-				Option(Value("False"), If(falseSelected != "", Attr("selected", "")), Text(falseLabel)),
-			),
-		),
-	)
+	return Execute(w, "input_ternary", struct {
+		Classes       string
+		Label         string
+		Name          string
+		NoneLabel     string
+		TrueLabel     string
+		FalseLabel    string
+		NoneSelected  bool
+		TrueSelected  bool
+		FalseSelected bool
+	}{
+		Classes:       e.Classes,
+		Label:         e.Label,
+		Name:          e.Name,
+		NoneLabel:     noneLabel,
+		TrueLabel:     trueLabel,
+		FalseLabel:    falseLabel,
+		NoneSelected:  noneSelected,
+		TrueSelected:  trueSelected,
+		FalseSelected: falseSelected,
+	})
 }
 
 // Parse extracts and parses selected string options into standard nullable Go boolean interfaces.

@@ -2,10 +2,10 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ButtonModal represents a button that fetches and displays modal content via HTMX.
@@ -24,8 +24,8 @@ type ButtonModal struct {
 	IconClasses string
 	// Classes represents additional CSS classes for the button container.
 	Classes string
-	// Attr is an optional Getter that yields additional HTML or HTMX attributes (Node) to attach to the button.
-	Attr getters.Getter[Node]
+	// Attr is an optional Getter that yields additional HTML or HTMX attributes to attach to the button.
+	Attr getters.Getter[HTMLAttributes]
 }
 
 // GetKey returns the unique key identifier for this ButtonModal component.
@@ -38,8 +38,8 @@ func (e ButtonModal) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the ButtonModal component into a gomponents Node representing a button inside a div container.
-func (e ButtonModal) Build(ctx context.Context) Node {
+// Build compiles the ButtonModal component into a button inside a div container.
+func (e ButtonModal) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	url := ""
 	if e.Url != nil {
 		if v, err := e.Url(ctx); err == nil {
@@ -47,12 +47,13 @@ func (e ButtonModal) Build(ctx context.Context) Node {
 		}
 	}
 
-	content := Group{}
+	var iconHTML template.HTML
 	if e.Icon != "" {
-		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
-	}
-	if e.Label != "" {
-		content = append(content, Text(e.Label))
+		h, err := RenderHTML(&Icon{Name: e.Icon, Classes: e.IconClasses}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		iconHTML = h
 	}
 
 	buttonClasses := "btn " + e.Classes
@@ -60,27 +61,26 @@ func (e ButtonModal) Build(ctx context.Context) Node {
 		buttonClasses += " inline-flex items-center gap-2"
 	}
 
-	buttonAttrs := []Node{
-		Type("button"),
-		Class(buttonClasses),
-		Attr("hx-get", url),
-		Attr("hx-target", HTMXTargetBodyModal),
-		Attr("hx-swap", HTMXSwapBodyModal),
-		Attr("hx-push-url", "false"),
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
-	if e.Attr != nil {
-		extra, err := e.Attr(ctx)
-		if err != nil {
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
-		}
-		if extra != nil {
-			buttonAttrs = append(buttonAttrs, extra)
-		}
-	}
-	buttonAttrs = append(buttonAttrs, content)
 
-	return Div(
-		Class("w-full fk-modal-host"),
-		Button(Group(buttonAttrs)),
-	)
+	return Execute(w, "button_modal", struct {
+		URL      string
+		Classes  string
+		HXTarget string
+		HXSwap   string
+		Attrs    HTMLAttributes
+		Icon     template.HTML
+		Label    string
+	}{
+		URL:      url,
+		Classes:  buttonClasses,
+		HXTarget: HTMXTargetBodyModal,
+		HXSwap:   HTMXSwapBodyModal,
+		Attrs:    attrs,
+		Icon:     iconHTML,
+		Label:    e.Label,
+	})
 }

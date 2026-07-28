@@ -5,7 +5,7 @@ import (
 	"github.com/lariv-in/lariv/registry"
 )
 
-// GetPlugin returns registry contributions for [lariv.BuildAllRegistries].
+// GetPlugin returns registry contributions for [lariv.AppBuilder].
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	return registry.Pair[string, lariv.Plugin]{
 		Key: "p_no_signup",

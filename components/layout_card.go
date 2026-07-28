@@ -2,9 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // LayoutCard represents a page layout wrapper component designed to center its children inside a standalone card element.
@@ -30,20 +29,15 @@ type LayoutCard struct {
 	Children []PageInterface
 }
 
-// Build compiles the LayoutCard component into a centered card overlay Div with progress bars.
-func (e LayoutCard) Build(ctx context.Context) Node {
-	group := Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+// Build compiles the LayoutCard component into a centered card overlay with progress bars.
+func (e LayoutCard) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-	return Div(
-		Class("min-h-screen flex items-center justify-center bg-base-200"),
-		Progress(Class("progress w-full fixed top-0 left-0 h-1 z-50"), ID("global-loading-indicator")),
-		Div(Class("card shadow-xl"), Div(
-			Class("card-body"),
-			group,
-		)),
-	)
+	return Execute(w, "layout_card", struct {
+		Children template.HTML
+	}{Children: children})
 }
 
 // GetKey returns the unique key identifier for this LayoutCard component.

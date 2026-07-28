@@ -78,10 +78,14 @@ func pluginDBInitHooks() lariv.PluginFeatures[lariv.DBInitHook] {
 	}
 }
 
-func init() {
-	lariv.RegistryAdmin.Register("p_users", lariv.AdminPanel[User]{
-		SearchField: "Name",
-		ListFields:  []string{"Name", "Email", "IsSuperuser", "Role.Name"},
-		Preload:     []string{"Role"},
-	})
+func pluginAdmin() lariv.PluginFeatures[lariv.AdminPanelInterface] {
+	return lariv.PluginFeatures[lariv.AdminPanelInterface]{
+		Entries: []registry.Pair[string, lariv.AdminPanelInterface]{
+			{Key: "p_users", Value: lariv.AdminPanel[User]{
+				SearchField: "Name",
+				ListFields:  []string{"Name", "Email", "IsSuperuser", "Role.Name"},
+				Preload:     []string{"Role"},
+			}},
+		},
+	}
 }

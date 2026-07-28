@@ -1,0 +1,17 @@
+{{define "input_multi_vnode"}}
+<div class="my-1 {{.Classes}}" x-data="{{.AlpineData}}">
+	<label class="label text-sm font-bold">{{.Label}}</label>
+	<template x-for="file in files" :key="file.id">
+		<div class="flex items-center gap-2 text-sm my-1 rounded-lg bg-base-200 px-2 py-1">
+			<input type="hidden" name="{{.Name}}" :value="file.id">
+			{{.DocumentIcon}}
+			<span class="flex-1 min-w-0 truncate" x-text="file.name"></span>
+			<span class="opacity-50 shrink-0" x-text="'(' + file.size + ')'"></span>
+			<button type="button" class="btn btn-ghost btn-square btn-xs shrink-0" @click.stop="removeFile(file.id)" aria-label="Remove">
+				{{.RemoveIcon}}
+			</button>
+		</div>
+	</template>
+	<input type="file" name="{{.Name}}" class="file-input file-input-bordered w-full {{.Classes}}" multiple{{if .Accept}} accept="{{.Accept}}"{{end}}>
+</div>
+{{end}}

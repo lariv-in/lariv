@@ -2,9 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // HTMXTargetBodyModal / HTMXSwapBodyModal append modal markup as a direct child of document.body.
@@ -38,42 +37,40 @@ type Modal struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// UID represents the unique HTML element ID used by DOM scripts to close or query the dialog.
-	UID      string
+	UID string
 	// Children represents the slice of sub-components rendered in the modal viewport box.
 	Children []PageInterface
 	// Classes represents additional CSS classes applied to the output HTML wrapper.
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
-	Classes  string
+	Classes string
 }
 
 // Build compiles the Modal component into a Dialog layout wrapper.
-func (e Modal) Build(ctx context.Context) Node {
-	var childNodes []Node
-	for _, child := range e.Children {
-		childNodes = append(childNodes, Render(child, ctx))
+func (e Modal) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-
-	uid := e.UID
-
-	modalContent := Div(Class("mt-8"), Group(childNodes))
-
-	return El("dialog",
-		ID(uid), Class("modal modal-open fk-modal-container"),
-		Attr("hx-push-url", "false"),
-		Attr("hx-target", "this"),
-		Attr("hx-swap", "outerHTML"),
-		Div(Class("modal-box max-w-4xl bg-base-200 border border-base-300 "+e.Classes),
-			FormEl(Method("dialog"),
-				Button(Type("button"), Class("btn btn-sm btn-circle btn-outline btn-error absolute right-3 top-3"),
-					Attr("onclick", "document.getElementById('"+uid+"').remove()"), Render(Icon{Name: "x-mark"}, ctx),
-				),
-			),
-			modalContent,
-		),
-		FormEl(Method("dialog"), Class("modal-backdrop"),
-			Button(Attr("onclick", "document.getElementById('"+uid+"').remove()"), Text("close")),
-		),
-	)
+	closeIcon, err := RenderHTML(Icon{Name: "x-mark"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	onclick := "document.getElementById('" + e.UID + "').remove()"
+	return Execute(w, "modal", struct {
+		UID           string
+		Classes       string
+		CloseIcon     template.HTML
+		Children      template.HTML
+		CloseAttrs    HTMLAttributes
+		BackdropAttrs HTMLAttributes
+	}{
+		UID:           e.UID,
+		Classes:       e.Classes,
+		CloseIcon:     closeIcon,
+		Children:      children,
+		CloseAttrs:    HTMLAttributes{"onclick": onclick},
+		BackdropAttrs: HTMLAttributes{"onclick": onclick},
+	})
 }
 
 // GetKey returns the unique key identifier for this Modal component.

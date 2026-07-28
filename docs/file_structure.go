@@ -34,7 +34,7 @@
 //
 //   - config.toml: The main configuration file for the application. It contains settings like debug mode, database type, server listen address, and plugin-specific options (e.g., mail server settings, PWA settings, user authentication configs).
 //   - go.mod & go.sum: Standard Go module definition files managing project dependencies.
-//   - main.go: The application entry point. It handles loading configurations, registering the list of active plugins, and booting the Cobra CLI wrapper by calling lariv.Start(...).
+//   - main.go: The application entry point. It registers plugins on an [lariv.AppBuilder], loads configuration via LoadConfigFromFile, and boots the Cobra CLI via (*App).Start.
 //
 // # The plugins Directory
 //

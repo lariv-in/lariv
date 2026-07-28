@@ -1,0 +1,5 @@
+-- +goose Up
+ALTER TABLE db_routes ADD COLUMN IF NOT EXISTS theme VARCHAR(128) NOT NULL DEFAULT '';
+
+-- +goose Down
+ALTER TABLE db_routes DROP COLUMN IF EXISTS theme;

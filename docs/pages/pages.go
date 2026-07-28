@@ -3,7 +3,7 @@
 // # Plugin Pages (pages.go)
 //
 // Pages in Lariv represent frontend screens, navigation views, or widgets.
-// They must satisfy the components.PageInterface and return a gomponents.Node from Build().
+// They must satisfy the components.PageInterface and write HTML from Build(cat, ctx, w).
 //
 // # 1. Creating a Page using Existing Components
 //
@@ -13,7 +13,7 @@
 //		components.Page
 //	}
 //
-//	func (p *DashboardPage) Build(ctx context.Context) gomponents.Node {
+//	func (p *DashboardPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 //		return components.Render(components.ShellBase{
 //			Children: []components.PageInterface{
 //				&components.LayoutCard{
@@ -22,7 +22,7 @@
 //					},
 //				},
 //			},
-//		}, ctx)
+//		}, cat, ctx,  w)
 //	}
 //
 //	func (p *DashboardPage) GetKey() string     { return p.Key }
@@ -39,7 +39,7 @@
 //		components.Page
 //	}
 //
-//	func (p *ProfilePage) Build(ctx context.Context) gomponents.Node {
+//	func (p *ProfilePage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 //		return components.TemplateFSComponent{
 //			Page:             components.Page{Key: p.Key, Roles: p.Roles},
 //			Filesystem:       embeddedFS,
@@ -48,7 +48,7 @@
 //			TemplateContext: getters.Static[any](map[string]any{
 //				"Username": "John",
 //			}),
-//		}.Build(ctx)
+//		}.Build(cat, ctx, w)
 //	}
 //
 // # 3. Creating a Page using Hardcoded Template Strings
@@ -63,7 +63,7 @@
 //		components.Page
 //	}
 //
-//	func (p *HardcodedPage) Build(ctx context.Context) gomponents.Node {
+//	func (p *HardcodedPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 //		return components.TemplateComponent{
 //			Page:         components.Page{Key: p.Key, Roles: p.Roles},
 //			Template:     *cardTemplate,
@@ -71,7 +71,7 @@
 //			TemplateContext: getters.Static[any](map[string]any{
 //				"Title": "Raw Template Component",
 //			}),
-//		}.Build(ctx)
+//		}.Build(cat, ctx, w)
 //	}
 //
 // # 4. Creating a Page using External Template Files
@@ -82,14 +82,14 @@
 //		components.Page
 //	}
 //
-//	func (p *ExternalPage) Build(ctx context.Context) gomponents.Node {
+//	func (p *ExternalPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 //		return components.TemplateFSComponent{
 //			Page:             components.Page{Key: p.Key, Roles: p.Roles},
 //			Filesystem:       os.DirFS("/opt/app/templates"),
 //			TemplatePatterns: []string{"*.html"},
 //			TemplateName:     "landing.html",
 //			TemplateContext:  nil,
-//		}.Build(ctx)
+//		}.Build(cat, ctx, w)
 //	}
 //
 // # 5. Mixing Template-based and Component-based Pages
@@ -100,7 +100,7 @@
 //		components.Page
 //	}
 //
-//	func (p *MixedPage) Build(ctx context.Context) gomponents.Node {
+//	func (p *MixedPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 //		return components.Render(components.ShellBase{
 //			Children: []components.PageInterface{
 //				&components.LayoutCard{
@@ -116,10 +116,6 @@
 //					}),
 //				},
 //			},
-//		}, ctx)
+//		}, cat, ctx, w)
 //	}
-//
-// # Standard html/template Package Reference
-//
-// Refer to Go standard library [html/template] package.
 package pages

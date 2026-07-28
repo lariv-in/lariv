@@ -2,9 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // target styling constant defining fallback DaisyUI dropdown details panel classes.
@@ -25,7 +24,7 @@ type TableButtonFilter struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Child represents the nested sub-component (typically a filter form) rendered inside the dropdown panel.
-	Child          PageInterface
+	Child PageInterface
 	// ContentClasses represents additional CSS classes applied to the output HTML wrapper.
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	ContentClasses string
@@ -59,19 +58,26 @@ func (e *TableButtonFilter) SetChildren(children []PageInterface) {
 }
 
 // Build compiles the TableButtonFilter component into a details HTML block wrapping dropdown items.
-func (e TableButtonFilter) Build(ctx context.Context) Node {
+func (e TableButtonFilter) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	contentClass := e.ContentClasses
 	if contentClass == "" {
 		contentClass = tableButtonFilterDefaultContentClasses
 	}
-	var panel Node = Group{}
+	var panel template.HTML
 	if e.Child != nil {
-		panel = Render(e.Child, ctx)
+		h, err := RenderHTML(e.Child, cat, ctx)
+		if err != nil {
+			return err
+		}
+		panel = h
 	}
-	return El("details",
-		Class("dropdown dropdown-end"),
-		Attr("@click.outside", "if(!$event.target.closest('.fk-modal-container')){$el.removeAttribute('open')}"),
-		El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"), Render(Icon{Name: "funnel"}, ctx)),
-		Div(Class(contentClass), panel),
-	)
+	icon, err := RenderHTML(Icon{Name: "funnel"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	return Execute(w, "table_button_filter", struct {
+		Icon         template.HTML
+		ContentClass string
+		Panel        template.HTML
+	}{Icon: icon, ContentClass: contentClass, Panel: panel})
 }

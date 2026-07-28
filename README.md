@@ -113,13 +113,13 @@ func main() {
 		p_users.GetPlugin(),
 	}
 	// Load database settings, server addresses, and plugin parameters from config.toml.
-	config, err := lariv.LoadConfigFromFile("config.toml", plugins)
+	app, err := lariv.NewBuilder().AddPlugins(plugins).LoadConfigFromFile("config.toml")
 	if err != nil {
-     	log.Fatalf("failed loading configuration file: %v", err)
+		log.Fatalf("failed loading configuration file: %v", err)
 	}
 
-	// 3. Build global registries and run the Cobra CLI bootstrapper.
-	if err := lariv.Start(config, plugins); err != nil {
+	// 2. Run the Cobra CLI bootstrapper.
+	if err := app.Start(); err != nil {
 		log.Fatalf("failed executing application entry: %v", err)
 	}
 }

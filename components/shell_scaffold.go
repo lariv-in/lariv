@@ -2,8 +2,7 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
+	"io"
 )
 
 // ShellScaffold represents the main authenticated dashboard page scaffolding layout.
@@ -26,15 +25,14 @@ type ShellScaffold struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Sidebar represents the slice of sub-components rendered in the left-hand navigation column.
-	Sidebar   []PageInterface
+	Sidebar []PageInterface
 	// Children represents the slice of sub-components rendered in the main dashboard content body.
-	Children  []PageInterface
+	Children []PageInterface
 	// ExtraHead represents the slice of custom header tags (e.g. metadata, scripts, links) injected in the HTML head.
 	ExtraHead []PageInterface
 }
 
-// Body compiles the core page content wrapper inside the parent HTML document shell structure.
-func (e ShellScaffold) Body(ctx context.Context) Node {
+func (e ShellScaffold) shellBase() ShellBase {
 	return ShellBase{
 		ExtraHead: e.ExtraHead,
 		Children: []PageInterface{
@@ -47,24 +45,17 @@ func (e ShellScaffold) Body(ctx context.Context) Node {
 				},
 			},
 		},
-	}.Body(ctx)
+	}
+}
+
+// Body compiles the core page content wrapper inside the parent HTML document shell structure.
+func (e ShellScaffold) Body(cat Catalog, ctx context.Context, w io.Writer) error {
+	return e.shellBase().Body(cat, ctx, w)
 }
 
 // Build compiles the ShellScaffold component into base Shell elements.
-func (e ShellScaffold) Build(ctx context.Context) Node {
-	return Render(ShellBase{
-		ExtraHead: e.ExtraHead,
-		Children: []PageInterface{
-			LayoutTopbar{
-				Children: []PageInterface{
-					LayoutSidebar{
-						Sidebar:  e.Sidebar,
-						Children: e.Children,
-					},
-				},
-			},
-		},
-	}, ctx)
+func (e ShellScaffold) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	return Render(e.shellBase(), cat, ctx, w)
 }
 
 // GetKey returns the unique key identifier for this ShellScaffold component.

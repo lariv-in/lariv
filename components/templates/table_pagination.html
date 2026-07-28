@@ -1,0 +1,13 @@
+{{define "table_pagination"}}
+<div class="flex flex-col justify-center items-center gap-2 p-4">
+	<div class="join">
+		{{range .Pages}}
+		{{if .Ellipsis}}
+		<button disabled class="join-item btn btn-sm">...</button>
+		{{else}}
+		<a href="{{.URL}}" hx-get="{{.URL}}" hx-target="closest .data-table-container" hx-swap="outerHTML" hx-push-url="{{.PushURL}}" class="{{.Classes}}">{{.Label}}</a>
+		{{end}}
+		{{end}}
+	</div>
+</div>
+{{end}}

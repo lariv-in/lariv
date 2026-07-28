@@ -1,0 +1,12 @@
+{{define "input_ternary"}}
+<div class="my-1 {{.Classes}}">
+	<label class="label text-sm font-bold flex flex-col items-start gap-1">
+		{{.Label}}
+		<select name="{{.Name}}" class="select select-bordered w-full">
+			<option value=""{{if .NoneSelected}} selected{{end}}>{{.NoneLabel}}</option>
+			<option value="True"{{if .TrueSelected}} selected{{end}}>{{.TrueLabel}}</option>
+			<option value="False"{{if .FalseSelected}} selected{{end}}>{{.FalseLabel}}</option>
+		</select>
+	</label>
+</div>
+{{end}}

@@ -2,11 +2,11 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // SidebarMenuItem represents a single clickable option hyperlink in a sidebar navigation list.
@@ -47,13 +47,13 @@ func (e SidebarMenuItem) GetRoles() []string {
 }
 
 // Build compiles the SidebarMenuItem component into a list item wrapping a navigation link.
-func (e SidebarMenuItem) Build(ctx context.Context) Node {
+func (e SidebarMenuItem) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	title := ""
 	if e.Title != nil {
 		t, err := e.Title(ctx)
 		if err != nil {
 			slog.Error("SidebarMenuItem Title getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		title = t
 	}
@@ -62,14 +62,18 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 		u, err := e.Url(ctx)
 		if err != nil {
 			slog.Error("SidebarMenuItem Url getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		url = u
 	}
 
-	var iconNode Node
+	var iconHTML template.HTML
 	if e.Icon != "" {
-		iconNode = Render(Icon{Name: e.Icon, Classes: "heroicon-sm"}, ctx)
+		h, err := RenderHTML(Icon{Name: e.Icon, Classes: "heroicon-sm"}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		iconHTML = h
 	}
 
 	activeClass := ""
@@ -77,13 +81,12 @@ func (e SidebarMenuItem) Build(ctx context.Context) Node {
 		activeClass = " menu-active"
 	}
 
-	return Li(
-		A(
-			Href(url), Class(activeClass),
-			If(iconNode != nil, iconNode),
-			Text(title),
-		),
-	)
+	return Execute(w, "sidebar_menu_item", struct {
+		URL         string
+		ActiveClass string
+		Icon        template.HTML
+		Title       string
+	}{URL: url, ActiveClass: activeClass, Icon: iconHTML, Title: title})
 }
 
 // SidebarMenu represents a wrapper panel housing a collection of SidebarMenuItem list links.
@@ -116,17 +119,16 @@ type SidebarMenu struct {
 }
 
 // Build compiles the SidebarMenu component into a list wrapper Ul element.
-func (e SidebarMenu) Build(ctx context.Context) Node {
-	var items []Node
-
-	// Back button
+func (e SidebarMenu) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	var backHTML template.HTML
+	hasBack := false
 	if e.Back != nil {
 		backTitle := ""
 		if e.Back.Title != nil {
 			t, err := e.Back.Title(ctx)
 			if err != nil {
 				slog.Error("SidebarMenu Back Title getter failed", "error", err, "key", e.Key)
-				return ContainerError{Error: getters.Static(err)}.Build(ctx)
+				return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 			}
 			backTitle = t
 		}
@@ -135,39 +137,45 @@ func (e SidebarMenu) Build(ctx context.Context) Node {
 			u, err := e.Back.Url(ctx)
 			if err != nil {
 				slog.Error("SidebarMenu Back Url getter failed", "error", err, "key", e.Key)
-				return ContainerError{Error: getters.Static(err)}.Build(ctx)
+				return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 			}
 			backUrl = u
 		}
-		items = append(items, Li(
-			Render(ButtonLink{
-				Page:    e.Back.Page,
-				Label:   getters.Static(backTitle),
-				Link:    getters.Static(backUrl),
-				Icon:    "arrow-left",
-				Classes: "btn-sm mb-2",
-			}, ctx),
-		))
+		h, err := RenderHTML(ButtonLink{
+			Page:    e.Back.Page,
+			Label:   getters.Static(backTitle),
+			Link:    getters.Static(backUrl),
+			Icon:    "arrow-left",
+			Classes: "btn-sm mb-2",
+		}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		backHTML = h
+		hasBack = true
 	}
 
-	// Title
+	title := ""
 	if e.Title != nil {
-		title, err := e.Title(ctx)
+		t, err := e.Title(ctx)
 		if err != nil {
 			slog.Error("SidebarMenu Title getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
-		if title != "" {
-			items = append(items, Li(Class("menu-title font-semibold opacity-70"), Text(title)))
-		}
+		title = t
 	}
 
-	// Children
-	for _, child := range e.Children {
-		items = append(items, Render(child, ctx))
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
 
-	return Ul(Class("menu w-full wrap-anywhere"), Group(items))
+	return Execute(w, "sidebar_menu", struct {
+		HasBack  bool
+		Back     template.HTML
+		Title    string
+		Children template.HTML
+	}{HasBack: hasBack, Back: backHTML, Title: title, Children: children})
 }
 
 // GetKey returns the unique key identifier for this SidebarMenu component.

@@ -2,8 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
+	"html/template"
+	"io"
 )
 
 // ClientIf conditionally renders its children on the client side using Alpine.js's x-if directive.
@@ -29,29 +29,23 @@ type ClientIf struct {
 	// Data is an optional Alpine.js data string (unused in the default Build method).
 	Data string
 	// Init is an optional Alpine.js initialization expression (unused in the default Build method).
-	Init     string
+	Init string
 	// Children represents the child components rendered conditionally.
 	Children []PageInterface
 }
 
 // Build compiles the ClientIf component into an HTML <template> element.
 // If multiple children are present, they are grouped under a single root <div> element to comply with Alpine's x-if requirements.
-func (e ClientIf) Build(ctx context.Context) Node {
-	group := Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+func (e ClientIf) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-
-	content := Node(group)
-	if len(group) > 1 {
-		// Alpine x-if template content must have a single root element.
-		content = El("div", group)
-	}
-
-	return El("template",
-		If(e.Condition != "", Attr("x-if", e.Condition)),
-		content,
-	)
+	return Execute(w, "client_if", struct {
+		Condition string
+		Wrap      bool
+		Children  template.HTML
+	}{Condition: e.Condition, Wrap: len(e.Children) > 1, Children: children})
 }
 
 // GetKey returns the unique key identifier for this ClientIf component.

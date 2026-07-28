@@ -2,13 +2,11 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log/slog"
 	"net/mail"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputEmail represents an email address input form field component.
@@ -51,24 +49,29 @@ func (e InputEmail) GetRoles() []string {
 }
 
 // Build compiles the InputEmail component into a Div wrapping an email selection Input.
-func (e InputEmail) Build(ctx context.Context) Node {
-	var valueNode Node = Value("")
+func (e InputEmail) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	value := ""
 	if e.Getter != nil {
-		value, err := e.Getter(ctx)
+		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputEmail getter failed", "error", err, "key", e.Key)
 		} else {
-			valueNode = Value(value)
+			value = v
 		}
 	}
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Input(Type("email"), Name(e.Name), valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
-		),
-	)
+	return Execute(w, "input_email", struct {
+		Classes  string
+		Label    string
+		Name     string
+		Value    string
+		Required bool
+	}{
+		Classes:  e.Classes,
+		Label:    e.Label,
+		Name:     e.Name,
+		Value:    value,
+		Required: e.Required,
+	})
 }
 
 // Parse extracts the email string value and validates it using mail.ParseAddress.

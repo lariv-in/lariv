@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"gorm.io/driver/sqlite"
@@ -163,5 +164,52 @@ func TestDeleteTreeRemovesStoredFiles(t *testing.T) {
 	}
 	if len(entries) != 0 {
 		t.Fatalf("expected storage dir to be empty after delete, found %d entries", len(entries))
+	}
+}
+
+func TestCreateVNodeFromReaderAndReplaceContent(t *testing.T) {
+	db := testDB(t)
+	withTempStorage(t)
+
+	node, err := CreateVNodeFromReader(db, "page.html", strings.NewReader("<html><body>v1</body></html>"), nil)
+	if err != nil {
+		t.Fatalf("CreateVNodeFromReader failed: %v", err)
+	}
+	if node.Name != "page.html" {
+		t.Fatalf("unexpected name %q", node.Name)
+	}
+
+	download, err := node.OpenDownload()
+	if err != nil {
+		t.Fatalf("OpenDownload failed: %v", err)
+	}
+	data, err := io.ReadAll(download.Reader)
+	_ = download.Reader.Close()
+	if err != nil {
+		t.Fatalf("ReadAll failed: %v", err)
+	}
+	if string(data) != "<html><body>v1</body></html>" {
+		t.Fatalf("unexpected content %q", string(data))
+	}
+
+	oldPath := node.FilePath
+	if err := node.ReplaceContentFromReader(db, strings.NewReader("<html><body>v2</body></html>")); err != nil {
+		t.Fatalf("ReplaceContentFromReader failed: %v", err)
+	}
+	if node.FilePath == oldPath {
+		t.Fatal("expected FilePath to change after replace")
+	}
+
+	download, err = node.OpenDownload()
+	if err != nil {
+		t.Fatalf("OpenDownload after replace failed: %v", err)
+	}
+	data, err = io.ReadAll(download.Reader)
+	_ = download.Reader.Close()
+	if err != nil {
+		t.Fatalf("ReadAll after replace failed: %v", err)
+	}
+	if string(data) != "<html><body>v2</body></html>" {
+		t.Fatalf("unexpected replaced content %q", string(data))
 	}
 }

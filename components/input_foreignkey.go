@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 	"net/url"
 	"reflect"
@@ -12,8 +14,6 @@ import (
 
 	"github.com/lariv-in/lariv/getters"
 	"gorm.io/gorm"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputForeignKey represents a relationship selector form input component.
@@ -53,8 +53,8 @@ type InputForeignKey[T any] struct {
 	// Classes represents additional CSS classes applied to the output HTML wrapper.
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	Classes string
-	// Attr is an optional Getter returning additional HTML nodes/attributes to apply to the input.
-	Attr getters.Getter[Node]
+	// Attr is an optional Getter returning additional HTML attributes to apply to the input.
+	Attr getters.Getter[HTMLAttributes]
 	// Hidden specifies if this selection field renders only a hidden input without a visible label or dialog trigger.
 	Hidden bool
 }
@@ -70,7 +70,7 @@ func (e InputForeignKey[T]) GetRoles() []string {
 }
 
 // Build compiles the InputForeignKey component into an Alpine-driven picker container Div.
-func (e InputForeignKey[T]) Build(ctx context.Context) Node {
+func (e InputForeignKey[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	valuePk := ""
 	displayValue := ""
 
@@ -105,24 +105,37 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 		}
 	}
 
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		slog.Error("InputForeignKey attr getter failed", "error", err, "key", e.Key)
+		attrs = HTMLAttributes{}
+	}
+
 	if e.Hidden {
 		wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
 		wrapClass += " hidden"
-		return Div(
-			Class(wrapClass),
-			Input(
-				Type("hidden"), Name(e.Name), Value(valuePk),
-				Iff(e.Attr != nil, func() (out Node) {
-					out = Raw("")
-					n, err := e.Attr(ctx)
-					if err != nil {
-						slog.Error("InputForeignKey attr getter failed", "error", err, "key", e.Key)
-						return out
-					}
-					return n
-				}),
-			),
-		)
+		return Execute(w, "input_foreign_key", struct {
+			Hidden       bool
+			WrapClass    string
+			Classes      string
+			Name         string
+			Value        string
+			Attrs        HTMLAttributes
+			Label        string
+			Required     bool
+			AlpineData   string
+			EventHandler string
+			URL          string
+			HXTarget     string
+			HXSwap       string
+			ClearIcon    template.HTML
+		}{
+			Hidden:    true,
+			WrapClass: wrapClass,
+			Name:      e.Name,
+			Value:     valuePk,
+			Attrs:     attrs,
+		})
 	}
 
 	placeholder := e.Placeholder
@@ -159,63 +172,44 @@ func (e InputForeignKey[T]) Build(ctx context.Context) Node {
 	// Selector dialog is closed from the table row @click (getters.Select); avoid removing the wrong dialog here.
 	eventHandler := fmt.Sprintf("if ($event.detail.name === '%s') { value = $event.detail.value; display = $event.detail.display }", e.Name)
 
-	return Div(
-		Class(fmt.Sprintf("my-1 relative %s", e.Classes)),
-		Attr("x-data", alpineData),
-		Attr("@fk-select.window", eventHandler),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Input(
-				Type("hidden"), Name(e.Name), Attr(":value", "value"),
-				If(e.Required, Required()),
-				Iff(e.Attr != nil, func() (out Node) {
-					out = Raw("")
-					defer func() {
-						if r := recover(); r != nil {
-							slog.Error("InputForeignKey attr getter panicked", "panic", r, "key", e.Key)
-						}
-					}()
-					n, err := e.Attr(ctx)
-					if err != nil {
-						slog.Error("InputForeignKey attr getter failed", "error", err, "key", e.Key)
-						return out
-					}
-					if n == nil {
-						return out
-					}
-					v := reflect.ValueOf(n)
-					if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Map || v.Kind() == reflect.Slice || v.Kind() == reflect.Interface || v.Kind() == reflect.Func) && v.IsNil() {
-						return out
-					}
-					return n
-				}),
-			),
-			Div(
-				Class("flex w-full items-stretch gap-1"),
-				Div(
-					Class("input input-bordered flex-1 flex items-center cursor-pointer"),
-					Attr(":class", "display ? '' : 'opacity-50'"),
-					Attr("hx-get", urlStr),
-					Attr("hx-target", HTMXTargetBodyModal),
-					Attr("hx-swap", HTMXSwapBodyModal),
-					Attr("hx-push-url", "false"),
-					El("span", Attr("x-text", "display || placeholder")),
-				),
-				If(
-					!e.Required,
-					Button(
-						Type("button"),
-						Class("btn btn-ghost btn-square shrink-0"),
-						Attr("@click.stop", "value = ''; display = ''"),
-						Attr("x-show", "value"),
-						Attr("aria-label", "Clear selection"),
-						Render(Icon{Name: "x-mark"}, ctx),
-					),
-				),
-			),
-		),
-	)
+	var clearIcon template.HTML
+	if !e.Required {
+		icon, err := RenderHTML(Icon{Name: "x-mark"}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		clearIcon = icon
+	}
+
+	return Execute(w, "input_foreign_key", struct {
+		Hidden       bool
+		WrapClass    string
+		Classes      string
+		Name         string
+		Value        string
+		Attrs        HTMLAttributes
+		Label        string
+		Required     bool
+		AlpineData   string
+		EventHandler string
+		URL          string
+		HXTarget     string
+		HXSwap       string
+		ClearIcon    template.HTML
+	}{
+		Hidden:       false,
+		Classes:      e.Classes,
+		Name:         e.Name,
+		Attrs:        attrs,
+		Label:        e.Label,
+		Required:     e.Required,
+		AlpineData:   alpineData,
+		EventHandler: eventHandler,
+		URL:          urlStr,
+		HXTarget:     HTMXTargetBodyModal,
+		HXSwap:       HTMXSwapBodyModal,
+		ClearIcon:    clearIcon,
+	})
 }
 
 // Parse extracts the GORM primary key ID from parameters, queries GORM to verify its database presence, and yields the unit primary key.

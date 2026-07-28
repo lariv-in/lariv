@@ -3,11 +3,11 @@ package components
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"sort"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ClientMatchIf evaluates a dynamic variable name and conditionally renders a matching component.
@@ -38,44 +38,51 @@ type ClientMatchIf struct {
 	Children []PageInterface
 }
 
+type clientMatchCase struct {
+	Condition string
+	Content   template.HTML
+}
+
 // Build compiles the ClientMatchIf component into a collection of conditional HTML <template> elements,
 // one for each case inside the match map.
-func (e ClientMatchIf) Build(ctx context.Context) Node {
+func (e ClientMatchIf) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Key == nil {
-		return Group{}
+		return nil
 	}
 	key, err := e.Key(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	if e.Match == nil {
-		return Group{}
+		return nil
 	}
 	match, err := e.Match(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	keys := make([]string, 0, len(match))
 	for k := range match {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	group := Group{}
+	cases := make([]clientMatchCase, 0, len(keys))
 	for _, k := range keys {
 		page := match[k]
 		if page == nil {
 			continue
 		}
-		group = append(
-			group,
-			El(
-				"template",
-				Attr("x-if", fmt.Sprintf("%s === %q", key, k)),
-				Div(Render(page, ctx)),
-			),
-		)
+		content, err := RenderHTML(page, cat, ctx)
+		if err != nil {
+			return err
+		}
+		cases = append(cases, clientMatchCase{
+			Condition: fmt.Sprintf("%s === %q", key, k),
+			Content:   content,
+		})
 	}
-	return group
+	return Execute(w, "client_match_if", struct {
+		Cases []clientMatchCase
+	}{Cases: cases})
 }
 
 // GetKey returns the unique key identifier for this ClientMatchIf component.

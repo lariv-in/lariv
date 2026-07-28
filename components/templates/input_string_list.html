@@ -1,0 +1,17 @@
+{{define "input_string_list"}}
+<div class="my-1 {{.Classes}}">
+	<label class="label text-sm font-bold flex flex-col items-start gap-1">
+		{{.Label}}
+		<div x-data="{{.AlpineData}}" x-init="{{.InitJS}}">
+			<template x-for="(item, i) in items" :key="i">
+				<div class="flex gap-2 items-center my-1">
+					<input type="text" class="input input-bordered flex-1" x-model="items[i]" placeholder="Option value">
+					<button type="button" class="btn btn-ghost btn-sm shrink-0" @click="remove(i)">Remove</button>
+				</div>
+			</template>
+			<button type="button" class="btn btn-outline btn-sm mt-1" @click="add()">Add option</button>
+			<input type="hidden" name="{{.Name}}">
+		</div>
+	</label>
+</div>
+{{end}}

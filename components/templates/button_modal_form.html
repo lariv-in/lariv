@@ -1,0 +1,5 @@
+{{define "button_modal_form"}}
+<div class="fk-modal-host"{{attrs .HostAttrs}}>
+	<button type="button" class="{{.Classes}}" hx-get="{{.URL}}" hx-target="{{.HXTarget}}" hx-swap="{{.HXSwap}}" hx-push-url="false"{{attrs .Attrs}}>{{.Icon}}{{.Label}}</button>
+</div>
+{{end}}

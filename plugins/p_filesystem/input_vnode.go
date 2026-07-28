@@ -3,14 +3,14 @@ package p_filesystem
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 	"mime/multipart"
 	"strings"
 
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 type InputVNode struct {
@@ -32,7 +32,7 @@ func (e InputVNode) GetRoles() []string {
 	return e.Roles
 }
 
-func (e InputVNode) Build(ctx context.Context) Node {
+func (e InputVNode) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	var currentFile *VNode
 	if e.VNode != nil {
 		v, err := e.VNode(ctx)
@@ -45,28 +45,36 @@ func (e InputVNode) Build(ctx context.Context) Node {
 
 	accept := strings.Join(e.AllowedFiletypes, ",")
 
-	var fileInfo Node
-	if currentFile != nil {
-		fileInfo = Div(
-			Class("flex items-center gap-2 text-sm my-1"),
-			components.Render(components.Icon{Name: "document"}, ctx),
-			Span(Text(currentFile.Name)),
-			Span(Class("opacity-50"), Text(fmt.Sprintf("(%s)", currentFile.FileSizeDisplay()))),
-		)
+	data := struct {
+		Classes  string
+		Label    string
+		Name     string
+		Required bool
+		Accept   string
+		HasFile  bool
+		Icon     template.HTML
+		FileName string
+		FileSize string
+	}{
+		Classes:  e.Classes,
+		Label:    e.Label,
+		Name:     e.Name,
+		Required: e.Required && currentFile == nil,
+		Accept:   accept,
 	}
 
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(Class("label text-sm font-bold"), Text(e.Label)),
-		If(fileInfo != nil, fileInfo),
-		Input(
-			Type("file"),
-			Name(e.Name),
-			Class(fmt.Sprintf("file-input file-input-bordered w-full %s", e.Classes)),
-			If(e.Required && currentFile == nil, Required()),
-			If(accept != "", Accept(accept)),
-		),
-	)
+	if currentFile != nil {
+		icon, err := components.RenderHTML(components.Icon{Name: "document"}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		data.HasFile = true
+		data.Icon = icon
+		data.FileName = currentFile.Name
+		data.FileSize = currentFile.FileSizeDisplay()
+	}
+
+	return executeTemplate(w, "input_vnode", data)
 }
 
 func (e InputVNode) ParseMultipart(files []*multipart.FileHeader, ctx context.Context) (any, error) {

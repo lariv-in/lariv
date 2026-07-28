@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	neturl "net/url"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ButtonModalForm is like [ButtonModal] but registers a local listener for bubbling
@@ -31,15 +31,15 @@ type ButtonModalForm struct {
 	Icon        string
 	IconClasses string
 	Classes     string
-	Attr        getters.Getter[Node]
+	Attr        getters.Getter[HTMLAttributes]
 }
 
 func (e ButtonModalForm) GetKey() string     { return e.Key }
 func (e ButtonModalForm) GetRoles() []string { return e.Roles }
 
-func (e ButtonModalForm) Build(ctx context.Context) Node {
+func (e ButtonModalForm) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Name == nil {
-		return ContainerError{Error: getters.Static(fmt.Errorf("ButtonModalForm: Name is nil"))}.Build(ctx)
+		return ContainerError{Error: getters.Static(fmt.Errorf("ButtonModalForm: Name is nil"))}.Build(cat, ctx, w)
 	}
 	href := ""
 	if e.Url != nil {
@@ -49,7 +49,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	}
 	name, err := e.Name(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	postURL := ""
 	if e.FormPostURL != nil {
@@ -58,7 +58,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		}
 	}
 	if postURL == "" || e.ModalUID == "" {
-		return ContainerError{Error: getters.Static(fmt.Errorf("ButtonModalForm: FormPostURL and ModalUID are required"))}.Build(ctx)
+		return ContainerError{Error: getters.Static(fmt.Errorf("ButtonModalForm: FormPostURL and ModalUID are required"))}.Build(cat, ctx, w)
 	}
 
 	if postParsed, err := neturl.Parse(postURL); err == nil {
@@ -71,7 +71,7 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 	if href != "" {
 		parsedURL, err := neturl.Parse(href)
 		if err != nil {
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		query := parsedURL.Query()
 		query.Set("name", name)
@@ -81,15 +81,15 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 
 	nameLit, err := json.Marshal(name)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	postLit, err := json.Marshal(postURL)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	uidLit, err := json.Marshal(e.ModalUID)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
 	// Alpine @lariv-form-submit: POST the bubbling form via htmx.ajax, then close or swap the dialog.
@@ -149,12 +149,13 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		string(postLit),
 	)
 
-	content := Group{}
+	var iconHTML template.HTML
 	if e.Icon != "" {
-		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
-	}
-	if e.Label != "" {
-		content = append(content, Text(e.Label))
+		h, err := RenderHTML(&Icon{Name: e.Icon, Classes: e.IconClasses}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		iconHTML = h
 	}
 
 	buttonClasses := "btn " + e.Classes
@@ -162,28 +163,32 @@ func (e ButtonModalForm) Build(ctx context.Context) Node {
 		buttonClasses += " inline-flex items-center gap-2"
 	}
 
-	buttonAttrs := []Node{
-		Type("button"),
-		Class(buttonClasses),
-		Attr("hx-get", href),
-		Attr("hx-target", HTMXTargetBodyModal),
-		Attr("hx-swap", HTMXSwapBodyModal),
-		Attr("hx-push-url", "false"),
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
-	if e.Attr != nil {
-		extra, err := e.Attr(ctx)
-		if err != nil {
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
-		}
-		if extra != nil {
-			buttonAttrs = append(buttonAttrs, extra)
-		}
-	}
-	buttonAttrs = append(buttonAttrs, content)
 
-	return Div(
-		Class("fk-modal-host"),
-		Attr("@lariv-form-submit.window.stop", script),
-		Button(Group(buttonAttrs)),
-	)
+	hostAttrs := HTMLAttributes{
+		"@lariv-form-submit.window.stop": script,
+	}
+
+	return Execute(w, "button_modal_form", struct {
+		HostAttrs HTMLAttributes
+		URL       string
+		Classes   string
+		HXTarget  string
+		HXSwap    string
+		Attrs     HTMLAttributes
+		Icon      template.HTML
+		Label     string
+	}{
+		HostAttrs: hostAttrs,
+		URL:       href,
+		Classes:   buttonClasses,
+		HXTarget:  HTMXTargetBodyModal,
+		HXSwap:    HTMXSwapBodyModal,
+		Attrs:     attrs,
+		Icon:      iconHTML,
+		Label:     e.Label,
+	})
 }

@@ -2,11 +2,10 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldText represents a read-only plain-text display field.
@@ -41,16 +40,19 @@ func (e FieldText) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldText component into a Div Node wrapping the resolved plain text.
-func (e FieldText) Build(ctx context.Context) Node {
+// Build compiles the FieldText component into a Div wrapping the resolved plain text.
+func (e FieldText) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	value := ""
 	if e.Getter != nil {
 		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldText getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		value = v
 	}
-	return Div(Class(e.Classes), Text(value))
+	return Execute(w, "field_text", struct {
+		Classes string
+		Value   string
+	}{Classes: e.Classes, Value: value})
 }

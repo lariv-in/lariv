@@ -7,16 +7,20 @@ import (
 	"github.com/lariv-in/lariv/registry"
 )
 
-func init() {
-	components.RegistryTopbar.Register("dashboard.appsPageButton", components.ButtonLink{
-		Icon:    "squares-2x2",
-		Link:    lariv.RoutePath("dashboard.AppsPage", nil),
-		Classes: "btn-sm btn-square btn-neutral",
-	})
-	components.RegistryTopbar.Register("dashboard.themeButton", pcomps.ThemeButton{
-		Classes: "btn-sm btn-square btn-outline",
-	})
-	components.RegistryTopbar.Register("dashboard.userDropdown", pcomps.UserDropdown{})
+func pluginTopbar() lariv.PluginFeatures[components.PageInterface] {
+	return lariv.PluginFeatures[components.PageInterface]{
+		Entries: []registry.Pair[string, components.PageInterface]{
+			{Key: "dashboard.appsPageButton", Value: components.ButtonLink{
+				Icon:    "squares-2x2",
+				Link:    lariv.RoutePath("dashboard.AppsPage", nil),
+				Classes: "btn-sm btn-square btn-neutral",
+			}},
+			{Key: "dashboard.themeButton", Value: pcomps.ThemeButton{
+				Classes: "btn-sm btn-square btn-outline",
+			}},
+			{Key: "dashboard.userDropdown", Value: pcomps.UserDropdown{}},
+		},
+	}
 }
 
 func pluginPages() lariv.PluginFeatures[components.PageInterface] {

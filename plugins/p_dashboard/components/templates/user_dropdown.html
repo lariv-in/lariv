@@ -1,0 +1,21 @@
+{{define "user_dropdown"}}
+<details class="dropdown dropdown-end" @click.outside="$el.removeAttribute('open')">
+	<summary class="btn btn-sm btn-circle avatar placeholder">
+		<div class="rounded-full w-10">
+			<span class="text-xl">{{.AvatarText}}</span>
+		</div>
+	</summary>
+	<div class="card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-50 bg-base-100 p-4">
+		<div class="flex flex-col gap-1">
+			<div class="font-bold text-lg">{{.Name}}</div>
+			<div class="text-sm opacity-70 cursor-default">{{.RoleDisplay}}</div>
+		</div>
+		{{if .UserOK}}
+		<div class="flex flex-col gap-1 mt-2 pt-2 border-t border-base-300">
+			<a class="btn justify-start w-full" href="{{.SelfDetailHref}}">My Account</a>
+			{{.LogoutButton}}
+		</div>
+		{{end}}
+	</div>
+</details>
+{{end}}

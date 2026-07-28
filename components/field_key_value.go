@@ -3,13 +3,12 @@ package components
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/registry"
 	"gorm.io/datatypes"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldKeyValue represents a read-only display field that renders dynamic key-value pairs.
@@ -45,37 +44,38 @@ func (e FieldKeyValue) GetRoles() []string {
 }
 
 // Build compiles the FieldKeyValue component into an HTML structure rendering the parsed key-value lists.
-func (e FieldKeyValue) Build(ctx context.Context) Node {
+func (e FieldKeyValue) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Getter == nil {
-		return Div()
+		return Execute(w, "field_key_value", struct {
+			Empty   bool
+			Classes string
+			Pairs   []registry.Pair[string, string]
+		}{Empty: true})
 	}
 
 	jsonData, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldKeyValue getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	if len(jsonData) == 0 {
-		return Div()
+		return Execute(w, "field_key_value", struct {
+			Empty   bool
+			Classes string
+			Pairs   []registry.Pair[string, string]
+		}{Empty: true})
 	}
 
 	var val []registry.Pair[string, string]
 	err = json.Unmarshal(jsonData, &val)
 	if err != nil {
 		slog.Error("FieldKeyValue unmarshal failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
-	var nodes []Node
-	for _, r := range val {
-		nodes = append(
-			nodes,
-			Div(
-				Class("mb-4 pb-4 border-b border-base-300 last:border-b-0"),
-				Div(Class("font-medium text-sm text-base-content/70 mb-1"), Text(r.Key)),
-				Div(Class("whitespace-pre-wrap"), Text(r.Value)),
-			),
-		)
-	}
-	return Div(Class(e.Classes), Group(nodes))
+	return Execute(w, "field_key_value", struct {
+		Empty   bool
+		Classes string
+		Pairs   []registry.Pair[string, string]
+	}{Classes: e.Classes, Pairs: val})
 }

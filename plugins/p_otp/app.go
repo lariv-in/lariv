@@ -10,7 +10,7 @@ import (
 
 const AppURL = "/otp/preferences/"
 
-// GetPlugin returns registry contributions for [lariv.BuildAllRegistries].
+// GetPlugin returns registry contributions for [lariv.AppBuilder].
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppURL)
 	if err != nil {
@@ -30,6 +30,7 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 			Pages:       pluginStages(pluginPages),
 			Routes:      pluginStages(pluginRoutes),
 			Models:      pluginStages(pluginModels),
+			Admin:       lariv.PluginStages(pluginAdmin),
 		},
 	}
 }

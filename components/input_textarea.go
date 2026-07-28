@@ -2,12 +2,10 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputTextarea represents a multi-line text input form field component.
@@ -52,32 +50,35 @@ func (e InputTextarea) GetRoles() []string {
 }
 
 // Build compiles the InputTextarea component into a Div wrapping an HTML Textarea.
-func (e InputTextarea) Build(ctx context.Context) Node {
+func (e InputTextarea) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	rows := e.Rows
 	if rows <= 0 {
 		rows = 3
 	}
-	var valueNode Node = Text("")
+	value := ""
 	if e.Getter != nil {
-		value, err := e.Getter(ctx)
+		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputTextarea getter failed", "error", err, "key", e.Key)
 		} else {
-			valueNode = Text(value)
+			value = v
 		}
 	}
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Textarea(Name(e.Name),
-				Rows(fmt.Sprintf("%d", rows)),
-				valueNode,
-				Class(fmt.Sprintf("textarea textarea-bordered w-full %s", e.Classes)),
-				If(e.Required, Required())),
-		),
-	)
+	return Execute(w, "input_textarea", struct {
+		Classes  string
+		Label    string
+		Name     string
+		Rows     int
+		Value    string
+		Required bool
+	}{
+		Classes:  e.Classes,
+		Label:    e.Label,
+		Name:     e.Name,
+		Rows:     rows,
+		Value:    value,
+		Required: e.Required,
+	})
 }
 
 // Parse extracts the textarea string value from parameters.

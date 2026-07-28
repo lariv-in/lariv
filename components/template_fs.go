@@ -8,11 +8,9 @@ import (
 	"path/filepath"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
 )
 
-// TemplateComponent is a component that can be used to render a
-// [html/template.Template]
+// TemplateFSComponent is a component that can be used to render templates from an fs.FS.
 type TemplateFSComponent struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
@@ -58,26 +56,23 @@ func (e *TemplateFSComponent) CompileTemplate() error {
 	return nil
 }
 
-// Build returns the rendered content of template as is
-func (e TemplateFSComponent) Build(ctx context.Context) Node {
-	return NodeFunc(func(w io.Writer) error {
-		if e.template == nil {
-			err := e.CompileTemplate()
-			if err != nil {
-				return err
-			}
+// Build executes the rendered content of the template to w.
+func (e TemplateFSComponent) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	if e.template == nil {
+		if err := e.CompileTemplate(); err != nil {
+			return err
 		}
-		var data any
-		if e.TemplateContext != nil {
-			data_, err := e.TemplateContext(ctx)
-			data = data_
-			if err != nil {
-				return err
-			}
+	}
+	var data any
+	if e.TemplateContext != nil {
+		data_, err := e.TemplateContext(ctx)
+		data = data_
+		if err != nil {
+			return err
 		}
-		if e.TemplateName != "" {
-			return e.template.ExecuteTemplate(w, e.TemplateName, data)
-		}
-		return e.template.Execute(w, data)
-	})
+	}
+	if e.TemplateName != "" {
+		return e.template.ExecuteTemplate(w, e.TemplateName, data)
+	}
+	return e.template.Execute(w, data)
 }

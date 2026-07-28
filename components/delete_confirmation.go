@@ -2,11 +2,10 @@ package components
 
 import (
 	"context"
+	"io"
 	"net/http"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 var _ FormInterface = DeleteConfirmation{}
@@ -22,9 +21,10 @@ func (e deleteConfirmSubmitBtn) GetKey() string { return e.Key }
 // GetRoles returns the authorized roles required to view deleteConfirmSubmitBtn.
 func (e deleteConfirmSubmitBtn) GetRoles() []string { return e.Roles }
 
-// Build compiles deleteConfirmSubmitBtn into a red destructive submit button Node.
-func (deleteConfirmSubmitBtn) Build(context.Context) Node {
-	return Button(Type("submit"), Class("btn btn-error my-2"), Text("Confirm Delete"))
+// Build compiles deleteConfirmSubmitBtn into a red destructive submit button.
+func (deleteConfirmSubmitBtn) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	_, err := io.WriteString(w, `<button type="submit" class="btn btn-error my-2">Confirm Delete</button>`)
+	return err
 }
 
 // DeleteConfirmation represents a destructive form/modal content that warns users before performing delete operations.
@@ -49,8 +49,8 @@ type DeleteConfirmation struct {
 	Message string
 	// Classes represents additional CSS classes applied to the outer div wrapper.
 	Classes string
-	// Attr is a Getter yielding additional attributes (Node) to apply to the form (e.g., FormBubbling).
-	Attr getters.Getter[Node]
+	// Attr is a Getter yielding additional attributes to apply to the form (e.g., FormBubbling).
+	Attr getters.Getter[HTMLAttributes]
 }
 
 // GetKey returns the unique key identifier for this DeleteConfirmation component.
@@ -63,30 +63,48 @@ func (e DeleteConfirmation) GetRoles() []string {
 	return e.Roles
 }
 
-// deleteConfirmationGlobalError resolves and returns a global error banner node if $error._global contains an error.
-func deleteConfirmationGlobalError(ctx context.Context) Node {
-	err, lookupErr := getters.Key[error]("$error._global")(ctx)
-	if lookupErr != nil || err == nil {
-		return nil
-	}
-	return Div(Class("alert alert-error my-2 text-sm"), Text(err.Error()))
-}
-
 // Build compiles the DeleteConfirmation component into an HTML warning section with confirm/cancel submit actions.
-func (e DeleteConfirmation) Build(ctx context.Context) Node {
-	form := FormComponent[struct{}]{
-		Classes:        "gap-2 my-4",
-		Attr:           e.Attr,
-		ChildrenAction: []PageInterface{deleteConfirmSubmitBtn{}},
+func (e DeleteConfirmation) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
-	return Div(
-		Class("container mx-auto "+e.Classes),
-		H2(Class("text-xl font-bold text-error"), Text(e.Title)),
-		P(Class("my-2"), Text(e.Message)),
-		deleteConfirmationGlobalError(ctx),
-		form.Build(ctx),
-	)
+	var errorMessage string
+	if errVal, lookupErr := getters.Key[error]("$error._global")(ctx); lookupErr == nil && errVal != nil {
+		errorMessage = errVal.Error()
+	}
+
+	var formError string
+	if errMap, ok := ctx.Value(getters.ContextKeyError).(map[string]error); ok {
+		if formErr := errMap["_form"]; formErr != nil {
+			formError = formErr.Error()
+		}
+	} else if errorMap, ok := ctx.Value(getters.ContextKeyError).(map[string]any); ok {
+		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
+			if err, ok := formErr.(error); ok {
+				formError = err.Error()
+			}
+		}
+	}
+
+	return Execute(w, "delete_confirmation", struct {
+		Classes      string
+		Title        string
+		Message      string
+		ErrorMessage string
+		FormClasses  string
+		Attrs        HTMLAttributes
+		FormError    string
+	}{
+		Classes:      e.Classes,
+		Title:        e.Title,
+		Message:      e.Message,
+		ErrorMessage: errorMessage,
+		FormClasses:  "gap-2 my-4",
+		Attrs:        attrs,
+		FormError:    formError,
+	})
 }
 
 // ParseForm parses the submitted deletion form parameters.

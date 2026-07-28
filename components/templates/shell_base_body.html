@@ -1,0 +1,13 @@
+{{define "shell_base_body"}}
+<body class="hide-right font-sans" x-data="{ theme: localStorage.getItem('theme') || 'light' }" :data-theme="theme" hx-ext="alpine-morph" hx-boost="true" hx-indicator="#global-loading-indicator" hx-push-url="true">
+	<div id="global-loading-indicator" class="fixed top-0 left-0 w-full z-50">
+		<div class="h-0.5 bg-primary animate-pulse"></div>
+	</div>
+	{{.Children}}
+	{{if .GlobalError}}
+	<div class="toast toast-bottom toast-center z-50">
+		<div class="alert alert-error">{{.GlobalError}}</div>
+	</div>
+	{{end}}
+</body>
+{{end}}

@@ -20,7 +20,6 @@ import (
 	"github.com/lariv-in/lariv/plugins/p_filesystem"
 	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
-	. "maragu.dev/gomponents"
 )
 
 func formatTimeVal(val any, fmtLayout string) string {
@@ -149,15 +148,17 @@ func FindMatchingDBRoute(db *gorm.DB, reqPath string) (*DBRoute, error) {
 		return nil, err
 	}
 
-	// 2. Exact match on ltree_path
-	err = db.Preload("Page").Preload("References").
-		Where("ltree_path = ?::ltree AND is_active = ?", reqLTree, true).
-		First(&route).Error
-	if err == nil {
-		return &route, nil
-	}
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+	// 2. Exact match on ltree_path (Postgres only; SQLite has no ltree casts)
+	if db.Dialector.Name() == "postgres" {
+		err = db.Preload("Page").Preload("References").
+			Where("ltree_path = ?::ltree AND is_active = ?", reqLTree, true).
+			First(&route).Error
+		if err == nil {
+			return &route, nil
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
 	}
 
 	// 3. Evaluate lquery / ltxtquery / wildcard matches
@@ -201,26 +202,30 @@ func FindMatchingDBRoute(db *gorm.DB, reqPath string) (*DBRoute, error) {
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (p DynamicWebsitePage) Build(ctx context.Context) Node {
+func (p DynamicWebsitePage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
 		slog.Error("DynamicWebsitePage: failed to resolve DB from context", "error", err)
-		return Text("Internal Server Error")
+		_, _ = io.WriteString(w, "Internal Server Error")
+		return nil
 	}
 
 	req, ok := ctx.Value("$request").(*http.Request)
 	if !ok || req == nil {
 		slog.Error("DynamicWebsitePage: missing or nil $request in context")
-		return Text("Internal Server Error")
+		_, _ = io.WriteString(w, "Internal Server Error")
+		return nil
 	}
 
 	dbRoutePtr, err := FindMatchingDBRoute(db, req.URL.Path)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return Text("404 Not Found")
+			_, _ = io.WriteString(w, "404 Not Found")
+			return nil
 		}
 		slog.Error("DynamicWebsitePage: failed to query DBRoute", "path", req.URL.Path, "error", err)
-		return Text("Internal Server Error")
+		_, _ = io.WriteString(w, "Internal Server Error")
+		return nil
 	}
 	dbRoute := *dbRoutePtr
 
@@ -367,24 +372,29 @@ func (p DynamicWebsitePage) Build(ctx context.Context) Node {
 			}),
 			Funcs: funcMap,
 		}
-		return components.Render(tmplComp, ctx)
+
+		if strings.TrimSpace(dbRoute.Theme) == "" {
+			return components.Render(tmplComp, cat, ctx, w)
+		}
+		var buf strings.Builder
+		if err := components.Render(tmplComp, cat, ctx, &buf); err != nil {
+			return err
+		}
+		var theme lariv.GrapesJSTheme
+		if app, ok := lariv.AppFromContext(ctx); ok {
+			theme, _ = lookupGrapesJSTheme(app, dbRoute.Theme)
+		}
+		_, err = io.WriteString(w, injectThemeAssets(buf.String(), dbRoute.Theme, theme))
+		return err
 	}
 
-	return fileStreamingNode{
-		dbFS:    dbFS,
-		relPath: relPath,
-	}
+	return streamWebsiteFile(w, dbFS, relPath)
 }
 
-type fileStreamingNode struct {
-	dbFS    lariv.UsefulFilesystem
-	relPath string
-}
-
-func (f fileStreamingNode) Render(w io.Writer) error {
-	file, err := f.dbFS.Open(f.relPath)
+func streamWebsiteFile(w io.Writer, dbFS lariv.UsefulFilesystem, relPath string) error {
+	file, err := dbFS.Open(relPath)
 	if err != nil {
-		slog.Error("fileStreamingNode: failed to open file", "path", f.relPath, "error", err)
+		slog.Error("streamWebsiteFile: failed to open file", "path", relPath, "error", err)
 		if rw, ok := w.(http.ResponseWriter); ok {
 			http.Error(rw, "404 Not Found", http.StatusNotFound)
 			return nil
@@ -395,7 +405,7 @@ func (f fileStreamingNode) Render(w io.Writer) error {
 	defer file.Close()
 
 	if rw, ok := w.(http.ResponseWriter); ok {
-		ext := strings.ToLower(filepath.Ext(f.relPath))
+		ext := strings.ToLower(filepath.Ext(relPath))
 		contentType := mime.TypeByExtension(ext)
 		if contentType == "" {
 			contentType = "application/octet-stream"
@@ -407,48 +417,129 @@ func (f fileStreamingNode) Render(w io.Writer) error {
 	return err
 }
 
-func routeFormFields() components.ContainerColumn {
-	return components.ContainerColumn{
-		Children: []components.PageInterface{
-			&components.ContainerError{
-				Error: getters.Key[error]("$error.Path"),
-				Children: []components.PageInterface{
-					&components.InputText{Label: "Path", Name: "Path", Required: true, Getter: getters.Key[string]("$in.Path")},
-				},
-			},
-			&components.ContainerError{
-				Error: getters.Key[error]("$error.PageID"),
-				Children: []components.PageInterface{
-					&p_filesystem.InputFile{
-						Label:    "Template Page",
-						Name:     "PageID",
-						Required: true,
-						VNode:    getters.Key[p_filesystem.VNode]("$in.Page"),
-					},
-				},
-			},
-			&components.ContainerError{
-				Error: getters.Key[error]("$error.References"),
-				Children: []components.PageInterface{
-					&components.InputManyToMany[p_filesystem.VNode]{
-						Label:       "Reference Files",
-						Name:        "References",
-						Url:         lariv.RoutePath("filesystem.MultiSelectRoute", nil),
-						Display:     getters.Key[string]("$in.Name"),
-						Placeholder: "Select reference files...",
-						Required:    false,
-						Getter:      getters.Key[[]p_filesystem.VNode]("$in.References"),
-					},
-				},
-			},
-			&components.ContainerError{
-				Error: getters.Key[error]("$error.IsActive"),
-				Children: []components.PageInterface{
-					&components.InputCheckbox{Label: "Is Active", Name: "IsActive", Getter: getters.Key[bool]("$in.IsActive")},
+func routeThemeLabelGetter(ctx context.Context) (string, error) {
+	p, err := grapesJSThemePairGetter(ctx)
+	if err != nil {
+		return "", err
+	}
+	if p.Key == "" {
+		return "None", nil
+	}
+	if p.Value != "" {
+		return p.Value, nil
+	}
+	return p.Key, nil
+}
+
+func routeFormFields(allowCreateNew bool) components.ContainerColumn {
+	pageFields := []components.PageInterface{
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.PageID"),
+			Children: []components.PageInterface{
+				&p_filesystem.InputFile{
+					Label:    "Template Page",
+					Name:     "PageID",
+					Required: !allowCreateNew,
+					VNode:    getters.Key[p_filesystem.VNode]("$in.Page"),
 				},
 			},
 		},
 	}
+	if allowCreateNew {
+		pageFields = []components.PageInterface{
+			&components.ClientData{
+				Data: "{ createNewPage: false }",
+				Init: "createNewPage = $el.querySelector('[name=CreateNewPage]')?.checked ?? false",
+				Children: []components.PageInterface{
+					&components.InputCheckbox{
+						Label:  "Create new HTML file",
+						Name:   "CreateNewPage",
+						Getter: getters.Static(false),
+						XModel: "createNewPage",
+					},
+					&components.ClientIf{
+						Condition: "!createNewPage",
+						Children: []components.PageInterface{
+							&components.ContainerError{
+								Error: getters.Key[error]("$error.PageID"),
+								Children: []components.PageInterface{
+									&p_filesystem.InputFile{
+										Label:    "Template Page",
+										Name:     "PageID",
+										Required: false,
+										VNode:    getters.Key[p_filesystem.VNode]("$in.Page"),
+									},
+								},
+							},
+						},
+					},
+					&components.ClientIf{
+						Condition: "createNewPage",
+						Children: []components.PageInterface{
+							&components.ContainerError{
+								Error: getters.Key[error]("$error.NewPageName"),
+								Children: []components.PageInterface{
+									&components.InputText{
+										Label:    "New file name",
+										Name:     "NewPageName",
+										Required: false,
+										Getter:   getters.Static(""),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	children := []components.PageInterface{
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.Path"),
+			Children: []components.PageInterface{
+				&components.InputText{Label: "Path", Name: "Path", Required: true, Getter: getters.Key[string]("$in.Path")},
+			},
+		},
+	}
+	children = append(children, pageFields...)
+	children = append(
+		children,
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.References"),
+			Children: []components.PageInterface{
+				&components.InputManyToMany[p_filesystem.VNode]{
+					Label:       "Reference Files",
+					Name:        "References",
+					Url:         lariv.RoutePath("filesystem.MultiSelectRoute", nil),
+					Display:     getters.Key[string]("$in.Name"),
+					Placeholder: "Select reference files...",
+					Required:    false,
+					Getter:      getters.Key[[]p_filesystem.VNode]("$in.References"),
+				},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.IsActive"),
+			Children: []components.PageInterface{
+				&components.InputCheckbox{Label: "Is Active", Name: "IsActive", Getter: getters.Key[bool]("$in.IsActive")},
+			},
+		},
+		&components.ContainerError{
+			Error: getters.Key[error]("$error.Theme"),
+			Children: []components.PageInterface{
+				&components.InputSelect[string]{
+					Label:      "Theme",
+					Name:       "Theme",
+					EmptyLabel: "None",
+					Choices:    grapesJSThemeChoices,
+					Getter:     grapesJSThemePairGetter,
+				},
+			},
+		},
+	)
+
+	return components.ContainerColumn{Children: children}
 }
 
 func pluginPages() lariv.PluginFeatures[components.PageInterface] {
@@ -536,7 +627,7 @@ func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 										Href:    getters.Key[string]("$in.Path"),
 										Label:   getters.Static("View Live Page ↗"),
 										Classes: "link link-primary font-semibold mb-4 block",
-										Attr:    getters.Static[Node](Attr("hx-boost", "false")),
+										Attr:    getters.Static(components.HTMLAttributes{"hx-boost": "false"}),
 									},
 									&components.LabelInline{
 										Title:   "Template Page Name",
@@ -559,6 +650,26 @@ func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 											&components.FieldCheckbox{Getter: getters.Key[bool]("$in.IsActive")},
 										},
 									},
+									&components.LabelInline{
+										Title:   "Theme",
+										Classes: "mt-4 block",
+										Children: []components.PageInterface{
+											&components.FieldText{Getter: routeThemeLabelGetter},
+										},
+									},
+									&components.ShowIf{
+										Getter: editablePageGetter("$in.Page"),
+										Children: []components.PageInterface{
+											&components.FieldLink{
+												Href: lariv.RoutePath("p_website.RoutesBuilderRoute", map[string]getters.Getter[any]{
+													"id": getters.Any(getters.Key[uint]("$in.ID")),
+												}),
+												Label:   getters.Static("Edit with GrapesJS"),
+												Classes: "btn btn-outline btn-sm mt-2 inline-flex",
+												Attr:    getters.Static(components.HTMLAttributes{"hx-boost": "false"}),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -578,7 +689,7 @@ func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 								Page: components.Page{Key: "p_website.RoutesCreateForm"},
 								Attr: getters.FormBubbling(getters.Static("p_website.RoutesCreateForm")),
 								ChildrenInput: []components.PageInterface{
-									routeFormFields(),
+									routeFormFields(true),
 								},
 								ChildrenAction: []components.PageInterface{
 									&components.ButtonSubmit{Label: "Create Route"},
@@ -604,7 +715,7 @@ func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 								Attr:   getters.FormBubbling(getters.Static("p_website.RoutesUpdateForm")),
 								Getter: getters.Key[DBRoute]("dbroute"),
 								ChildrenInput: []components.PageInterface{
-									routeFormFields(),
+									routeFormFields(false),
 								},
 								ChildrenAction: []components.PageInterface{
 									&components.ContainerRow{
@@ -642,6 +753,14 @@ func pluginPages() lariv.PluginFeatures[components.PageInterface] {
 						Message: "Are you sure you want to delete this route? This action cannot be undone.",
 						Attr:    getters.FormBubbling(getters.Static("p_website.RoutesDeleteForm")),
 					},
+				},
+			}},
+			{Key: "p_website.RoutesBuilderPage", Value: &components.ShellBase{
+				ExtraHead: []components.PageInterface{
+					grapesJSHead{Page: components.Page{Key: "p_website.GrapesJSHead"}},
+				},
+				Children: []components.PageInterface{
+					grapesJSBuilderBody{Page: components.Page{Key: "p_website.GrapesJSBuilderBody"}},
 				},
 			}},
 		},

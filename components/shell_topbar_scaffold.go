@@ -2,8 +2,7 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
+	"io"
 )
 
 // ShellTopbarScaffold represents a page layout document scaffold wrapper featuring a top navigation bar.
@@ -23,13 +22,12 @@ type ShellTopbarScaffold struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Children represents the slice of nested sub-components rendered in the topbar page content area.
-	Children  []PageInterface
+	Children []PageInterface
 	// ExtraHead represents the slice of custom header tags (e.g. metadata, scripts, links) injected in the HTML head.
 	ExtraHead []PageInterface
 }
 
-// Body compiles the core page content wrapper inside the parent HTML document shell structure.
-func (e ShellTopbarScaffold) Body(ctx context.Context) Node {
+func (e ShellTopbarScaffold) shellBase() ShellBase {
 	return ShellBase{
 		ExtraHead: e.ExtraHead,
 		Children: []PageInterface{
@@ -37,19 +35,17 @@ func (e ShellTopbarScaffold) Body(ctx context.Context) Node {
 				Children: e.Children,
 			},
 		},
-	}.Body(ctx)
+	}
+}
+
+// Body compiles the core page content wrapper inside the parent HTML document shell structure.
+func (e ShellTopbarScaffold) Body(cat Catalog, ctx context.Context, w io.Writer) error {
+	return e.shellBase().Body(cat, ctx, w)
 }
 
 // Build compiles the ShellTopbarScaffold component into base Shell elements.
-func (e ShellTopbarScaffold) Build(ctx context.Context) Node {
-	return Render(ShellBase{
-		ExtraHead: e.ExtraHead,
-		Children: []PageInterface{
-			LayoutTopbar{
-				Children: e.Children,
-			},
-		},
-	}, ctx)
+func (e ShellTopbarScaffold) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	return Render(e.shellBase(), cat, ctx, w)
 }
 
 // GetKey returns the unique key identifier for this ShellTopbarScaffold component.

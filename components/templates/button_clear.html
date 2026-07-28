@@ -1,0 +1,3 @@
+{{define "button_clear"}}
+<button type="button" class="{{.Classes}}" onclick="this.closest('form').querySelectorAll('input,select,textarea').forEach(el => { el.value = ''; });">{{.Icon}}{{.Label}}</button>
+{{end}}

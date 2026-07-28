@@ -2,14 +2,14 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/plugins/p_users"
-	"maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
 )
 
 type UserDropdown struct {
@@ -24,7 +24,7 @@ func (e UserDropdown) GetRoles() []string {
 	return e.Roles
 }
 
-func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
+func (e UserDropdown) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	user, userOK := p_users.UserFromContextOptional(ctx)
 	roleName, roleOK := p_users.RoleFromContextOptional(ctx)
 
@@ -41,49 +41,39 @@ func (e UserDropdown) Build(ctx context.Context) gomponents.Node {
 		avatarText = string(name[0])
 	}
 
-	cardBody := gomponents.Group{
-		html.Div(
-			html.Class("flex flex-col gap-1"),
-			html.Div(html.Class("font-bold text-lg"), gomponents.Text(name)),
-			html.Div(html.Class("text-sm opacity-70 cursor-default"), gomponents.Text(roleDisplay)),
-		),
-	}
+	var selfDetailHref string
+	var logoutButton template.HTML
 	if userOK {
-		selfDetailHref, err := getters.IfOr(lariv.RoutePath("p_users.SelfDetailRoute", nil), ctx, "")
+		href, err := getters.IfOr(lariv.RoutePath("p_users.SelfDetailRoute", nil), ctx, "")
 		if err != nil {
 			slog.Error("user dropdown: resolve self detail route", "error", err)
 		}
-		cardBody = append(cardBody, html.Div(
-			html.Class("flex flex-col gap-1 mt-2 pt-2 border-t border-base-300"),
-			html.A(
-				html.Class("btn justify-start w-full"),
-				html.Href(selfDetailHref),
-				gomponents.Text("My Account"),
-			),
-			components.Render(components.ButtonPost{
-				Label:   "Logout",
-				Icon:    "arrow-right-start-on-rectangle",
-				URL:     lariv.RoutePath("p_users.LogoutRoute", nil),
-				Classes: "btn btn-error justify-start w-full",
-			}, ctx),
-		))
+		selfDetailHref = href
+
+		logoutButton, err = components.RenderHTML(components.ButtonPost{
+			Label:   "Logout",
+			Icon:    "arrow-right-start-on-rectangle",
+			URL:     lariv.RoutePath("p_users.LogoutRoute", nil),
+			Classes: "btn btn-error justify-start w-full",
+		}, cat, ctx)
+		if err != nil {
+			return err
+		}
 	}
 
-	return gomponents.El(
-		"details",
-		html.Class("dropdown dropdown-end"),
-		gomponents.Attr("@click.outside", "$el.removeAttribute('open')"),
-		gomponents.El(
-			"summary",
-			html.Class("btn btn-sm btn-circle avatar placeholder"),
-			html.Div(
-				html.Class("rounded-full w-10"),
-				html.Span(html.Class("text-xl"), gomponents.Text(avatarText)),
-			),
-		),
-		html.Div(
-			html.Class("card w-64 my-1.5 card-body shadow dropdown-content border border-base-300 rounded-box z-50 bg-base-100 p-4"),
-			cardBody,
-		),
-	)
+	return execute(w, "user_dropdown", struct {
+		AvatarText     string
+		Name           string
+		RoleDisplay    string
+		UserOK         bool
+		SelfDetailHref string
+		LogoutButton   template.HTML
+	}{
+		AvatarText:     avatarText,
+		Name:           name,
+		RoleDisplay:    roleDisplay,
+		UserOK:         userOK,
+		SelfDetailHref: selfDetailHref,
+		LogoutButton:   logoutButton,
+	})
 }

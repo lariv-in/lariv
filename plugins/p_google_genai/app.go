@@ -10,7 +10,7 @@ import (
 
 const AppUrl = "/google-genai/"
 
-// GetPlugin returns registry contributions for [lariv.BuildAllRegistries].
+// GetPlugin returns registry contributions for [lariv.AppBuilder].
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppUrl)
 	if err != nil {

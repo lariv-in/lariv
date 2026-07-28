@@ -10,7 +10,7 @@ import (
 
 const AppUrl = "/filesystem/"
 
-// GetPlugin returns the registry contributions for this plugin for [lariv.BuildAllRegistries].
+// GetPlugin returns the registry contributions for this plugin for [lariv.AppBuilder].
 // Callers assembling the full plugin list should include a pair with key "p_filesystem" and this value.
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppUrl)
@@ -31,6 +31,7 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 			Routes:      pluginStages(pluginRoutes),
 			Configs:     pluginStages(pluginConfigs),
 			Generators:  pluginStages(pluginGenerators),
+			Admin:       lariv.PluginStages(pluginAdmin),
 		},
 	}
 }

@@ -1,0 +1,3 @@
+{{define "htmx_polling"}}
+<div hx-get="{{.URL}}" hx-target="body" hx-swap="outerHTML" hx-trigger="every 2s">{{.Children}}</div>
+{{end}}

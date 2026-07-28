@@ -17,9 +17,8 @@ func TestFieldMarkdown_Sanitize(t *testing.T) {
 		field := FieldMarkdown{
 			Getter: getters.Static(unsafeMarkdown),
 		}
-		node := field.Build(ctx)
 		var buf bytes.Buffer
-		if err := node.Render(&buf); err != nil {
+		if err := field.Build(EmptyCatalog{}, ctx, &buf); err != nil {
 			t.Fatalf("unexpected render error: %v", err)
 		}
 		rendered := buf.String()
@@ -36,9 +35,8 @@ func TestFieldMarkdown_Sanitize(t *testing.T) {
 			Getter:   getters.Static(unsafeMarkdown),
 			Sanitize: getters.Static(true),
 		}
-		node := field.Build(ctx)
 		var buf bytes.Buffer
-		if err := node.Render(&buf); err != nil {
+		if err := field.Build(EmptyCatalog{}, ctx, &buf); err != nil {
 			t.Fatalf("unexpected render error: %v", err)
 		}
 		rendered := buf.String()
@@ -55,9 +53,8 @@ func TestFieldMarkdown_Sanitize(t *testing.T) {
 			Getter:   getters.Static(unsafeMarkdown),
 			Sanitize: getters.Static(false),
 		}
-		node := field.Build(ctx)
 		var buf bytes.Buffer
-		if err := node.Render(&buf); err != nil {
+		if err := field.Build(EmptyCatalog{}, ctx, &buf); err != nil {
 			t.Fatalf("unexpected render error: %v", err)
 		}
 		rendered := buf.String()

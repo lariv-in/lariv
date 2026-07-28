@@ -16,15 +16,16 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 		log.Panic(err)
 	}
 	p := lariv.Plugin{
-		Type:        lariv.PluginTypeApp,
-		Icon:        "sparkles",
-		URL:         u,
-		VerboseName: "Assistant",
-		Pages:       lariv.PluginStages(pluginPages),
-		Views:       lariv.PluginStages(pluginViews),
-		Routes:      lariv.PluginStages(pluginRoutes),
-		Configs:     lariv.PluginStages(pluginConfigs),
-		DBInitHooks: lariv.PluginStages(pluginDBInitHooks),
+		Type:         lariv.PluginTypeApp,
+		Icon:         "sparkles",
+		URL:          u,
+		VerboseName:  "Assistant",
+		Pages:        lariv.PluginStages(pluginPages),
+		Views:        lariv.PluginStages(pluginViews),
+		Routes:       lariv.PluginStages(pluginRoutes),
+		Configs:      lariv.PluginStages(pluginConfigs),
+		DBInitHooks:  lariv.PluginStages(pluginDBInitHooks),
+		RightSidebar: lariv.PluginStages(pluginRightSidebar),
 	}
 	return registry.Pair[string, lariv.Plugin]{Key: "p_llm_assistant", Value: p}
 }

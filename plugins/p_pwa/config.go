@@ -1,11 +1,13 @@
 package p_pwa
 
 import (
+	"context"
+	"html"
+	"io"
+
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/registry"
-	"maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
 )
 
 type PwaIconConfig struct {
@@ -82,13 +84,24 @@ type PwaConfig struct {
 
 var Config = &PwaConfig{}
 
-func (c *PwaConfig) PostConfig() {
-	if c.AppName != "" {
-		components.RegistryShellHeadNodes.Patch("core.Title", func(_ gomponents.Node) gomponents.Node {
-			return html.TitleEl(gomponents.Text(c.AppName))
-		})
-	}
+type pwaTitle struct {
+	components.Page
+	Title string
 }
+
+func (t pwaTitle) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
+	title := Config.AppName
+	if title == "" {
+		title = t.Title
+	}
+	if title == "" {
+		title = "Lariv"
+	}
+	_, err := io.WriteString(w, "<title>"+html.EscapeString(title)+"</title>")
+	return err
+}
+
+func (c *PwaConfig) PostConfig() {}
 
 func pluginConfigs() lariv.PluginFeatures[lariv.Config] {
 	return lariv.PluginFeatures[lariv.Config]{

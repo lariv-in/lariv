@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/getters"
+	"github.com/lariv-in/lariv/registry"
 	"github.com/lariv-in/lariv/views"
 	"gorm.io/gorm"
 )
@@ -35,7 +37,11 @@ func downloadHandler(_ *views.View) http.Handler {
 			return
 		}
 
-		catalog, err := BuildExportCatalog(db)
+		var models *[]registry.Pair[string, any]
+		if app, ok := lariv.AppFromContext(r.Context()); ok {
+			models = app.Models.AllStable()
+		}
+		catalog, err := BuildExportCatalogFrom(db, models)
 		if err != nil {
 			slog.Error("export: build catalog in download", "error", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

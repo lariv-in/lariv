@@ -73,12 +73,17 @@ func Key[T any](key string) Getter[T] {
 			return zero, nil
 		}
 		rv := reflect.ValueOf(value)
+		wantType := reflect.TypeFor[T]()
 		if rv.Kind() == reflect.Pointer {
 			if rv.IsNil() {
 				return zero, nil
 			}
-			if reflect.TypeOf(zero).Kind() != reflect.Pointer {
-				value = rv.Elem().Interface()
+			// Deref for non-pointer T, but keep pointer receivers when T is an
+			// interface (e.g. error) so value.(T) can still succeed.
+			if wantType.Kind() != reflect.Pointer {
+				if _, ok := value.(T); !ok {
+					value = rv.Elem().Interface()
+				}
 			}
 		}
 		v, ok := value.(T)
@@ -86,7 +91,7 @@ func Key[T any](key string) Getter[T] {
 			if coerced, ok2 := coerceKeyValue[T](value); ok2 {
 				return coerced, nil
 			}
-			return zero, fmt.Errorf("Value for key %s found, but the type of value in context was %v, expected %v", key, reflect.TypeOf(value), reflect.TypeOf(zero))
+			return zero, fmt.Errorf("Value for key %s found, but the type of value in context was %v, expected %v", key, reflect.TypeOf(value), wantType)
 		}
 		return v, nil
 	}

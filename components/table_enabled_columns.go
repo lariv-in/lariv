@@ -3,13 +3,13 @@ package components
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"net/http"
 	"sort"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // TableWithColumns is implemented by [DataTable] for [ButtonToggleColumns].
@@ -163,25 +163,30 @@ func (e ButtonToggleColumns) GetRoles() []string {
 	return e.Roles
 }
 
+type buttonToggleColumnsRow struct {
+	Href  string
+	Label string
+}
+
 // Build compiles the ButtonToggleColumns component into an HTML dropdown selector element.
-func (e ButtonToggleColumns) Build(ctx context.Context) Node {
+func (e ButtonToggleColumns) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Table == nil || e.QueryKey == "" {
-		return Group{}
+		return nil
 	}
 	tab, err := e.Table(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	if tab == nil {
-		return Group{}
+		return nil
 	}
 	cols := tab.TableColumns()
 	req, ok := ctx.Value("$request").(*http.Request)
 	if !ok {
-		return Group{}
+		return nil
 	}
 
-	var rows []Node
+	var rows []buttonToggleColumnsRow
 	for _, col := range cols {
 		if col.Name == "" {
 			continue
@@ -196,25 +201,23 @@ func (e ButtonToggleColumns) Build(ctx context.Context) Node {
 		if checked {
 			mark = "\u2611 "
 		}
-		rows = append(rows, A(
-			Href(href),
-			Class("link link-hover flex items-center gap-2 px-2 py-1 rounded hover:bg-base-200"),
-			Text(mark+col.Label),
-		))
+		rows = append(rows, buttonToggleColumnsRow{Href: href, Label: mark + col.Label})
 	}
 	if len(rows) == 0 {
-		return Group{}
+		return nil
 	}
 
-	return El(
-		"details",
-		Class("dropdown dropdown-end"),
-		Attr("@click.outside", "if(!$event.target.closest('.fk-modal-container')){$el.removeAttribute('open')}"),
-		El("summary", Class("btn btn-square dropdown-toggle btn-primary btn-sm"), Render(Icon{Name: "view-columns"}, ctx)),
-		Div(
-			Class(tableButtonFilterDefaultContentClasses),
-			Div(Class("text-sm font-semibold mb-2"), Text("Columns")),
-			Group(rows),
-		),
-	)
+	icon, err := RenderHTML(Icon{Name: "view-columns"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	return Execute(w, "button_toggle_columns", struct {
+		Icon         template.HTML
+		ContentClass string
+		Rows         []buttonToggleColumnsRow
+	}{
+		Icon:         icon,
+		ContentClass: tableButtonFilterDefaultContentClasses,
+		Rows:         rows,
+	})
 }

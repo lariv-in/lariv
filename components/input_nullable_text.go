@@ -3,13 +3,11 @@ package components
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
-	"reflect"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputNullableText represents a text input form field component designed to bind to optional pointer strings (*string).
@@ -41,8 +39,8 @@ type InputNullableText struct {
 	Classes string
 	// Hidden specifies if this text field is rendered as a hidden input element.
 	Hidden bool
-	// Attr is an optional Getter returning additional HTML nodes/attributes to apply to the input.
-	Attr getters.Getter[Node]
+	// Attr is an optional Getter returning additional HTML attributes to apply to the input.
+	Attr getters.Getter[HTMLAttributes]
 }
 
 // GetKey returns the unique key identifier for this InputNullableText component.
@@ -56,14 +54,14 @@ func (e InputNullableText) GetRoles() []string {
 }
 
 // Build compiles the InputNullableText component into a Div wrapping a text input.
-func (e InputNullableText) Build(ctx context.Context) Node {
-	var valueNode Node = Value("")
+func (e InputNullableText) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	value := ""
 	if e.Getter != nil {
-		value, err := e.Getter(ctx)
+		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputNullableText getter failed", "error", err, "key", e.Key)
-		} else if value != nil {
-			valueNode = Value(*value)
+		} else if v != nil {
+			value = *v
 		}
 	}
 
@@ -71,40 +69,36 @@ func (e InputNullableText) Build(ctx context.Context) Node {
 	if e.Hidden {
 		wrapClass += " hidden"
 	}
-	return Div(
-		Class(wrapClass),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			If(!e.Hidden, Text(e.Label)),
-			Input(
-				If(!e.Hidden, Type("text")), If(e.Hidden, Type("hidden")), Name(e.Name),
-				valueNode,
-				Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)),
-				If(e.Required, Required()),
-				Iff(e.Attr != nil, func() (out Node) {
-					out = Raw("")
-					defer func() {
-						if r := recover(); r != nil {
-							slog.Error("InputNullableText attr getter panicked", "panic", r, "key", e.Key)
-						}
-					}()
-					n, err := e.Attr(ctx)
-					if err != nil {
-						slog.Error("InputNullableText attr getter failed", "error", err, "key", e.Key)
-						return out
-					}
-					if n == nil {
-						return out
-					}
-					v := reflect.ValueOf(n)
-					if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Map || v.Kind() == reflect.Slice || v.Kind() == reflect.Interface || v.Kind() == reflect.Func) && v.IsNil() {
-						return out
-					}
-					return n
-				}),
-			),
-		),
-	)
+	inputType := "text"
+	if e.Hidden {
+		inputType = "hidden"
+	}
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		slog.Error("InputNullableText attr getter failed", "error", err, "key", e.Key)
+		attrs = HTMLAttributes{}
+	}
+	return Execute(w, "input_nullable_text", struct {
+		WrapClass string
+		Hidden    bool
+		Label     string
+		Type      string
+		Name      string
+		Value     string
+		Classes   string
+		Required  bool
+		Attrs     HTMLAttributes
+	}{
+		WrapClass: wrapClass,
+		Hidden:    e.Hidden,
+		Label:     e.Label,
+		Type:      inputType,
+		Name:      e.Name,
+		Value:     value,
+		Classes:   e.Classes,
+		Required:  e.Required,
+		Attrs:     attrs,
+	})
 }
 
 // Parse extracts text strings from parameters and returns a string pointer or a nil pointer if empty.

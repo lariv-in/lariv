@@ -1,0 +1,3 @@
+{{define "client_if"}}
+<template{{if .Condition}} x-if="{{.Condition}}"{{end}}>{{if .Wrap}}<div>{{.Children}}</div>{{else}}{{.Children}}{{end}}</template>
+{{end}}

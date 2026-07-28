@@ -2,10 +2,8 @@ package components
 
 import (
 	"context"
-	"fmt"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // LabelInline represents a layout component grouping a bold label prefix and child elements horizontally.
@@ -26,24 +24,25 @@ type LabelInline struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Title represents the header prefix text displayed before the colon.
-	Title    string
+	Title string
 	// Children represents the slice of nested sub-components rendered in the row.
 	Children []PageInterface
 	// Classes represents additional CSS classes applied to the output HTML wrapper.
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
-	Classes  string
+	Classes string
 }
 
 // Build compiles the LabelInline component into a Div wrapping a primary label Span and nested children.
-func (e LabelInline) Build(ctx context.Context) Node {
-	var childNodes []Node
-	for _, child := range e.Children {
-		childNodes = append(childNodes, Render(child, ctx))
+func (e LabelInline) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-	return Div(Class(fmt.Sprintf("flex gap-2 %s", e.Classes)),
-		Span(Class("text-primary font-bold"), Text(e.Title+":")),
-		Group(childNodes),
-	)
+	return Execute(w, "label_inline", struct {
+		Classes  string
+		Title    string
+		Children template.HTML
+	}{Classes: e.Classes, Title: e.Title, Children: children})
 }
 
 // GetKey returns the unique key identifier for this LabelInline component.

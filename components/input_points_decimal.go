@@ -3,13 +3,12 @@ package components
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 
 	"github.com/lariv-in/lariv/fields"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputPointsDecimal represents a high-precision decimal value input form field component.
@@ -50,7 +49,7 @@ func (e InputPointsDecimal) GetKey() string { return e.Key }
 func (e InputPointsDecimal) GetRoles() []string { return e.Roles }
 
 // Build compiles the InputPointsDecimal component into a Div wrapping a decimal text Input.
-func (e InputPointsDecimal) Build(ctx context.Context) Node {
+func (e InputPointsDecimal) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	text := ""
 	if e.Getter != nil {
 		pd, err := e.Getter(ctx)
@@ -64,21 +63,29 @@ func (e InputPointsDecimal) Build(ctx context.Context) Node {
 	if e.Hidden {
 		wrapClass += " hidden"
 	}
-	valueNode := Value(text)
-	return Div(
-		Class(wrapClass),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			If(!e.Hidden, Text(e.Label)),
-			Input(
-				If(!e.Hidden, Type("text")), If(e.Hidden, Type("hidden")), Name(e.Name),
-				valueNode,
-				Attr("inputmode", "decimal"),
-				Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)),
-				If(e.Required, Required()),
-			),
-		),
-	)
+	inputType := "text"
+	if e.Hidden {
+		inputType = "hidden"
+	}
+	return Execute(w, "input_points_decimal", struct {
+		WrapClass string
+		Hidden    bool
+		Label     string
+		Type      string
+		Name      string
+		Value     string
+		Classes   string
+		Required  bool
+	}{
+		WrapClass: wrapClass,
+		Hidden:    e.Hidden,
+		Label:     e.Label,
+		Type:      inputType,
+		Name:      e.Name,
+		Value:     text,
+		Classes:   e.Classes,
+		Required:  e.Required,
+	})
 }
 
 // Parse extracts and unmarshals string values into a fields.DecimalSix object.

@@ -54,14 +54,18 @@ func pluginModels() lariv.PluginFeatures[any] {
 	}
 }
 
-func init() {
-	lariv.RegistryAdmin.Register("p_blog", lariv.AdminPanel[Blog]{
-		SearchField: "Title",
-		ListFields:  []string{"Title", "Slug", "CreatedByID", "UpdatedAt"},
-		Preload:     []string{"CreatedBy", "Tags"},
-	})
-	lariv.RegistryAdmin.Register("p_blog_tag", lariv.AdminPanel[BlogTag]{
-		SearchField: "Name",
-		ListFields:  []string{"Name", "UpdatedAt"},
-	})
+func pluginAdmin() lariv.PluginFeatures[lariv.AdminPanelInterface] {
+	return lariv.PluginFeatures[lariv.AdminPanelInterface]{
+		Entries: []registry.Pair[string, lariv.AdminPanelInterface]{
+			{Key: "p_blog", Value: lariv.AdminPanel[Blog]{
+				SearchField: "Title",
+				ListFields:  []string{"Title", "Slug", "CreatedByID", "UpdatedAt"},
+				Preload:     []string{"CreatedBy", "Tags"},
+			}},
+			{Key: "p_blog_tag", Value: lariv.AdminPanel[BlogTag]{
+				SearchField: "Name",
+				ListFields:  []string{"Name", "UpdatedAt"},
+			}},
+		},
+	}
 }

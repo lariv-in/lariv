@@ -25,7 +25,7 @@ import (
 type MultiStepFormLayer struct{}
 
 // Next wraps the downstream HTTP request handlers routing multi-stage form transitions.
-func (m MultiStepFormLayer) Next(view View, next http.Handler) http.Handler {
+func (m MultiStepFormLayer) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		form, ok := viewMultiStepForm(view)
 		if !ok {
@@ -135,7 +135,7 @@ func (w *multiStepSwapResponseWriter) Write(b []byte) (int, error) {
 }
 
 // viewMultiStepForm scans the View page hierarchy returning the target MultiStepForm structure instance.
-func viewMultiStepForm(view View) (components.MultiStepForm, bool) {
+func viewMultiStepForm(view *View) (components.MultiStepForm, bool) {
 	page, ok := view.GetPage()
 	if !ok {
 		return components.MultiStepForm{}, false

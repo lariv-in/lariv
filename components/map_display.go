@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"html/template"
+	"io"
 	"log/slog"
 	"regexp"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // Pinned MapLibre for [MapDisplay]; matches seer map plugins.
@@ -35,13 +35,17 @@ func (e *MapDisplayLibreHead) GetKey() string { return e.Key }
 func (e *MapDisplayLibreHead) GetRoles() []string { return e.Roles }
 
 // Build compiles the MapDisplayLibreHead component into CDN stylesheet and script tags.
-func (e *MapDisplayLibreHead) Build(ctx context.Context) Node {
+func (e *MapDisplayLibreHead) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	baseMapLibre := "https://unpkg.com/maplibre-gl@" + mapDisplayLibreCDNVersion + "/dist/"
 	baseCBORX := "https://unpkg.com/cbor-x@" + mapDisplayCBORXCDNVersion + "/dist/"
-	return Group([]Node{
-		Link(Href(baseMapLibre+"maplibre-gl.css"), Rel("stylesheet"), CrossOrigin("anonymous")),
-		Script(Src(baseMapLibre+"maplibre-gl.js"), CrossOrigin("anonymous")),
-		Script(Src(baseCBORX+"index.js"), CrossOrigin("anonymous")),
+	return Execute(w, "map_display_libre_head", struct {
+		CSSHref string
+		JSSrc   string
+		CBORSrc string
+	}{
+		CSSHref: baseMapLibre + "maplibre-gl.css",
+		JSSrc:   baseMapLibre + "maplibre-gl.js",
+		CBORSrc: baseCBORX + "index.js",
 	})
 }
 
@@ -99,7 +103,7 @@ func (e *MapDisplay) GetKey() string { return e.Key }
 func (e *MapDisplay) GetRoles() []string { return e.Roles }
 
 // Build compiles the MapDisplay component into MapLibre container Divs and dynamic script setup tags.
-func (e *MapDisplay) Build(ctx context.Context) Node {
+func (e *MapDisplay) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	dataURL := ""
 	if e.DataURL != nil {
 		u, err := e.DataURL(ctx)
@@ -108,7 +112,7 @@ func (e *MapDisplay) Build(ctx context.Context) Node {
 			return ContainerError{
 				Page:  Page{Key: e.Key + ".err"},
 				Error: getters.Static(err),
-			}.Build(ctx)
+			}.Build(cat, ctx, w)
 		}
 		dataURL = strings.TrimSpace(u)
 	}
@@ -118,7 +122,7 @@ func (e *MapDisplay) Build(ctx context.Context) Node {
 		return ContainerError{
 			Page:  Page{Key: e.Key + ".err"},
 			Error: getters.Static(err),
-		}.Build(ctx)
+		}.Build(cat, ctx, w)
 	}
 
 	refreshMS := int64(0)
@@ -129,7 +133,7 @@ func (e *MapDisplay) Build(ctx context.Context) Node {
 			return ContainerError{
 				Page:  Page{Key: e.Key + ".err"},
 				Error: getters.Static(err),
-			}.Build(ctx)
+			}.Build(cat, ctx, w)
 		}
 		refreshMS = v
 	}
@@ -142,7 +146,7 @@ func (e *MapDisplay) Build(ctx context.Context) Node {
 			return ContainerError{
 				Page:  Page{Key: e.Key + ".err"},
 				Error: getters.Static(err),
-			}.Build(ctx)
+			}.Build(cat, ctx, w)
 		}
 		deferStart = v
 	}
@@ -155,7 +159,7 @@ func (e *MapDisplay) Build(ctx context.Context) Node {
 			return ContainerError{
 				Page:  Page{Key: e.Key + ".err"},
 				Error: getters.Static(err),
-			}.Build(ctx)
+			}.Build(cat, ctx, w)
 		}
 		skipAutoFitBounds = v
 	}
@@ -168,7 +172,7 @@ func (e *MapDisplay) Build(ctx context.Context) Node {
 			return ContainerError{
 				Page:  Page{Key: e.Key + ".err"},
 				Error: getters.Static(err),
-			}.Build(ctx)
+			}.Build(cat, ctx, w)
 		}
 		markerIconSizeDefault = v
 	}
@@ -1850,14 +1854,15 @@ body[data-theme="dark"] #` + mapElID + `.maplibregl-map .mapdisplay-layer-toolba
   }
 })();`
 
-	return Group([]Node{
-		StyleEl(Raw(mapCtrlCSS)),
-		Div(
-			ID(mapElID),
-			Class(classes),
-			Attr("x-data", "{}"),
-			Attr("x-on:destroy", "if ($el.mapDisplayInstance) { $el.mapDisplayInstance.destroy(); }"),
-		),
-		Script(Raw(initJS)),
+	return Execute(w, "map_display", struct {
+		MapCtrlCSS template.CSS
+		MapElID    string
+		Classes    string
+		InitJS     template.JS
+	}{
+		MapCtrlCSS: template.CSS(mapCtrlCSS),
+		MapElID:    mapElID,
+		Classes:    classes,
+		InitJS:     template.JS(initJS),
 	})
 }

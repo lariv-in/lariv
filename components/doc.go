@@ -1,5 +1,5 @@
 // Package components provides reusable and interactive UI layout components, fields, inputs, and page scaffolds
-// for the Lariv application framework, constructed using maragu.dev/gomponents.
+// for the Lariv application framework, rendered with html/template.
 //
 // The package revolves around several core interfaces that define components, nested structures, document shells, and forms.
 //
@@ -12,8 +12,8 @@
 //		Text string
 //	}
 //
-//	func (b CustomBadge) Build(ctx context.Context) gomponents.Node {
-//		return html.Span(html.Class("badge"), gomponents.Text(b.Text))
+//	func (b CustomBadge) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+//		return components.Execute(w, "custom_badge", struct{ Text string }{Text: b.Text})
 //	}
 //
 //	func (b CustomBadge) GetKey() string     { return b.Key }

@@ -1,0 +1,24 @@
+{{define "layout_sidebar"}}
+<div id="app-layout" class="size-full" x-data="{{.XData}}">
+	<div class="grid h-full transition-[grid-template-columns] duration-[400ms] ease-in" :class="isMobile ? 'grid-cols-1' : (showLeft ? 'grid-cols-[250px_1fr]' : 'grid-cols-[0px_1fr]')">
+		<div x-show="isMobile && showLeft" x-transition.opacity="" @click="showLeft = false" class="absolute inset-x-0 bottom-0 top-16 bg-black/50 z-20"></div>
+		<aside class="bg-base-100 border-r border-base-300 overflow-hidden max-md:absolute max-md:left-0 max-md:top-16 max-md:z-50 max-md:h-[calc(100vh-4rem)] max-md:shadow-xl max-md:transition-all max-md:duration-300 max-md:-translate-x-full" :style="isMobile && showLeft ? 'translate: none' : ''">
+			<div class="h-full overflow-y-auto w-[250px] bg-base-100 p-2">{{.Sidebar}}</div>
+		</aside>
+		<main class="overflow-y-auto p-4 relative h-full bg-base-100">
+			<button @click="showLeft = !showLeft" class="btn btn-sm btn-square mb-2">{{.MenuIcon}}</button>
+			<div class="messages mb-4">
+				<template x-for="msg in messages">
+					<div class="alert shadow-lg mb-2" :class="msg.tags == 'error' ? 'alert-error' : (msg.tags == 'success' ? 'alert-success' : 'alert-info')">
+						<div class="flex-1">
+							<span class="font-semibold" x-text="msg.tags.charAt(0).toUpperCase() + msg.tags.slice(1) + ':'"></span>
+							<span x-text="msg.text"></span>
+						</div>
+					</div>
+				</template>
+			</div>
+			{{.Children}}
+		</main>
+	</div>
+</div>
+{{end}}

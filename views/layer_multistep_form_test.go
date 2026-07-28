@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	"maragu.dev/gomponents"
 )
 
 type multiStepLayerTestPage struct {
@@ -18,12 +18,13 @@ type multiStepLayerTestPage struct {
 	Children []components.PageInterface
 }
 
-func (p multiStepLayerTestPage) Build(ctx context.Context) gomponents.Node {
-	group := gomponents.Group{}
+func (p multiStepLayerTestPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	for _, child := range p.Children {
-		group = append(group, components.Render(child, ctx))
+		if err := components.Render(child, cat, ctx,  w); err != nil {
+			return err
+		}
 	}
-	return group
+	return nil
 }
 
 func (p multiStepLayerTestPage) GetKey() string {

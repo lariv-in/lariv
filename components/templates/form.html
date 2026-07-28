@@ -1,0 +1,13 @@
+{{define "form"}}
+<form class="flex flex-col gap-2 {{.Classes}}"{{if .Enctype}} enctype="{{.Enctype}}"{{end}}{{if .Action}} action="{{.Action}}"{{end}}{{attrs .Attrs}}>
+	{{.Prefix}}
+	<div>
+		{{if .Title}}<div class="text-xl font-semibold">{{.Title}}</div>{{end}}
+		{{if .Subtitle}}<div class="text-sm text-gray-500">{{.Subtitle}}</div>{{end}}
+	</div>
+	<div>{{.Inputs}}</div>
+	{{if .FormError}}<span class="text-sm text-error">{{.FormError}}</span>{{end}}
+	<div class="my-2">{{.Actions}}</div>
+	{{.Suffix}}
+</form>
+{{end}}

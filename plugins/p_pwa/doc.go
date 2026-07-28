@@ -10,7 +10,7 @@
 //
 // # Shell Head Snippets
 //
-// Registers links in components.RegistryShellHeadNodes in init():
+// Registers links via Plugin.HeadNodes on GetPlugin():
 //
 //   - "pwa.manifestLink" -> Link
 //         Injects <link rel="manifest" href="/app.webmanifest"> tag for browser PWA discovery.

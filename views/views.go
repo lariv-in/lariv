@@ -41,29 +41,37 @@ type View struct {
 	// Layers represents the collection of middleware layers wrapping page views.
 	Layers []registry.Pair[string, Layer]
 
-	mu            sync.RWMutex
+	mu            *sync.RWMutex
 	cachedHandler http.Handler
+}
+
+func (v *View) lockMu() *sync.RWMutex {
+	if v.mu == nil {
+		v.mu = new(sync.RWMutex)
+	}
+	return v.mu
 }
 
 // GetHandler compiles the View's middleware layers and rendering handlers into a single nested [http.Handler] flow.
 func (v *View) GetHandler() http.Handler {
-	v.mu.RLock()
+	mu := v.lockMu()
+	mu.RLock()
 	if v.cachedHandler != nil {
 		h := v.cachedHandler
-		v.mu.RUnlock()
+		mu.RUnlock()
 		return h
 	}
-	v.mu.RUnlock()
+	mu.RUnlock()
 
-	v.mu.Lock()
-	defer v.mu.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	if v.cachedHandler != nil {
 		return v.cachedHandler
 	}
 
 	var handler http.Handler = http.HandlerFunc(v.RenderPage)
 	for i := len(v.Layers) - 1; i >= 0; i-- {
-		handler = v.Layers[i].Value.Next(*v, handler)
+		handler = v.Layers[i].Value.Next(v, handler)
 	}
 	v.cachedHandler = handler
 	return handler
@@ -90,7 +98,8 @@ func (v *View) RenderPage(w http.ResponseWriter, r *http.Request) {
 	if errs, ok := ctx.Value(getters.ContextKeyError).(map[string]error); ok && len(errs) > 0 {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
-	err := components.Render(page, ctx).Render(w)
+	cat := components.CatalogFromContext(ctx)
+	err := components.Render(page, cat, ctx, w)
 	if err != nil {
 		// Do not panic when the client is already gone (common with slow layers + devtools, live reload).
 		if isBenignResponseWriteError(err) {
@@ -171,8 +180,9 @@ func (v *View) ParseForm(w http.ResponseWriter, r *http.Request) (map[string]any
 
 // WithLayer appends a new middleware layer block to the View execution stack.
 func (v *View) WithLayer(name string, layer Layer) *View {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+	mu := v.lockMu()
+	mu.Lock()
+	defer mu.Unlock()
 	// Append layer; keys are labels only and are not required to be unique.
 	v.Layers = append(v.Layers, registry.Pair[string, Layer]{Key: name, Value: layer})
 	v.cachedHandler = nil
@@ -182,8 +192,9 @@ func (v *View) WithLayer(name string, layer Layer) *View {
 // InsertLayerBefore inserts a middleware layer with the given name immediately before the first layer matching beforeName.
 // If the target layer is missing, it appends it to the end of the stack.
 func (v *View) InsertLayerBefore(beforeName, name string, layer Layer) *View {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+	mu := v.lockMu()
+	mu.Lock()
+	defer mu.Unlock()
 	v.cachedHandler = nil
 	p := registry.Pair[string, Layer]{Key: name, Value: layer}
 	for i, mw := range v.Layers {
@@ -200,8 +211,9 @@ func (v *View) InsertLayerBefore(beforeName, name string, layer Layer) *View {
 // InsertLayerAfter inserts a middleware layer with the given name immediately after the first layer matching afterName.
 // If the target layer is missing, it appends it to the end of the stack.
 func (v *View) InsertLayerAfter(afterName, name string, layer Layer) *View {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+	mu := v.lockMu()
+	mu.Lock()
+	defer mu.Unlock()
 	v.cachedHandler = nil
 	p := registry.Pair[string, Layer]{Key: name, Value: layer}
 	for i, mw := range v.Layers {
@@ -223,8 +235,9 @@ func (v *View) InsertLayerAfter(afterName, name string, layer Layer) *View {
 
 // WithLayers appends multiple middleware layer blocks to the View execution stack.
 func (v *View) WithLayers(layers ...registry.Pair[string, Layer]) *View {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+	mu := v.lockMu()
+	mu.Lock()
+	defer mu.Unlock()
 	v.cachedHandler = nil
 	for _, layer := range layers {
 		v.Layers = append(v.Layers, registry.Pair[string, Layer]{Key: layer.Key, Value: layer.Value})
@@ -234,8 +247,9 @@ func (v *View) WithLayers(layers ...registry.Pair[string, Layer]) *View {
 
 // PatchLayers applies function modifications to multiple middleware layers by matching keys.
 func (v *View) PatchLayers(layers ...registry.Pair[string, func(Layer) Layer]) *View {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+	mu := v.lockMu()
+	mu.Lock()
+	defer mu.Unlock()
 	v.cachedHandler = nil
 	for _, layer := range layers {
 		for i, mw := range v.Layers {
@@ -249,8 +263,9 @@ func (v *View) PatchLayers(layers ...registry.Pair[string, func(Layer) Layer]) *
 
 // PatchLayer applies a function patcher to the first middleware layer matching the name key.
 func (v *View) PatchLayer(name string, patcher func(Layer) Layer) *View {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+	mu := v.lockMu()
+	mu.Lock()
+	defer mu.Unlock()
 	v.cachedHandler = nil
 	for i, mw := range v.Layers {
 		if mw.Key == name {

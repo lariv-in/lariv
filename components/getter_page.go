@@ -2,9 +2,9 @@ package components
 
 import (
 	"context"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
 )
 
 // GetterPage represents a component that resolves another page/component dynamically at render time.
@@ -29,18 +29,18 @@ type GetterPage struct {
 }
 
 // Build compiles the GetterPage by resolving the dynamically retrieved page component and rendering it.
-func (e GetterPage) Build(ctx context.Context) Node {
+func (e GetterPage) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Getter == nil {
-		return Group{}
+		return nil
 	}
 	page, err := e.Getter(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	if page == nil {
-		return Group{}
+		return nil
 	}
-	return Render(page, ctx)
+	return Render(page, cat, ctx, w)
 }
 
 // GetKey returns the unique key identifier for this GetterPage component.

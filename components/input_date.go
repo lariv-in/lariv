@@ -2,13 +2,11 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log/slog"
 	"time"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputDate represents a date selection input form field component.
@@ -53,34 +51,35 @@ func (e InputDate) GetRoles() []string {
 }
 
 // Build compiles the InputDate component into a Div wrapping a date selection Input.
-func (e InputDate) Build(ctx context.Context) Node {
+func (e InputDate) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	timezone, _ := ctx.Value("$tz").(*time.Location)
 	if timezone == nil {
 		timezone = DefaultTimeZone
 	}
-	var valueNode Node = Value("")
+	value := ""
 	if e.Getter != nil {
 		t, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputDate getter failed", "error", err, "key", e.Key)
 		} else if !t.IsZero() {
-			valueNode = Value(t.In(timezone).Format("2006-01-02"))
+			value = t.In(timezone).Format("2006-01-02")
 		}
 	}
-	if e.Hidden {
-		return Div(
-			Class("hidden"),
-			Input(Type("hidden"), Name(e.Name), valueNode),
-		)
-	}
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Input(Type("date"), Name(e.Name), valueNode, Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)), If(e.Required, Required())),
-		),
-	)
+	return Execute(w, "input_date", struct {
+		Hidden   bool
+		Classes  string
+		Label    string
+		Name     string
+		Value    string
+		Required bool
+	}{
+		Hidden:   e.Hidden,
+		Classes:  e.Classes,
+		Label:    e.Label,
+		Name:     e.Name,
+		Value:    value,
+		Required: e.Required,
+	})
 }
 
 // Parse extracts the selected date string from parameter arrays and parses it as a time.Time in localized location.

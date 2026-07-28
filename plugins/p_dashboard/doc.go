@@ -11,7 +11,7 @@
 //
 // # Top Bar Navigation Elements
 //
-// Registers UI widgets into components.RegistryTopbar:
+// Registers UI widgets via Plugin.Topbar on GetPlugin():
 //
 //   - "dashboard.appsPageButton" -> components.ButtonLink
 //     Icon link directing users back to the dashboard apps grid.

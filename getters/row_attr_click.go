@@ -3,9 +3,6 @@ package getters
 import (
 	"context"
 	"fmt"
-
-	"maragu.dev/gomponents"
-	ghtml "maragu.dev/gomponents/html"
 )
 
 // ContextKeyTableDisplay is set on the row context by table list/grid views so row-attribute
@@ -22,8 +19,8 @@ func tableDisplayIsGrid(ctx context.Context) bool {
 	return v == TableDisplayGrid
 }
 
-func rowAttrNavigateClick(click, classExpr Getter[string]) Getter[gomponents.Node] {
-	return func(ctx context.Context) (gomponents.Node, error) {
+func rowAttrNavigateClick(click, classExpr Getter[string]) Getter[map[string]string] {
+	return func(ctx context.Context) (map[string]string, error) {
 		if click == nil {
 			return nil, fmt.Errorf("getters: rowAttrNavigateClick: click getter is nil")
 		}
@@ -49,41 +46,41 @@ func rowAttrNavigateClick(click, classExpr Getter[string]) Getter[gomponents.Nod
 
 		if grid {
 			if classStr != "" {
-				return gomponents.Group{
-					ghtml.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer transition-colors"),
-					gomponents.Attr(":class", classStr),
-					gomponents.Attr("@click", expr),
+				return map[string]string{
+					"class":  "border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer transition-colors",
+					":class": classStr,
+					"@click": expr,
 				}, nil
 			}
-			return gomponents.Group{
-				ghtml.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200 transition-colors"),
-				gomponents.Attr("@click", expr),
+			return map[string]string{
+				"class":  "border border-base-300 rounded-box flex flex-col bg-base-100 p-2 cursor-pointer hover:bg-base-200 transition-colors",
+				"@click": expr,
 			}, nil
 		}
 
 		if classStr != "" {
-			return gomponents.Group{
-				ghtml.Class("cursor-pointer transition-colors"),
-				gomponents.Attr(":class", classStr),
-				gomponents.Attr("@click", expr),
+			return map[string]string{
+				"class":  "cursor-pointer transition-colors",
+				":class": classStr,
+				"@click": expr,
 			}, nil
 		}
-		return gomponents.Group{
-			ghtml.Class("cursor-pointer hover:bg-base-200 transition-colors"),
-			gomponents.Attr("@click", expr),
+		return map[string]string{
+			"class":  "cursor-pointer hover:bg-base-200 transition-colors",
+			"@click": expr,
 		}, nil
 	}
 }
 
-func rowAttrClassOnly(classStr string, grid bool) gomponents.Node {
+func rowAttrClassOnly(classStr string, grid bool) map[string]string {
 	if grid {
-		return gomponents.Group{
-			ghtml.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 transition-colors"),
-			gomponents.Attr(":class", classStr),
+		return map[string]string{
+			"class":  "border border-base-300 rounded-box flex flex-col bg-base-100 p-2 transition-colors",
+			":class": classStr,
 		}
 	}
-	return gomponents.Group{
-		ghtml.Class("transition-colors"),
-		gomponents.Attr(":class", classStr),
+	return map[string]string{
+		"class":  "transition-colors",
+		":class": classStr,
 	}
 }

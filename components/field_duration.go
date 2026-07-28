@@ -2,12 +2,11 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"time"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldDuration represents a read-only field that displays time duration values.
@@ -41,26 +40,32 @@ func (e FieldDuration) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldDuration component into a Div Node displaying the duration string.
-// Includes a defer/recover safety net to handle getter panics cleanly by returning an empty string.
-func (e FieldDuration) Build(ctx context.Context) (out Node) {
-	out = Group{}
+// Build compiles the FieldDuration component into a Div displaying the duration string.
+// Includes a defer/recover safety net to handle getter panics cleanly by writing an empty string.
+func (e FieldDuration) Build(cat Catalog, ctx context.Context, w io.Writer) (err error) {
 	if e.Getter == nil {
-		return out
+		return nil
 	}
 	defer func() {
 		if r := recover(); r != nil {
 			slog.Error("FieldDuration getter panicked", "panic", r, "key", e.Key)
-			out = Div(Class(e.Classes), Text(""))
+			err = Execute(w, "field_duration", struct {
+				Classes string
+				Value   string
+			}{Classes: e.Classes, Value: ""})
 		}
 	}()
 	v, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldDuration getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
-	if v == nil {
-		return Div(Class(e.Classes), Text(""))
+	value := ""
+	if v != nil {
+		value = v.String()
 	}
-	return Div(Class(e.Classes), Text(v.String()))
+	return Execute(w, "field_duration", struct {
+		Classes string
+		Value   string
+	}{Classes: e.Classes, Value: value})
 }

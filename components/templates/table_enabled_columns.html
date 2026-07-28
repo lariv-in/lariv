@@ -1,0 +1,11 @@
+{{define "button_toggle_columns"}}
+<details class="dropdown dropdown-end" @click.outside="if(!$event.target.closest('.fk-modal-container')){$el.removeAttribute('open')}">
+	<summary class="btn btn-square dropdown-toggle btn-primary btn-sm">{{.Icon}}</summary>
+	<div class="{{.ContentClass}}">
+		<div class="text-sm font-semibold mb-2">Columns</div>
+		{{range .Rows}}
+		<a href="{{.Href}}" class="link link-hover flex items-center gap-2 px-2 py-1 rounded hover:bg-base-200">{{.Label}}</a>
+		{{end}}
+	</div>
+</details>
+{{end}}

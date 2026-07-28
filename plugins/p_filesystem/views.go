@@ -51,7 +51,7 @@ type loadVNodeByPathParamLayer struct {
 	Param string
 }
 
-func (m loadVNodeByPathParamLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (m loadVNodeByPathParamLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		db, err := filesystemDB(r)
 		if err != nil {
@@ -420,7 +420,7 @@ func multiUploadHandler(v *views.View) http.Handler {
 // vNodeListEnrichLayer fills [VNode.ListChildrenCount] for each row (directories) after [views.LayerList].
 type vNodeListEnrichLayer struct{}
 
-func (vNodeListEnrichLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (vNodeListEnrichLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ol, ok := r.Context().Value("vnodes").(components.ObjectList[VNode])
 		if !ok || len(ol.Items) == 0 {

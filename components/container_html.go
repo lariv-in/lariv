@@ -2,8 +2,8 @@ package components
 
 import (
 	"context"
-
-	"maragu.dev/gomponents"
+	"html/template"
+	"io"
 )
 
 // ContainerHTML layout container wraps child components in a custom HTML layout function.
@@ -19,8 +19,9 @@ import (
 //	     Children: []components.PageInterface{
 //	         &components.FieldText{Getter: getters.Static("Inner content")},
 //	     },
-//	     HTML: func(ctx context.Context, children gomponents.Node) gomponents.Node {
-//	         return html.Div(html.Class("card bg-base-200 p-4 shadow"), children)
+//	     HTML: func(ctx context.Context, w io.Writer, children template.HTML) error {
+//	         _, err := io.WriteString(w, `<div class="card bg-base-200 p-4 shadow">`+string(children)+`</div>`)
+//	         return err
 //	     },
 //	 }
 type ContainerHTML struct {
@@ -28,20 +29,21 @@ type ContainerHTML struct {
 	Page
 	// Children represents the nested components to render inside this wrapper.
 	Children []PageInterface
-	// HTML represents the custom function that receives the rendered children nodes and returns the wrapped HTML structure.
-	HTML     func(context.Context, gomponents.Node) gomponents.Node
+	// HTML represents the custom function that receives the rendered children HTML and writes the wrapped structure.
+	HTML func(context.Context, io.Writer, template.HTML) error
 }
 
 // Build compiles the ContainerHTML component by rendering children and executing the HTML layout callback.
-func (e ContainerHTML) Build(ctx context.Context) gomponents.Node {
-	group := gomponents.Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+func (e ContainerHTML) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
 	if e.HTML != nil {
-		return e.HTML(ctx, group)
+		return e.HTML(ctx, w, children)
 	}
-	return group
+	_, err = io.WriteString(w, string(children))
+	return err
 }
 
 // GetKey returns the unique key identifier for this ContainerHTML component.

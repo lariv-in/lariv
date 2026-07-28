@@ -1,0 +1,18 @@
+{{define "field_many_to_many"}}
+<div class="{{.Classes}}">
+	{{if .Label}}<label class="label text-sm font-bold">{{.Label}}</label>{{end}}
+	{{if .Empty}}
+	<span class="text-sm opacity-50">{{.EmptyText}}</span>
+	{{else}}
+	<div class="input input-bordered w-full min-h-12 h-auto flex flex-wrap items-center gap-2">
+		{{range .Chips}}
+		{{if .Href}}
+		<a href="{{.Href}}" class="flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-2 py-1 min-w-0 max-w-full link link-hover no-underline"><span class="text-sm flex-1 min-w-0 truncate">{{.Label}}</span></a>
+		{{else}}
+		<div class="flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-2 py-1 min-w-0 max-w-full"><span class="text-sm flex-1 min-w-0 truncate">{{.Label}}</span></div>
+		{{end}}
+		{{end}}
+	</div>
+	{{end}}
+</div>
+{{end}}

@@ -1,0 +1,22 @@
+{{define "history_sidebar_panel"}}
+<div x-data="{{.XData}}" @new-session-created.window="activeSessionId = $event.detail.id; showModal = false; htmx.ajax('GET', '/llm-assistant/sidebar-chat/' + activeSessionId + '/', {target: '#sidebar-chat-container', swap: 'innerHTML', source: $el})" class="flex flex-col gap-0 p-2 h-full overflow-hidden" hx-push-url="false">
+	<div class="flex justify-between items-center flex-none border-b border-base-300 pb-2 px-1">
+		<div id="session-name-container" class="text-sm font-semibold truncate max-w-[70%]">{{.ActiveSessionName}}</div>
+		<div class="flex gap-1 flex-none">
+			<button class="btn btn-sm btn-ghost btn-circle" @click="showModal = true">{{.IconClock}}</button>
+			<button class="btn btn-sm btn-ghost btn-circle" hx-post="/llm-assistant/new-session/" hx-swap="none" hx-push-url="false">{{.IconPlus}}</button>
+		</div>
+	</div>
+	<div id="sidebar-chat-container" class="flex-1 flex flex-col gap-4 overflow-hidden min-h-0" hx-push-url="false">{{.InitialChat}}</div>
+	<dialog x-show="showModal" :class="showModal ? 'modal modal-open' : 'modal'">
+		<div class="modal-box bg-base-100 max-w-lg border border-base-300 p-6 relative">
+			<button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3" @click="showModal = false">{{.IconXMark}}</button>
+			<h3 class="text-lg font-bold mb-4">Conversations</h3>
+			<div id="modal-sessions-list" class="max-h-60 overflow-y-auto flex flex-col bg-base-200 rounded border border-base-300">{{.SessionItems}}</div>
+		</div>
+		<form method="dialog" class="modal-backdrop">
+			<button @click="showModal = false">close</button>
+		</form>
+	</dialog>
+</div>
+{{end}}

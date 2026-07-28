@@ -3,13 +3,12 @@ package components
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/registry"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // Environment represents a dropdown selector that controls settings stored in a client-side "environment" cookie map.
@@ -54,8 +53,14 @@ func (e Environment[T]) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the Environment component into a dropdown select menu Node.
-func (e Environment[T]) Build(ctx context.Context) Node {
+type environmentOption struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
+// Build compiles the Environment component into a dropdown select menu.
+func (e Environment[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	var zero T
 
 	key := ""
@@ -63,7 +68,7 @@ func (e Environment[T]) Build(ctx context.Context) Node {
 		k, err := e.Key(ctx)
 		if err != nil {
 			slog.Error("Environment Key getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		key = k
 	}
@@ -73,7 +78,7 @@ func (e Environment[T]) Build(ctx context.Context) Node {
 		opts, err := e.Options(ctx)
 		if err != nil {
 			slog.Error("Environment Options getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		options = opts
 	}
@@ -89,22 +94,23 @@ func (e Environment[T]) Build(ctx context.Context) Node {
 		def, err := e.Default(ctx)
 		if err != nil {
 			slog.Error("Environment Default getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		if any(def) != any(zero) {
 			rawSel = fmt.Sprint(def)
 		}
 	}
 
-	optionNodes := []Node{
-		Option(Value(""), If(rawSel == "", Attr("selected", "")), Text("—")),
+	optionNodes := []environmentOption{
+		{Value: "", Label: "—", Selected: rawSel == ""},
 	}
 	for _, opt := range options {
 		ks := fmt.Sprint(opt.Key)
-		optionNodes = append(
-			optionNodes,
-			Option(Value(ks), If(rawSel == ks, Attr("selected", "")), Text(opt.Value)),
-		)
+		optionNodes = append(optionNodes, environmentOption{
+			Value:    ks,
+			Label:    opt.Value,
+			Selected: rawSel == ks,
+		})
 	}
 
 	onChange := fmt.Sprintf(`(function(){
@@ -118,14 +124,17 @@ func (e Environment[T]) Build(ctx context.Context) Node {
 		htmx.ajax('GET',window.location.pathname,{target:'body',swap:'outerHTML'});
 	}).call(this)`, key)
 
-	return Div(
-		Class(fmt.Sprintf("my-1 %s", e.Classes)),
-		If(e.Label != "", Label(Class("label text-sm font-bold"), Text(e.Label))),
-		Select(
-			Name(key),
-			Class("select select-bordered w-full"),
-			Attr("onchange", onChange),
-			Group(optionNodes),
-		),
-	)
+	return Execute(w, "environment", struct {
+		Classes string
+		Label   string
+		Name    string
+		Attrs   HTMLAttributes
+		Options []environmentOption
+	}{
+		Classes: e.Classes,
+		Label:   e.Label,
+		Name:    key,
+		Attrs:   HTMLAttributes{"onchange": onChange},
+		Options: optionNodes,
+	})
 }

@@ -1,0 +1,9 @@
+{{define "multi_step_form_hidden_stage"}}
+<input type="hidden" name="$stage" value="{{.}}">
+{{end}}
+{{define "multi_step_form_hidden_input"}}
+<input type="hidden" name="{{.Name}}" value="{{.Value}}">
+{{end}}
+{{define "multi_step_form_hidden_multi"}}
+{{range .Values}}<input type="hidden" name="{{$.Name}}" value="{{.}}">{{end}}
+{{end}}

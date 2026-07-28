@@ -2,13 +2,12 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"html/template"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	g_html "maragu.dev/gomponents/html"
 )
 
 // TableListContent represents a sub-component layout rendering query lists in standard HTML tabular tables.
@@ -31,12 +30,23 @@ type TableListContent[T any] struct {
 	Columns []TableColumn
 	// Data represents the dynamic Getter retrieving the paginated ObjectList payload.
 	Data getters.Getter[ObjectList[T]]
-	// RowAttr represents the dynamic getter returning TR/card attribute nodes.
-	RowAttr getters.Getter[Node]
+	// RowAttr represents the dynamic getter returning TR HTML attributes.
+	RowAttr getters.Getter[HTMLAttributes]
+}
+
+type tableListHeader struct {
+	Label   string
+	SortURL string
+	PushURL string
+}
+
+type tableListRow struct {
+	Attrs HTMLAttributes
+	Cells []template.HTML
 }
 
 // Build compiles the TableListContent component into tabular lists featuring sorting headers and zebra tr wrappers.
-func (e TableListContent[T]) Build(ctx context.Context) Node {
+func (e TableListContent[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	var data ObjectList[T]
 	if e.Data != nil {
 		resolved, err := e.Data(ctx)
@@ -51,85 +61,76 @@ func (e TableListContent[T]) Build(ctx context.Context) Node {
 		currentSort = req.URL.Query().Get("sort")
 	}
 
-	var ths []Node
+	headers := make([]tableListHeader, 0, len(e.Columns))
 	for _, col := range e.Columns {
-		if col.Name == "" || !hasReq {
-			ths = append(ths, g_html.Th(g_html.Class("whitespace-nowrap min-w-[100px]"), Text(col.Label)))
-			continue
+		h := tableListHeader{Label: col.Label}
+		if col.Name != "" && hasReq {
+			sortURL := columnSortURL(req, col.Name)
+			ind := sortColumnIndicator(currentSort, col.Name)
+			pushURL := "true"
+			if strings.Contains(req.URL.Path, "select") {
+				pushURL = "false"
+			}
+			h.Label = col.Label + ind
+			h.SortURL = sortURL
+			h.PushURL = pushURL
 		}
-		sortURL := columnSortURL(req, col.Name)
-		ind := sortColumnIndicator(currentSort, col.Name)
-		pushURL := "true"
-		if strings.Contains(req.URL.Path, "select") {
-			pushURL = "false"
-		}
-		ths = append(ths, g_html.Th(
-			g_html.Class("whitespace-nowrap min-w-[100px]"),
-			g_html.A(
-				g_html.Href(sortURL),
-				Attr("hx-get", sortURL),
-				Attr("hx-target", "closest .data-table-container"),
-				Attr("hx-swap", "outerHTML"),
-				Attr("hx-push-url", pushURL),
-				g_html.Class("link link-hover link-neutral no-underline hover:underline cursor-pointer font-inherit text-inherit inline-flex items-center gap-1"),
-				Text(col.Label+ind),
-			),
-		))
+		headers = append(headers, h)
 	}
 
-	var trs []Node
 	if len(data.Items) == 0 {
-		trs = append(trs, g_html.Tr(g_html.Td(g_html.ColSpan(fmt.Sprintf("%d", len(e.Columns))), g_html.Class("text-center opacity-50 py-8"), Text("Table is empty"))))
-	} else {
-		n := len(data.Items)
-		for i, row := range data.Items {
-			rowMap := getters.MapFromStruct(row)
-			rowCtx := context.WithValue(ctx, "$row", rowMap)
-			rowCtx = context.WithValue(rowCtx, getters.ContextKeyTableDisplay, getters.TableDisplayList)
-			// Per-row list position for cell components (int; 0-based).
-			rowCtx = context.WithValue(rowCtx, "$rowIndex", i)
-			rowCtx = context.WithValue(rowCtx, "$isFirstRow", i == 0)
-			rowCtx = context.WithValue(rowCtx, "$isLastRow", i == n-1)
-
-			var tds []Node
-			for _, col := range e.Columns {
-				var cellNodes []Node
-				for _, child := range col.Children {
-					cellNodes = append(cellNodes, Render(child, rowCtx))
-				}
-				tds = append(tds, g_html.Td(g_html.Class("whitespace-nowrap truncate max-w-xs min-w-[100px]"), Group(cellNodes)))
-			}
-
-			var rowNodes []Node
-			if e.RowAttr != nil {
-				extra, err := e.RowAttr(rowCtx)
-				if err != nil {
-					return ContainerError{Error: getters.Static(err)}.Build(ctx)
-				}
-				if extra != nil {
-					rowNodes = append(rowNodes, extra)
-				} else {
-					rowNodes = append(rowNodes, g_html.Class("hover:bg-base-200 transition-colors"))
-				}
-			} else {
-				rowNodes = append(rowNodes, g_html.Class("hover:bg-base-200 transition-colors"))
-			}
-			rowNodes = append(rowNodes, Group(tds))
-			trs = append(trs, g_html.Tr(rowNodes...))
-		}
+		return Execute(w, "table_list_content", struct {
+			Headers []tableListHeader
+			Empty   bool
+			ColSpan int
+			Rows    []tableListRow
+		}{
+			Headers: headers,
+			Empty:   true,
+			ColSpan: len(e.Columns),
+		})
 	}
 
-	return g_html.Div(
-		g_html.Class("table-container flex flex-col rounded-box border border-base-300 bg-base-100"),
-		g_html.Div(
-			g_html.Class("overflow-x-auto"),
-			g_html.Table(
-				g_html.Class("table table-zebra"),
-				g_html.THead(g_html.Tr(ths...)),
-				g_html.TBody(trs...),
-			),
-		),
-	)
+	rows := make([]tableListRow, 0, len(data.Items))
+	n := len(data.Items)
+	for i, row := range data.Items {
+		rowMap := getters.MapFromStruct(row)
+		rowCtx := context.WithValue(ctx, "$row", rowMap)
+		rowCtx = context.WithValue(rowCtx, getters.ContextKeyTableDisplay, getters.TableDisplayList)
+		rowCtx = context.WithValue(rowCtx, "$rowIndex", i)
+		rowCtx = context.WithValue(rowCtx, "$isFirstRow", i == 0)
+		rowCtx = context.WithValue(rowCtx, "$isLastRow", i == n-1)
+
+		cells := make([]template.HTML, 0, len(e.Columns))
+		for _, col := range e.Columns {
+			cell, err := RenderChildren(cat, rowCtx, col.Children)
+			if err != nil {
+				return err
+			}
+			cells = append(cells, cell)
+		}
+
+		attrs, err := ResolveAttrs(rowCtx, e.RowAttr)
+		if err != nil {
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
+		}
+		if len(attrs) == 0 {
+			attrs = HTMLAttributes{"class": "hover:bg-base-200 transition-colors"}
+		}
+		rows = append(rows, tableListRow{Attrs: attrs, Cells: cells})
+	}
+
+	return Execute(w, "table_list_content", struct {
+		Headers []tableListHeader
+		Empty   bool
+		ColSpan int
+		Rows    []tableListRow
+	}{
+		Headers: headers,
+		Empty:   false,
+		ColSpan: len(e.Columns),
+		Rows:    rows,
+	})
 }
 
 // GetKey returns the unique key identifier for this TableListContent.

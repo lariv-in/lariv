@@ -2,15 +2,14 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldTextArea represents a read-only multi-line text display field.
-// It resolves a string value dynamically from context and renders it inside a div Node decorated with the CSS class "whitespace-pre-wrap" to preserve formatting and newlines.
+// It resolves a string value dynamically from context and renders it inside a div decorated with the CSS class "whitespace-pre-wrap" to preserve formatting and newlines.
 //
 // Use Cases:
 //   - Showing long descriptions, logs, address records, or administrator notes where paragraph breaks and spaces must be preserved.
@@ -41,16 +40,19 @@ func (e FieldTextArea) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldTextArea component into a Div Node with formatting preservation classes.
-func (e FieldTextArea) Build(ctx context.Context) Node {
+// Build compiles the FieldTextArea component into a Div with formatting preservation classes.
+func (e FieldTextArea) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	value := ""
 	if e.Getter != nil {
 		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldTextArea getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		value = v
 	}
-	return Div(Class(e.Classes+" whitespace-pre-wrap"), Text(value))
+	return Execute(w, "field_text_area", struct {
+		Classes string
+		Value   string
+	}{Classes: e.Classes + " whitespace-pre-wrap", Value: value})
 }

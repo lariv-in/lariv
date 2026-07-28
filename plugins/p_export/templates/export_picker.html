@@ -1,0 +1,57 @@
+{{define "export_picker"}}
+<div class="container max-w-6xl mx-auto mt-4" x-data="{{.XData}}">
+	<div class="mb-6">
+		<h1 class="text-2xl font-semibold">XLSX Export</h1>
+		<p class="text-sm text-base-content/70 mt-2">Select model roots. Frontend auto-selects dependencies. Backend recomputes same closure before export.</p>
+	</div>
+	<div class="stats shadow mb-6 w-full">
+		<div class="stat">
+			<div class="stat-title">Models</div>
+			<div class="stat-value text-2xl">{{.ModelCount}}</div>
+		</div>
+		<div class="stat">
+			<div class="stat-title">Root Selection</div>
+			<div class="stat-value text-2xl"><span x-text="selectedRoots.length"></span></div>
+		</div>
+		<div class="stat">
+			<div class="stat-title">Effective Export</div>
+			<div class="stat-value text-2xl"><span x-text="effective.length"></span></div>
+		</div>
+	</div>
+	<form method="post" action="{{.Action}}" class="space-y-6" data-hx-boost="false">
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+			{{range .Rows}}
+			<div class="card bg-base-100 border border-base-300 shadow-sm">
+				<div class="card-body gap-3">
+					<div class="flex items-start justify-between gap-4">
+						<div class="space-y-1">
+							<div class="font-semibold">{{.Table}}</div>
+							<div class="text-sm text-base-content/70">{{.Description}}</div>
+							<div class="text-xs text-base-content/60">{{.Deps}}</div>
+						</div>
+						<label class="label cursor-pointer gap-3">
+							<span class="label-text text-sm">Select</span>
+							<input type="checkbox" name="models" value="{{.Table}}" class="checkbox checkbox-primary" @change="toggleRoot($event.target.value, $event.target.checked)" :checked="{{.CheckedExpr}}" :disabled="{{.DisabledExpr}}">
+						</label>
+					</div>
+				</div>
+			</div>
+			{{else}}
+			<div class="alert">No registered models available in this deployment.</div>
+			{{end}}
+		</div>
+		<div class="card bg-base-200 border border-base-300">
+			<div class="card-body gap-4">
+				<div class="text-sm">
+					<span class="font-semibold">Selected tables: </span>
+					<span x-text='effective.length ? effective.join(", ") : "None"'></span>
+				</div>
+				<div class="flex gap-3">
+					<button type="submit" class="btn btn-primary">Export XLSX</button>
+					<button type="button" class="btn btn-outline" @click="clearAll()">Clear</button>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+{{end}}

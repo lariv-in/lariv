@@ -3,6 +3,8 @@ package components
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"slices"
 	"sort"
 
@@ -10,8 +12,6 @@ import (
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/plugins/p_users"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 type AppsGrid struct {
@@ -27,7 +27,14 @@ func (e AppsGrid) GetRoles() []string {
 	return e.Roles
 }
 
-func (e AppsGrid) Build(ctx context.Context) Node {
+type appsGridItem struct {
+	Href        string
+	VerboseName string
+	XShow       string
+	Icon        template.HTML
+}
+
+func (e AppsGrid) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	var apps []lariv.Plugin
 	if e.Apps != nil {
 		if appsVal, err := e.Apps(ctx); err == nil {
@@ -36,44 +43,45 @@ func (e AppsGrid) Build(ctx context.Context) Node {
 	}
 
 	if len(apps) == 0 {
-		pluginsMap := lariv.RegistryPlugin.AllStable()
-		roleName := p_users.RoleFromContext(ctx, "dashboard.AppsGrid")
-		for _, pluginItem := range *pluginsMap {
-			plugin := pluginItem.Value
-			if plugin.Type == lariv.PluginTypeApp {
-				if roleName != "superuser" && len(plugin.Roles) > 0 {
-					if !slices.Contains(plugin.Roles, roleName) {
-						continue
+		if app, ok := lariv.AppFromContext(ctx); ok && app != nil {
+			pluginsMap := app.Plugins.AllStable()
+			roleName := p_users.RoleFromContext(ctx, "dashboard.AppsGrid")
+			for _, pluginItem := range *pluginsMap {
+				plugin := pluginItem.Value
+				if plugin.Type == lariv.PluginTypeApp {
+					if roleName != "superuser" && len(plugin.Roles) > 0 {
+						if !slices.Contains(plugin.Roles, roleName) {
+							continue
+						}
 					}
+					apps = append(apps, plugin)
 				}
-				apps = append(apps, plugin)
 			}
+			sort.Slice(apps, func(i, j int) bool {
+				return apps[i].VerboseName < apps[j].VerboseName
+			})
 		}
-		sort.Slice(apps, func(i, j int) bool {
-			return apps[i].VerboseName < apps[j].VerboseName
-		})
 	}
 
-	group := Group{}
+	items := make([]appsGridItem, 0, len(apps))
 	for _, app := range apps {
 		var href string
 		if app.URL != nil {
 			href = app.URL.String()
 		}
-		group = append(group, A(
-			Href(href),
-			Class("btn btn-md h-auto flex-col space-y-1 py-4"),
-			Attr("x-show", fmt.Sprintf("'%s'.toLowerCase().includes(search.toLowerCase())", app.VerboseName)),
-			Attr("x-cloak"), components.Render(components.Icon{Name: app.Icon, Classes: "w-8 h-8"}, ctx), Div(
-				Class("text-sm truncate min-w-0 w-full"),
-				Text(app.VerboseName),
-			),
-		))
+		icon, err := components.RenderHTML(components.Icon{Name: app.Icon, Classes: "w-8 h-8"}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		items = append(items, appsGridItem{
+			Href:        href,
+			VerboseName: app.VerboseName,
+			XShow:       fmt.Sprintf("'%s'.toLowerCase().includes(search.toLowerCase())", app.VerboseName),
+			Icon:        icon,
+		})
 	}
-	return Div(Class("container max-w-5xl mx-auto mt-4 @container"), Attr("x-data", "{ search: ''}"),
-		Div(
-			Class("mb-4"),
-			Input(Type("text"), Attr("x-model", "search"), Placeholder("Search apps..."), Class("input input-bordered w-full")),
-		),
-		Div(Class("grid grid-cols-2 @md:grid-cols-4 @2xl:grid-cols-6 gap-2"), group))
+
+	return execute(w, "apps_grid", struct {
+		Apps []appsGridItem
+	}{Apps: items})
 }

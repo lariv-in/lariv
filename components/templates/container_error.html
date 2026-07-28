@@ -1,0 +1,6 @@
+{{define "container_error"}}
+<div class="flex flex-col gap-1 w-full">
+	{{.Children}}
+	{{if .ErrorMessage}}<span class="text-sm text-error">{{.ErrorMessage}}</span>{{end}}
+</div>
+{{end}}

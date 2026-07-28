@@ -2,12 +2,11 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"strconv"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputCheckbox represents a boolean state toggler form input component.
@@ -41,58 +40,60 @@ type InputCheckbox struct {
 	Classes string
 	// Hidden specifies if this checkbox is rendered as a hidden form element instead of an interactive toggle.
 	Hidden bool
-	// Attr is an optional Getter returning additional HTML nodes/attributes to apply to the input.
-	Attr getters.Getter[Node]
+	// Attr is an optional Getter returning additional HTML attributes to apply to the input.
+	Attr getters.Getter[HTMLAttributes]
 }
 
 // Build compiles the InputCheckbox component into a wrapper Div Node with nested checkbox Input.
-func (e InputCheckbox) Build(ctx context.Context) Node {
+func (e InputCheckbox) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	checked := false
-	var checkedNode Node = Raw("")
 	if e.Getter != nil {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputCheckbox getter failed", "error", err, "key", e.Key)
 		} else {
 			checked = value
-			if checked {
-				checkedNode = Checked()
-			}
 		}
 	}
 	if e.Hidden {
-		return Div(
-			Class("hidden"),
-			Input(
-				Type("hidden"),
-				Name(e.Name),
-				Value(strconv.FormatBool(checked)),
-			),
-		)
+		return Execute(w, "input_checkbox", struct {
+			Hidden  bool
+			Name    string
+			Value   string
+			Classes string
+			Label   string
+			XModel  string
+			Checked bool
+			Attrs   HTMLAttributes
+		}{
+			Hidden: true,
+			Name:   e.Name,
+			Value:  strconv.FormatBool(checked),
+		})
 	}
-	return Div(
-		Class(e.Classes),
-		Label(
-			Class("label text-sm font-bold cursor-pointer justify-start gap-2 flex flex-row items-center"),
-			Input(
-				Type("checkbox"),
-				If(e.Name != "", Name(e.Name)),
-				Value("true"),
-				Class("checkbox"),
-				If(e.XModel != "", Attr("x-model", e.XModel)),
-				checkedNode,
-				Iff(e.Attr != nil, func() Node {
-					n, err := e.Attr(ctx)
-					if err != nil {
-						slog.Error("InputCheckbox Attr getter failed", "error", err, "key", e.Key)
-						return Raw("")
-					}
-					return n
-				}),
-			),
-			Span(Class("label-text"), Text(e.Label)),
-		),
-	)
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		slog.Error("InputCheckbox Attr getter failed", "error", err, "key", e.Key)
+		attrs = HTMLAttributes{}
+	}
+	return Execute(w, "input_checkbox", struct {
+		Hidden  bool
+		Name    string
+		Value   string
+		Classes string
+		Label   string
+		XModel  string
+		Checked bool
+		Attrs   HTMLAttributes
+	}{
+		Hidden:  false,
+		Name:    e.Name,
+		Classes: e.Classes,
+		Label:   e.Label,
+		XModel:  e.XModel,
+		Checked: checked,
+		Attrs:   attrs,
+	})
 }
 
 // Parse extracts and parses the boolean checked status from request parameter strings.

@@ -2,12 +2,11 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
 	"github.com/nyaruka/phonenumbers"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldPhone represents a read-only phone number display field.
@@ -42,22 +41,25 @@ func (e FieldPhone) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldPhone component into a Div Node containing the E.164 formatted phone number.
-func (e FieldPhone) Build(ctx context.Context) Node {
+// Build compiles the FieldPhone component into a Div containing the E.164 formatted phone number.
+func (e FieldPhone) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Getter == nil {
-		return Group{}
+		return nil
 	}
 
 	value, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldPhone getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
 	v, err := phonenumbers.Parse(value, "IN")
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
-	return Div(Class(e.Classes), Text(phonenumbers.Format(v, phonenumbers.E164)))
+	return Execute(w, "field_phone", struct {
+		Classes string
+		Value   string
+	}{Classes: e.Classes, Value: phonenumbers.Format(v, phonenumbers.E164)})
 }

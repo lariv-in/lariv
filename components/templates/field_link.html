@@ -1,0 +1,7 @@
+{{define "field_link"}}
+{{if .Href}}
+<a href="{{.Href}}" class="{{.Classes}}"{{attrs .Attrs}}>{{.Label}}</a>
+{{else}}
+<div class="{{.Classes}}">{{.Label}}</div>
+{{end}}
+{{end}}

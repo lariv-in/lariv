@@ -2,12 +2,11 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"time"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldDatetime represents a read-only date and time display field.
@@ -41,19 +40,22 @@ func (e FieldDatetime) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldDatetime component into a Div HTML Node containing the localized formatted time string.
-func (e FieldDatetime) Build(ctx context.Context) Node {
+// Build compiles the FieldDatetime component into a Div containing the localized formatted time string.
+func (e FieldDatetime) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Getter == nil {
-		return Group{}
+		return nil
 	}
 	v, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("FieldDatetime getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	timezone, _ := ctx.Value("$tz").(*time.Location)
 	if timezone == nil {
 		timezone = DefaultTimeZone
 	}
-	return Div(Class(e.Classes), Text(v.In(timezone).Format("Mon, 02 Jan 2006 15:04:05")))
+	return Execute(w, "field_datetime", struct {
+		Classes string
+		Value   string
+	}{Classes: e.Classes, Value: v.In(timezone).Format("Mon, 02 Jan 2006 15:04:05")})
 }

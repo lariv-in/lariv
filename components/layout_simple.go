@@ -2,9 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // LayoutSimple represents a clean, single-column fullscreen canvas layout component.
@@ -29,16 +28,15 @@ type LayoutSimple struct {
 	Children []PageInterface
 }
 
-// Build compiles the LayoutSimple component into a single-column padded viewport Node.
-func (e LayoutSimple) Build(ctx context.Context) Node {
-	return Render(ContainerHTML{
-		Children: e.Children,
-		HTML: func(ctx context.Context, children Node) Node {
-			return Div(Class("size-full overflow-y-auto p-4"),
-				children,
-			)
-		},
-	}, ctx)
+// Build compiles the LayoutSimple component into a single-column padded viewport.
+func (e LayoutSimple) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
+	}
+	return Execute(w, "layout_simple", struct {
+		Children template.HTML
+	}{Children: children})
 }
 
 // GetKey returns the unique key identifier for this LayoutSimple component.

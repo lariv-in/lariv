@@ -2,10 +2,8 @@ package components
 
 import (
 	"context"
-	"fmt"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // ContainerRow layout container arranges its child components horizontally.
@@ -31,16 +29,19 @@ type ContainerRow struct {
 	Children []PageInterface
 	// Classes represents additional CSS classes applied to the wrapping div container.
 	// (Discouraged: Limit custom class overrides to layout utilities like margins or alignment).
-	Classes  string
+	Classes string
 }
 
-// Build compiles the ContainerRow component into a div Node containing horizontally laid out child nodes.
-func (e ContainerRow) Build(ctx context.Context) Node {
-	group := Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+// Build compiles the ContainerRow component into a div containing horizontally laid out children.
+func (e ContainerRow) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-	return Div(Class(fmt.Sprintf("flex flex-row gap-1 %s", e.Classes)), group)
+	return Execute(w, "container_row", struct {
+		Classes  string
+		Children template.HTML
+	}{Classes: e.Classes, Children: children})
 }
 
 // GetKey returns the unique key identifier for this ContainerRow component.

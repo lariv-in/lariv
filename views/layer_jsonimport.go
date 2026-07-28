@@ -37,7 +37,7 @@ type LayerJsonImport[T any] struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing bulk JSON file imports.
-func (m LayerJsonImport[T]) Next(view View, next http.Handler) http.Handler {
+func (m LayerJsonImport[T]) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			next.ServeHTTP(w, r)

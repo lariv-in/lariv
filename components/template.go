@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
 )
 
 // TemplateComponent is a component that can be used to render a
@@ -32,20 +31,18 @@ func (e TemplateComponent) GetRoles() []string {
 	return e.Roles
 }
 
-// Build returns the content wrapped in a Text Node
-func (e TemplateComponent) Build(ctx context.Context) Node {
-	return NodeFunc(func(w io.Writer) error {
-		var data any
-		if e.TemplateContext != nil {
-			data_, err := e.TemplateContext(ctx)
-			data = data_
-			if err != nil {
-				return err
-			}
+// Build executes the configured html/template to w.
+func (e TemplateComponent) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	var data any
+	if e.TemplateContext != nil {
+		data_, err := e.TemplateContext(ctx)
+		data = data_
+		if err != nil {
+			return err
 		}
-		if e.TemplateName != "" {
-			return e.Template.ExecuteTemplate(w, e.TemplateName, data)
-		}
-		return e.Template.Execute(w, data)
-	})
+	}
+	if e.TemplateName != "" {
+		return e.Template.ExecuteTemplate(w, e.TemplateName, data)
+	}
+	return e.Template.Execute(w, data)
 }

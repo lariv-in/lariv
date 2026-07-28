@@ -2,10 +2,10 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	g_html "maragu.dev/gomponents/html"
 )
 
 // TableGridContent represents a sub-component layout that renders list data rows as a grid of responsive cards.
@@ -28,12 +28,23 @@ type TableGridContent[T any] struct {
 	Columns []TableColumn
 	// Data represents the dynamic Getter retrieving the paginated ObjectList payload.
 	Data getters.Getter[ObjectList[T]]
-	// RowAttr represents the dynamic getter returning TR/card attribute nodes.
-	RowAttr getters.Getter[Node]
+	// RowAttr represents the dynamic getter returning card HTML attributes.
+	RowAttr getters.Getter[HTMLAttributes]
+}
+
+type tableGridField struct {
+	Label   string
+	Content template.HTML
+}
+
+type tableGridCard struct {
+	Attrs  HTMLAttributes
+	Title  template.HTML
+	Fields []tableGridField
 }
 
 // Build compiles the TableGridContent component into a grid of card blocks.
-func (e TableGridContent[T]) Build(ctx context.Context) Node {
+func (e TableGridContent[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	var data ObjectList[T]
 	if e.Data != nil {
 		resolved, err := e.Data(ctx)
@@ -42,71 +53,55 @@ func (e TableGridContent[T]) Build(ctx context.Context) Node {
 		}
 	}
 
-	var cards []Node
 	if len(data.Items) == 0 {
-		cards = append(cards, g_html.Div(g_html.Class("col-span-full text-center opacity-50 py-8"), Text("Table is empty")))
-	} else {
-		n := len(data.Items)
-		for i, row := range data.Items {
-			rowMap := getters.MapFromStruct(row)
-			rowCtx := context.WithValue(ctx, "$row", rowMap)
-			rowCtx = context.WithValue(rowCtx, getters.ContextKeyTableDisplay, getters.TableDisplayGrid)
-			rowCtx = context.WithValue(rowCtx, "$rowIndex", i)
-			rowCtx = context.WithValue(rowCtx, "$isFirstRow", i == 0)
-			rowCtx = context.WithValue(rowCtx, "$isLastRow", i == n-1)
-
-			var contentNodes []Node
-			// First column is the title
-			if len(e.Columns) > 0 {
-				var firstColNodes []Node
-				for _, child := range e.Columns[0].Children {
-					firstColNodes = append(firstColNodes, Render(child, rowCtx))
-				}
-				contentNodes = append(contentNodes, g_html.Div(g_html.Class("font-semibold text-md truncate"), Group(firstColNodes)))
-			}
-
-			// Remaining columns as small labels
-			for _, col := range e.Columns[1:] {
-				var colNodes []Node
-				for _, child := range col.Children {
-					colNodes = append(colNodes, Render(child, rowCtx))
-				}
-				contentNodes = append(contentNodes, g_html.Div(
-					g_html.Class("text-sm flex gap-2 truncate"),
-					g_html.Span(g_html.Class("font-semibold text-primary"), If(col.Label != "", Text(col.Label))),
-					g_html.Span(Group(colNodes)),
-				))
-			}
-
-			var cardNodes []Node
-			if e.RowAttr != nil {
-				extra, err := e.RowAttr(rowCtx)
-				if err != nil {
-					return ContainerError{Error: getters.Static(err)}.Build(ctx)
-				}
-				if extra != nil {
-					cardNodes = append(cardNodes, extra)
-				} else {
-					cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 hover:bg-base-200 transition-colors"))
-				}
-			} else {
-				cardNodes = append(cardNodes, g_html.Class("border border-base-300 rounded-box flex flex-col bg-base-100 p-2 hover:bg-base-200 transition-colors"))
-			}
-			cardNodes = append(cardNodes, Group(contentNodes))
-			cards = append(cards, g_html.Div(cardNodes...))
-		}
+		return Execute(w, "table_grid_content", struct {
+			Empty bool
+			Cards []tableGridCard
+		}{Empty: true})
 	}
 
-	return g_html.Div(
-		g_html.Class("flex flex-col gap-4, @container"),
-		g_html.Div(
-			g_html.Class("overflow-x-auto"),
-			g_html.Div(
-				g_html.Class("grid grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-3 @3xl:grid-cols-4 gap-2"),
-				Group(cards),
-			),
-		),
-	)
+	cards := make([]tableGridCard, 0, len(data.Items))
+	n := len(data.Items)
+	for i, row := range data.Items {
+		rowMap := getters.MapFromStruct(row)
+		rowCtx := context.WithValue(ctx, "$row", rowMap)
+		rowCtx = context.WithValue(rowCtx, getters.ContextKeyTableDisplay, getters.TableDisplayGrid)
+		rowCtx = context.WithValue(rowCtx, "$rowIndex", i)
+		rowCtx = context.WithValue(rowCtx, "$isFirstRow", i == 0)
+		rowCtx = context.WithValue(rowCtx, "$isLastRow", i == n-1)
+
+		var title template.HTML
+		if len(e.Columns) > 0 {
+			t, err := RenderChildren(cat, rowCtx, e.Columns[0].Children)
+			if err != nil {
+				return err
+			}
+			title = t
+		}
+
+		fields := make([]tableGridField, 0, max(len(e.Columns)-1, 0))
+		for _, col := range e.Columns[1:] {
+			content, err := RenderChildren(cat, rowCtx, col.Children)
+			if err != nil {
+				return err
+			}
+			fields = append(fields, tableGridField{Label: col.Label, Content: content})
+		}
+
+		attrs, err := ResolveAttrs(rowCtx, e.RowAttr)
+		if err != nil {
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
+		}
+		if len(attrs) == 0 {
+			attrs = HTMLAttributes{"class": "border border-base-300 rounded-box flex flex-col bg-base-100 p-2 hover:bg-base-200 transition-colors"}
+		}
+		cards = append(cards, tableGridCard{Attrs: attrs, Title: title, Fields: fields})
+	}
+
+	return Execute(w, "table_grid_content", struct {
+		Empty bool
+		Cards []tableGridCard
+	}{Empty: false, Cards: cards})
 }
 
 // GetKey returns the unique key identifier for this TableGridContent.

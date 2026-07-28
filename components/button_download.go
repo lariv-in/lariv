@@ -2,10 +2,10 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ButtonDownload represents an anchor link styled as a button that triggers a file download.
@@ -36,20 +36,22 @@ func (e ButtonDownload) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the ButtonDownload component into a gomponents Node representing an HTML <a> element.
-func (e ButtonDownload) Build(ctx context.Context) Node {
+// Build compiles the ButtonDownload component into an HTML <a> element.
+func (e ButtonDownload) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	link := ""
 	if e.Link != nil {
 		if v, err := e.Link(ctx); err == nil {
 			link = v
 		}
 	}
-	content := Group{}
+
+	var iconHTML template.HTML
 	if e.Icon != "" {
-		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
-	}
-	if e.Label != "" {
-		content = append(content, Text(e.Label))
+		h, err := RenderHTML(&Icon{Name: e.Icon, Classes: e.IconClasses}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		iconHTML = h
 	}
 
 	classes := "btn " + e.Classes
@@ -57,11 +59,10 @@ func (e ButtonDownload) Build(ctx context.Context) Node {
 		classes += " inline-flex gap-2"
 	}
 
-	return A(
-		Href(link),
-		Class(classes),
-		Attr("data-hx-boost", "false"),
-		Attr("download"),
-		content,
-	)
+	return Execute(w, "button_download", struct {
+		Link    string
+		Classes string
+		Icon    template.HTML
+		Label   string
+	}{Link: link, Classes: classes, Icon: iconHTML, Label: e.Label})
 }

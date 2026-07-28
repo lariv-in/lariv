@@ -2,9 +2,9 @@ package components
 
 import (
 	"context"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	"maragu.dev/gomponents"
 )
 
 // Target constants defining fallback defaults for creation controls.
@@ -55,8 +55,8 @@ func (e TableButtonCreate) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the TableButtonCreate component into a standard ButtonLink node structure.
-func (e TableButtonCreate) Build(ctx context.Context) gomponents.Node {
+// Build compiles the TableButtonCreate component into a standard ButtonLink structure.
+func (e TableButtonCreate) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	icon := e.Icon
 	if icon == "" {
 		icon = tableButtonCreateDefaultIcon
@@ -79,5 +79,5 @@ func (e TableButtonCreate) Build(ctx context.Context) gomponents.Node {
 		Icon:        icon,
 		IconClasses: e.IconClasses,
 		Classes:     classes,
-	}.Build(ctx)
+	}.Build(cat, ctx, w)
 }

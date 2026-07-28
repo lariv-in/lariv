@@ -2,14 +2,22 @@ package components
 
 import (
 	"context"
-	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
-	"maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
+)
+
+// Context keys used by [MultiStepForm] to decorate a stage [FormComponent] without string surgery.
+type multiStepFormCtxKey string
+
+const (
+	multiStepFormActionKey multiStepFormCtxKey = "$multiStepFormAction"
+	multiStepFormPrefixKey multiStepFormCtxKey = "$multiStepFormPrefix"
+	multiStepFormSuffixKey multiStepFormCtxKey = "$multiStepFormSuffix"
 )
 
 // FormInterface defines the behavior of a component that acts as a form, supplying form parameters parser.
@@ -54,19 +62,19 @@ type FormComponent[T any] struct {
 	Title string
 	// Subtitle is the descriptive subheading displayed beneath the form Title.
 	Subtitle string
-	// Attr is an optional Getter yielding additional HTML/HTMX attributes (Node) to apply to the form element.
-	Attr getters.Getter[gomponents.Node]
+	// Attr is an optional Getter yielding additional HTML/HTMX attributes to apply to the form element.
+	Attr getters.Getter[HTMLAttributes]
 }
 
-// Build compiles the FormComponent into an HTML form Node, rendering headings, inputs, validation errors, and actions.
-func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
+// Build compiles the FormComponent into an HTML form, rendering headings, inputs, validation errors, and actions.
+func (e FormComponent[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	// If a Getter is set, resolve the object and pass it to children via $in
 	childCtx := ctx
 	if e.Getter != nil {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FormComponent getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		objMap := getters.MapFromStruct(value)
 		if currentValues, ok := ctx.Value(getters.ContextKeyIn).(map[string]any); ok && len(currentValues) > 0 {
@@ -77,48 +85,32 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 		childCtx = context.WithValue(ctx, getters.ContextKeyIn, objMap)
 	}
 
-	inputGroup := gomponents.Group{}
-	for _, child := range e.ChildrenInput {
-		inputGroup = append(inputGroup, Render(child, childCtx))
+	inputs, err := RenderChildren(cat, childCtx, e.ChildrenInput)
+	if err != nil {
+		return err
 	}
-	submitGroup := gomponents.Group{html.Class("my-2")}
-	for _, child := range e.ChildrenAction {
-		submitGroup = append(submitGroup, Render(child, childCtx))
-	}
-
-	var headerNodes []gomponents.Node
-	if e.Title != "" {
-		headerNodes = append(headerNodes, html.Div(html.Class("text-xl font-semibold"), gomponents.Text(e.Title)))
-	}
-	if e.Subtitle != "" {
-		headerNodes = append(headerNodes, html.Div(html.Class("text-sm text-gray-500"), gomponents.Text(e.Subtitle)))
+	actions, err := RenderChildren(cat, childCtx, e.ChildrenAction)
+	if err != nil {
+		return err
 	}
 
-	var formErrorNode gomponents.Node
+	var formError string
 	if errMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]error); ok {
 		if formErr := errMap["_form"]; formErr != nil {
-			formErrorNode = html.Span(html.Class("text-sm text-error"), gomponents.Text(formErr.Error()))
+			formError = formErr.Error()
 		}
 	} else if errorMap, ok := childCtx.Value(getters.ContextKeyError).(map[string]any); ok {
 		if formErr, exists := errorMap["_form"]; exists && formErr != nil {
 			if err, ok := formErr.(error); ok {
-				formErrorNode = html.Span(html.Class("text-sm text-error"), gomponents.Text(err.Error()))
+				formError = err.Error()
 			}
 		}
 	}
 
-	formNodes := []gomponents.Node{
-		html.Class(fmt.Sprintf("flex flex-col gap-2 %s", e.Classes)),
-	}
-	if e.Attr != nil {
-		extra, err := e.Attr(childCtx)
-		if err != nil {
-			slog.Error("FormComponent Attr getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
-		}
-		if extra != nil {
-			formNodes = append(formNodes, extra)
-		}
+	attrs, err := ResolveAttrs(childCtx, e.Attr)
+	if err != nil {
+		slog.Error("FormComponent Attr getter failed", "error", err, "key", e.Key)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
 	enctype := ""
@@ -128,18 +120,36 @@ func (e FormComponent[T]) Build(ctx context.Context) gomponents.Node {
 			break
 		}
 	}
-	if enctype != "" {
-		formNodes = append(formNodes, gomponents.Attr("enctype", enctype))
-	}
 
-	formNodes = append(
-		formNodes,
-		html.Div(headerNodes...),
-		html.Div(inputGroup...),
-		formErrorNode,
-		html.Div(submitGroup...),
-	)
-	return html.Form(formNodes...)
+	action, _ := childCtx.Value(multiStepFormActionKey).(string)
+	prefix, _ := childCtx.Value(multiStepFormPrefixKey).(template.HTML)
+	suffix, _ := childCtx.Value(multiStepFormSuffixKey).(template.HTML)
+
+	return Execute(w, "form", struct {
+		Classes  string
+		Enctype  string
+		Action   string
+		Attrs    HTMLAttributes
+		Prefix   template.HTML
+		Title    string
+		Subtitle string
+		Inputs   template.HTML
+		FormError string
+		Actions  template.HTML
+		Suffix   template.HTML
+	}{
+		Classes:   e.Classes,
+		Enctype:   enctype,
+		Action:    action,
+		Attrs:     attrs,
+		Prefix:    prefix,
+		Title:     e.Title,
+		Subtitle:  e.Subtitle,
+		Inputs:    inputs,
+		FormError: formError,
+		Actions:   actions,
+		Suffix:    suffix,
+	})
 }
 
 // GetKey returns the unique key identifier for this FormComponent.

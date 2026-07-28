@@ -62,9 +62,10 @@ func pageEntriesSelection() []registry.Pair[string, components.PageInterface] {
 			UID: "filesystem-vnode-delete-modal",
 			Children: []components.PageInterface{
 				&components.DeleteConfirmation{
+					Page:    components.Page{Key: "filesystem.VNodeDeleteForm"},
 					Title:   "Confirm Deletion",
 					Message: "Are you sure you want to delete this item? Deleting directories will remove all nested contents.",
-					Attr:    getters.FormBubbling(getters.Key[string]("$get.name")),
+					Attr:    getters.FormBubbling(getters.Static("filesystem.VNodeDeleteForm")),
 				},
 			},
 		}},

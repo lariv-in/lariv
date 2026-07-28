@@ -1,16 +1,17 @@
 package p_llm_assistant
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"strings"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
-	. "maragu.dev/gomponents/html"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func registerAssistantMenuPages() {
@@ -41,40 +42,7 @@ type assistantChatRoot struct {
 	components.Page
 }
 
-func (e *assistantChatRoot) Build(ctx context.Context) Node {
-	sid := assistantOpenSessionID(ctx)
-	wsPath := AppUrl + "ws/"
-	if sid != 0 {
-		wsPath = fmt.Sprintf("%s?session_id=%d", wsPath, sid)
-	}
-	hiddenVal := "0"
-	if sid != 0 {
-		hiddenVal = fmt.Sprintf("%d", sid)
-	}
-	transcriptInner := []Node{}
-	if sid != 0 {
-		nodes, err := assistantTranscriptNodes(ctx, sid)
-		if err != nil {
-			transcriptInner = append(transcriptInner, Div(Class("text-error text-sm"), Text("Could not load chat history")))
-		} else if len(nodes) > 0 {
-			transcriptInner = append(transcriptInner, Group(nodes))
-		}
-	}
-	rootClass := "max-w-3xl mx-auto p-4 flex flex-col gap-4 min-h-[60vh]"
-	transcriptClass := "flex flex-col gap-2 flex-1 overflow-y-auto border border-base-300 rounded-lg p-3 bg-base-200/40 min-h-[200px]"
-	if e.Key == "llm_assistant.SidebarChatInner" {
-		rootClass = "max-w-3xl mx-auto p-0 flex flex-col gap-4 h-full overflow-hidden"
-		transcriptClass = "flex flex-col gap-2 flex-1 overflow-y-auto border border-base-300 rounded-lg p-3 bg-base-200/40 min-h-0"
-	}
-
-	multiSelectUrl, _ := lariv.RoutePath("filesystem.MultiSelectRoute", nil)(ctx)
-	multiUploadUrl, _ := lariv.RoutePath("filesystem.ChatUploadRoute", nil)(ctx)
-
-	return Div(
-		Class(rootClass),
-		Attr("hx-ext", "ws"),
-		Attr("ws-connect", wsPath),
-		Script(Raw(`document.body.addEventListener("htmx:wsConfigSend", function(event) {
+const assistantChatScript = `document.body.addEventListener("htmx:wsConfigSend", function(event) {
   if (!event || !event.detail || !event.detail.parameters) {
     return;
   }
@@ -163,21 +131,51 @@ if (!window.llm_assistant_scroll_registered) {
       observeTranscript();
     }
   });
-}`)),
-		Div(ID("llm_assistant_errors")),
-		Div(
-			ID("llm_assistant_transcript"),
-			Class(transcriptClass),
-			Attr("x-init", "$nextTick(() => { $el.scrollTop = $el.scrollHeight; setTimeout(() => { $el.scrollTop = $el.scrollHeight }, 100) })"),
-			Group(transcriptInner),
-		),
-		Div(
-			ID("llm_assistant_stream"),
-			Class("w-full max-w-2xl mx-auto mb-4 min-h-[1.5rem] border border-dashed border-base-300 rounded-lg p-4 text-sm"),
-		),
-		html.Form(
-			ID("llm_assistant_chat_form"), Class("flex flex-col gap-2"), Attr("ws-send", ""),
-			Attr("x-data", `{
+}`
+
+func (e *assistantChatRoot) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
+	sid := assistantOpenSessionID(ctx)
+	wsPath := AppUrl + "ws/"
+	if sid != 0 {
+		wsPath = fmt.Sprintf("%s?session_id=%d", wsPath, sid)
+	}
+	hiddenVal := "0"
+	if sid != 0 {
+		hiddenVal = fmt.Sprintf("%d", sid)
+	}
+	var transcript template.HTML
+	if sid != 0 {
+		html, err := assistantTranscriptHTML(ctx, sid)
+		if err != nil {
+			transcript = template.HTML(`<div class="text-error text-sm">Could not load chat history</div>`)
+		} else {
+			transcript = html
+		}
+	}
+	rootClass := "max-w-3xl mx-auto p-4 flex flex-col gap-4 min-h-[60vh]"
+	transcriptClass := "flex flex-col gap-2 flex-1 overflow-y-auto border border-base-300 rounded-lg p-3 bg-base-200/40 min-h-[200px]"
+	if e.Key == "llm_assistant.SidebarChatInner" {
+		rootClass = "max-w-3xl mx-auto p-0 flex flex-col gap-4 h-full overflow-hidden"
+		transcriptClass = "flex flex-col gap-2 flex-1 overflow-y-auto border border-base-300 rounded-lg p-3 bg-base-200/40 min-h-0"
+	}
+
+	multiSelectUrl, _ := lariv.RoutePath("filesystem.MultiSelectRoute", nil)(ctx)
+	multiUploadUrl, _ := lariv.RoutePath("filesystem.ChatUploadRoute", nil)(ctx)
+
+	iconXMark, err := components.RenderHTML(components.Icon{Name: "x-mark"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	iconUpload, err := components.RenderHTML(components.Icon{Name: "arrow-up-tray"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	iconClip, err := components.RenderHTML(components.Icon{Name: "paper-clip"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+
+	formXData := `{
 				items: [],
 				uploading: false,
 				syncStore() {
@@ -218,7 +216,7 @@ if (!window.llm_assistant_scroll_registered) {
 					try {
 						const fd = new FormData();
 						for (const f of fileInput.files) { fd.append('Files', f); }
-						const resp = await fetch('`+multiUploadUrl+`', {
+						const resp = await fetch('` + multiUploadUrl + `', {
 							method: 'POST',
 							headers: { 'HX-Request': 'true' },
 							body: fd
@@ -236,65 +234,33 @@ if (!window.llm_assistant_scroll_registered) {
 						fileInput.value = '';
 					}
 				}
-			}`),
-			Attr("x-init", "syncStore()"),
-			Attr("@fk-multi-select.window", "eventHandler($event)"),
-			Input(ID("llm_assistant_session_id"), Type("hidden"), Name("session_id"), Value(hiddenVal)),
+			}`
 
-			Template(
-				Attr("x-for", "item in items"),
-				Attr(":key", "item.Key"),
-				Input(Type("hidden"), Name("Files"), Attr(":value", "item.Key")),
-			),
-
-			Div(
-				Class("flex flex-wrap gap-2"),
-				Attr("x-show", "items.length > 0"),
-				Template(
-					Attr("x-for", "item in items"),
-					Attr(":key", "item.Key"),
-					Div(
-						Class("flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-1 py-1 text-xs"),
-						Span(Class("truncate max-w-[150px]"), Attr("x-text", "item.Value")),
-						Button(
-							Type("button"),
-							Class("btn btn-ghost btn-square btn-xs shrink-0"),
-							Attr("@click.stop", "removeItem(item.Key)"),
-							components.Render(components.Icon{Name: "x-mark"}, ctx),
-						),
-					),
-				),
-			),
-
-			Textarea(ID("llm_assistant_chat_message"), Name("message"), Class("textarea textarea-bordered w-full"), Rows("3"), Placeholder("Message…"), Required()),
-
-			Div(
-				Class("flex justify-end items-center gap-2"),
-				Label(
-					Class("btn btn-outline btn-square"),
-					Attr(":class", "uploading ? 'loading loading-spinner' : ''"),
-					Attr("title", "Upload files from device"),
-					Input(
-						Type("file"),
-						Class("hidden"),
-						Multiple(),
-						Attr("@change", "uploadFiles($event.target)"),
-					),
-					components.Render(components.Icon{Name: "arrow-up-tray"}, ctx),
-				),
-				Button(
-					Type("button"),
-					Class("btn btn-outline btn-square"),
-					Attr("hx-get", multiSelectUrl+"?target_input=Files"),
-					Attr("hx-target", "body"),
-					Attr("hx-swap", "beforeend"),
-					Attr("hx-push-url", "false"),
-					components.Render(components.Icon{Name: "paper-clip"}, ctx),
-				),
-				Button(ID("llm_assistant_chat_send"), Type("submit"), Class("btn btn-primary"), Text("Send")),
-			),
-		),
-	)
+	return executeTemplate(w, "assistant_chat_root", struct {
+		RootClass       string
+		WSPath          string
+		ChatScript      template.JS
+		TranscriptClass string
+		Transcript      template.HTML
+		FormXData       string
+		HiddenVal       string
+		IconXMark       template.HTML
+		IconUpload      template.HTML
+		IconClip        template.HTML
+		MultiSelectURL  string
+	}{
+		RootClass:       rootClass,
+		WSPath:          wsPath,
+		ChatScript:      template.JS(assistantChatScript),
+		TranscriptClass: transcriptClass,
+		Transcript:      transcript,
+		FormXData:       formXData,
+		HiddenVal:       hiddenVal,
+		IconXMark:       iconXMark,
+		IconUpload:      iconUpload,
+		IconClip:        iconClip,
+		MultiSelectURL:  multiSelectUrl,
+	})
 }
 
 func (e *assistantChatRoot) GetKey() string { return e.Key }
@@ -324,19 +290,19 @@ func assistantOpenSessionID(ctx context.Context) uint {
 	return 0
 }
 
-func assistantTranscriptNodes(ctx context.Context, sessionID uint) ([]Node, error) {
+func assistantTranscriptHTML(ctx context.Context, sessionID uint) (template.HTML, error) {
 	if sessionID == 0 {
-		return nil, nil
+		return "", nil
 	}
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	contents, err := LoadSessionContents(ctx, db, sessionID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	out := make([]Node, 0, len(contents))
+	var b strings.Builder
 	for _, c := range contents {
 		inner := strings.TrimSpace(assistantGenaiContentHTML(ctx, c))
 		if inner == "" {
@@ -344,82 +310,76 @@ func assistantTranscriptNodes(ctx context.Context, sessionID uint) ([]Node, erro
 		}
 		switch assistantTranscriptTurnKind(c) {
 		case "assistant":
-			out = append(out, assistantBubbleAssistantHTML(inner))
+			b.WriteString(assistantBubbleAssistantHTML(inner))
 		case "tool":
-			out = append(out, assistantBubbleToolHTML(inner))
+			b.WriteString(assistantBubbleToolHTML(inner))
 		default:
-			out = append(out, assistantBubbleUserHTML(inner))
+			b.WriteString(assistantBubbleUserHTML(inner))
 		}
 	}
-	return out, nil
+	return template.HTML(b.String()), nil
 }
 
-func assistantBubbleUserHTML(inner string) Node {
-	return Div(
-		Class("w-full flex flex-col items-center"),
-		Div(Class("w-full max-w-2xl bg-base-300/30 border border-base-300/50 rounded-xl text-sm p-2"), Raw(inner)),
-	)
+func assistantBubbleUserHTML(inner string) string {
+	return `<div class="w-full flex flex-col items-center"><div class="w-full max-w-2xl bg-base-300/30 border border-base-300/50 rounded-xl text-sm p-2">` + inner + `</div></div>`
 }
 
-func assistantBubbleAssistantHTML(inner string) Node {
-	return Div(
-		Class("w-full flex flex-col items-center"),
-		Div(Class("w-full max-w-2xl text-sm"), Raw(inner)),
-	)
+func assistantBubbleAssistantHTML(inner string) string {
+	return `<div class="w-full flex flex-col items-center"><div class="w-full max-w-2xl text-sm">` + inner + `</div></div>`
 }
 
-func assistantBubbleToolHTML(inner string) Node {
-	return Div(
-		Class("w-full flex flex-col"),
-		El(
-			"details",
-			Class("collapse text-sm w-fit"),
-			El("summary", Class("text-xs text-gray-300 cursor-pointer p-0"), Text("Tool Execution")),
-			Div(Class("collapse-content p-3 pt-0 overflow-x-auto"), Raw(inner)),
-		),
-	)
+func assistantBubbleToolHTML(inner string) string {
+	return `<div class="w-full flex flex-col"><details class="collapse text-sm w-fit"><summary class="text-xs text-gray-300 cursor-pointer p-0">Tool Execution</summary><div class="collapse-content p-3 pt-0 overflow-x-auto">` + inner + `</div></details></div>`
+}
+
+func renderSessionItemsHTML(sessions []LlmAssistantSession) (template.HTML, error) {
+	if len(sessions) == 0 {
+		var b bytes.Buffer
+		if err := executeTemplate(&b, "session_list_empty", nil); err != nil {
+			return "", err
+		}
+		return template.HTML(b.String()), nil
+	}
+	var b bytes.Buffer
+	for _, s := range sessions {
+		title := strings.TrimSpace(s.Title)
+		if title == "" {
+			title = fmt.Sprintf("Session #%d", s.ID)
+		}
+		if err := executeTemplate(&b, "session_list_item", struct {
+			ID    uint
+			Title string
+		}{ID: s.ID, Title: title}); err != nil {
+			return "", err
+		}
+	}
+	return template.HTML(b.String()), nil
 }
 
 type historySidebarPanel struct {
 	components.Page
 }
 
-func (e *historySidebarPanel) Build(ctx context.Context) Node {
+func (e *historySidebarPanel) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
-		return Div(Class("text-error"), Text("Error: no database context"))
+		_, writeErr := io.WriteString(w, `<div class="text-error">Error: no database context</div>`)
+		return writeErr
 	}
 
 	var sessions []LlmAssistantSession
 	if err := db.Order("updated_at desc").Find(&sessions).Error; err != nil {
-		return Div(Class("text-error"), Text("Error loading sessions"))
+		_, writeErr := io.WriteString(w, `<div class="text-error">Error loading sessions</div>`)
+		return writeErr
 	}
 
-	var sessionItems []Node
-	for _, s := range sessions {
-		title := strings.TrimSpace(s.Title)
-		if title == "" {
-			title = fmt.Sprintf("Session #%d", s.ID)
-		}
-		sessionItems = append(sessionItems, Div(
-			Class("p-3 hover:bg-base-300 rounded cursor-pointer transition border-b border-base-300 last:border-b-0 text-sm block no-underline text-base-content"),
-			Attr("hx-get", fmt.Sprintf("/llm-assistant/sidebar-chat/%d/", s.ID)),
-			Attr("hx-target", "#sidebar-chat-container"),
-			Attr("hx-swap", "innerHTML"),
-			Attr("hx-push-url", "false"),
-			Attr("@click", fmt.Sprintf("activeSessionId = %d; showModal = false", s.ID)),
-			Text(title),
-		))
-	}
-
-	if len(sessionItems) == 0 {
-		sessionItems = []Node{
-			Div(Class("p-4 text-center text-sm opacity-50"), Text("No sessions found")),
-		}
+	sessionItems, err := renderSessionItemsHTML(sessions)
+	if err != nil {
+		return err
 	}
 
 	currentSessionID := assistantOpenSessionID(ctx)
-	var initialChatContent Node = Group{}
+	var initialChat template.HTML
 	var activeSessionName string
 
 	if currentSessionID != 0 {
@@ -433,19 +393,15 @@ func (e *historySidebarPanel) Build(ctx context.Context) Node {
 			activeSessionName = fmt.Sprintf("Session #%d", currentSessionID)
 		}
 
-		chatInterface := components.Render(&assistantChatRoot{
+		chatHTML, err := components.RenderHTML(&assistantChatRoot{
 			Page: components.Page{Key: "llm_assistant.SidebarChatInner"},
-		}, ctx)
-
-		initialChatContent = Div(
-			Class("flex-1 overflow-hidden min-h-0"),
-			chatInterface,
-		)
+		}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		initialChat = template.HTML(`<div class="flex-1 overflow-hidden min-h-0">` + string(chatHTML) + `</div>`)
 	} else {
-		initialChatContent = Div(
-			Class("flex-1 overflow-hidden min-h-0"),
-			Attr("hx-push-url", "false"),
-		)
+		initialChat = template.HTML(`<div class="flex-1 overflow-hidden min-h-0" hx-push-url="false"></div>`)
 	}
 
 	xData := fmt.Sprintf(`{
@@ -472,78 +428,36 @@ func (e *historySidebarPanel) Build(ctx context.Context) Node {
 		}
 	}`, currentSessionID)
 
-	return Div(
-		Attr("x-data", xData),
-		Attr("@new-session-created.window", "activeSessionId = $event.detail.id; showModal = false; htmx.ajax('GET', '/llm-assistant/sidebar-chat/' + activeSessionId + '/', {target: '#sidebar-chat-container', swap: 'innerHTML', source: $el})"),
-		Class("flex flex-col gap-0 p-2 h-full overflow-hidden"),
-		Attr("hx-push-url", "false"),
+	iconClock, err := components.RenderHTML(components.Icon{Name: "clock"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	iconPlus, err := components.RenderHTML(components.Icon{Name: "plus"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+	iconXMark, err := components.RenderHTML(components.Icon{Name: "x-mark"}, cat, ctx)
+	if err != nil {
+		return err
+	}
 
-		// Header Row: Session name on left, buttons (History, New Chat) on right
-		Div(
-			Class("flex justify-between items-center flex-none border-b border-base-300 pb-2 px-1"),
-			Div(
-				ID("session-name-container"),
-				Class("text-sm font-semibold truncate max-w-[70%]"),
-				Text(activeSessionName),
-			),
-			Div(
-				Class("flex gap-1 flex-none"),
-				// History Button
-				Button(
-					Class("btn btn-sm btn-ghost btn-circle"),
-					Attr("@click", "showModal = true"),
-					components.Render(components.Icon{Name: "clock"}, ctx),
-				),
-				// New Chat Button
-				Button(
-					Class("btn btn-sm btn-ghost btn-circle"),
-					Attr("hx-post", "/llm-assistant/new-session/"),
-					Attr("hx-swap", "none"),
-					Attr("hx-push-url", "false"),
-					components.Render(components.Icon{Name: "plus"}, ctx),
-				),
-			),
-		),
-
-		// Selected Session Name & Chat under the button (swapped dynamically)
-		Div(
-			ID("sidebar-chat-container"),
-			Class("flex-1 flex flex-col gap-4 overflow-hidden min-h-0"),
-			Attr("hx-push-url", "false"),
-			initialChatContent,
-		),
-
-		// Custom Modal using standard dialog element, controlled by Alpine
-		El(
-			"dialog",
-			Attr("x-show", "showModal"),
-			Attr(":class", "showModal ? 'modal modal-open' : 'modal'"),
-			Div(
-				Class("modal-box bg-base-100 max-w-lg border border-base-300 p-6 relative"),
-				// Close button
-				Button(
-					Type("button"),
-					Class("btn btn-sm btn-circle btn-ghost absolute right-3 top-3"),
-					Attr("@click", "showModal = false"),
-					components.Render(components.Icon{Name: "x-mark"}, ctx),
-				),
-				// Modal Title
-				H3(Class("text-lg font-bold mb-4"), Text("Conversations")),
-				// Sessions List
-				Div(
-					ID("modal-sessions-list"),
-					Class("max-h-60 overflow-y-auto flex flex-col bg-base-200 rounded border border-base-300"),
-					Group(sessionItems),
-				),
-			),
-			// Backdrop clicking closes the modal
-			FormEl(
-				Method("dialog"),
-				Class("modal-backdrop"),
-				Button(Attr("@click", "showModal = false"), Text("close")),
-			),
-		),
-	)
+	return executeTemplate(w, "history_sidebar_panel", struct {
+		XData             string
+		ActiveSessionName string
+		IconClock         template.HTML
+		IconPlus          template.HTML
+		IconXMark         template.HTML
+		InitialChat       template.HTML
+		SessionItems      template.HTML
+	}{
+		XData:             xData,
+		ActiveSessionName: activeSessionName,
+		IconClock:         iconClock,
+		IconPlus:          iconPlus,
+		IconXMark:         iconXMark,
+		InitialChat:       initialChat,
+		SessionItems:      sessionItems,
+	})
 }
 
 func (e *historySidebarPanel) GetKey() string     { return e.Key }
@@ -554,18 +468,21 @@ type sidebarChatPage struct {
 	components.Page
 }
 
-func (e *sidebarChatPage) Build(ctx context.Context) Node {
+func (e *sidebarChatPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	db, err := getters.DBFromContext(ctx)
 	if err != nil {
-		return Div(Class("text-error"), Text("Error: no database context"))
+		_, writeErr := io.WriteString(w, `<div class="text-error">Error: no database context</div>`)
+		return writeErr
 	}
 	currentSessionID := assistantOpenSessionID(ctx)
 	if currentSessionID == 0 {
-		return Div(Class("text-error"), Text("No session selected"))
+		_, writeErr := io.WriteString(w, `<div class="text-error">No session selected</div>`)
+		return writeErr
 	}
 	var session LlmAssistantSession
 	if err := db.First(&session, currentSessionID).Error; err != nil {
-		return Div(Class("text-error"), Text("Session not found"))
+		_, writeErr := io.WriteString(w, `<div class="text-error">Session not found</div>`)
+		return writeErr
 	}
 
 	title := strings.TrimSpace(session.Title)
@@ -573,22 +490,20 @@ func (e *sidebarChatPage) Build(ctx context.Context) Node {
 		title = fmt.Sprintf("Session #%d", session.ID)
 	}
 
-	chatInterface := components.Render(&assistantChatRoot{
+	chatHTML, err := components.RenderHTML(&assistantChatRoot{
 		Page: components.Page{Key: "llm_assistant.SidebarChatInner"},
-	}, ctx)
-
-	return Group{
-		Div(
-			ID("session-name-container"),
-			Attr("hx-swap-oob", "true"),
-			Class("text-sm font-semibold truncate max-w-[70%]"),
-			Text(title),
-		),
-		Div(
-			Class("flex-1 overflow-hidden min-h-0"),
-			chatInterface,
-		),
+	}, cat, ctx)
+	if err != nil {
+		return err
 	}
+
+	return executeTemplate(w, "sidebar_chat_page", struct {
+		Title string
+		Chat  template.HTML
+	}{
+		Title: title,
+		Chat:  chatHTML,
+	})
 }
 
 func (e *sidebarChatPage) GetKey() string     { return e.Key }
@@ -603,14 +518,20 @@ func sidebarChatPageLookup(name string) (components.PageInterface, bool) {
 	return nil, false
 }
 
+func pluginRightSidebar() lariv.PluginFeatures[components.SidebarItem] {
+	return lariv.PluginFeatures[components.SidebarItem]{
+		Entries: []registry.Pair[string, components.SidebarItem]{
+			{Key: "llm_assistant.history_panel", Value: components.SidebarItem{
+				Icon: "clock",
+				Content: &historySidebarPanel{
+					Page: components.Page{Key: "llm_assistant.history_panel"},
+				},
+			}},
+		},
+	}
+}
+
 func init() {
 	registerAssistantMenuPages()
 	registerAssistantChatPage()
-
-	components.RegistryRightSidebar.Register("llm_assistant.history_panel", components.SidebarItem{
-		Icon: "clock",
-		Content: &historySidebarPanel{
-			Page: components.Page{Key: "llm_assistant.history_panel"},
-		},
-	})
 }

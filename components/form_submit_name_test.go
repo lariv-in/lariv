@@ -9,11 +9,11 @@ import (
 )
 
 func TestFormListenBoostedPostRendersNameGuard(t *testing.T) {
-	html := renderNode(t, FormListenBoostedPost{
+	html := renderPage(t, FormListenBoostedPost{
 		Name:      getters.Static("example.submit"),
 		ActionURL: getters.Static("/submit"),
 		Children:  []PageInterface{},
-	}.Build(context.Background()))
+	}, context.Background())
 
 	if !strings.Contains(html, `d.name !==`) {
 		t.Fatalf("expected name guard in boosted-post listener, got %s", html)
@@ -36,13 +36,13 @@ func TestFormListenBoostedPostRendersNameGuard(t *testing.T) {
 }
 
 func TestButtonModalFormThreadsNameIntoGetAndGuard(t *testing.T) {
-	html := renderNode(t, ButtonModalForm{
+	html := renderPage(t, ButtonModalForm{
 		Name:        getters.Static("example.modal"),
 		Url:         getters.Static("/modal"),
 		FormPostURL: getters.Static("/modal/post"),
 		ModalUID:    "example-modal",
 		Label:       "Open",
-	}.Build(context.Background()))
+	}, context.Background())
 
 	if !strings.Contains(html, `hx-get="/modal?name=example.modal"`) {
 		t.Fatalf("expected modal opener to carry the name query param, got %s", html)
@@ -69,12 +69,12 @@ func TestFormBubblingUsesRequestName(t *testing.T) {
 		"name": "example.modal",
 	})
 
-	html := renderNode(t, FormComponent[struct{}]{
+	html := renderPage(t, FormComponent[struct{}]{
 		Attr: getters.FormBubbling(getters.Key[string]("$get.name")),
 		ChildrenAction: []PageInterface{
 			ButtonSubmit{Label: "Save"},
 		},
-	}.Build(ctx))
+	}, ctx)
 
 	if !strings.Contains(html, "example.modal") {
 		t.Fatalf("expected bubbled form to embed the request name, got %s", html)

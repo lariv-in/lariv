@@ -1,0 +1,14 @@
+{{define "input_checkbox"}}
+{{if .Hidden}}
+<div class="hidden">
+	<input type="hidden" name="{{.Name}}" value="{{.Value}}">
+</div>
+{{else}}
+<div class="{{.Classes}}">
+	<label class="label text-sm font-bold cursor-pointer justify-start gap-2 flex flex-row items-center">
+		<input type="checkbox"{{if .Name}} name="{{.Name}}"{{end}} value="true" class="checkbox"{{if .XModel}} x-model="{{.XModel}}"{{end}}{{if .Checked}} checked{{end}}{{attrs .Attrs}}>
+		<span class="label-text">{{.Label}}</span>
+	</label>
+</div>
+{{end}}
+{{end}}

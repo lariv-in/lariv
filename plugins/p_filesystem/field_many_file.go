@@ -1,13 +1,14 @@
 package p_filesystem
 
 import (
+	"bytes"
 	"context"
+	"html/template"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 type FieldManyFile struct {
@@ -24,7 +25,7 @@ func (e FieldManyFile) GetRoles() []string {
 	return e.Roles
 }
 
-func (e FieldManyFile) Build(ctx context.Context) Node {
+func (e FieldManyFile) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	if e.VNode == nil {
 		return nil
 	}
@@ -38,12 +39,20 @@ func (e FieldManyFile) Build(ctx context.Context) Node {
 		return nil
 	}
 
-	var items []Node
+	var items bytes.Buffer
 	for _, n := range nodes {
 		if n.ID != 0 {
-			items = append(items, buildFileInfo(n, "", ctx))
+			if err := buildFileInfo(n, "", cat, ctx, &items); err != nil {
+				return err
+			}
 		}
 	}
 
-	return Div(Class(e.Classes), Group(items))
+	return executeTemplate(w, "field_many_file", struct {
+		Classes string
+		Items   template.HTML
+	}{
+		Classes: e.Classes,
+		Items:   template.HTML(items.String()),
+	})
 }

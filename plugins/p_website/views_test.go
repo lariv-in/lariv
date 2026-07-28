@@ -13,7 +13,6 @@ import (
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/plugins/p_filesystem"
-	"github.com/lariv-in/lariv/registry"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -85,18 +84,14 @@ func uploadHeaderForViews(t *testing.T, fieldName, fileName, body string) *multi
 // buildHandler assembles the full HTTP handler pipeline from registered plugins.
 func buildHandler(t *testing.T, db *gorm.DB) http.Handler {
 	t.Helper()
-	config := lariv.LarivConfig{}
-	corePlugin := lariv.CorePlugin(db, config)
-	plugins := []registry.Pair[string, lariv.Plugin]{
-		corePlugin,
-		GetPlugin(),
+	plugin := GetPlugin()
+	app, err := lariv.NewBuilder().
+		AddPlugin(plugin.Key, plugin.Value).
+		BuildWith(lariv.LarivConfig{}, db)
+	if err != nil {
+		t.Fatalf("build app: %v", err)
 	}
-	lariv.BuildAllRegistries(plugins)
-	var handler http.Handler = lariv.GetRouter(config)
-	for _, layer := range *lariv.RegistryLayer.AllStable() {
-		handler = layer.Value.Next(handler)
-	}
-	return handler
+	return app.Handler()
 }
 
 func TestDynamicWebsiteRouting(t *testing.T) {
@@ -121,12 +116,11 @@ func TestDynamicWebsiteRouting(t *testing.T) {
 	}
 
 	// Also insert an inactive DBRoute
-	inactiveRoute := DBRoute{
-		Path:     "/inactive",
-		PageID:   vnode.ID,
-		IsActive: false,
-	}
-	if err := db.Create(&inactiveRoute).Error; err != nil {
+	if err := db.Model(&DBRoute{}).Create(map[string]any{
+		"Path":     "/inactive",
+		"PageID":   vnode.ID,
+		"IsActive": false,
+	}).Error; err != nil {
 		t.Fatalf("failed to create inactive DBRoute: %v", err)
 	}
 

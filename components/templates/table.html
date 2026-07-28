@@ -1,0 +1,22 @@
+{{define "data_table"}}
+<div id="{{.UID}}" class="w-full data-table-container {{.Classes}}" x-data="{{.XData}}">
+	<div class="flex justify-between items-center my-2">
+		<div>
+			{{if .Title}}<div class="text-xl font-semibold">{{.Title}}</div>{{end}}
+			{{if .Subtitle}}<div class="text-sm text-gray-500">{{.Subtitle}}</div>{{end}}
+		</div>
+		<div class="flex items-center gap-2">
+			<select class="select select-md" x-model="view">
+				{{range .ViewOptions}}<option value="{{.}}">{{.}}</option>{{end}}
+			</select>
+			{{.Actions}}
+		</div>
+	</div>
+	<div class="relative my-2">
+		{{range .Displays}}
+		<div x-show="view === '{{.Name}}'">{{.HTML}}</div>
+		{{end}}
+		{{.Pagination}}
+	</div>
+</div>
+{{end}}

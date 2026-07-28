@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 type exportPickerPage struct {
@@ -25,7 +24,15 @@ func (e exportPickerPage) GetRoles() []string {
 	return e.Roles
 }
 
-func (e exportPickerPage) Build(ctx context.Context) Node {
+type exportPickerRow struct {
+	Table        string
+	Description  string
+	Deps         string
+	CheckedExpr  string
+	DisabledExpr string
+}
+
+func (e exportPickerPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	catalog, _ := ctx.Value(exportCatalogContextKey).(ExportCatalog)
 	dependencyMap := make(map[string][]string, len(catalog.Entries))
 	for _, entry := range catalog.Entries {
@@ -39,11 +46,13 @@ func (e exportPickerPage) Build(ctx context.Context) Node {
 	}
 
 	action := "#"
-	if route, ok := lariv.RegistryRoute.Get("export.DownloadRoute"); ok {
-		action = route.Path
+	if app, ok := lariv.AppFromContext(ctx); ok {
+		if route, found := app.Routes.Get("export.DownloadRoute"); found {
+			action = route.Path
+		}
 	}
 
-	rows := Group{}
+	rows := make([]exportPickerRow, 0, len(catalog.Entries))
 	for _, entry := range catalog.Entries {
 		deps := "No auto-selected dependencies"
 		if len(entry.ImmediateDeps) > 0 {
@@ -54,92 +63,26 @@ func (e exportPickerPage) Build(ctx context.Context) Node {
 			description = entry.ModelName + " | " + description
 		}
 
-		rows = append(
-			rows,
-			Div(
-				Class("card bg-base-100 border border-base-300 shadow-sm"),
-				Div(
-					Class("card-body gap-3"),
-					Div(
-						Class("flex items-start justify-between gap-4"),
-						Div(
-							Class("space-y-1"),
-							Div(Class("font-semibold"), Text(entry.Table)),
-							Div(Class("text-sm text-base-content/70"), Text(description)),
-							Div(Class("text-xs text-base-content/60"), Text(deps)),
-						),
-						Label(
-							Class("label cursor-pointer gap-3"),
-							Span(Class("label-text text-sm"), Text("Select")),
-							Input(
-								Type("checkbox"),
-								Name("models"),
-								Value(entry.Table),
-								Class("checkbox checkbox-primary"),
-								Attr("@change", "toggleRoot($event.target.value, $event.target.checked)"),
-								Attr(":checked", fmt.Sprintf("isChecked(%q)", entry.Table)),
-								Attr(":disabled", fmt.Sprintf("isAuto(%q)", entry.Table)),
-							),
-						),
-					),
-				),
-			),
-		)
+		rows = append(rows, exportPickerRow{
+			Table:        entry.Table,
+			Description:  description,
+			Deps:         deps,
+			CheckedExpr:  fmt.Sprintf("isChecked(%q)", entry.Table),
+			DisabledExpr: fmt.Sprintf("isAuto(%q)", entry.Table),
+		})
 	}
 
-	if len(catalog.Entries) == 0 {
-		rows = append(
-			rows,
-			Div(
-				Class("alert"),
-				Text("No registered models available in this deployment."),
-			),
-		)
-	}
-
-	return Div(
-		Class("container max-w-6xl mx-auto mt-4"),
-		Attr("x-data", exportPickerXData(string(depJSON))),
-		Div(
-			Class("mb-6"),
-			H1(Class("text-2xl font-semibold"), Text("XLSX Export")),
-			P(Class("text-sm text-base-content/70 mt-2"), Text("Select model roots. Frontend auto-selects dependencies. Backend recomputes same closure before export.")),
-		),
-		Div(
-			Class("stats shadow mb-6 w-full"),
-			Div(Class("stat"), Div(Class("stat-title"), Text("Models")), Div(Class("stat-value text-2xl"), Text(fmt.Sprintf("%d", len(catalog.Entries))))),
-			Div(Class("stat"), Div(Class("stat-title"), Text("Root Selection")), Div(Class("stat-value text-2xl"), Span(Attr("x-text", "selectedRoots.length")))),
-			Div(Class("stat"), Div(Class("stat-title"), Text("Effective Export")), Div(Class("stat-value text-2xl"), Span(Attr("x-text", "effective.length")))),
-		),
-		Form(
-			Method("post"),
-			Action(action),
-			Class("space-y-6"),
-			Attr("data-hx-boost", "false"),
-			Div(Class("grid grid-cols-1 lg:grid-cols-2 gap-4"), rows),
-			Div(
-				Class("card bg-base-200 border border-base-300"),
-				Div(
-					Class("card-body gap-4"),
-					Div(
-						Class("text-sm"),
-						Span(Class("font-semibold"), Text("Selected tables: ")),
-						Span(Attr("x-text", `effective.length ? effective.join(", ") : "None"`)),
-					),
-					Div(
-						Class("flex gap-3"),
-						Button(Type("submit"), Class("btn btn-primary"), Text("Export XLSX")),
-						Button(
-							Type("button"),
-							Class("btn btn-outline"),
-							Attr("@click", "clearAll()"),
-							Text("Clear"),
-						),
-					),
-				),
-			),
-		),
-	)
+	return execute(w, "export_picker", struct {
+		XData      string
+		ModelCount int
+		Action     string
+		Rows       []exportPickerRow
+	}{
+		XData:      exportPickerXData(string(depJSON)),
+		ModelCount: len(catalog.Entries),
+		Action:     action,
+		Rows:       rows,
+	})
 }
 
 func exportPickerXData(depJSON string) string {

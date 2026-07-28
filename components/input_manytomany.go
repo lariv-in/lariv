@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 	"net/url"
 	"strconv"
@@ -12,8 +14,6 @@ import (
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // AssociationIDs marks a parsed many-to-many form value so CRUD handlers can
@@ -77,7 +77,7 @@ func (e InputManyToMany[T]) GetRoles() []string {
 }
 
 // Build compiles the InputManyToMany component into a Div Node with Alpine.js list synchronizations.
-func (e InputManyToMany[T]) Build(ctx context.Context) Node {
+func (e InputManyToMany[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	items := e.initialSelections(ctx)
 	if items == nil {
 		items = []registry.Pair[string, string]{}
@@ -155,45 +155,32 @@ func (e InputManyToMany[T]) Build(ctx context.Context) Node {
 	}`, itemsJSON, placeholderJSON, string(nameJSON), string(nameJSON))
 	eventHandler := "eventHandler($event)"
 
-	return Div(
-		Class(fmt.Sprintf("my-1 relative %s", e.Classes)),
-		Attr("x-data", alpineData),
-		Attr("x-init", "syncStore()"),
-		Attr("@fk-multi-select.window", eventHandler),
-		Div(
-			Class("flex flex-col items-start gap-1"),
-			If(e.Label != "", Label(Class("label text-sm font-bold"), Text(e.Label))),
-			Div(
-				Class("input input-bordered w-full min-h-12 h-auto flex flex-wrap items-center gap-2 cursor-pointer"),
-				Attr(":class", "items.length ? '' : 'opacity-50'"),
-				Attr("hx-get", urlStr),
-				Attr("hx-target", HTMXTargetBodyModal),
-				Attr("hx-swap", HTMXSwapBodyModal),
-				Attr("hx-push-url", "false"),
-				Span(
-					Attr("x-show", "items.length === 0"),
-					Attr("x-text", "placeholder"),
-				),
-				Template(
-					Attr("x-for", "item in items"),
-					Attr(":key", "item.Key"),
-					Div(
-						Class("flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-1 py-1"),
-						Attr("@click", "$event.stopPropagation()"),
-						Input(Type("hidden"), Name(e.Name), Attr(":value", "item.Key")),
-						Span(Class("text-sm flex-1 min-w-0 truncate"), Attr("x-text", "item.Value")),
-						Button(
-							Type("button"),
-							Class("btn btn-ghost btn-square btn-xs shrink-0"),
-							Attr("@click.stop", "removeItem({ value: item.Key })"),
-							Attr("aria-label", "Remove"),
-							Render(Icon{Name: "x-mark"}, ctx),
-						),
-					),
-				),
-			),
-		),
-	)
+	removeIcon, err := RenderHTML(Icon{Name: "x-mark"}, cat, ctx)
+	if err != nil {
+		return err
+	}
+
+	return Execute(w, "input_many_to_many", struct {
+		Classes      string
+		AlpineData   string
+		EventHandler string
+		Label        string
+		URL          string
+		HXTarget     string
+		HXSwap       string
+		Name         string
+		RemoveIcon   template.HTML
+	}{
+		Classes:      e.Classes,
+		AlpineData:   alpineData,
+		EventHandler: eventHandler,
+		Label:        e.Label,
+		URL:          urlStr,
+		HXTarget:     HTMXTargetBodyModal,
+		HXSwap:       HTMXSwapBodyModal,
+		Name:         e.Name,
+		RemoveIcon:   removeIcon,
+	})
 }
 
 // Parse extracts the GORM primary key ID slice from parameters, queries GORM to verify databases presence, and yields an AssociationIDs payload.

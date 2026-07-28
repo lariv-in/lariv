@@ -2,11 +2,10 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldManyToMany represents a read-only layout displaying multiple associated records as tags or chips.
@@ -53,37 +52,36 @@ func (e FieldManyToMany[T]) GetRoles() []string {
 	return e.Roles
 }
 
+type fieldManyToManyChip struct {
+	Href  string
+	Label string
+}
+
 // Build compiles the FieldManyToMany component into an HTML panel rendering related selection chips.
-func (e FieldManyToMany[T]) Build(ctx context.Context) Node {
-	var chipNodes []Node
+func (e FieldManyToMany[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	var chips []fieldManyToManyChip
 	if e.Getter != nil {
 		values, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldManyToMany getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		for _, v := range values {
 			pair, ok := manyToManySelectionPair(ctx, v, e.Display, e.Key)
 			if !ok {
 				continue
 			}
-			label := Span(Class("text-sm flex-1 min-w-0 truncate"), Text(pair.Value))
-			chipClass := "flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-2 py-1 min-w-0 max-w-full"
+			chip := fieldManyToManyChip{Label: pair.Value}
 			if e.Link != nil {
 				itemCtx := context.WithValue(ctx, getters.ContextKeyIn, getters.MapFromStruct(v))
 				href, err := e.Link(itemCtx)
 				if err != nil {
 					slog.Error("FieldManyToMany link getter failed", "error", err, "key", e.Key)
 				} else if href != "" {
-					chipNodes = append(chipNodes, A(
-						Href(href),
-						Class(chipClass+" link link-hover no-underline"),
-						label,
-					))
-					continue
+					chip.Href = href
 				}
 			}
-			chipNodes = append(chipNodes, Div(Class(chipClass), label))
+			chips = append(chips, chip)
 		}
 	}
 
@@ -92,20 +90,17 @@ func (e FieldManyToMany[T]) Build(ctx context.Context) Node {
 		empty = "—"
 	}
 
-	var body Node
-	if len(chipNodes) == 0 {
-		body = Span(Class("text-sm opacity-50"), Text(empty))
-	} else {
-		body = Div(
-			Class("input input-bordered w-full min-h-12 h-auto flex flex-wrap items-center gap-2"),
-			Group(chipNodes),
-		)
-	}
-
-	outer := []Node{body}
-	if e.Label != "" {
-		outer = append([]Node{Label(Class("label text-sm font-bold"), Text(e.Label))}, outer...)
-	}
-
-	return Div(Class("my-1 "+e.Classes), Group(outer))
+	return Execute(w, "field_many_to_many", struct {
+		Classes   string
+		Label     string
+		Empty     bool
+		EmptyText string
+		Chips     []fieldManyToManyChip
+	}{
+		Classes:   "my-1 " + e.Classes,
+		Label:     e.Label,
+		Empty:     len(chips) == 0,
+		EmptyText: empty,
+		Chips:     chips,
+	})
 }

@@ -2,8 +2,7 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
+	"io"
 )
 
 // EscapedString is a component that can be used to return escaped string
@@ -25,7 +24,7 @@ func (e EscapedString) GetRoles() []string {
 	return e.Roles
 }
 
-// Build returns the content wrapped in a Text Node
-func (e EscapedString) Build(ctx context.Context) Node {
-	return Text(e.Content)
+// Build writes the escaped content.
+func (e EscapedString) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	return Execute(w, "escaped_string", struct{ Content string }{Content: e.Content})
 }

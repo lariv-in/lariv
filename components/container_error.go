@@ -2,10 +2,10 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ContainerError wraps child components and conditionally appends a visible error label.
@@ -32,22 +32,22 @@ type ContainerError struct {
 	Error getters.Getter[error]
 }
 
-// Build compiles the ContainerError component into a div Node containing the child nodes and the optional error message label.
-func (e ContainerError) Build(ctx context.Context) Node {
-	group := Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+// Build compiles the ContainerError component into HTML containing the children and optional error message.
+func (e ContainerError) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-
-	var errorNode Node
+	var errorMessage string
 	if e.Error != nil {
-		err, _ := e.Error(ctx)
-		if err != nil {
-			errorNode = Span(Class("text-sm text-error"), Text(err.Error()))
+		if errVal, _ := e.Error(ctx); errVal != nil {
+			errorMessage = errVal.Error()
 		}
 	}
-
-	return Div(Class("flex flex-col gap-1 w-full"), group, errorNode)
+	return Execute(w, "container_error", struct {
+		Children     template.HTML
+		ErrorMessage string
+	}{Children: children, ErrorMessage: errorMessage})
 }
 
 // GetKey returns the unique key identifier for this ContainerError component.

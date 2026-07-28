@@ -2,8 +2,7 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
+	"io"
 )
 
 // ShellAuthScaffold represents the global base page shell scaffold for authentication views.
@@ -24,25 +23,26 @@ type ShellAuthScaffold struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Children represents the slice of nested sub-components rendered in the centered card.
-	Children  []PageInterface
+	Children []PageInterface
 	// ExtraHead represents the slice of custom header tags (e.g. meta, scripts, links) injected in the HTML head.
 	ExtraHead []PageInterface
 }
 
-// Body compiles the core page content wrapper inside the parent HTML document shell structure.
-func (e ShellAuthScaffold) Body(ctx context.Context) Node {
+func (e ShellAuthScaffold) shellBase() ShellBase {
 	return ShellBase{
 		ExtraHead: e.ExtraHead,
-		Children:  []PageInterface{LayoutCard{Page{}, e.Children}},
-	}.Body(ctx)
+		Children:  []PageInterface{LayoutCard{Page: Page{}, Children: e.Children}},
+	}
+}
+
+// Body compiles the core page content wrapper inside the parent HTML document shell structure.
+func (e ShellAuthScaffold) Body(cat Catalog, ctx context.Context, w io.Writer) error {
+	return e.shellBase().Body(cat, ctx, w)
 }
 
 // Build compiles the ShellAuthScaffold component into base Shell elements.
-func (e ShellAuthScaffold) Build(ctx context.Context) Node {
-	return Render(ShellBase{
-		ExtraHead: e.ExtraHead,
-		Children:  []PageInterface{LayoutCard{Page{}, e.Children}},
-	}, ctx)
+func (e ShellAuthScaffold) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	return Render(e.shellBase(), cat, ctx, w)
 }
 
 // GetKey returns the unique key identifier for this ShellAuthScaffold component.

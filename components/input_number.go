@@ -3,14 +3,13 @@ package components
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputNumber represents a generic numerical value input form field component.
@@ -56,51 +55,69 @@ func (e InputNumber[T]) GetRoles() []string {
 }
 
 // Build compiles the InputNumber component into a Div wrapping a numeric Input.
-func (e InputNumber[T]) Build(ctx context.Context) Node {
-	var valueNode Node = Value("")
+func (e InputNumber[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	value := ""
 	if e.Getter != nil {
 		valueNumber, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputNumber getter failed", "error", err, "key", e.Key)
 		} else {
-			valueNode = Value(fmt.Sprintf("%v", valueNumber))
+			value = fmt.Sprintf("%v", valueNumber)
 		}
 	}
 	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
 	if e.Hidden {
 		wrapClass += " hidden"
-		return Div(
-			Class(wrapClass),
-			Input(Type("hidden"), Name(e.Name), valueNode),
-		)
+		return Execute(w, "input_number", struct {
+			Hidden    bool
+			WrapClass string
+			Label     string
+			Name      string
+			Value     string
+			Classes   string
+			Required  bool
+			InputMode string
+			Min       string
+		}{
+			Hidden:    true,
+			WrapClass: wrapClass,
+			Name:      e.Name,
+			Value:     value,
+		})
 	}
 	var zero T
 	kind := reflect.TypeOf(zero).Kind()
-	inputAttrs := []Node{
-		Type("number"),
-		Name(e.Name),
-		valueNode,
-		Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)),
-		If(e.Required, Required()),
-	}
+	inputMode := "numeric"
+	min := ""
 	switch kind {
 	case reflect.Float32, reflect.Float64:
-		inputAttrs = append(inputAttrs, Attr("inputmode", "decimal"))
-	default:
-		inputAttrs = append(inputAttrs, Attr("inputmode", "numeric"))
+		inputMode = "decimal"
 	}
 	switch kind {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		inputAttrs = append(inputAttrs, Attr("min", "0"))
+		min = "0"
 	}
-	return Div(
-		Class(wrapClass),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Input(inputAttrs...),
-		),
-	)
+	return Execute(w, "input_number", struct {
+		Hidden    bool
+		WrapClass string
+		Label     string
+		Name      string
+		Value     string
+		Classes   string
+		Required  bool
+		InputMode string
+		Min       string
+	}{
+		Hidden:    false,
+		WrapClass: wrapClass,
+		Label:     e.Label,
+		Name:      e.Name,
+		Value:     value,
+		Classes:   e.Classes,
+		Required:  e.Required,
+		InputMode: inputMode,
+		Min:       min,
+	})
 }
 
 // Parse extracts and parses numerical values from input parameters using reflection.

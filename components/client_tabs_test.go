@@ -19,7 +19,7 @@ func TestClientTabsBuild(t *testing.T) {
 		},
 	}
 
-	html := renderNode(t, tabs.Build(context.Background()))
+	html := renderPage(t, tabs, context.Background())
 
 	for _, want := range []string{
 		`x-data="{&#34;section&#34;:&#34;Reports&#34;}"`,
@@ -48,7 +48,7 @@ func TestClientTabsLayoutVertical(t *testing.T) {
 			{Key: "B", Value: getters.Static[PageInterface](FieldText{Getter: getters.Static("b")})},
 		},
 	}
-	html := renderNode(t, tabs.Build(context.Background()))
+	html := renderPage(t, tabs, context.Background())
 	if !strings.Contains(html, `w-full flex-col`) {
 		t.Fatalf("expected vertical ribbon classes in html: %s", html)
 	}
@@ -68,7 +68,7 @@ func TestClientTabsLayoutHorizontal(t *testing.T) {
 			{Key: "A", Value: getters.Static[PageInterface](FieldText{Getter: getters.Static("a")})},
 		},
 	}
-	html := renderNode(t, tabs.Build(context.Background()))
+	html := renderPage(t, tabs, context.Background())
 	if !strings.Contains(html, `flex-wrap`) {
 		t.Fatalf("expected horizontal ribbon with flex-wrap: %s", html)
 	}

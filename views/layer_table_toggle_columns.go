@@ -37,7 +37,7 @@ type LayerTableToggleColumns struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing table columns parsing.
-func (m LayerTableToggleColumns) Next(_ View, next http.Handler) http.Handler {
+func (m LayerTableToggleColumns) Next(_ *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		paramName, err := m.QueryParam(ctx)

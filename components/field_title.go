@@ -2,11 +2,10 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldTitle represents a read-only title header display field.
@@ -40,16 +39,20 @@ func (e FieldTitle) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldTitle component into a Div Node styled as primary header text.
-func (e FieldTitle) Build(ctx context.Context) Node {
+// Build compiles the FieldTitle component into a Div styled as primary header text.
+func (e FieldTitle) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	value := ""
 	if e.Getter != nil {
 		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldTitle getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		value = v
 	}
-	return Div(Class("text-xl font-semibold text-primary "+e.Classes), Text(value))
+	return Execute(w, "field_title", struct {
+		Classes string
+		Value   string
+	}{Classes: "text-xl font-semibold text-primary " + e.Classes, Value: value})
 }
+

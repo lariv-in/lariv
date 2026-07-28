@@ -1,0 +1,14 @@
+{{define "input_number"}}
+{{if .Hidden}}
+<div class="{{.WrapClass}}">
+	<input type="hidden" name="{{.Name}}" value="{{.Value}}">
+</div>
+{{else}}
+<div class="{{.WrapClass}}">
+	<label class="label text-sm font-bold flex flex-col items-start gap-1">
+		{{.Label}}
+		<input type="number" name="{{.Name}}" value="{{.Value}}" class="input input-bordered w-full {{.Classes}}" inputmode="{{.InputMode}}"{{if .Min}} min="{{.Min}}"{{end}}{{if .Required}} required{{end}}>
+	</label>
+</div>
+{{end}}
+{{end}}

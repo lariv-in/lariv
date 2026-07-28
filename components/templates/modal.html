@@ -1,0 +1,13 @@
+{{define "modal"}}
+<dialog id="{{.UID}}" class="modal modal-open fk-modal-container" hx-push-url="false" hx-target="this" hx-swap="outerHTML">
+	<div class="modal-box max-w-4xl bg-base-200 border border-base-300 {{.Classes}}">
+		<form method="dialog">
+			<button type="button" class="btn btn-sm btn-circle btn-outline btn-error absolute right-3 top-3"{{attrs .CloseAttrs}}>{{.CloseIcon}}</button>
+		</form>
+		<div class="mt-8">{{.Children}}</div>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button{{attrs .BackdropAttrs}}>close</button>
+	</form>
+</dialog>
+{{end}}

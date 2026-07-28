@@ -1,0 +1,8 @@
+{{define "layout_card"}}
+<div class="min-h-screen flex items-center justify-center bg-base-200">
+	<progress class="progress w-full fixed top-0 left-0 h-1 z-50" id="global-loading-indicator"></progress>
+	<div class="card shadow-xl">
+		<div class="card-body">{{.Children}}</div>
+	</div>
+</div>
+{{end}}

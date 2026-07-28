@@ -2,9 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // ClientData wraps child components inside a div element containing Alpine.js state attributes.
@@ -14,30 +13,28 @@ type ClientData struct {
 	Page
 	// Data specifies the raw JavaScript expression/object literal to bind to Alpine's x-data.
 	// Defaults to "{}" if empty.
-	Data     string
+	Data string
 	// Init specifies an optional raw JavaScript expression to evaluate on Alpine's x-init.
-	Init     string
+	Init string
 	// Children represents the child components enclosed within the state container.
 	Children []PageInterface
 }
 
-// Build compiles the ClientData component into a div Node decorated with x-data and x-init attributes.
-func (e ClientData) Build(ctx context.Context) Node {
+// Build compiles the ClientData component into a div decorated with x-data and x-init attributes.
+func (e ClientData) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	data := e.Data
 	if data == "" {
 		data = "{}"
 	}
-
-	group := Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-
-	return Div(
-		Attr("x-data", data),
-		If(e.Init != "", Attr("x-init", e.Init)),
-		group,
-	)
+	return Execute(w, "client_data", struct {
+		Data     string
+		Init     string
+		Children template.HTML
+	}{Data: data, Init: e.Init, Children: children})
 }
 
 // GetKey returns the unique key identifier for this ClientData component.

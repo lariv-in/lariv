@@ -1,0 +1,10 @@
+{{define "client_tabs"}}
+<div class="{{.OuterClass}}" x-data="{{.XData}}"{{attrs .Attrs}}>
+	<div class="{{.RibbonClass}}"{{attrs .RibbonAttrs}}>
+		{{range .Buttons}}
+		<button type="button" class="{{$.ButtonClass}}" @click="{{.Click}}" :class="{{.ClassExpr}}">{{.Label}}</button>
+		{{end}}
+	</div>
+	<div class="min-w-0 flex-1"{{attrs .ContentAttrs}}>{{.Panels}}</div>
+</div>
+{{end}}

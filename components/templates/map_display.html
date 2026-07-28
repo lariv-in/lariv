@@ -1,0 +1,10 @@
+{{define "map_display_libre_head"}}
+<link href="{{.CSSHref}}" rel="stylesheet" crossorigin="anonymous">
+<script src="{{.JSSrc}}" crossorigin="anonymous"></script>
+<script src="{{.CBORSrc}}" crossorigin="anonymous"></script>
+{{end}}
+{{define "map_display"}}
+<style>{{.MapCtrlCSS}}</style>
+<div id="{{.MapElID}}" class="{{.Classes}}" x-data="{}" x-on:destroy="if ($el.mapDisplayInstance) { $el.mapDisplayInstance.destroy(); }"></div>
+<script>{{.InitJS}}</script>
+{{end}}

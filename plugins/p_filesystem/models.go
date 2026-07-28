@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"mime/multipart"
 	"path/filepath"
 	"strings"
 
 	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 )
 
@@ -188,6 +190,47 @@ func CreateVNode(db *gorm.DB, name string, isDirectory bool, file *multipart.Fil
 	return node, nil
 }
 
+// CreateVNodeFromReader creates a file VNode from an io.Reader, storing bytes via [Filestore.SaveFromReader].
+func CreateVNodeFromReader(db *gorm.DB, name string, r io.Reader, parent *VNode) (*VNode, error) {
+	if parent != nil && !parent.IsDirectory {
+		return nil, fmt.Errorf("%q is not a directory", parent.Name)
+	}
+	if r == nil {
+		return nil, fmt.Errorf("reader is required")
+	}
+	if Store == nil {
+		return nil, fmt.Errorf("p_filesystem: store not configured")
+	}
+
+	name = sanitizeNodeName(name)
+	if name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+
+	ext := filepath.Ext(name)
+	storedPath, err := Store.SaveFromReader(r, ext)
+	if err != nil {
+		return nil, err
+	}
+
+	node := &VNode{
+		Name:        name,
+		IsDirectory: false,
+		FilePath:    storedPath,
+	}
+	if parent != nil {
+		node.ParentID = &parent.ID
+	}
+
+	if err := gorm.G[VNode](db).Create(context.Background(), node); err != nil {
+		if deleteErr := Store.Delete(storedPath); deleteErr != nil {
+			slog.Error("failed cleaning up stored file after create error", "path", storedPath, "error", deleteErr)
+		}
+		return nil, err
+	}
+	return node, nil
+}
+
 func (n *VNode) Update(db *gorm.DB, name string, file *multipart.FileHeader) error {
 	name = sanitizeNodeName(name)
 	if name == "" {
@@ -220,6 +263,43 @@ func (n *VNode) Update(db *gorm.DB, name string, file *multipart.FileHeader) err
 	}
 
 	return db.Save(n).Error
+}
+
+// ReplaceContentFromReader replaces the file node's backing blob with data from r, keeping the node name.
+func (n *VNode) ReplaceContentFromReader(db *gorm.DB, r io.Reader) error {
+	if n == nil {
+		return fmt.Errorf("vnode is nil")
+	}
+	if n.IsDirectory {
+		return fmt.Errorf("cannot replace content of a directory")
+	}
+	if r == nil {
+		return fmt.Errorf("reader is required")
+	}
+	if Store == nil {
+		return fmt.Errorf("p_filesystem: store not configured")
+	}
+
+	ext := filepath.Ext(n.Name)
+	storedPath, err := Store.SaveFromReader(r, ext)
+	if err != nil {
+		return err
+	}
+
+	oldPath := n.FilePath
+	n.FilePath = storedPath
+	if err := db.Save(n).Error; err != nil {
+		if deleteErr := Store.Delete(storedPath); deleteErr != nil {
+			slog.Error("failed cleaning up stored file after replace error", "path", storedPath, "error", deleteErr)
+		}
+		return err
+	}
+	if oldPath != "" && oldPath != storedPath {
+		if err := Store.Delete(oldPath); err != nil {
+			slog.Error("failed deleting replaced stored file", "path", oldPath, "error", err)
+		}
+	}
+	return nil
 }
 
 func (n *VNode) MoveToNode(db *gorm.DB, destination *VNode) error {
@@ -375,9 +455,13 @@ func HumanReadableSize(size uint64) string {
 	return "-"
 }
 
-func init() {
-	lariv.RegistryAdmin.Register("p_filesystem", lariv.AdminPanel[VNode]{
-		SearchField: "Name",
-		ListFields:  []string{"Name", "IsDirectory", "ParentID", "UpdatedAt"},
-	})
+func pluginAdmin() lariv.PluginFeatures[lariv.AdminPanelInterface] {
+	return lariv.PluginFeatures[lariv.AdminPanelInterface]{
+		Entries: []registry.Pair[string, lariv.AdminPanelInterface]{
+			{Key: "p_filesystem", Value: lariv.AdminPanel[VNode]{
+				SearchField: "Name",
+				ListFields:  []string{"Name", "IsDirectory", "ParentID", "UpdatedAt"},
+			}},
+		},
+	}
 }

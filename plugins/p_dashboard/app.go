@@ -11,7 +11,7 @@ import (
 const AppUrl = "/dashboard/"
 
 // GetPlugin returns the registry contributions for this plugin (views, pages, routes) for
-// [lariv.BuildAllRegistries]. Callers that assemble the full plugin list should include
+// [lariv.AppBuilder]. Callers that assemble the full plugin list should include
 // a pair with key "p_dashboard" and this value.
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, err := url.Parse(AppUrl)
@@ -27,6 +27,7 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 			Views:       pluginStages(pluginViews),
 			Pages:       pluginStages(pluginPages),
 			Routes:      pluginStages(pluginRoutes),
+			Topbar:      lariv.PluginStages(pluginTopbar),
 		},
 	}
 }

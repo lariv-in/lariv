@@ -2,12 +2,11 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 	"log/slog"
-	"net/http"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ButtonPost represents a button that performs a POST request via an HTMX-boosted form.
@@ -26,8 +25,8 @@ type ButtonPost struct {
 	IconClasses string
 	// Classes represents additional CSS classes for the button container.
 	Classes string
-	// Attr is an optional Getter yielding additional HTML/HTMX attributes (Node) to merge onto the submit button.
-	Attr getters.Getter[Node]
+	// Attr is an optional Getter yielding additional HTML/HTMX attributes to merge onto the submit button.
+	Attr getters.Getter[HTMLAttributes]
 }
 
 // GetKey returns the unique key identifier for this ButtonPost component.
@@ -40,8 +39,8 @@ func (e ButtonPost) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the ButtonPost component into a gomponents Node representing a submit button inside a POST form.
-func (e ButtonPost) Build(ctx context.Context) Node {
+// Build compiles the ButtonPost component into a submit button inside a POST form.
+func (e ButtonPost) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	url := ""
 	if e.URL != nil {
 		if v, err := e.URL(ctx); err == nil {
@@ -49,12 +48,13 @@ func (e ButtonPost) Build(ctx context.Context) Node {
 		}
 	}
 
-	content := Group{}
+	var iconHTML template.HTML
 	if e.Icon != "" {
-		content = append(content, Render(Icon{Name: e.Icon, Classes: e.IconClasses}, ctx))
-	}
-	if e.Label != "" {
-		content = append(content, Text(e.Label))
+		h, err := RenderHTML(&Icon{Name: e.Icon, Classes: e.IconClasses}, cat, ctx)
+		if err != nil {
+			return err
+		}
+		iconHTML = h
 	}
 
 	buttonClasses := "btn " + e.Classes
@@ -62,28 +62,17 @@ func (e ButtonPost) Build(ctx context.Context) Node {
 		buttonClasses += " inline-flex items-center gap-2"
 	}
 
-	return Form(
-		Action(url), Method(http.MethodPost),
-		// Use htmx boost so the POST is handled via HTMX without a
-		// full-page navigation; the response (e.g. updated detail view
-		// showing "Generating..." state) will be swapped in-place.
-		Attr("hx-boost", "true"),
-		Attr("@click.stop", ""),
-		Button(
-			Type("submit"),
-			Class(buttonClasses),
-			Iff(e.Attr != nil, func() Node {
-				n, err := e.Attr(ctx)
-				if err != nil {
-					slog.Error("ButtonPost Attr getter failed", "error", err, "key", e.Key)
-					return Raw("")
-				}
-				if n == nil {
-					return Raw("")
-				}
-				return n
-			}),
-			content,
-		),
-	)
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		slog.Error("ButtonPost Attr getter failed", "error", err, "key", e.Key)
+		attrs = HTMLAttributes{}
+	}
+
+	return Execute(w, "button_post", struct {
+		URL     string
+		Classes string
+		Attrs   HTMLAttributes
+		Icon    template.HTML
+		Label   string
+	}{URL: url, Classes: buttonClasses, Attrs: attrs, Icon: iconHTML, Label: e.Label})
 }

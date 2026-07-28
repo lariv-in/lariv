@@ -1,0 +1,22 @@
+{{define "input_foreign_key"}}
+{{if .Hidden}}
+<div class="{{.WrapClass}}">
+	<input type="hidden" name="{{.Name}}" value="{{.Value}}"{{attrs .Attrs}}>
+</div>
+{{else}}
+<div class="my-1 relative {{.Classes}}" x-data="{{.AlpineData}}" @fk-select.window="{{.EventHandler}}">
+	<label class="label text-sm font-bold flex flex-col items-start gap-1">
+		{{.Label}}
+		<input type="hidden" name="{{.Name}}" :value="value"{{if .Required}} required{{end}}{{attrs .Attrs}}>
+		<div class="flex w-full items-stretch gap-1">
+			<div class="input input-bordered flex-1 flex items-center cursor-pointer" :class="display ? '' : 'opacity-50'" hx-get="{{.URL}}" hx-target="{{.HXTarget}}" hx-swap="{{.HXSwap}}" hx-push-url="false">
+				<span x-text="display || placeholder"></span>
+			</div>
+			{{if not .Required}}
+			<button type="button" class="btn btn-ghost btn-square shrink-0" @click.stop="value = ''; display = ''" x-show="value" aria-label="Clear selection">{{.ClearIcon}}</button>
+			{{end}}
+		</div>
+	</label>
+</div>
+{{end}}
+{{end}}

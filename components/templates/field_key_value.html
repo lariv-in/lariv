@@ -1,0 +1,14 @@
+{{define "field_key_value"}}
+{{if .Empty}}
+<div></div>
+{{else}}
+<div class="{{.Classes}}">
+	{{range .Pairs}}
+	<div class="mb-4 pb-4 border-b border-base-300 last:border-b-0">
+		<div class="font-medium text-sm text-base-content/70 mb-1">{{.Key}}</div>
+		<div class="whitespace-pre-wrap">{{.Value}}</div>
+	</div>
+	{{end}}
+</div>
+{{end}}
+{{end}}

@@ -1,59 +1,34 @@
 package lariv
 
 import (
-	"github.com/lariv-in/lariv/registry"
 	"github.com/spf13/cobra"
 )
 
-// Start initializes and executes the Cobra CLI application, acting as the main entrypoint for any Lariv application.
-//
-// CLI Command Scopes:
-//   - Root Command: Starts the HTTP web server via [StartServer].
-//   - generate: Runs database seed generators via [RunGenerators].
-//   - tui: Launches the Bubble Tea terminal user interface.
-//   - Plugin Commands: Resolves and registers custom commands dynamically loaded from [RegistryCommand].
-//
-// Registries and configurations must be populated before invoking this function (e.g. using LoadConfigFromFile).
+// CommandFactory represents a generator function that builds Cobra CLI commands mapped to a specific [LarivConfig].
 //
 // Use Cases:
-//   - Initializing the CLI bootstrapper in the main execution block of a Go application.
+//   - Defining custom CLI sub-commands inside application plugins (e.g., system diagnostics, database cleaner tasks).
 //
 // Example:
 //
-//	func main() {
-//		config := lariv.LarivConfig{
-//			DBType:  lariv.DBTypePostgres,
-//			Address: ":8080",
-//		}
-//		plugins := []registry.Pair[string, lariv.Plugin]{
-//			p_dashboard.GetPlugin(),
-//		}
-//		if err := lariv.Start(config, plugins); err != nil {
-//			log.Fatal(err)
+//	var BackupCmdFactory CommandFactory = func(config LarivConfig) *cobra.Command {
+//		return &cobra.Command{
+//			Use:   "backup",
+//			Short: "Executes a database schema backup",
+//			Run: func(cmd *cobra.Command, args []string) {
+//				executeBackup(config)
+//			},
 //		}
 //	}
-func Start(config LarivConfig, plugins []registry.Pair[string, Plugin]) error {
-	_ = plugins
-	rootCmd := &cobra.Command{
-		Use:   "lariv",
-		Short: "Lariv web framework",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return StartServer(config)
-		},
-	}
-
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "generate",
-		Short: "Run data generators to seed the database",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			RunGenerators(config)
-			return nil
-		},
-	})
-
-	for _, pair := range *RegistryCommand.AllStable() {
-		rootCmd.AddCommand(pair.Value(config))
-	}
-
-	return rootCmd.Execute()
-}
+//
+//	// Register the command factory inside your lariv.Plugin configuration:
+//	lariv.Plugin{
+//		CommandFactories: lariv.PluginStages(func() PluginFeatures[CommandFactory] {
+//			return PluginFeatures[CommandFactory]{
+//				Entries: []registry.Pair[string, CommandFactory]{
+//					registry.NewPair("backup_db", BackupCmdFactory),
+//				},
+//			}
+//		}),
+//	}
+type CommandFactory func(LarivConfig) *cobra.Command

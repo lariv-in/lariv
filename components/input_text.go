@@ -3,12 +3,10 @@ package components
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
-	"reflect"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputText represents a standard text input form field component.
@@ -33,8 +31,8 @@ type InputText struct {
 	Name string
 	// Getter is the dynamic function retrieving the default/current string value.
 	Getter getters.Getter[string]
-	// Attr is an optional Getter returning additional HTML nodes/attributes to apply to the input.
-	Attr getters.Getter[Node]
+	// Attr is an optional Getter returning additional HTML attributes to apply to the input.
+	Attr getters.Getter[HTMLAttributes]
 	// Required is a boolean indicating if this form text is a mandatory input.
 	Required bool
 	// Classes represents additional CSS classes applied to the output HTML wrapper.
@@ -55,14 +53,14 @@ func (e InputText) GetRoles() []string {
 }
 
 // Build compiles the InputText component into a Div wrapping a text/hidden Input.
-func (e InputText) Build(ctx context.Context) Node {
-	valueNode := Value("")
+func (e InputText) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	value := ""
 	if e.Getter != nil {
-		value, err := e.Getter(ctx)
+		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("InputText getter failed", "error", err, "key", e.Key)
 		} else {
-			valueNode = Value(value)
+			value = v
 		}
 	}
 
@@ -70,40 +68,36 @@ func (e InputText) Build(ctx context.Context) Node {
 	if e.Hidden {
 		wrapClass += " hidden"
 	}
-	return Div(
-		Class(wrapClass),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			If(!e.Hidden, Text(e.Label)),
-			Input(
-				If(!e.Hidden, Type("text")), If(e.Hidden, Type("hidden")), Name(e.Name),
-				valueNode,
-				Class(fmt.Sprintf("input input-bordered w-full %s", e.Classes)),
-				If(e.Required, Required()),
-				Iff(e.Attr != nil, func() (out Node) {
-					out = Raw("")
-					defer func() {
-						if r := recover(); r != nil {
-							slog.Error("InputText attr getter panicked", "panic", r, "key", e.Key)
-						}
-					}()
-					n, err := e.Attr(ctx)
-					if err != nil {
-						slog.Error("InputText attr getter failed", "error", err, "key", e.Key)
-						return out
-					}
-					if n == nil {
-						return out
-					}
-					v := reflect.ValueOf(n)
-					if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Map || v.Kind() == reflect.Slice || v.Kind() == reflect.Interface || v.Kind() == reflect.Func) && v.IsNil() {
-						return out
-					}
-					return n
-				}),
-			),
-		),
-	)
+	inputType := "text"
+	if e.Hidden {
+		inputType = "hidden"
+	}
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		slog.Error("InputText attr getter failed", "error", err, "key", e.Key)
+		attrs = HTMLAttributes{}
+	}
+	return Execute(w, "input_text", struct {
+		WrapClass string
+		Hidden    bool
+		Label     string
+		Type      string
+		Name      string
+		Value     string
+		Classes   string
+		Required  bool
+		Attrs     HTMLAttributes
+	}{
+		WrapClass: wrapClass,
+		Hidden:    e.Hidden,
+		Label:     e.Label,
+		Type:      inputType,
+		Name:      e.Name,
+		Value:     value,
+		Classes:   e.Classes,
+		Required:  e.Required,
+		Attrs:     attrs,
+	})
 }
 
 // Parse extracts the text string value from input parameters.

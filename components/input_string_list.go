@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
 	"gorm.io/datatypes"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // InputStringList represents a dynamic list of text values input form field component.
@@ -53,7 +52,7 @@ func (e InputStringList) GetRoles() []string {
 }
 
 // Build compiles the InputStringList component into an interactive Alpine-driven list of inputs.
-func (e InputStringList) Build(ctx context.Context) Node {
+func (e InputStringList) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	var items []string
 	if e.Getter != nil {
 		j, err := e.Getter(ctx)
@@ -92,44 +91,19 @@ $el.closest('form').addEventListener('submit', (e) => {
 }, true);
 `, strconv.Quote(e.Name))
 
-	wrapClass := fmt.Sprintf("my-1 %s", e.Classes)
-	return Div(
-		Class(wrapClass),
-		Label(
-			Class("label text-sm font-bold flex flex-col items-start gap-1"),
-			Text(e.Label),
-			Div(
-				Attr("x-data", alpineData),
-				Attr("x-init", initJS),
-				Template(
-					Attr("x-for", "(item, i) in items"),
-					Attr(":key", "i"),
-					Div(
-						Class("flex gap-2 items-center my-1"),
-						Input(
-							Type("text"),
-							Class("input input-bordered flex-1"),
-							Attr("x-model", "items[i]"),
-							Attr("placeholder", "Option value"),
-						),
-						Button(
-							Type("button"),
-							Class("btn btn-ghost btn-sm shrink-0"),
-							Attr("@click", "remove(i)"),
-							Text("Remove"),
-						),
-					),
-				),
-				Button(
-					Type("button"),
-					Class("btn btn-outline btn-sm mt-1"),
-					Attr("@click", "add()"),
-					Text("Add option"),
-				),
-				Input(Type("hidden"), Name(e.Name)),
-			),
-		),
-	)
+	return Execute(w, "input_string_list", struct {
+		Classes    string
+		Label      string
+		Name       string
+		AlpineData string
+		InitJS     string
+	}{
+		Classes:    e.Classes,
+		Label:      e.Label,
+		Name:       e.Name,
+		AlpineData: alpineData,
+		InitJS:     initJS,
+	})
 }
 
 // Parse extracts the serialized JSON string list, validating that it matches a valid string array.

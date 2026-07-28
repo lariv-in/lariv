@@ -1,9 +1,12 @@
 package p_livereloading
 
 import (
+	"context"
+	"io"
+
+	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"github.com/lariv-in/lariv/registry"
 )
 
 func liveReloadScript() string {
@@ -46,13 +49,19 @@ func liveReloadScript() string {
 		"})();"
 }
 
-func registerHeadNodes() {
-	components.RegistryShellHeadNodes.Register(
-		"liverealoading.js",
-		Script(Raw(liveReloadScript())),
-	)
+type liveReloadHead struct {
+	components.Page
 }
 
-func init() {
-	registerHeadNodes()
+func (liveReloadHead) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
+	_, err := io.WriteString(w, "<script>"+liveReloadScript()+"</script>")
+	return err
+}
+
+func pluginHeadNodes() lariv.PluginFeatures[components.PageInterface] {
+	return lariv.PluginFeatures[components.PageInterface]{
+		Entries: []registry.Pair[string, components.PageInterface]{
+			{Key: "liverealoading.js", Value: liveReloadHead{}},
+		},
+	}
 }

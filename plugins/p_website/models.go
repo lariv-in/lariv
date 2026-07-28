@@ -22,6 +22,10 @@ type DBRoute struct {
 	Page       p_filesystem.VNode   `gorm:"constraint:OnDelete:RESTRICT;foreignKey:PageID;references:ID"`
 	References []p_filesystem.VNode `gorm:"many2many:p_website_route_references;"`
 	IsActive   bool                 `gorm:"notnull;default:true"`
+	// Theme is a GrapesJSThemes registry key (e.g. "p_website.default"); empty means no theme.
+	Theme string `gorm:"type:varchar(128);not null;default:''"`
+	// GrapesProject holds GrapesJS project JSON for re-editing; empty means never saved from the builder.
+	GrapesProject string `gorm:"type:text"`
 }
 
 func pluginModels() lariv.PluginFeatures[any] {
@@ -32,9 +36,13 @@ func pluginModels() lariv.PluginFeatures[any] {
 	}
 }
 
-func init() {
-	lariv.RegistryAdmin.Register("p_website", lariv.AdminPanel[DBRoute]{
-		SearchField: "Path",
-		ListFields:  []string{"Path", "LTreePath", "PageID", "IsActive", "UpdatedAt"},
-	})
+func pluginAdmin() lariv.PluginFeatures[lariv.AdminPanelInterface] {
+	return lariv.PluginFeatures[lariv.AdminPanelInterface]{
+		Entries: []registry.Pair[string, lariv.AdminPanelInterface]{
+			{Key: "p_website", Value: lariv.AdminPanel[DBRoute]{
+				SearchField: "Path",
+				ListFields:  []string{"Path", "LTreePath", "PageID", "IsActive", "UpdatedAt"},
+			}},
+		},
+	}
 }

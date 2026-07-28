@@ -2,10 +2,7 @@ package components
 
 import (
 	"context"
-	"fmt"
-
-	"maragu.dev/gomponents"
-	"maragu.dev/gomponents/html"
+	"io"
 )
 
 // Icon represents a graphic icon component retrieved dynamically from the Heroicons library via the Iconify design API.
@@ -23,12 +20,12 @@ type Icon struct {
 	// Page embeds common component properties like Key and Roles.
 	Page
 	// Name represents the exact name identifier of the Heroicon to load (e.g., "check-circle" or "academic-cap").
-	Name    string
+	Name string
 	// Classes represents additional CSS classes applied to the output HTML span element.
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	Classes string
-	// Attrs is a slice of extra HTML attributes/gomponents nodes applied to the span element.
-	Attrs   []gomponents.Node
+	// Attrs is a map of extra HTML attributes applied to the span element.
+	Attrs HTMLAttributes
 }
 
 // GetKey returns the unique key identifier for this Icon component.
@@ -41,12 +38,11 @@ func (e Icon) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the Icon component into a Span Node displaying the Heroicon.
-func (e Icon) Build(ctx context.Context) gomponents.Node {
-	nodes := []gomponents.Node{
-		html.Class(fmt.Sprintf("heroicon %s", e.Classes)),
-		html.Style(fmt.Sprintf("--heroicon-url: url('https://api.iconify.design/heroicons/%s.svg')", e.Name)),
-	}
-	nodes = append(nodes, e.Attrs...)
-	return html.Span(nodes...)
+// Build compiles the Icon component into a span displaying the Heroicon.
+func (e Icon) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	return Execute(w, "icon", struct {
+		Name    string
+		Classes string
+		Attrs   HTMLAttributes
+	}{Name: e.Name, Classes: e.Classes, Attrs: e.Attrs})
 }

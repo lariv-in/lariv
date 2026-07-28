@@ -58,6 +58,10 @@ func pluginModels() lariv.PluginFeatures[any] {
 	}
 }
 
-func init() {
-	lariv.RegistryAdmin.Register("p_otp", lariv.AdminPanel[OTPPreferences]{SearchField: ""})
+func pluginAdmin() lariv.PluginFeatures[lariv.AdminPanelInterface] {
+	return lariv.PluginFeatures[lariv.AdminPanelInterface]{
+		Entries: []registry.Pair[string, lariv.AdminPanelInterface]{
+			{Key: "p_otp", Value: lariv.AdminPanel[OTPPreferences]{SearchField: ""}},
+		},
+	}
 }

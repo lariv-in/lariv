@@ -12,6 +12,7 @@
 // # Database Models
 //
 //   - p_filesystem.VNode: DB model mapping file/directory nodes, parent links, file sizes, and MIME upload files.
+//     CreateVNodeFromReader / ReplaceContentFromReader support writing file bytes without multipart uploads.
 //
 // # Pages
 //

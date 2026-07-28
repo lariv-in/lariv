@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
 	"github.com/lariv-in/lariv/registry"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ClientTabsLayout controls the tab ribbon layout/orientation.
@@ -50,12 +50,12 @@ type ClientTabs struct {
 	StateKey string
 	// Layout selects the ribbon orientation.
 	Layout ClientTabsLayout
-	// Attr is an optional Getter yielding additional HTML/HTMX attributes (Node) to apply to the root container.
-	Attr getters.Getter[Node]
-	// RibbonAttr is an optional Getter yielding additional HTML/HTMX attributes (Node) to apply to the tab ribbon container.
-	RibbonAttr getters.Getter[Node]
-	// ContentAttr is an optional Getter yielding additional HTML/HTMX attributes (Node) to apply to the tab content panel wrapper.
-	ContentAttr getters.Getter[Node]
+	// Attr is an optional Getter yielding additional HTML/HTMX attributes to apply to the root container.
+	Attr getters.Getter[HTMLAttributes]
+	// RibbonAttr is an optional Getter yielding additional HTML/HTMX attributes to apply to the tab ribbon container.
+	RibbonAttr getters.Getter[HTMLAttributes]
+	// ContentAttr is an optional Getter yielding additional HTML/HTMX attributes to apply to the tab content panel wrapper.
+	ContentAttr getters.Getter[HTMLAttributes]
 	// DiscoveryChildren registers child components under this tab container so they can be located by tree traversal (e.g. FindChildren).
 	// Typically references the same panel nodes returned by the tabs' value getters.
 	DiscoveryChildren []PageInterface
@@ -85,11 +85,17 @@ func (e ClientTabs) layoutClasses() (outer, ribbon, button string) {
 	}
 }
 
+type clientTabButton struct {
+	Label     string
+	Click     string
+	ClassExpr string
+}
+
 // Build compiles the ClientTabs component into an HTML structure containing tab buttons and panels.
 // Initializes Alpine x-data with the default selected tab.
-func (e ClientTabs) Build(ctx context.Context) Node {
+func (e ClientTabs) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if len(e.Tabs) == 0 {
-		return Group{}
+		return nil
 	}
 
 	keys := make([]string, 0, len(e.Tabs))
@@ -102,7 +108,7 @@ func (e ClientTabs) Build(ctx context.Context) Node {
 		}
 		page, err := pageGetter(ctx)
 		if err != nil {
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		if page == nil {
 			continue
@@ -111,7 +117,7 @@ func (e ClientTabs) Build(ctx context.Context) Node {
 		match[key] = page
 	}
 	if len(keys) == 0 {
-		return Group{}
+		return nil
 	}
 
 	stateKey := e.StateKey
@@ -122,74 +128,69 @@ func (e ClientTabs) Build(ctx context.Context) Node {
 	defaultTab := keys[0]
 	if e.Default != nil {
 		if selected, err := e.Default(ctx); err != nil {
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		} else if _, ok := match[selected]; ok {
 			defaultTab = selected
 		}
 	}
 	xData, err := json.Marshal(map[string]string{stateKey: defaultTab})
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
+	}
+
+	attrs, err := ResolveAttrs(ctx, e.Attr)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
+	}
+	ribbonAttrs, err := ResolveAttrs(ctx, e.RibbonAttr)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
+	}
+	contentAttrs, err := ResolveAttrs(ctx, e.ContentAttr)
+	if err != nil {
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 
 	outerClass, ribbonClass, buttonClass := e.layoutClasses()
 
-	ribbon := Group{}
+	buttons := make([]clientTabButton, 0, len(keys))
 	for _, key := range keys {
-		ribbon = append(ribbon, Button(
-			Type("button"),
-			Class(buttonClass),
-			Attr("@click", fmt.Sprintf("%s = %q", stateKey, key)),
-			Attr(":class", fmt.Sprintf("%s === %q ? 'btn-primary' : 'btn-ghost'", stateKey, key)),
-			Text(key),
-		))
+		buttons = append(buttons, clientTabButton{
+			Label:     key,
+			Click:     fmt.Sprintf("%s = %q", stateKey, key),
+			ClassExpr: fmt.Sprintf("%s === %q ? 'btn-primary' : 'btn-ghost'", stateKey, key),
+		})
 	}
 
-	return Div(
-		Class(outerClass),
-		Attr("x-data", string(xData)),
-		Iff(e.Attr != nil, func() Node {
-			n, err := e.Attr(ctx)
-			if err != nil {
-				return ContainerError{Error: getters.Static(err)}.Build(ctx)
-			}
-			if n == nil {
-				return Group{}
-			}
-			return n
-		}),
-		Div(
-			Class(ribbonClass),
-			Iff(e.RibbonAttr != nil, func() Node {
-				n, err := e.RibbonAttr(ctx)
-				if err != nil {
-					return ContainerError{Error: getters.Static(err)}.Build(ctx)
-				}
-				if n == nil {
-					return Group{}
-				}
-				return n
-			}),
-			ribbon,
-		),
-		Div(
-			Class("min-w-0 flex-1"),
-			Iff(e.ContentAttr != nil, func() Node {
-				n, err := e.ContentAttr(ctx)
-				if err != nil {
-					return ContainerError{Error: getters.Static(err)}.Build(ctx)
-				}
-				if n == nil {
-					return Group{}
-				}
-				return n
-			}),
-			Render(ClientMatchIf{
-				Key:   getters.Static(stateKey),
-				Match: getters.Static(match),
-			}, ctx),
-		),
-	)
+	panels, err := RenderHTML(ClientMatchIf{
+		Key:   getters.Static(stateKey),
+		Match: getters.Static(match),
+	}, cat, ctx)
+	if err != nil {
+		return err
+	}
+
+	return Execute(w, "client_tabs", struct {
+		OuterClass   string
+		RibbonClass  string
+		ButtonClass  string
+		XData        string
+		Attrs        HTMLAttributes
+		RibbonAttrs  HTMLAttributes
+		ContentAttrs HTMLAttributes
+		Buttons      []clientTabButton
+		Panels       template.HTML
+	}{
+		OuterClass:   outerClass,
+		RibbonClass:  ribbonClass,
+		ButtonClass:  buttonClass,
+		XData:        string(xData),
+		Attrs:        attrs,
+		RibbonAttrs:  ribbonAttrs,
+		ContentAttrs: contentAttrs,
+		Buttons:      buttons,
+		Panels:       panels,
+	})
 }
 
 // GetKey returns the unique key identifier for this ClientTabs component.

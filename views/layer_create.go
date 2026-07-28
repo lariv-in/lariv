@@ -45,7 +45,7 @@ type LayerCreate[T any] struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing row creation on POST triggers.
-func (m LayerCreate[T]) Next(view View, next http.Handler) http.Handler {
+func (m LayerCreate[T]) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			next.ServeHTTP(w, r)
@@ -61,7 +61,7 @@ func (m LayerCreate[T]) Next(view View, next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-		values, fieldErrors = m.FormPatchers.Apply(view, r, values, fieldErrors)
+		values, fieldErrors = m.FormPatchers.Apply(*view, r, values, fieldErrors)
 		ctx = r.Context()
 		if len(fieldErrors) != 0 {
 			for fname, ferr := range fieldErrors {

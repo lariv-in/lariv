@@ -1,0 +1,31 @@
+{{define "assistant_chat_root"}}
+<div class="{{.RootClass}}" hx-ext="ws" ws-connect="{{.WSPath}}">
+	<script>{{.ChatScript}}</script>
+	<div id="llm_assistant_errors"></div>
+	<div id="llm_assistant_transcript" class="{{.TranscriptClass}}" x-init="$nextTick(() => { $el.scrollTop = $el.scrollHeight; setTimeout(() => { $el.scrollTop = $el.scrollHeight }, 100) })">{{.Transcript}}</div>
+	<div id="llm_assistant_stream" class="w-full max-w-2xl mx-auto mb-4 min-h-[1.5rem] border border-dashed border-base-300 rounded-lg p-4 text-sm"></div>
+	<form id="llm_assistant_chat_form" class="flex flex-col gap-2" ws-send="" x-data="{{.FormXData}}" x-init="syncStore()" @fk-multi-select.window="eventHandler($event)">
+		<input id="llm_assistant_session_id" type="hidden" name="session_id" value="{{.HiddenVal}}">
+		<template x-for="item in items" :key="item.Key">
+			<input type="hidden" name="Files" :value="item.Key">
+		</template>
+		<div class="flex flex-wrap gap-2" x-show="items.length > 0">
+			<template x-for="item in items" :key="item.Key">
+				<div class="flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-1 py-1 text-xs">
+					<span class="truncate max-w-[150px]" x-text="item.Value"></span>
+					<button type="button" class="btn btn-ghost btn-square btn-xs shrink-0" @click.stop="removeItem(item.Key)">{{.IconXMark}}</button>
+				</div>
+			</template>
+		</div>
+		<textarea id="llm_assistant_chat_message" name="message" class="textarea textarea-bordered w-full" rows="3" placeholder="Message…" required></textarea>
+		<div class="flex justify-end items-center gap-2">
+			<label class="btn btn-outline btn-square" :class="uploading ? 'loading loading-spinner' : ''" title="Upload files from device">
+				<input type="file" class="hidden" multiple @change="uploadFiles($event.target)">
+				{{.IconUpload}}
+			</label>
+			<button type="button" class="btn btn-outline btn-square" hx-get="{{.MultiSelectURL}}?target_input=Files" hx-target="body" hx-swap="beforeend" hx-push-url="false">{{.IconClip}}</button>
+			<button id="llm_assistant_chat_send" type="submit" class="btn btn-primary">Send</button>
+		</div>
+	</form>
+</div>
+{{end}}

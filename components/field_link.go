@@ -2,11 +2,10 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldLink represents a read-only hyperlink field.
@@ -35,7 +34,7 @@ type FieldLink struct {
 	// (Discouraged: Use layout containers or theme styling instead of custom styling overrides).
 	Classes string
 	// Attr is an optional Getter returning additional HTML attributes to apply to the link.
-	Attr getters.Getter[Node]
+	Attr getters.Getter[HTMLAttributes]
 }
 
 // GetKey returns the unique key identifier for this FieldLink component.
@@ -48,14 +47,14 @@ func (e FieldLink) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldLink component into an anchor Node, or a text Div if the URL is empty.
-func (e FieldLink) Build(ctx context.Context) Node {
+// Build compiles the FieldLink component into an anchor, or a text Div if the URL is empty.
+func (e FieldLink) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	href := ""
 	if e.Href != nil {
 		v, err := e.Href(ctx)
 		if err != nil {
 			slog.Error("FieldLink href getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		href = v
 	}
@@ -65,14 +64,11 @@ func (e FieldLink) Build(ctx context.Context) Node {
 			label = v
 		}
 	}
-	if href == "" {
-		return Div(Class(e.Classes), Text(label))
-	}
-	var extra Node = Raw("")
-	if e.Attr != nil {
-		if n, err := e.Attr(ctx); err == nil && n != nil {
-			extra = n
-		}
-	}
-	return A(Href(href), Class(e.Classes), extra, Text(label))
+	attrs, _ := ResolveAttrs(ctx, e.Attr)
+	return Execute(w, "field_link", struct {
+		Href    string
+		Label   string
+		Classes string
+		Attrs   HTMLAttributes
+	}{Href: href, Label: label, Classes: e.Classes, Attrs: attrs})
 }

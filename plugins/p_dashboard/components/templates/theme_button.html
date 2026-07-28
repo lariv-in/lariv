@@ -1,0 +1,6 @@
+{{define "theme_button"}}
+<button type="button" class="btn items-center {{.Classes}}" @click="toggleTheme()">
+	<span class="inline-flex items-center justify-center" x-show="theme === 'light'">{{.SunIcon}}</span>
+	<span class="inline-flex items-center justify-center" x-show="theme !== 'light'">{{.MoonIcon}}</span>
+</button>
+{{end}}

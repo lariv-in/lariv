@@ -1,0 +1,5 @@
+{{define "button_post"}}
+<form action="{{.URL}}" method="POST" hx-boost="true" @click.stop="">
+	<button type="submit" class="{{.Classes}}"{{attrs .Attrs}}>{{.Icon}}{{.Label}}</button>
+</form>
+{{end}}

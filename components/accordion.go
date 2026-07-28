@@ -1,12 +1,9 @@
-// Package components provides a set of reusable UI components and input controls
-// built on top of gomponents for structured, server-side rendered HTML generation.
 package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // AccordionItem represents a single collapsible section within an Accordion.
@@ -32,23 +29,34 @@ type Accordion struct {
 	Items []AccordionItem
 }
 
-// Build compiles the Accordion component into a gomponents Node representing the HTML structure.
-func (e Accordion) Build(ctx context.Context) Node {
-	var nodes []Node
+type accordionItemData struct {
+	Open     bool
+	Title    template.HTML
+	Children template.HTML
+}
+
+// Build compiles the Accordion component into HTML representing the collapsible structure.
+func (e Accordion) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	items := make([]accordionItemData, 0, len(e.Items))
 	for _, item := range e.Items {
-		var childNodes []Node
-		for _, child := range item.Children {
-			childNodes = append(childNodes, Render(child, ctx))
+		title, err := RenderHTML(item.Title, cat, ctx)
+		if err != nil {
+			return err
 		}
-		nodes = append(nodes,
-			Div(Class("collapse collapse-arrow bg-base-100 border border-base-300"),
-				El("input", Type("checkbox"), If(item.Open, Attr("checked", "checked"))),
-				Div(Class("collapse-title"), Render(item.Title, ctx)),
-				Div(Class("collapse-content"), Group(childNodes)),
-			),
-		)
+		children, err := RenderChildren(cat, ctx, item.Children)
+		if err != nil {
+			return err
+		}
+		items = append(items, accordionItemData{
+			Open:     item.Open,
+			Title:    title,
+			Children: children,
+		})
 	}
-	return Div(Class("join join-vertical w-full "+e.Classes), Group(nodes))
+	return Execute(w, "accordion", struct {
+		Classes string
+		Items   []accordionItemData
+	}{Classes: e.Classes, Items: items})
 }
 
 // GetKey returns the unique key identifier for this Accordion.

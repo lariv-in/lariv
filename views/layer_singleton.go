@@ -36,7 +36,7 @@ type LayerSingleton[T any] struct {
 }
 
 // Next wraps the downstream HTTP request handlers executing singleton loading or updates.
-func (m LayerSingleton[T]) Next(view View, next http.Handler) http.Handler {
+func (m LayerSingleton[T]) Next(view *View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		db, dberr := getters.DBFromContext(ctx)

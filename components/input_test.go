@@ -16,7 +16,6 @@ import (
 	"github.com/lariv-in/lariv/registry"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"maragu.dev/gomponents"
 )
 
 func TestInputImplementations(t *testing.T) {
@@ -126,7 +125,7 @@ func TestInputSelectBuildSelected(t *testing.T) {
 	current := getters.Static(registry.Pair[string, string]{Key: "b", Value: "Beta"})
 	input := InputSelect[string]{Label: "Pick", Name: "pick", Choices: choices, Getter: current}
 
-	html := renderNode(t, input.Build(context.Background()))
+	html := renderPage(t, input, context.Background())
 	if !strings.Contains(html, `selected`) || !strings.Contains(html, "Beta") {
 		t.Fatalf("expected selected Beta option in html: %s", html)
 	}
@@ -147,25 +146,25 @@ func TestHiddenInputsRenderTypedValues(t *testing.T) {
 	}{
 		{
 			name:     "checkbox",
-			html:     renderNode(t, InputCheckbox{Name: "Enabled", Hidden: true, Getter: getters.Static(false)}.Build(context.Background())),
+			html:     renderPage(t, InputCheckbox{Name: "Enabled", Hidden: true, Getter: getters.Static(false)}, context.Background()),
 			wantType: `type="hidden"`,
 			wantVal:  `value="false"`,
 		},
 		{
 			name:     "date",
-			html:     renderNode(t, InputDate{Name: "Date", Hidden: true, Getter: getters.Static(dateValue)}.Build(ctx)),
+			html:     renderPage(t, InputDate{Name: "Date", Hidden: true, Getter: getters.Static(dateValue)}, ctx),
 			wantType: `type="hidden"`,
 			wantVal:  `value="2026-04-15"`,
 		},
 		{
 			name:     "time",
-			html:     renderNode(t, InputTime{Name: "Time", Hidden: true, Getter: getters.Static(dateValue)}.Build(ctx)),
+			html:     renderPage(t, InputTime{Name: "Time", Hidden: true, Getter: getters.Static(dateValue)}, ctx),
 			wantType: `type="hidden"`,
 			wantVal:  `value="10:45"`,
 		},
 		{
 			name:     "datetime",
-			html:     renderNode(t, InputDatetime{Name: "Datetime", Hidden: true, Getter: getters.Static(dateValue)}.Build(ctx)),
+			html:     renderPage(t, InputDatetime{Name: "Datetime", Hidden: true, Getter: getters.Static(dateValue)}, ctx),
 			wantType: `type="hidden"`,
 			wantVal:  `value="2026-04-15T10:45"`,
 		},
@@ -297,7 +296,7 @@ func TestFormComponentBuildAddsMultipartEnctype(t *testing.T) {
 		},
 	}
 
-	html := renderNode(t, form.Build(context.Background()))
+	html := renderPage(t, form, context.Background())
 	if !strings.Contains(html, `enctype="multipart/form-data"`) {
 		t.Fatalf("expected multipart enctype in rendered form, got %s", html)
 	}
@@ -321,7 +320,7 @@ func TestFormComponentBuildPreservesContextValuesOverGetter(t *testing.T) {
 		"Name": fmt.Errorf("required"),
 	})
 
-	html := renderNode(t, form.Build(ctx))
+	html := renderPage(t, form, ctx)
 	if !strings.Contains(html, `value="context value"`) {
 		t.Fatalf("expected rerender context value to win over getter value, got %s", html)
 	}
@@ -384,7 +383,7 @@ func TestInputManyToManyBuildUsesAssociationIDsContext(t *testing.T) {
 		"Teachers": AssociationIDs{Field: "Teachers", IDs: []uint{2, 1}},
 	})
 
-	html := renderNode(t, input.Build(ctx))
+	html := renderPage(t, input, ctx)
 	if !strings.Contains(html, "Alpha") || !strings.Contains(html, "Beta") {
 		t.Fatalf("expected selected names in rendered html, got %s", html)
 	}
@@ -412,7 +411,7 @@ func TestInputManyToManyBuildEmptyStateUsesArray(t *testing.T) {
 		Placeholder: "Select teachers...",
 	}
 
-	html := renderNode(t, input.Build(context.Background()))
+	html := renderPage(t, input, context.Background())
 	if !strings.Contains(html, `items: []`) {
 		t.Fatalf("expected empty items array in x-data, got %s", html)
 	}
@@ -472,11 +471,11 @@ func openTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func renderNode(t *testing.T, node gomponents.Node) string {
+func renderPage(t *testing.T, p PageInterface, ctx context.Context) string {
 	t.Helper()
 	var out bytes.Buffer
-	if err := node.Render(&out); err != nil {
-		t.Fatalf("Render failed: %v", err)
+	if err := p.Build(EmptyCatalog{}, ctx, &out); err != nil {
+		t.Fatalf("Build failed: %v", err)
 	}
 	return out.String()
 }

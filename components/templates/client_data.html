@@ -1,0 +1,3 @@
+{{define "client_data"}}
+<div x-data="{{.Data}}"{{if .Init}} x-init="{{.Init}}"{{end}}>{{.Children}}</div>
+{{end}}

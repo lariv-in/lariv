@@ -29,7 +29,7 @@ func Select[T, D comparable](name string, valueGetter Getter[T], displayGetter G
 		if err != nil {
 			return "", err
 		}
-		// JSON object is a valid JS object literal here; gomponents.Attr HTML-escapes the full @click value once.
+		// JSON object is a valid JS object literal here; attribute rendering HTML-escapes the full @click value once.
 		// Close the dialog that contains this row (not "last body dialog") so nested/stacked modals cannot remove the wrong one.
 		js := fmt.Sprintf("$dispatch('fk-select', %s); $event.currentTarget.closest('dialog.modal')?.remove()", detail)
 		return js, nil

@@ -1,0 +1,8 @@
+{{define "input_nullable_text"}}
+<div class="{{.WrapClass}}">
+	<label class="label text-sm font-bold flex flex-col items-start gap-1">
+		{{if not .Hidden}}{{.Label}}{{end}}
+		<input type="{{.Type}}" name="{{.Name}}" value="{{.Value}}" class="input input-bordered w-full {{.Classes}}"{{if .Required}} required{{end}}{{attrs .Attrs}}>
+	</label>
+</div>
+{{end}}

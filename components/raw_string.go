@@ -2,8 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
+	"html/template"
+	"io"
 )
 
 // RawString is a component that can be used to return un-escaped string
@@ -25,7 +25,7 @@ func (e RawString) GetRoles() []string {
 	return e.Roles
 }
 
-// Build returns the content wrapped in a Raw Node
-func (e RawString) Build(ctx context.Context) Node {
-	return Raw(e.Content)
+// Build writes the unescaped HTML content.
+func (e RawString) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	return Execute(w, "raw_string", struct{ Content template.HTML }{Content: template.HTML(e.Content)})
 }

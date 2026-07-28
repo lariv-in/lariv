@@ -1,0 +1,17 @@
+{{define "input_many_to_many"}}
+<div class="my-1 relative {{.Classes}}" x-data="{{.AlpineData}}" x-init="syncStore()" @fk-multi-select.window="{{.EventHandler}}">
+	<div class="flex flex-col items-start gap-1">
+		{{if .Label}}<label class="label text-sm font-bold">{{.Label}}</label>{{end}}
+		<div class="input input-bordered w-full min-h-12 h-auto flex flex-wrap items-center gap-2 cursor-pointer" :class="items.length ? '' : 'opacity-50'" hx-get="{{.URL}}" hx-target="{{.HXTarget}}" hx-swap="{{.HXSwap}}" hx-push-url="false">
+			<span x-show="items.length === 0" x-text="placeholder"></span>
+			<template x-for="item in items" :key="item.Key">
+				<div class="flex items-center gap-1 rounded-lg bg-base-200 pl-2 pr-1 py-1" @click="$event.stopPropagation()">
+					<input type="hidden" name="{{.Name}}" :value="item.Key">
+					<span class="text-sm flex-1 min-w-0 truncate" x-text="item.Value"></span>
+					<button type="button" class="btn btn-ghost btn-square btn-xs shrink-0" @click.stop="removeItem({ value: item.Key })" aria-label="Remove">{{.RemoveIcon}}</button>
+				</div>
+			</template>
+		</div>
+	</div>
+</div>
+{{end}}

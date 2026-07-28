@@ -6,17 +6,14 @@ import (
 	"fmt"
 	neturl "net/url"
 	"strings"
-
-	"maragu.dev/gomponents"
-	ghtml "maragu.dev/gomponents/html"
 )
 
 // FormBubbling returns attributes for [components.FormComponent].Attr: HTTP POST plus Alpine
 // @submit.prevent that stops native submit and dispatches a bubbling CustomEvent "lariv-form-submit"
 // from the form with detail { form: <form element>, name: string }. Parents (e.g. [components.ButtonModalForm],
 // or [components.FormListenBoostedPost]) handle the request.
-func FormBubbling(name Getter[string]) Getter[gomponents.Node] {
-	return func(ctx context.Context) (gomponents.Node, error) {
+func FormBubbling(name Getter[string]) Getter[map[string]string] {
+	return func(ctx context.Context) (map[string]string, error) {
 		if name == nil {
 			return nil, fmt.Errorf("FormBubbling: Name is nil")
 		}
@@ -28,26 +25,26 @@ func FormBubbling(name Getter[string]) Getter[gomponents.Node] {
 		if err != nil {
 			return nil, err
 		}
-		return gomponents.Group{
-			ghtml.Method("POST"),
-			gomponents.Attr("hx-boost", "false"),
-			gomponents.Attr("@submit.prevent", fmt.Sprintf(
+		return map[string]string{
+			"method":   "POST",
+			"hx-boost": "false",
+			"@submit.prevent": fmt.Sprintf(
 				`(function(evt){evt.preventDefault();var f=(evt.currentTarget&&evt.currentTarget.tagName==='FORM')?evt.currentTarget:(evt.target&&evt.target.closest&&evt.target.closest('form'));if(!f)return;f.dispatchEvent(new CustomEvent('lariv-form-submit',{bubbles:true,detail:{form:f,name:%s}}))})($event)`,
 				nLit,
-			)),
+			),
 		}, nil
 	}
 }
 
 // FormBubblingWithDataPostURL is [FormBubbling] plus data-lariv-post-url on the form (merges ?name= into postURLBase) so row-scoped POST targets work when many modal openers share one dialog id.
-func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]) Getter[gomponents.Node] {
-	return func(ctx context.Context) (gomponents.Node, error) {
-		bub, err := FormBubbling(name)(ctx)
+func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]) Getter[map[string]string] {
+	return func(ctx context.Context) (map[string]string, error) {
+		attrs, err := FormBubbling(name)(ctx)
 		if err != nil {
 			return nil, err
 		}
 		if postURLBase == nil {
-			return bub, nil
+			return attrs, nil
 		}
 		u, err := postURLBase(ctx)
 		if err != nil {
@@ -55,7 +52,7 @@ func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]
 		}
 		u = strings.TrimSpace(u)
 		if u == "" {
-			return bub, nil
+			return attrs, nil
 		}
 		resolvedName, err := name(ctx)
 		if err != nil {
@@ -67,7 +64,12 @@ func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]
 			parsed.RawQuery = q.Encode()
 			u = parsed.String()
 		}
-		return gomponents.Group{bub, gomponents.Attr("data-lariv-post-url", u)}, nil
+		out := make(map[string]string, len(attrs)+1)
+		for k, v := range attrs {
+			out[k] = v
+		}
+		out["data-lariv-post-url"] = u
+		return out, nil
 	}
 }
 
@@ -75,8 +77,8 @@ func FormBubblingWithDataPostURL(name Getter[string], postURLBase Getter[string]
 // issues a boosted GET via htmx.ajax (outerHTML swap). When the form is inside a modal
 // (dialog.modal), the swap target is that dialog so the list modal refreshes in place;
 // otherwise the target is body for full-page list filters.
-func FormBoostedGet(path Getter[string]) Getter[gomponents.Node] {
-	return func(ctx context.Context) (gomponents.Node, error) {
+func FormBoostedGet(path Getter[string]) Getter[map[string]string] {
+	return func(ctx context.Context) (map[string]string, error) {
 		url, err := IfOr(path, ctx, "")
 		if err != nil {
 			return nil, err
@@ -85,12 +87,12 @@ func FormBoostedGet(path Getter[string]) Getter[gomponents.Node] {
 		if err != nil {
 			return nil, err
 		}
-		return gomponents.Group{
-			ghtml.Method("GET"),
-			gomponents.Attr("@submit.prevent", fmt.Sprintf(
+		return map[string]string{
+			"method": "GET",
+			"@submit.prevent": fmt.Sprintf(
 				`(function(evt){var t=evt&&evt.target;var f=t&&t.closest&&t.closest('form');if(!f)return;var m=f.closest('dialog.modal');var o={source:f,swap:'outerHTML',values:htmx.values(f),headers:{'HX-Boosted':'true'}};o.target=m||'body';o.pushUrl=!m;htmx.ajax('GET',%s,o)})($event)`,
 				urlLit,
-			)),
+			),
 		}, nil
 	}
 }

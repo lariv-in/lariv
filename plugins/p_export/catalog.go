@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/lariv-in/lariv"
+	"github.com/lariv-in/lariv/registry"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -45,7 +45,15 @@ type ExportCatalog struct {
 }
 
 func BuildExportCatalog(db *gorm.DB) (ExportCatalog, error) {
-	models := lariv.RegistryModel.AllStable()
+	return BuildExportCatalogFrom(db, nil)
+}
+
+// BuildExportCatalogFrom builds the export catalog from an explicit model list.
+// If models is nil, models are taken from the [lariv.App] in ctx when provided via BuildExportCatalogContext.
+func BuildExportCatalogFrom(db *gorm.DB, models *[]registry.Pair[string, any]) (ExportCatalog, error) {
+	if models == nil {
+		models = &[]registry.Pair[string, any]{}
+	}
 	entries := make([]ModelCatalogEntry, 0, len(*models))
 	joinTables := map[string]JoinTableEntry{}
 

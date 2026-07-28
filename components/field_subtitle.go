@@ -2,11 +2,10 @@ package components
 
 import (
 	"context"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldSubtitle represents a read-only subtitle or descriptor header field.
@@ -37,16 +36,18 @@ func (e FieldSubtitle) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldSubtitle component into a Div Node styled as gray secondary text.
-func (e FieldSubtitle) Build(ctx context.Context) Node {
+// Build compiles the FieldSubtitle component into a Div styled as gray secondary text.
+func (e FieldSubtitle) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	value := ""
 	if e.Getter != nil {
 		v, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldSubtitle getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		value = v
 	}
-	return Div(Class("text-md text-gray-500"), Text(value))
+	return Execute(w, "field_subtitle", struct {
+		Value string
+	}{Value: value})
 }

@@ -140,18 +140,17 @@
 //
 //		"github.com/lariv-in/lariv/components"
 //		"github.com/lariv-in/lariv/registry"
-//		"maragu.dev/gomponents"
-//		"maragu.dev/gomponents/html"
+//		"html/template"
+//		"io"
 //	)
 //
 //	type HelloPage struct {
 //		components.Page // Embeds Key and Roles field helpers
 //	}
 //
-//	func (p HelloPage) Build(ctx context.Context) gomponents.Node {
-//		return html.Div(
-//			html.H1(gomponents.Text("Hello, World!")),
-//		)
+//	func (p HelloPage) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
+//		_, err := io.WriteString(w, `<div><h1>Hello, World!</h1></div>`)
+//		return err
 //	}
 //
 //	func pluginPages() lariv.PluginFeatures[components.PageInterface] {
@@ -211,12 +210,12 @@
 //			myplugin.GetPlugin(),
 //		}
 //
-//		config, err := lariv.LoadConfigFromFile("config.toml", plugins)
+//		app, err := lariv.NewBuilder().AddPlugins(plugins).LoadConfigFromFile("config.toml")
 //		if err != nil {
 //			log.Fatalf("failed to load configuration: %v", err)
 //		}
 //
-//		if err := lariv.Start(config, plugins); err != nil {
+//		if err := app.Start(); err != nil {
 //			log.Fatalf("failed to start server: %v", err)
 //		}
 //	}

@@ -2,11 +2,11 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldList represents a generic read-only list component that iterates over a slice of items of type T.
@@ -36,27 +36,30 @@ type FieldList[T any] struct {
 	Children []PageInterface // template for each item
 }
 
-// Build compiles the FieldList component by fetching the slice, setting the item in the context, and rendering the child template Nodes.
-func (e FieldList[T]) Build(ctx context.Context) Node {
-	var listNodes Group
+// Build compiles the FieldList component by fetching the slice, setting the item in the context, and rendering the child templates.
+func (e FieldList[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	var items []template.HTML
 
 	if e.Getter != nil {
 		rawData, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldList getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		for _, item := range rawData {
 			itemCtx := context.WithValue(ctx, "$row", item)
-			var childrenNodes Group
-			for _, child := range e.Children {
-				childrenNodes = append(childrenNodes, Render(child, itemCtx))
+			children, err := RenderChildren(cat, itemCtx, e.Children)
+			if err != nil {
+				return err
 			}
-			listNodes = append(listNodes, Div(Class("list-item ml-4"), childrenNodes))
+			items = append(items, children)
 		}
 	}
 
-	return Div(Class(e.Classes), listNodes)
+	return Execute(w, "field_list", struct {
+		Classes string
+		Items   []template.HTML
+	}{Classes: e.Classes, Items: items})
 }
 
 // GetKey returns the unique key identifier for this FieldList component.

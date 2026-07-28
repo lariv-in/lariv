@@ -141,12 +141,10 @@ func (m UserMessage) Save(r *http.Request) (UserMessage, error) {
 	}
 
 	inner := strings.TrimSpace(assistantGenaiContentHTML(ctx, &content))
-	var sb strings.Builder
-	_ = assistantBubbleUserHTML(inner).Render(&sb)
 	m.RenderedHTML = fmt.Sprintf(
 		`<input id="llm_assistant_session_id" hx-swap-oob="true" type="hidden" name="session_id" value="%d"><div id="llm_assistant_transcript" hx-swap-oob="beforeend">%s</div>`,
 		m.SessionID,
-		sb.String(),
+		assistantBubbleUserHTML(inner),
 	)
 
 	return m, nil
@@ -365,11 +363,9 @@ func assistantToolHTML(ctx context.Context, content *genai.Content) string {
 	if inner == "" {
 		inner = `<span class="opacity-50 text-sm">(empty)</span>`
 	}
-	var sb strings.Builder
-	_ = assistantBubbleToolHTML(inner).Render(&sb)
 	return fmt.Sprintf(
 		`<div id="llm_assistant_transcript" hx-swap-oob="beforeend">%s</div>`,
-		sb.String(),
+		assistantBubbleToolHTML(inner),
 	)
 }
 
@@ -378,11 +374,9 @@ func assistantFinalHTML(ctx context.Context, content *genai.Content) string {
 	if inner == "" {
 		inner = `<span class="opacity-50">(empty)</span>`
 	}
-	var sb strings.Builder
-	_ = assistantBubbleAssistantHTML(inner).Render(&sb)
 	return fmt.Sprintf(
 		`<div id="llm_assistant_transcript" hx-swap-oob="beforeend">%s</div>`,
-		sb.String(),
+		assistantBubbleAssistantHTML(inner),
 	)
 }
 

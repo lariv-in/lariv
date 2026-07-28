@@ -9,7 +9,7 @@ import (
 
 const AppURL = "/blog/"
 
-// GetPlugin returns registry contributions for [lariv.BuildAllRegistries].
+// GetPlugin returns registry contributions for [lariv.AppBuilder].
 func GetPlugin() registry.Pair[string, lariv.Plugin] {
 	u, _ := url.Parse(AppURL)
 
@@ -26,6 +26,7 @@ func GetPlugin() registry.Pair[string, lariv.Plugin] {
 			Views:       lariv.PluginStages(pluginViews),
 			Pages:       lariv.PluginStages(pluginPages),
 			Routes:      lariv.PluginStages(pluginRoutes),
+			Admin:       lariv.PluginStages(pluginAdmin),
 		},
 	}
 }

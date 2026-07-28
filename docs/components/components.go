@@ -31,8 +31,8 @@
 //		"context"
 //		"io"
 //		"github.com/lariv-in/lariv/components"
-//		"maragu.dev/gomponents"
-//		html "maragu.dev/gomponents/html"
+//		"html/template"
+//		"io"
 //	)
 //
 //	type BadgeComponent struct {
@@ -49,12 +49,8 @@
 //		return b.Roles
 //	}
 //
-//	func (b BadgeComponent) Build(ctx context.Context) gomponents.Node {
-//		return gomponents.NodeFunc(func(w io.Writer) error {
-//			return html.Span(
-//				html.Class("badge badge-"+b.Color),
-//				gomponents.Text(b.Label),
-//			).Render(w)
-//		})
+//	func (b BadgeComponent) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
+//		_, err := fmt.Fprintf(w, `<span class="badge badge-%s">%s</span>`, b.Color, template.HTMLEscapeString(b.Label))
+//		return err
 //	}
 package components

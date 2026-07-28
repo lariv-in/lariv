@@ -1,0 +1,8 @@
+{{define "input_phone"}}
+<div class="my-1 {{.Classes}}">
+	<label class="label text-sm font-bold flex flex-col items-start gap-1">
+		{{.Label}}
+		<input type="tel" name="{{.Name}}" value="{{.Value}}" class="input input-bordered w-full {{.Classes}}"{{if .Required}} required{{end}}>
+	</label>
+</div>
+{{end}}

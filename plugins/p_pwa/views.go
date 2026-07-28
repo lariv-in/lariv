@@ -3,6 +3,7 @@ package p_pwa
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,8 +13,6 @@ import (
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/registry"
 	"github.com/lariv-in/lariv/views"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 const (
@@ -29,8 +28,8 @@ type pwaAssetPage struct {
 	components.Page
 }
 
-func (pwaAssetPage) Build(context.Context) Node {
-	return Group{}
+func (pwaAssetPage) Build(components.Catalog, context.Context, io.Writer) error {
+	return nil
 }
 
 func (p pwaAssetPage) GetKey() string {
@@ -216,6 +215,15 @@ func assetLinksHandler(_ *views.View) http.Handler {
 	})
 }
 
+type pwaManifestLink struct {
+	components.Page
+}
+
+func (pwaManifestLink) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
+	_, err := io.WriteString(w, `<link rel="manifest" href="/app.webmanifest">`)
+	return err
+}
+
 func pluginViews() lariv.PluginFeatures[*views.View] {
 	return lariv.PluginFeatures[*views.View]{
 		Entries: []registry.Pair[string, *views.View]{
@@ -228,6 +236,15 @@ func pluginViews() lariv.PluginFeatures[*views.View] {
 	}
 }
 
-func init() {
-	_ = components.RegistryShellHeadNodes.Register("pwa.manifestLink", Link(Rel("manifest"), Href("/app.webmanifest")))
+func pluginHeadNodes() lariv.PluginFeatures[components.PageInterface] {
+	return lariv.PluginFeatures[components.PageInterface]{
+		Entries: []registry.Pair[string, components.PageInterface]{
+			{Key: "pwa.manifestLink", Value: pwaManifestLink{}},
+		},
+		Patches: []registry.Pair[string, func(components.PageInterface) components.PageInterface]{
+			{Key: "core.Title", Value: func(_ components.PageInterface) components.PageInterface {
+				return pwaTitle{}
+			}},
+		},
+	}
 }

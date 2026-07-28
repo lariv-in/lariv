@@ -2,9 +2,8 @@ package components
 
 import (
 	"context"
-
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
+	"html/template"
+	"io"
 )
 
 // ClientShow toggles the visibility of its children using Alpine.js's x-show directive.
@@ -35,19 +34,19 @@ type ClientShow struct {
 	// Condition specifies a valid client-side Alpine.js expression to evaluate (e.g. "showMore").
 	Condition string
 	// Children represents the child components whose visibility is toggled.
-	Children  []PageInterface
+	Children []PageInterface
 }
 
-// Build compiles the ClientShow component into a div Node containing Alpine x-show attribute.
-func (e ClientShow) Build(ctx context.Context) Node {
-	group := Group{}
-	for _, child := range e.Children {
-		group = append(group, Render(child, ctx))
+// Build compiles the ClientShow component into a div containing Alpine x-show attribute.
+func (e ClientShow) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-	return Div(
-		If(e.Condition != "", Attr("x-show", e.Condition)),
-		group,
-	)
+	return Execute(w, "client_show", struct {
+		Condition string
+		Children  template.HTML
+	}{Condition: e.Condition, Children: children})
 }
 
 // GetKey returns the unique key identifier for this ClientShow component.

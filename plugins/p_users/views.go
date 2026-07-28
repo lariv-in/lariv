@@ -39,7 +39,7 @@ func changeUserPassword(db *gorm.DB, userID uint, newPassword string) error {
 
 type authenticatedUserDetailLayer struct{}
 
-func (authenticatedUserDetailLayer) Next(_ views.View, next http.Handler) http.Handler {
+func (authenticatedUserDetailLayer) Next(_ *views.View, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authUser := UserFromContext(r.Context(), "authenticatedUserDetailLayer")
 		db, dberr := getters.DBFromContext(r.Context())

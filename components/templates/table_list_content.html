@@ -1,0 +1,30 @@
+{{define "table_list_content"}}
+<div class="table-container flex flex-col rounded-box border border-base-300 bg-base-100">
+	<div class="overflow-x-auto">
+		<table class="table table-zebra">
+			<thead>
+				<tr>
+					{{range .Headers}}
+					<th class="whitespace-nowrap min-w-[100px]">
+						{{if .SortURL}}
+						<a href="{{.SortURL}}" hx-get="{{.SortURL}}" hx-target="closest .data-table-container" hx-swap="outerHTML" hx-push-url="{{.PushURL}}" class="link link-hover link-neutral no-underline hover:underline cursor-pointer font-inherit text-inherit inline-flex items-center gap-1">{{.Label}}</a>
+						{{else}}
+						{{.Label}}
+						{{end}}
+					</th>
+					{{end}}
+				</tr>
+			</thead>
+			<tbody>
+				{{if .Empty}}
+				<tr><td colspan="{{.ColSpan}}" class="text-center opacity-50 py-8">Table is empty</td></tr>
+				{{else}}
+				{{range .Rows}}
+				<tr{{attrs .Attrs}}>{{range .Cells}}<td class="whitespace-nowrap truncate max-w-xs min-w-[100px]">{{.}}</td>{{end}}</tr>
+				{{end}}
+				{{end}}
+			</tbody>
+		</table>
+	</div>
+</div>
+{{end}}

@@ -1,0 +1,6 @@
+{{define "table_button_filter"}}
+<details class="dropdown dropdown-end" @click.outside="if(!$event.target.closest('.fk-modal-container')){$el.removeAttribute('open')}">
+	<summary class="btn btn-square dropdown-toggle btn-primary btn-sm">{{.Icon}}</summary>
+	<div class="{{.ContentClass}}">{{.Panel}}</div>
+</details>
+{{end}}

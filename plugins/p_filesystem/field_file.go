@@ -3,26 +3,20 @@ package p_filesystem
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
-	"time"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
-func buildFileInfo(v VNode, classes string, ctx context.Context) Node {
-	timezone, _ := ctx.Value("$tz").(*time.Location)
-	if timezone == nil {
-		timezone = components.DefaultTimeZone
-	}
+func buildFileInfo(v VNode, classes string, cat components.Catalog, ctx context.Context, w io.Writer) error {
 	rowClass := fmt.Sprintf("flex items-center gap-2 text-sm %s", classes)
-	children := []Node{
-		components.Render(components.Icon{Name: "document"}, ctx),
-		Span(Text(v.Name)),
-		Span(Class("opacity-50"), Text(fmt.Sprintf("(%s)", v.FileSizeDisplay()))),
+	icon, err := components.RenderHTML(components.Icon{Name: "document"}, cat, ctx)
+	if err != nil {
+		return err
 	}
 
 	detailURL, err := lariv.RoutePath("filesystem.DetailRoute", map[string]getters.Getter[any]{
@@ -30,14 +24,33 @@ func buildFileInfo(v VNode, classes string, ctx context.Context) Node {
 	})(ctx)
 	if err != nil {
 		slog.Error("buildFileInfo detail route resolution failed", "error", err, "vnodeID", v.ID)
-		return Div(Class(rowClass), Group(children))
+		return executeTemplate(w, "field_file", struct {
+			Href     string
+			RowClass string
+			Icon     template.HTML
+			Name     string
+			Size     string
+		}{
+			RowClass: rowClass,
+			Icon:     icon,
+			Name:     v.Name,
+			Size:     v.FileSizeDisplay(),
+		})
 	}
 
-	return A(
-		Href(detailURL),
-		Class(rowClass+" link link-hover"),
-		Group(children),
-	)
+	return executeTemplate(w, "field_file", struct {
+		Href     string
+		RowClass string
+		Icon     template.HTML
+		Name     string
+		Size     string
+	}{
+		Href:     detailURL,
+		RowClass: rowClass,
+		Icon:     icon,
+		Name:     v.Name,
+		Size:     v.FileSizeDisplay(),
+	})
 }
 
 type FieldFile struct {
@@ -54,7 +67,7 @@ func (e FieldFile) GetRoles() []string {
 	return e.Roles
 }
 
-func (e FieldFile) Build(ctx context.Context) Node {
+func (e FieldFile) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	if e.VNode == nil {
 		return nil
 	}
@@ -68,5 +81,5 @@ func (e FieldFile) Build(ctx context.Context) Node {
 		return nil
 	}
 
-	return buildFileInfo(v, e.Classes, ctx)
+	return buildFileInfo(v, e.Classes, cat, ctx, w)
 }

@@ -1,11 +1,6 @@
 package lariv
 
 import (
-	"fmt"
-	"log/slog"
-	"os"
-	"path/filepath"
-
 	"github.com/BurntSushi/toml"
 	"github.com/lariv-in/lariv/registry"
 	"gorm.io/driver/postgres"
@@ -45,71 +40,49 @@ const (
 	DBTypePostgres = DBType("Postgres")
 )
 
-// LoadConfigFromFile decodes a TOML configuration file, registers application plugins,
-// initializes database connections, decodes specific plugin configurations, and runs database migrations and hooks.
+// Config defines the interface implemented by plugin config structs to receive and validate parsed settings from TOML files.
+// PostConfig is executed automatically after settings are mapped, enabling validation or setting default values.
 //
 // Use Cases:
-//   - Parsing configurations from files at startup before running the Cobra TUI or web server.
+//   - Defining configuration tables for plugins (e.g. storage paths, API client secrets).
 //
-// Example:
+// Example Definition:
 //
-//	config, err := lariv.LoadConfigFromFile("config.toml", plugins)
-//	if err != nil {
-//		log.Fatal(err)
+//	type DashboardConfig struct {
+//		AppName string
 //	}
+//
+//	func (c *DashboardConfig) PostConfig() {
+//		if c.AppName == "" {
+//			c.AppName = "My Dashboard App"
+//		}
+//	}
+//
+// Example Registration:
+//
+//	var DashboardConfigPtr = &DashboardConfig{}
+//
+//	// Register the config instance inside your lariv.Plugin configuration:
+//	lariv.Plugin{
+//		Configs: lariv.PluginStages(func() PluginFeatures[Config] {
+//			return PluginFeatures[Config]{
+//				Entries: []registry.Pair[string, Config]{
+//					registry.NewPair("dashboard", DashboardConfigPtr),
+//				},
+//			}
+//		}),
+//	}
+type Config interface {
+	// PostConfig executes sanity checks and assigns default values after TOML values are loaded.
+	PostConfig()
+}
+
+// LoadConfigFromFile decodes a TOML configuration file via [AppBuilder] and returns the config.
+// Prefer NewBuilder().AddPlugins(plugins).LoadConfigFromFile(path) to retain the [*App].
 func LoadConfigFromFile(path string, plugins []registry.Pair[string, Plugin]) (LarivConfig, error) {
-	var config LarivConfig
-
-	if path == "" {
-		return config, fmt.Errorf("config path is empty")
-	}
-
-	resolvedPath := path
-	if !filepath.IsAbs(resolvedPath) {
-		if _, err := os.Stat(resolvedPath); err == nil {
-			// File exists in the current working directory, use it directly.
-		} else {
-			// Fallback to the directory of the binary.
-			exe, err := os.Executable()
-			if err != nil {
-				slog.Error("failed resolving executable path for config file", "err", err, "configPath", path)
-				return config, err
-			}
-			resolvedPath = filepath.Join(filepath.Dir(exe), resolvedPath)
-		}
-	}
-
-	md, err := toml.DecodeFile(resolvedPath, &config)
+	app, err := NewBuilder().AddPlugins(plugins).LoadConfigFromFile(path)
 	if err != nil {
-		slog.Error("failed decoding config file", "err", err, "configPath", path, "resolvedPath", resolvedPath)
-		return config, err
+		return LarivConfig{}, err
 	}
-
-	db, err := GetDbConn(config)
-	if err != nil {
-		return config, err
-	}
-	BuildAllRegistries(append([]registry.Pair[string, Plugin]{CorePlugin(db, config)}, plugins...))
-
-	// Decode plugin configs before InitDB so DB-init hooks (e.g. background
-	// workers started in a hook) observe fully populated config rather than
-	// racing against config decoding.
-	for key, cfgPointer := range RegistryConfig.All() {
-		if prim, ok := config.Plugins[key]; ok {
-			err = md.PrimitiveDecode(prim, cfgPointer)
-			if err != nil {
-				slog.Error("failed decoding plugin config", "err", err, "plugin", key)
-				return config, err
-			}
-		}
-		// Run even when the app has no [Plugins.<key>] table, so plugins can require fields
-		// (e.g. panic if mandatory secrets are missing) instead of silently skipping validation.
-		cfgPointer.PostConfig()
-	}
-
-	if err := InitDB(db, config); err != nil {
-		return config, err
-	}
-
-	return config, nil
+	return app.Config, nil
 }

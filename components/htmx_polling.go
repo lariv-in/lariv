@@ -2,10 +2,10 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // HTMXPolling represents a container component that periodically polls a server endpoint using HTMX.
@@ -33,23 +33,20 @@ type HTMXPolling struct {
 	Children []PageInterface
 }
 
-// Build compiles the HTMXPolling component into a Div Node with HTMX polling attributes.
-func (e HTMXPolling) Build(ctx context.Context) Node {
-	var children Group
-	for _, child := range e.Children {
-		children = append(children, Render(child, ctx))
+// Build compiles the HTMXPolling component into a Div with HTMX polling attributes.
+func (e HTMXPolling) Build(cat Catalog, ctx context.Context, w io.Writer) error {
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
 	url, err := e.URL(ctx)
 	if err != nil {
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
-	return Div(
-		Attr("hx-get", url),
-		Attr("hx-target", "body"),
-		Attr("hx-swap", "outerHTML"),
-		Attr("hx-trigger", "every 2s"),
-		children,
-	)
+	return Execute(w, "htmx_polling", struct {
+		URL      string
+		Children template.HTML
+	}{URL: url, Children: children})
 }
 
 // GetKey returns the unique key identifier for this HTMXPolling component.

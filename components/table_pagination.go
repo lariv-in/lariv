@@ -2,13 +2,12 @@ package components
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // TablePagination represents the list pagination buttons row component for DataTable widgets.
@@ -39,8 +38,16 @@ func (e TablePagination[T]) GetRoles() []string {
 	return e.Roles
 }
 
+type tablePaginationPage struct {
+	Ellipsis bool
+	URL      string
+	PushURL  string
+	Classes  string
+	Label    string
+}
+
 // Build compiles the TablePagination component into a centered list pagination buttons row.
-func (e TablePagination[T]) Build(ctx context.Context) Node {
+func (e TablePagination[T]) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Data == nil {
 		return nil
 	}
@@ -60,7 +67,7 @@ func (e TablePagination[T]) Build(ctx context.Context) Node {
 		return nil // Cannot reconstruct URL without request
 	}
 
-	var pages []Node
+	var pages []tablePaginationPage
 
 	n := int(number)
 	np := int(numPages)
@@ -74,7 +81,7 @@ func (e TablePagination[T]) Build(ctx context.Context) Node {
 
 	if startPage > 1 {
 		pages = append(pages, e.pageButton(req, 1, number == 1),
-			Button(Disabled(), Class("join-item btn btn-sm"), Text("...")))
+			tablePaginationPage{Ellipsis: true})
 	}
 
 	for p := startPage; p <= endPage; p++ {
@@ -82,21 +89,17 @@ func (e TablePagination[T]) Build(ctx context.Context) Node {
 	}
 
 	if endPage < np {
-		pages = append(pages, Button(Disabled(), Class("join-item btn btn-sm"), Text("...")),
+		pages = append(pages, tablePaginationPage{Ellipsis: true},
 			e.pageButton(req, np, number == numPages))
 	}
 
-	return Div(
-		Class("flex flex-col justify-center items-center gap-2 p-4"),
-		Div(
-			Class("join"),
-			Group(pages),
-		),
-	)
+	return Execute(w, "table_pagination", struct {
+		Pages []tablePaginationPage
+	}{Pages: pages})
 }
 
-// pageButton constructs a single navigation button Node linked to page index p.
-func (e TablePagination[T]) pageButton(req *http.Request, p int, active bool) Node {
+// pageButton constructs a single navigation button linked to page index p.
+func (e TablePagination[T]) pageButton(req *http.Request, p int, active bool) tablePaginationPage {
 	u := *req.URL
 	q := u.Query()
 	q.Set("page", strconv.Itoa(p))
@@ -112,13 +115,10 @@ func (e TablePagination[T]) pageButton(req *http.Request, p int, active bool) No
 		pushURL = "false"
 	}
 
-	return A(
-		Href(u.String()),
-		Attr("hx-get", u.String()),
-		Attr("hx-target", "closest .data-table-container"),
-		Attr("hx-swap", "outerHTML"),
-		Attr("hx-push-url", pushURL),
-		Class(classes),
-		Text(strconv.Itoa(p)),
-	)
+	return tablePaginationPage{
+		URL:     u.String(),
+		PushURL: pushURL,
+		Classes: classes,
+		Label:   strconv.Itoa(p),
+	}
 }

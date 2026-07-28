@@ -1,0 +1,11 @@
+{{define "accordion"}}
+<div class="join join-vertical w-full {{.Classes}}">
+	{{range .Items}}
+	<div class="collapse collapse-arrow bg-base-100 border border-base-300">
+		<input type="checkbox"{{if .Open}} checked="checked"{{end}}>
+		<div class="collapse-title">{{.Title}}</div>
+		<div class="collapse-content">{{.Children}}</div>
+	</div>
+	{{end}}
+</div>
+{{end}}

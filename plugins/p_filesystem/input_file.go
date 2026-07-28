@@ -2,11 +2,11 @@ package p_filesystem
 
 import (
 	"context"
+	"io"
 
 	"github.com/lariv-in/lariv"
 	"github.com/lariv-in/lariv/components"
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
 )
 
 type InputFile struct {
@@ -27,7 +27,7 @@ func (e InputFile) GetRoles() []string {
 	return e.Roles
 }
 
-func (e InputFile) Build(ctx context.Context) Node {
+func (e InputFile) Build(cat components.Catalog, ctx context.Context, w io.Writer) error {
 	fk := components.InputForeignKey[VNode]{
 		Page:        e.Page,
 		Label:       e.Label,
@@ -39,7 +39,7 @@ func (e InputFile) Build(ctx context.Context) Node {
 		Required:    e.Required,
 		Classes:     e.Classes,
 	}
-	return fk.Build(ctx)
+	return fk.Build(cat, ctx, w)
 }
 
 func (e InputFile) Parse(v any, ctx context.Context) (any, error) {

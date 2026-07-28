@@ -3,11 +3,11 @@ package components
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // ShowIf represents a conditional container component.
@@ -36,23 +36,25 @@ type ShowIf struct {
 }
 
 // Build compiles the ShowIf component, rendering nested children if the resolved Getter value is truthy.
-func (e ShowIf) Build(ctx context.Context) Node {
+func (e ShowIf) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	if e.Getter == nil {
-		return Group{}
+		return nil
 	}
 	v, err := e.Getter(ctx)
 	if err != nil {
 		slog.Error("ShowIf getter failed", "error", err, "key", e.Key)
-		return ContainerError{Error: getters.Static(err)}.Build(ctx)
+		return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 	}
 	if !isTruthy(v) {
-		return Group{}
+		return nil
 	}
-	var nodes []Node
-	for _, child := range e.Children {
-		nodes = append(nodes, Render(child, ctx))
+	children, err := RenderChildren(cat, ctx, e.Children)
+	if err != nil {
+		return err
 	}
-	return Div(Group(nodes))
+	return Execute(w, "show_if", struct {
+		Children template.HTML
+	}{Children: children})
 }
 
 // GetKey returns the unique key identifier for this ShowIf component.

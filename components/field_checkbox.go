@@ -2,11 +2,11 @@ package components
 
 import (
 	"context"
+	"html/template"
+	"io"
 	"log/slog"
 
 	"github.com/lariv-in/lariv/getters"
-	. "maragu.dev/gomponents"
-	. "maragu.dev/gomponents/html"
 )
 
 // FieldCheckbox represents a read-only field that displays boolean values as icons.
@@ -37,20 +37,27 @@ func (e FieldCheckbox) GetRoles() []string {
 	return e.Roles
 }
 
-// Build compiles the FieldCheckbox component into a Span Node containing the check or X icon.
-func (e FieldCheckbox) Build(ctx context.Context) Node {
+// Build compiles the FieldCheckbox component into a Span containing the check or X icon.
+func (e FieldCheckbox) Build(cat Catalog, ctx context.Context, w io.Writer) error {
 	truthy := false
 	if e.Getter != nil {
 		value, err := e.Getter(ctx)
 		if err != nil {
 			slog.Error("FieldCheckbox getter failed", "error", err, "key", e.Key)
-			return ContainerError{Error: getters.Static(err)}.Build(ctx)
+			return ContainerError{Error: getters.Static(err)}.Build(cat, ctx, w)
 		}
 		truthy = value
 	}
 
+	icon := Icon{Name: "x-circle", Classes: "text-error"}
 	if truthy {
-		return Span(Render(Icon{Name: "check-circle", Classes: "text-success"}, ctx))
+		icon = Icon{Name: "check-circle", Classes: "text-success"}
 	}
-	return Span(Render(Icon{Name: "x-circle", Classes: "text-error"}, ctx))
+	iconHTML, err := RenderHTML(icon, cat, ctx)
+	if err != nil {
+		return err
+	}
+	return Execute(w, "field_checkbox", struct {
+		Icon template.HTML
+	}{Icon: iconHTML})
 }
